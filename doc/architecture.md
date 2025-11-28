@@ -55,7 +55,7 @@ graph TD
     -   Global UI State: Zustand
 -   **Local Database**: Dexie.js (IndexedDB wrapper)
 -   **PWA**: vite-plugin-pwa
--   **ML/AI**: @xenova/transformers (Local Whisper)
+-   **ML/AI**: @huggingface/transformers (Local Whisper)
 -   **Styling**: Tailwind CSS
 -   **UI Components**: shadcn/ui (Radix UI based)
 -   **I18n**: i18next
@@ -96,6 +96,15 @@ src/
 ├── db/                  # Dexie configuration and schema
 ├── services/            # API clients and AI service wrappers
 ├── stores/              # Zustand global stores (settings, auth)
-└── lib/                 # Utility functions
+├── locales/             # i18next translation files
+│   ├── en/              # English translations
+│   ├── zh/              # Chinese translations
+│   ├── ja/              # Japanese translations
+│   ├── ko/              # Korean translations
+│   ├── es/              # Spanish translations
+│   ├── fr/              # French translations
+│   ├── de/              # German translations
+│   └── pt/              # Portuguese translations
+└── lib/                 # Utility functions (i18n config)
 ```
 

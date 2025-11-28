@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import i18n from "../lib/i18n"
 
 type Theme = "light" | "dark" | "system"
 
@@ -19,11 +20,21 @@ export const useSettingsStore = create<SettingsState>()(
       preferredLanguage: "en",
       dailyGoal: 30,
       setTheme: (theme) => set({ theme }),
-      setPreferredLanguage: (lang) => set({ preferredLanguage: lang }),
+      setPreferredLanguage: (lang) => {
+        set({ preferredLanguage: lang })
+        // Sync with i18n
+        i18n.changeLanguage(lang)
+      },
       setDailyGoal: (goal) => set({ dailyGoal: Math.max(0, goal) }),
     }),
     {
       name: "enjoy-settings",
+      onRehydrateStorage: () => (state) => {
+        // Sync i18n language when store is rehydrated
+        if (state?.preferredLanguage) {
+          i18n.changeLanguage(state.preferredLanguage)
+        }
+      },
     }
   )
 )

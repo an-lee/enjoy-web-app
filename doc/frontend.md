@@ -79,7 +79,87 @@ Used for UI state and device settings.
     -   `R`: Record (Hold to record, release to stop)
     -   `ArrowLeft/Right`: Prev/Next sentence.
 
-## 5. Styling & Responsiveness
+## 5. Internationalization (i18n)
+
+### i18next Configuration
+The app uses **i18next** with **react-i18next** for internationalization.
+
+#### Supported Languages
+- English (en) - Default
+- Chinese (zh)
+- Japanese (ja)
+- Korean (ko)
+- Spanish (es)
+- French (fr)
+- German (de)
+- Portuguese (pt)
+
+#### Configuration
+- **Config File**: `src/lib/i18n.ts`
+- **Translation Files**: `src/locales/{lang}/translation.json`
+- **Language Detection**: Automatically detects from:
+  1. Settings store (`enjoy-settings` localStorage)
+  2. Browser navigator language
+  3. HTML lang attribute
+
+#### Usage in Components
+```tsx
+import { useTranslation } from 'react-i18next'
+
+function MyComponent() {
+  const { t } = useTranslation()
+
+  return (
+    <div>
+      <h1>{t('common.appName')}</h1>
+      <p>{t('common.loading')}</p>
+    </div>
+  )
+}
+```
+
+#### Language Switching
+Language changes are managed through the settings store:
+```tsx
+import { useSettingsStore } from '@/stores/settings'
+
+function LanguageSwitcher() {
+  const { preferredLanguage, setPreferredLanguage } = useSettingsStore()
+
+  return (
+    <select
+      value={preferredLanguage}
+      onChange={(e) => setPreferredLanguage(e.target.value)}
+    >
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+      {/* ... */}
+    </select>
+  )
+}
+```
+
+The settings store automatically syncs with i18next when the language changes.
+
+#### Translation File Structure
+Translation files follow a nested JSON structure:
+```json
+{
+  "common": {
+    "appName": "Enjoy Web App",
+    "loading": "Loading...",
+    "error": "Error"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme"
+  }
+}
+```
+
+Access nested keys using dot notation: `t('common.appName')`
+
+## 6. Styling & Responsiveness
 
 ### Tailwind CSS v4
 -   **Configuration**: Uses `@tailwindcss/vite` plugin

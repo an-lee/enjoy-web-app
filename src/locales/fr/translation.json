@@ -1,0 +1,31 @@
+{
+  "common": {
+    "appName": "Enjoy Web App",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "search": "Rechercher",
+    "settings": "Paramètres",
+    "language": "Langue"
+  },
+  "header": {
+    "title": "Enjoy Web App"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "theme": "Thème",
+    "language": "Langue",
+    "dailyGoal": "Objectif Quotidien",
+    "minutes": "minutes"
+  }
+}
+

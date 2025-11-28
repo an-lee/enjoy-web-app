@@ -1,0 +1,31 @@
+{
+  "common": {
+    "appName": "Enjoy Web App",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "search": "検索",
+    "settings": "設定",
+    "language": "言語"
+  },
+  "header": {
+    "title": "Enjoy Web App"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "language": "言語",
+    "dailyGoal": "毎日の目標",
+    "minutes": "分"
+  }
+}
+
