@@ -87,5 +87,33 @@
       "billing": "Cobrança",
       "notifications": "Notificações"
     }
+  },
+  "translation": {
+    "title": "Tradução Inteligente",
+    "inputPlaceholder": "Digite o texto para traduzir...",
+    "translate": "Traduzir",
+    "regenerate": "Regenerar",
+    "translationStyle": "Estilo de Tradução",
+    "styleLiteral": "Literal",
+    "styleNatural": "Natural",
+    "styleCasual": "Casual",
+    "styleFormal": "Formal",
+    "styleSimplified": "Simplificado",
+    "styleDetailed": "Detalhado",
+    "styleCustom": "Personalizado",
+    "history": "Histórico",
+    "showHistory": "Mostrar Histórico",
+    "hideHistory": "Ocultar Histórico",
+    "noHistory": "Sem histórico de tradução",
+    "sourceText": "Texto Original",
+    "translatedText": "Texto Traduzido",
+    "loading": "Traduzindo...",
+    "error": "A tradução falhou. Por favor, tente novamente.",
+    "sourceLanguage": "Idioma de Origem",
+    "targetLanguage": "Idioma de Destino",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "page": "Página",
+    "of": "de"
   }
 }

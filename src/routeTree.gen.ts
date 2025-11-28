@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
+import { Route as SmartTranslationRouteImport } from './routes/smart-translation'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
@@ -19,6 +20,11 @@ import { Route as EchoIdRouteImport } from './routes/echo.$id'
 const VocabularyRoute = VocabularyRouteImport.update({
   id: '/vocabulary',
   path: '/vocabulary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SmartTranslationRoute = SmartTranslationRouteImport.update({
+  id: '/smart-translation',
+  path: '/smart-translation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
+  '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
   '/echo/$id': typeof EchoIdRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
+  '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
   '/echo/$id': typeof EchoIdRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
+  '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
   '/echo/$id': typeof EchoIdRoute
 }
@@ -79,16 +88,25 @@ export interface FileRouteTypes {
     | '/library'
     | '/login'
     | '/settings'
+    | '/smart-translation'
     | '/vocabulary'
     | '/echo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/library' | '/login' | '/settings' | '/vocabulary' | '/echo/$id'
+  to:
+    | '/'
+    | '/library'
+    | '/login'
+    | '/settings'
+    | '/smart-translation'
+    | '/vocabulary'
+    | '/echo/$id'
   id:
     | '__root__'
     | '/'
     | '/library'
     | '/login'
     | '/settings'
+    | '/smart-translation'
     | '/vocabulary'
     | '/echo/$id'
   fileRoutesById: FileRoutesById
@@ -98,6 +116,7 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
   SettingsRoute: typeof SettingsRoute
+  SmartTranslationRoute: typeof SmartTranslationRoute
   VocabularyRoute: typeof VocabularyRoute
   EchoIdRoute: typeof EchoIdRoute
 }
@@ -109,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/vocabulary'
       fullPath: '/vocabulary'
       preLoaderRoute: typeof VocabularyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/smart-translation': {
+      id: '/smart-translation'
+      path: '/smart-translation'
+      fullPath: '/smart-translation'
+      preLoaderRoute: typeof SmartTranslationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -154,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
   SettingsRoute: SettingsRoute,
+  SmartTranslationRoute: SmartTranslationRoute,
   VocabularyRoute: VocabularyRoute,
   EchoIdRoute: EchoIdRoute,
 }

@@ -87,5 +87,33 @@
       "billing": "결제",
       "notifications": "알림"
     }
+  },
+  "translation": {
+    "title": "스마트 번역",
+    "inputPlaceholder": "번역할 텍스트를 입력하세요...",
+    "translate": "번역",
+    "regenerate": "재생성",
+    "translationStyle": "번역 스타일",
+    "styleLiteral": "직역",
+    "styleNatural": "자연스러운",
+    "styleCasual": "캐주얼",
+    "styleFormal": "격식있는",
+    "styleSimplified": "간소화",
+    "styleDetailed": "상세",
+    "styleCustom": "사용자 정의",
+    "history": "기록",
+    "showHistory": "기록 보기",
+    "hideHistory": "기록 숨기기",
+    "noHistory": "번역 기록이 없습니다",
+    "sourceText": "원문",
+    "translatedText": "번역문",
+    "loading": "번역 중...",
+    "error": "번역에 실패했습니다. 다시 시도해주세요.",
+    "sourceLanguage": "원본 언어",
+    "targetLanguage": "대상 언어",
+    "previous": "이전",
+    "next": "다음",
+    "page": "페이지",
+    "of": "/"
   }
 }

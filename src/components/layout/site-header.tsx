@@ -17,8 +17,14 @@ export function SiteHeader() {
       return t("library.title")
     } else if (pathname === "/vocabulary") {
       return t("vocabulary.title")
+    } else if (pathname === "/plugins/youtube") {
+      return t("plugins.youtube")
+    } else if (pathname === "/plugins/podcast") {
+      return t("plugins.podcast")
     } else if (pathname === "/settings") {
       return t("settings.title")
+    } else if (pathname === "/smart-translation") {
+      return t("translation.title")
     } else if (pathname.startsWith("/echo/")) {
       return t("echo.title")
     }

@@ -87,5 +87,33 @@
       "billing": "請求",
       "notifications": "通知"
     }
+  },
+  "translation": {
+    "title": "スマート翻訳",
+    "inputPlaceholder": "翻訳するテキストを入力...",
+    "translate": "翻訳",
+    "regenerate": "再生成",
+    "translationStyle": "翻訳スタイル",
+    "styleLiteral": "逐語訳",
+    "styleNatural": "自然",
+    "styleCasual": "カジュアル",
+    "styleFormal": "フォーマル",
+    "styleSimplified": "簡略化",
+    "styleDetailed": "詳細",
+    "styleCustom": "カスタム",
+    "history": "履歴",
+    "showHistory": "履歴を表示",
+    "hideHistory": "履歴を非表示",
+    "noHistory": "翻訳履歴がありません",
+    "sourceText": "原文",
+    "translatedText": "訳文",
+    "loading": "翻訳中...",
+    "error": "翻訳に失敗しました。もう一度お試しください。",
+    "sourceLanguage": "元の言語",
+    "targetLanguage": "目標言語",
+    "previous": "前へ",
+    "next": "次へ",
+    "page": "ページ",
+    "of": "/"
   }
 }

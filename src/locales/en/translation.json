@@ -93,5 +93,33 @@
       "billing": "Billing",
       "notifications": "Notifications"
     }
+  },
+  "translation": {
+    "title": "Smart Translation",
+    "inputPlaceholder": "Enter text to translate...",
+    "translate": "Translate",
+    "regenerate": "Regenerate",
+    "translationStyle": "Translation Style",
+    "styleLiteral": "Literal",
+    "styleNatural": "Natural",
+    "styleCasual": "Casual",
+    "styleFormal": "Formal",
+    "styleSimplified": "Simplified",
+    "styleDetailed": "Detailed",
+    "styleCustom": "Custom",
+    "history": "History",
+    "showHistory": "Show History",
+    "hideHistory": "Hide History",
+    "noHistory": "No translation history",
+    "sourceText": "Source Text",
+    "translatedText": "Translated Text",
+    "loading": "Translating...",
+    "error": "Translation failed. Please try again.",
+    "sourceLanguage": "Source Language",
+    "targetLanguage": "Target Language",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of"
   }
 }

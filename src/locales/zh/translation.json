@@ -87,5 +87,33 @@
       "billing": "账单",
       "notifications": "通知"
     }
+  },
+  "translation": {
+    "title": "智能翻译",
+    "inputPlaceholder": "输入要翻译的文本...",
+    "translate": "翻译",
+    "regenerate": "重新生成",
+    "translationStyle": "翻译风格",
+    "styleLiteral": "直译",
+    "styleNatural": "自然",
+    "styleCasual": "口语化",
+    "styleFormal": "正式",
+    "styleSimplified": "简化",
+    "styleDetailed": "详细",
+    "styleCustom": "自定义",
+    "history": "以往记录",
+    "showHistory": "显示记录",
+    "hideHistory": "收起记录",
+    "noHistory": "暂无翻译记录",
+    "sourceText": "原文",
+    "translatedText": "译文",
+    "loading": "翻译中...",
+    "error": "翻译失败，请重试。",
+    "sourceLanguage": "源语言",
+    "targetLanguage": "目标语言",
+    "previous": "上一页",
+    "next": "下一页",
+    "page": "第",
+    "of": "页，共"
   }
 }
