@@ -1,0 +1,13 @@
+export { apiClient } from './client'
+export { authApi } from './auth'
+export { userApi } from './user'
+
+// Legacy API object for backward compatibility during migration
+import { authApi } from './auth'
+import { userApi } from './user'
+
+export const api = {
+  auth: authApi,
+  user: userApi,
+}
+

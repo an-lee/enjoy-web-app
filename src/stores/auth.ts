@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { setAuthToken, clearAuthToken, getAuthToken } from '@/services/api'
 
 export interface User {
   id: string
@@ -29,11 +28,7 @@ export const useAuthStore = create<AuthState>()(
 
       setToken: (token: string | null) => {
         set({ token, isAuthenticated: !!token })
-        if (token) {
-          setAuthToken(token)
-        } else {
-          clearAuthToken()
-        }
+        // Token is automatically retrieved from store by API client interceptor
       },
 
       setUser: (user: User | null) => {
@@ -42,27 +37,21 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         set({ token: null, user: null, isAuthenticated: false })
-        clearAuthToken()
+        // Token is automatically retrieved from store by API client interceptor
       },
     }),
     {
       name: 'enjoy-auth',
-      onRehydrateStorage: () => (state) => {
-        // Sync token with API client when store is rehydrated
-        if (state?.token) {
-          setAuthToken(state.token)
-        }
-      },
+      // Token is automatically retrieved from store by API client interceptor
+      // No need to sync manually
     }
   )
 )
 
-// Initialize auth token from store on module load
+// Listen for postMessage from browser extension
 if (typeof window !== 'undefined') {
-  const token = useAuthStore.getState().token
-  if (token) {
-    setAuthToken(token)
-  }
+  // Token is automatically retrieved from store by API client interceptor
+  // No need to initialize manually
 
   // Listen for postMessage from browser extension
   window.addEventListener('message', (event) => {

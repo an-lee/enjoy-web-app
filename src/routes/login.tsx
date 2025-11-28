@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, AlertCircle } from 'lucide-react'
-import { api } from '@/services/api'
+import { api } from '@/lib/api'
 
 export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -179,7 +179,9 @@ function LoginPage() {
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader className="text-center space-y-1">
-            <CardTitle className="text-2xl">{t('auth.login.title')}</CardTitle>
+            <CardTitle className="text-2xl" suppressHydrationWarning>
+              {t('auth.login.title')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {error && (
@@ -192,7 +194,9 @@ function LoginPage() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center gap-3 py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">{t('auth.login.processing')}</p>
+                <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                  {t('auth.login.processing')}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -202,9 +206,9 @@ function LoginPage() {
                   size="lg"
                   className="w-full"
                 >
-                  {t('auth.login.button')}
+                  <span suppressHydrationWarning>{t('auth.login.button')}</span>
                 </Button>
-                <p className="text-center text-xs text-muted-foreground">
+                <p className="text-center text-xs text-muted-foreground" suppressHydrationWarning>
                   {t('auth.login.help')}
                 </p>
               </div>
