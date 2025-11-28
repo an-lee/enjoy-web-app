@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useSettingsStore } from '@/stores/settings'
-import { useTheme } from '@/components/theme-provider'
+import { useSettingsStore } from '@/stores'
+import { useTheme } from '@/components/layout'
 import {
   Card,
   CardContent,

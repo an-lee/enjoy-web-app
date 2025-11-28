@@ -7,13 +7,11 @@ import { useEffect } from 'react'
 import '../lib/i18n'
 
 import appCss from '../styles.css?url'
-import { AppSidebar } from '@/components/app-sidebar'
-import { SiteHeader } from '@/components/site-header'
+import { AppSidebar, SiteHeader, ThemeProvider } from '@/components/layout'
 import {
   SidebarInset,
   SidebarProvider,
 } from '@/components/ui/sidebar'
-import { ThemeProvider } from '@/components/theme-provider'
 
 export const Route = createRootRoute({
   head: () => ({
