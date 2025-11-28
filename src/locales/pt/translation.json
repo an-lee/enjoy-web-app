@@ -20,7 +20,13 @@
     "library": "Biblioteca",
     "vocabulary": "Vocabulário",
     "add": "Adicionar",
-    "navigation": "Navegação"
+    "navigation": "Navegação",
+    "generateContent": "Gerar Conteúdo",
+    "smartTranslation": "Tradução Inteligente",
+    "voiceSynthesis": "Síntese de Voz",
+    "plugins": "Plugins",
+    "youtube": "YouTube",
+    "podcast": "Podcast"
   },
   "header": {
     "title": "Enjoy Echo"

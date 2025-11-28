@@ -20,7 +20,13 @@
     "library": "라이브러리",
     "vocabulary": "어휘",
     "add": "추가",
-    "navigation": "내비게이션"
+    "navigation": "내비게이션",
+    "generateContent": "콘텐츠 생성",
+    "smartTranslation": "스마트 번역",
+    "voiceSynthesis": "음성 합성",
+    "plugins": "플러그인",
+    "youtube": "YouTube",
+    "podcast": "팟캐스트"
   },
   "header": {
     "title": "Enjoy Echo"

@@ -20,7 +20,13 @@
     "library": "ライブラリ",
     "vocabulary": "語彙",
     "add": "追加",
-    "navigation": "ナビゲーション"
+    "navigation": "ナビゲーション",
+    "generateContent": "コンテンツ生成",
+    "smartTranslation": "スマート翻訳",
+    "voiceSynthesis": "音声合成",
+    "plugins": "プラグイン",
+    "youtube": "YouTube",
+    "podcast": "ポッドキャスト"
   },
   "header": {
     "title": "Enjoy Echo"

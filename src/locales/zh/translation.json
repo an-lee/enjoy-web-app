@@ -20,7 +20,13 @@
     "library": "素材库",
     "vocabulary": "词汇表",
     "add": "添加",
-    "navigation": "导航"
+    "navigation": "导航",
+    "generateContent": "生成语料",
+    "smartTranslation": "智能翻译",
+    "voiceSynthesis": "语音合成",
+    "plugins": "插件",
+    "youtube": "YouTube",
+    "podcast": "播客"
   },
   "header": {
     "title": "Enjoy Echo"

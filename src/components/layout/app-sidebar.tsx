@@ -6,6 +6,10 @@ import {
   IconFolder,
   IconFileWord,
   IconSettings,
+  IconLanguage,
+  IconMicrophone,
+  IconBrandYoutube,
+  IconCast,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/layout/nav-main"
@@ -16,6 +20,9 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -52,6 +59,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ]
 
+  const navGenerateContent = [
+    {
+      title: t("common.smartTranslation"),
+      url: "/smart-translation",
+      icon: IconLanguage,
+    },
+    {
+      title: t("common.voiceSynthesis"),
+      url: "/voice-synthesis",
+      icon: IconMicrophone,
+    },
+  ]
+
+  const navPlugins = [
+    {
+      title: t("common.youtube"),
+      url: "/plugins/youtube",
+      icon: IconBrandYoutube,
+    },
+    {
+      title: t("common.podcast"),
+      url: "/plugins/podcast",
+      icon: IconCast,
+    },
+  ]
+
   // Get user info from auth store, with fallback for when user is not loaded yet
   const userInfo = user
     ? {
@@ -84,6 +117,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
+        <SidebarGroup>
+          <SidebarGroupLabel>{t("common.generateContent")}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navGenerateContent.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton tooltip={item.title} asChild>
+                    <Link to={item.url}>
+                      {item.icon && <item.icon />}
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>{t("common.plugins")}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navPlugins.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton tooltip={item.title} asChild>
+                    <Link to={item.url}>
+                      {item.icon && <item.icon />}
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
