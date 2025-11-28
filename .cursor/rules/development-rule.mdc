@@ -1,0 +1,27 @@
+---
+description: General development rules and documentation maintenance guidelines
+globs:
+alwaysApply: true
+---
+
+# Development Rules
+
+## Package Manager
+- **ALWAYS** use `bun` for all package management and script execution tasks.
+- Do NOT use `npm`, `yarn`, or `pnpm`.
+- Example: Use `bun add <package>` instead of `npm install <package>`.
+- Example: Use `bun run dev` instead of `npm run dev`.
+
+## Documentation Maintenance
+- **Read First**: Before starting any complex task, consult the relevant documentation in the `doc/` directory to understand the existing architecture and design.
+- **Update on Change**: If you modify the system architecture, data models, API contracts, or core business logic, you **MUST** update the corresponding documentation in `doc/`.
+  - `doc/architecture.md`: For system-level changes.
+  - `doc/data_models.md`: For database schema or local storage changes.
+  - `doc/api_services.md`: For API endpoint or AI service changes.
+  - `doc/business_logic.md`: For changes to core workflows (e.g., shadowing loop).
+  - `doc/frontend.md`: For significant UI/UX pattern changes.
+- **Keep it Technical**: Documentation updates should be concise, technical, and aimed at developers/LLMs. Avoid marketing fluff.
+- **Single Source of Truth**: The `doc/` directory is the source of truth for the project's design. Keep it in sync with the code.
+
+## General
+- **Language**: Use English for all code, comments, and documentation updates.
