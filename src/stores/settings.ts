@@ -2,13 +2,9 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import i18n from "../lib/i18n"
 
-type Theme = "light" | "dark" | "system"
-
 interface SettingsState {
-  theme: Theme
   preferredLanguage: string
   dailyGoal: number
-  setTheme: (theme: Theme) => void
   setPreferredLanguage: (lang: string) => void
   setDailyGoal: (goal: number) => void
 }
@@ -16,10 +12,8 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      theme: "system",
       preferredLanguage: "en",
       dailyGoal: 30,
-      setTheme: (theme) => set({ theme }),
       setPreferredLanguage: (lang) => {
         set({ preferredLanguage: lang })
         // Sync with i18n

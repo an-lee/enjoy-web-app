@@ -46,7 +46,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navSecondary = [
     {
       title: t("common.settings"),
-      url: "#",
+      url: "/settings",
       icon: IconSettings,
     },
   ]

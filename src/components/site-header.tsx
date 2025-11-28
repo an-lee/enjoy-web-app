@@ -17,6 +17,8 @@ export function SiteHeader() {
       return t("library.title")
     } else if (pathname === "/vocabulary") {
       return t("vocabulary.title")
+    } else if (pathname === "/settings") {
+      return t("settings.title")
     } else if (pathname.startsWith("/echo/")) {
       return t("echo.title")
     }
