@@ -13,24 +13,23 @@ export function SiteHeader() {
 
     if (pathname === "/") {
       return t("dashboard.title")
-    } else if (pathname === "/library") {
+    } else if (pathname.startsWith("/library")) {
       return t("library.title")
-    } else if (pathname === "/vocabulary") {
+    } else if (pathname.startsWith("/vocabulary")) {
       return t("vocabulary.title")
-    } else if (pathname === "/plugins/youtube") {
-      return t("plugins.youtube")
-    } else if (pathname === "/plugins/podcast") {
-      return t("plugins.podcast")
-    } else if (pathname === "/settings") {
+    } else if (pathname.startsWith("/plugins/youtube")) {
+      return t("plugins.youtube.title")
+    } else if (pathname.startsWith("/plugins/podcast")) {
+      return t("plugins.podcast.title")
+    } else if (pathname.startsWith("/settings")) {
       return t("settings.title")
-    } else if (pathname === "/smart-translation") {
+    } else if (pathname.startsWith("/smart-translation")) {
       return t("translation.title")
     } else if (pathname.startsWith("/echo/")) {
       return t("echo.title")
     }
 
-    // Default fallback
-    return t("header.title")
+    return t("common.appName")
   }
 
   return (
