@@ -48,7 +48,7 @@ graph TD
 
 ### Frontend (Web App)
 -   **Build Tool**: Vite
--   **Framework**: React 18 + TypeScript
+-   **Framework**: React 19 + TypeScript
 -   **Routing**: TanStack Router (File-based routing)
 -   **State Management**:
     -   Server State: TanStack Query
