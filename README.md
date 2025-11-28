@@ -1,4 +1,4 @@
-Welcome to your new TanStack app! 
+Welcome to your new TanStack app!
 
 # Getting Started
 
@@ -24,6 +24,52 @@ This project uses [Vitest](https://vitest.dev/) for testing. You can run the tes
 ```bash
 bun --bun run test
 ```
+
+## CI/CD
+
+This project includes GitHub Actions workflows for continuous integration and deployment.
+
+### CI Workflow
+
+The CI workflow (`.github/workflows/ci.yml`) runs automatically on:
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop` branches
+
+It performs:
+- **Test**: Runs the test suite using Vitest
+- **Build**: Builds the project and verifies the build artifacts
+- **Type Check**: Validates TypeScript types without emitting files
+
+### Deployment Workflow
+
+The deployment workflow (`.github/workflows/deploy.yml`) automatically deploys to Cloudflare Workers when:
+- Code is pushed to the `main` branch
+- Manually triggered via GitHub Actions UI
+
+#### Setup Required Secrets
+
+Before deployment can work, you need to configure the following secrets in your GitHub repository:
+
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Secrets and variables** → **Actions**
+3. Add the following secrets:
+
+   - `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token
+     - Create one at: https://dash.cloudflare.com/profile/api-tokens
+     - Required permissions: `Account:Cloudflare Workers:Edit`
+
+   - `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID
+     - Find it in your Cloudflare dashboard URL or account settings
+
+#### Manual Deployment
+
+You can also deploy manually using:
+
+```bash
+bun run deploy
+```
+
+This will build the project and deploy it to Cloudflare Workers using Wrangler.
 
 ## Styling
 
