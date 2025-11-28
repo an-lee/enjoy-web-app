@@ -46,7 +46,7 @@ export function NavUser({
 
   const handleLogout = () => {
     logout()
-    navigate({ to: '/login' })
+    navigate({ to: '/login', search: { redirect: undefined } })
   }
 
   // Generate initials for avatar fallback

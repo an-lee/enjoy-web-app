@@ -56,10 +56,16 @@ Before deployment can work, you need to configure the following secrets in your 
 
    - `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token
      - Create one at: https://dash.cloudflare.com/profile/api-tokens
-     - Required permissions: `Account:Cloudflare Workers:Edit`
+     - Click **Create Token** → **Get started** with **Custom token**
+     - **Required permissions**:
+       - `Account` → `Cloudflare Workers` → `Edit`
+       - `User` → `User Details` → `Read`
+     - **Account Resources**: Select your account (or "All accounts")
+     - ⚠️ **Important**: Save the token immediately after creation, as you won't be able to view it again
 
    - `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID
-     - Find it in your Cloudflare dashboard URL or account settings
+     - Find it in your Cloudflare dashboard URL (e.g., `https://dash.cloudflare.com/[ACCOUNT_ID]/...`)
+     - Or go to **Workers & Pages** → Your worker → **Settings** → **Account ID**
 
 #### Manual Deployment
 

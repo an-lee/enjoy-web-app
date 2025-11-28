@@ -61,9 +61,6 @@ i18n
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
-      // Prevent automatic language detection during initialization
-      // This ensures SSR and client hydration use the same initial language
-      initImmediate: false,
     },
     react: {
       useSuspense: false, // Disable suspense for better compatibility
