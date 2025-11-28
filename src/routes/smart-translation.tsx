@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { db, type Translation, type TranslationStyle } from '@/db'
 import { ChevronDown, ChevronUp, RefreshCw, Loader2 } from 'lucide-react'
@@ -28,6 +27,7 @@ const TRANSLATION_STYLES: { value: TranslationStyle; label: string }[] = [
   { value: 'formal', label: 'translation.styleFormal' },
   { value: 'simplified', label: 'translation.styleSimplified' },
   { value: 'detailed', label: 'translation.styleDetailed' },
+  { value: 'custom', label: 'translation.styleCustom' },
 ]
 
 const ITEMS_PER_PAGE = 10
@@ -36,6 +36,7 @@ function SmartTranslation() {
   const { t } = useTranslation()
   const [inputText, setInputText] = useState('')
   const [translationStyle, setTranslationStyle] = useState<TranslationStyle>('natural')
+  const [customPrompt, setCustomPrompt] = useState('')
   const [sourceLanguage, setSourceLanguage] = useState('en')
   const [targetLanguage, setTargetLanguage] = useState('zh')
   const [currentTranslation, setCurrentTranslation] = useState<Translation | null>(null)
@@ -74,16 +75,30 @@ function SmartTranslation() {
 
   const handleTranslate = async () => {
     if (!inputText.trim()) return
+    if (translationStyle === 'custom' && !customPrompt.trim()) {
+      setError(t('translation.customPromptRequired'))
+      return
+    }
 
     setIsTranslating(true)
     setError(null)
 
     try {
-      // Check if translation already exists
-      const existing = await db.translations
-        .where('[sourceText+targetLanguage+style]')
-        .equals([inputText.trim(), targetLanguage, translationStyle])
-        .first()
+      // For custom style, check if translation with same prompt exists
+      let existing: Translation | undefined
+      if (translationStyle === 'custom') {
+        // For custom style, we need to filter by customPrompt as well
+        const candidates = await db.translations
+          .where('[sourceText+targetLanguage+style]')
+          .equals([inputText.trim(), targetLanguage, translationStyle])
+          .toArray()
+        existing = candidates.find((item) => item.customPrompt === customPrompt.trim())
+      } else {
+        existing = await db.translations
+          .where('[sourceText+targetLanguage+style]')
+          .equals([inputText.trim(), targetLanguage, translationStyle])
+          .first()
+      }
 
       if (existing) {
         setCurrentTranslation(existing)
@@ -100,8 +115,11 @@ function SmartTranslation() {
         sourceText: inputText.trim(),
         sourceLanguage,
         targetLanguage,
-        translatedText: `[Mock Translation] ${inputText.trim()} (${translationStyle})`,
+        translatedText: translationStyle === 'custom'
+          ? `[Mock Translation with Custom Prompt] ${inputText.trim()} (${customPrompt.trim()})`
+          : `[Mock Translation] ${inputText.trim()} (${translationStyle})`,
         style: translationStyle,
+        customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
         aiModel: 'mock',
         syncStatus: 'local',
         createdAt: Date.now(),
@@ -126,6 +144,10 @@ function SmartTranslation() {
 
   const handleRegenerate = async () => {
     if (!inputText.trim() || !currentTranslation) return
+    if (translationStyle === 'custom' && !customPrompt.trim()) {
+      setError(t('translation.customPromptRequired'))
+      return
+    }
 
     setIsTranslating(true)
     setError(null)
@@ -136,7 +158,10 @@ function SmartTranslation() {
 
       const updatedTranslation: Translation = {
         ...currentTranslation,
-        translatedText: `[Regenerated Translation] ${inputText.trim()} (${translationStyle})`,
+        translatedText: translationStyle === 'custom'
+          ? `[Regenerated Translation with Custom Prompt] ${inputText.trim()} (${customPrompt.trim()})`
+          : `[Regenerated Translation] ${inputText.trim()} (${translationStyle})`,
+        customPrompt: translationStyle === 'custom' ? customPrompt.trim() : currentTranslation.customPrompt,
         updatedAt: Date.now(),
       }
 
@@ -170,9 +195,7 @@ function SmartTranslation() {
     <div className="container mx-auto max-w-4xl py-8">
       <div className="space-y-6">
         {/* Input Section */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
+        <div className="space-y-4">
               {/* Three dropdowns in a row */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
@@ -215,7 +238,19 @@ function SmartTranslation() {
 
                 <div className="space-y-2">
                   <Label htmlFor="translation-style">{t('translation.translationStyle')}</Label>
-                  <Select value={translationStyle} onValueChange={(value) => setTranslationStyle(value as TranslationStyle)}>
+                  <Select
+                    value={translationStyle}
+                    onValueChange={(value) => {
+                      const newStyle = value as TranslationStyle
+                      setTranslationStyle(newStyle)
+                      // Clear custom prompt when switching away from custom style
+                      if (newStyle !== 'custom') {
+                        setCustomPrompt('')
+                      }
+                      // Clear current translation when style changes
+                      setCurrentTranslation(null)
+                    }}
+                  >
                     <SelectTrigger id="translation-style" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
@@ -230,7 +265,28 @@ function SmartTranslation() {
                 </div>
               </div>
 
+              {/* Custom Prompt Input - shown when custom style is selected */}
+              {translationStyle === 'custom' && (
+                <div className="space-y-2 p-4 bg-muted/50 rounded-md border">
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-prompt">{t('translation.customPrompt')}</Label>
+                    <Textarea
+                      id="custom-prompt"
+                      placeholder={t('translation.customPromptPlaceholder')}
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>{t('translation.customPromptDescription')}</p>
+                    <p className="text-xs italic">{t('translation.customPromptHint')}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
+                <Label htmlFor="translation-input">{t('translation.sourceText')}</Label>
                 <Textarea
                   id="translation-input"
                   placeholder={t('translation.inputPlaceholder')}
@@ -262,45 +318,37 @@ function SmartTranslation() {
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
         {/* Translation Result */}
         {currentTranslation && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">
-                    {t('translation.translatedText')}
-                  </Label>
-                  <div className="p-4 bg-muted rounded-md min-h-[60px]">
-                    <p className="whitespace-pre-wrap">{currentTranslation.translatedText}</p>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRegenerate}
-                    disabled={isTranslating}
-                  >
-                    <RefreshCw className={cn("mr-2 h-4 w-4", isTranslating && "animate-spin")} />
-                    {t('translation.regenerate')}
-                  </Button>
-                </div>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">
+                {t('translation.translatedText')}
+              </Label>
+              <div className="p-4 bg-muted rounded-md min-h-[60px]">
+                <p className="whitespace-pre-wrap">{currentTranslation.translatedText}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={isTranslating}
+              >
+                <RefreshCw className={cn("mr-2 h-4 w-4", isTranslating && "animate-spin")} />
+                {t('translation.regenerate')}
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <Card className="border-destructive">
-            <CardContent className="pt-6">
-              <p className="text-destructive">{error}</p>
-            </CardContent>
-          </Card>
+          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
         )}
 
         {/* History Toggle Button */}
@@ -332,17 +380,15 @@ function SmartTranslation() {
 
         {/* History Section */}
         {showHistory && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold">{t('translation.history')}</h2>
-                {history.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">
-                    {t('translation.noHistory')}
-                  </p>
-                ) : (
-                  <>
-                    <div className="space-y-2">
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">{t('translation.history')}</h2>
+            {history.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                {t('translation.noHistory')}
+              </p>
+            ) : (
+              <>
+                <div className="space-y-2">
                       {history.map((item) => {
                         const isExpanded = expandedItems.has(item.id)
                         return (
@@ -416,8 +462,6 @@ function SmartTranslation() {
                   </>
                 )}
               </div>
-            </CardContent>
-          </Card>
         )}
       </div>
     </div>
