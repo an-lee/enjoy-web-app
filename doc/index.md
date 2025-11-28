@@ -25,4 +25,3 @@ This documentation guides the development of the **Web App** and its integration
 - **Offline-First**: The Web App must support full offline functionality for local files, syncing when online.
 - **Performance**: Audio/Video processing should not block the main thread (use Web Workers).
 - **Type Safety**: Strict TypeScript usage across the entire stack.
-

@@ -3,13 +3,15 @@
 ## 1. High-Level Architecture
 
 Enjoy Echo consists of three main components:
-1.  **Browser Extension** (Live): For online video platforms (YouTube, Netflix).
-2.  **Web App** (In Development): For local files, offline study, and management.
-3.  **Rails API Backend**: Central hub for auth, data sync, and AI service proxy.
+
+1. **Browser Extension** (Live): For online video platforms (YouTube, Netflix).
+2. **Web App** (In Development): For local files, offline study, and management.
+3. **Rails API Backend**: Central hub for auth, data sync, and AI service proxy.
 
 The Web App acts as a Single Page Application (SPA) served via Cloudflare Pages.
 
 ### Diagram
+
 ```mermaid
 graph TD
     User[User] --> Extension[Browser Extension]
@@ -47,36 +49,39 @@ graph TD
 ## 2. Technology Stack
 
 ### Frontend (Web App)
--   **Build Tool**: Vite
--   **Framework**: React 19 + TypeScript
--   **Routing**: TanStack Router (File-based routing)
--   **State Management**:
-    -   Server State: TanStack Query
-    -   Global UI State: Zustand
--   **Local Database**: Dexie.js (IndexedDB wrapper)
--   **PWA**: vite-plugin-pwa
--   **ML/AI**: @huggingface/transformers (Local Whisper)
--   **Styling**: Tailwind CSS
--   **UI Components**: shadcn/ui (Radix UI based)
--   **I18n**: i18next
+
+- **Build Tool**: Vite
+- **Framework**: React 19 + TypeScript
+- **Routing**: TanStack Router (File-based routing)
+- **State Management**:
+  - Server State: TanStack Query
+  - Global UI State: Zustand
+- **Local Database**: Dexie.js (IndexedDB wrapper)
+- **PWA**: vite-plugin-pwa
+- **ML/AI**: @huggingface/transformers (Local Whisper)
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui (Radix UI based)
+- **I18n**: i18next
 
 ### Backend (Rails API)
--   **Framework**: Ruby on Rails (API Mode)
--   **Database**: PostgreSQL
--   **Cache/Queue**: Redis / Sidekiq
--   **Authentication**: Devise + JWT
+
+- **Framework**: Ruby on Rails (API Mode)
+- **Database**: PostgreSQL
+- **Cache/Queue**: Redis / Sidekiq
+- **Authentication**: Devise + JWT
 
 ### External Services
--   **LLM (Dictionary)**: Cloudflare Workers AI (Llama/Mistral)
--   **ASR (Cloud)**: Cloudflare Workers AI (Whisper)
--   **Translation**: Cloudflare Workers AI (M2M100) / DeepL (Fallback)
--   **TTS & Assessment**: Azure Speech Services
+
+- **LLM (Dictionary)**: Cloudflare Workers AI (Llama/Mistral)
+- **ASR (Cloud)**: Cloudflare Workers AI (Whisper)
+- **Translation**: Cloudflare Workers AI (M2M100) / DeepL (Fallback)
+- **TTS & Assessment**: Azure Speech Services
 
 ## 3. Project Structure
 
 The Web App follows a feature-based structure combined with functional grouping.
 
-```
+```bash
 src/
 ├── components/          # Shared UI components
 │   ├── ui/              # Atom components (buttons, inputs)
@@ -107,4 +112,3 @@ src/
 │   └── pt/              # Portuguese translations
 └── lib/                 # Utility functions (i18n config)
 ```
-
