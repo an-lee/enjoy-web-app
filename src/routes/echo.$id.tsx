@@ -12,7 +12,7 @@ function EchoPractice() {
   const { id } = Route.useParams()
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto">
       <div className="mb-6">
         <Link to="/library">
           <Button variant="ghost" className="mb-4">
