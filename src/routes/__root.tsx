@@ -1,4 +1,4 @@
-import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute, Outlet, redirect, useLocation } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +12,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from '@/components/ui/sidebar'
+import { useAuthStore } from '@/stores'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -34,6 +35,25 @@ export const Route = createRootRoute({
       },
     ],
   }),
+
+  beforeLoad: ({ location }) => {
+    const { isAuthenticated } = useAuthStore.getState()
+
+    // Allow access to login page without authentication
+    if (location.pathname === '/login') {
+      return
+    }
+
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/login',
+        search: {
+          redirect: location.pathname,
+        },
+      })
+    }
+  },
 
   component: RootComponent,
   shellComponent: RootDocument,
@@ -72,30 +92,39 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const location = useLocation()
+  const isLoginPage = location.pathname === '/login'
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="enjoy-ui-theme">
-      <SidebarProvider
-        style={
-          {
-            "--sidebar-width": "calc(var(--spacing) * 72)",
-            "--header-height": "calc(var(--spacing) * 12)",
-          } as React.CSSProperties
-        }
-      >
-        <AppSidebar variant="inset" />
-        <SidebarInset>
-          <SiteHeader />
-          <div className="flex flex-1 flex-col">
-            <div className="flex flex-1 flex-col gap-2">
-              <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                <div className="px-4 lg:px-6">
-                  <Outlet />
+      {isLoginPage ? (
+        // Login page - no sidebar or header
+        <Outlet />
+      ) : (
+        // Authenticated pages - with sidebar and header
+        <SidebarProvider
+          style={
+            {
+              "--sidebar-width": "calc(var(--spacing) * 72)",
+              "--header-height": "calc(var(--spacing) * 12)",
+            } as React.CSSProperties
+          }
+        >
+          <AppSidebar variant="inset" />
+          <SidebarInset>
+            <SiteHeader />
+            <div className="flex flex-1 flex-col">
+              <div className="flex flex-1 flex-col gap-2">
+                <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                  <div className="px-4 lg:px-6">
+                    <Outlet />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+          </SidebarInset>
+        </SidebarProvider>
+      )}
     </ThemeProvider>
   )
 }

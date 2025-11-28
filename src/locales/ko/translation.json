@@ -63,5 +63,23 @@
     "word": "단어",
     "meaning": "의미",
     "example": "예문"
+  },
+  "auth": {
+    "login": {
+      "title": "로그인",
+      "button": "로그인",
+      "processing": "인증 처리 중...",
+      "help": "로그인을 완료하기 위한 팝업 창이 열립니다. 프롬프트가 표시되면 이 사이트의 팝업을 허용하세요.",
+      "popupBlocked": "로그인 팝업을 열 수 없습니다. 이 사이트의 팝업을 허용한 후 다시 시도하세요.",
+      "popupClosed": "로그인 팝업이 닫혔습니다. 다시 시도하세요.",
+      "authFailed": "인증에 실패했습니다. 다시 시도하세요.",
+      "authError": "인증 중 오류가 발생했습니다."
+    },
+    "logout": "로그아웃",
+    "menu": {
+      "account": "계정",
+      "billing": "결제",
+      "notifications": "알림"
+    }
   }
 }

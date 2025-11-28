@@ -63,5 +63,23 @@
     "word": "Wort",
     "meaning": "Bedeutung",
     "example": "Beispiel"
+  },
+  "auth": {
+    "login": {
+      "title": "Anmelden",
+      "button": "Anmelden",
+      "processing": "Authentifizierung wird verarbeitet...",
+      "help": "Ein Popup-Fenster wird geöffnet, damit Sie die Anmeldung abschließen können. Bitte erlauben Sie Popups für diese Website, wenn Sie dazu aufgefordert werden.",
+      "popupBlocked": "Anmelde-Popup konnte nicht geöffnet werden. Bitte erlauben Sie Popups für diese Website und versuchen Sie es erneut.",
+      "popupClosed": "Anmelde-Popup wurde geschlossen. Bitte versuchen Sie es erneut.",
+      "authFailed": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "authError": "Während der Authentifizierung ist ein Fehler aufgetreten."
+    },
+    "logout": "Abmelden",
+    "menu": {
+      "account": "Konto",
+      "billing": "Abrechnung",
+      "notifications": "Benachrichtigungen"
+    }
   }
 }

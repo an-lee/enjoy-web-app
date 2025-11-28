@@ -20,9 +20,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useAuthStore } from "@/stores"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation()
+  const { user } = useAuthStore()
 
   const navMain = [
     {
@@ -50,11 +52,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ]
 
-  const user = {
-    name: "User",
-    email: "user@example.com",
-    avatar: "",
-  }
+  // Get user info from auth store, with fallback for when user is not loaded yet
+  const userInfo = user
+    ? {
+        name: user.name,
+        email: user.email,
+        avatar: user.avatarUrl || "",
+      }
+    : {
+        name: t("common.loading"),
+        email: "",
+        avatar: "",
+      }
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -78,7 +87,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser user={userInfo} />
       </SidebarFooter>
     </Sidebar>
   )

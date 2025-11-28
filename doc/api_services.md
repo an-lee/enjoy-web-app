@@ -4,6 +4,18 @@
 
 The Rails API serves as the interface between the client and various AI providers. It handles authentication, rate limiting, and standardizing responses.
 
+### Authentication
+
+The web app uses OAuth authentication, which is initiated by the browser extension:
+1. Extension opens webapp login page: `/login?state={state}&locale={locale}`
+2. Webapp handles OAuth flow with backend
+3. On success, webapp sends `ENJOY_ECHO_AUTH_SUCCESS` message to extension via `postMessage`
+4. Extension validates token and stores it
+
+**Auth Endpoints:**
+-   `POST /api/v1/auth/oauth/callback`: OAuth callback handler (if needed)
+-   `GET /api/v1/user/profile`: Get current user profile
+
 ### Key Endpoints
 
 -   `POST /api/v1/materials`: Create metadata for new material.

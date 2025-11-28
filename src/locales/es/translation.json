@@ -63,5 +63,23 @@
     "word": "Palabra",
     "meaning": "Significado",
     "example": "Ejemplo"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar Sesión",
+      "button": "Iniciar Sesión",
+      "processing": "Procesando autenticación...",
+      "help": "Se abrirá una ventana emergente para que completes el inicio de sesión. Por favor, permite las ventanas emergentes de este sitio si se te solicita.",
+      "popupBlocked": "No se pudo abrir la ventana emergente de inicio de sesión. Por favor, permite las ventanas emergentes de este sitio e inténtalo de nuevo.",
+      "popupClosed": "La ventana emergente de inicio de sesión se cerró. Por favor, inténtalo de nuevo.",
+      "authFailed": "La autenticación falló. Por favor, inténtalo de nuevo.",
+      "authError": "Ocurrió un error durante la autenticación."
+    },
+    "logout": "Cerrar Sesión",
+    "menu": {
+      "account": "Cuenta",
+      "billing": "Facturación",
+      "notifications": "Notificaciones"
+    }
   }
 }

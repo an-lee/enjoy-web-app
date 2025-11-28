@@ -63,5 +63,23 @@
     "word": "单词",
     "meaning": "含义",
     "example": "例句"
+  },
+  "auth": {
+    "login": {
+      "title": "登录",
+      "button": "登录",
+      "processing": "正在处理认证...",
+      "help": "将打开一个弹出窗口供您完成登录。如果浏览器提示，请允许此网站的弹出窗口。",
+      "popupBlocked": "无法打开登录弹出窗口。请允许此网站的弹出窗口后重试。",
+      "popupClosed": "登录弹出窗口已关闭。请重试。",
+      "authFailed": "认证失败。请重试。",
+      "authError": "认证过程中发生错误。"
+    },
+    "logout": "退出登录",
+    "menu": {
+      "account": "账户",
+      "billing": "账单",
+      "notifications": "通知"
+    }
   }
 }

@@ -63,5 +63,23 @@
     "word": "Palavra",
     "meaning": "Significado",
     "example": "Exemplo"
+  },
+  "auth": {
+    "login": {
+      "title": "Entrar",
+      "button": "Entrar",
+      "processing": "Processando autenticação...",
+      "help": "Uma janela popup será aberta para você completar o login. Por favor, permita popups para este site se solicitado.",
+      "popupBlocked": "Falha ao abrir a janela popup de login. Por favor, permita popups para este site e tente novamente.",
+      "popupClosed": "A janela popup de login foi fechada. Por favor, tente novamente.",
+      "authFailed": "A autenticação falhou. Por favor, tente novamente.",
+      "authError": "Ocorreu um erro durante a autenticação."
+    },
+    "logout": "Sair",
+    "menu": {
+      "account": "Conta",
+      "billing": "Cobrança",
+      "notifications": "Notificações"
+    }
   }
 }
