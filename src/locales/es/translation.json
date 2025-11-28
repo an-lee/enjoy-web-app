@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Enjoy Web App",
+    "appName": "Enjoy Echo",
     "loading": "Cargando...",
     "error": "Error",
     "success": "Éxito",
@@ -23,7 +23,7 @@
     "navigation": "Navegación"
   },
   "header": {
-    "title": "Enjoy Web App"
+    "title": "Enjoy Echo"
   },
   "settings": {
     "title": "Configuración",
@@ -65,4 +65,3 @@
     "example": "Ejemplo"
   }
 }
-

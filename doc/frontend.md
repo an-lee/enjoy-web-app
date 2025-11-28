@@ -146,7 +146,7 @@ Translation files follow a nested JSON structure:
 ```json
 {
   "common": {
-    "appName": "Enjoy Web App",
+    "appName": "Enjoy Echo",
     "loading": "Loading...",
     "error": "Error"
   },

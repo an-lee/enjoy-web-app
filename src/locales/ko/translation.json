@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Enjoy Web App",
+    "appName": "Enjoy Echo",
     "loading": "로딩 중...",
     "error": "오류",
     "success": "성공",
@@ -23,7 +23,7 @@
     "navigation": "내비게이션"
   },
   "header": {
-    "title": "Enjoy Web App"
+    "title": "Enjoy Echo"
   },
   "settings": {
     "title": "설정",
@@ -65,4 +65,3 @@
     "example": "예문"
   }
 }
-

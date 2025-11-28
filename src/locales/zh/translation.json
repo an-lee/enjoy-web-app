@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Enjoy Web App",
+    "appName": "Enjoy Echo",
     "loading": "加载中...",
     "error": "错误",
     "success": "成功",
@@ -23,7 +23,7 @@
     "navigation": "导航"
   },
   "header": {
-    "title": "Enjoy Web App"
+    "title": "Enjoy Echo"
   },
   "settings": {
     "title": "设置",
@@ -65,4 +65,3 @@
     "example": "例句"
   }
 }
-
