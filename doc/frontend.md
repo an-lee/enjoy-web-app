@@ -49,7 +49,7 @@ function MyComponent() {
 
 ### Feature Components
 Complex logic resides in `src/features`.
--   **Example**: `src/features/practice/PracticeSession.tsx` contains the state machine for the practice loop, while `src/components/practice/Waveform.tsx` is a dumb presentation component.
+-   **Example**: `src/features/echo/EchoSession.tsx` contains the state machine for the echo practice loop, while `src/components/echo/Waveform.tsx` is a dumb presentation component.
 
 ## 3. State Management
 
@@ -71,7 +71,7 @@ Used for UI state and device settings.
 3.  Metadata entry created.
 4.  Background process triggers local ASR (if needed).
 
-### The Practice Page (`/practice/$id`)
+### The Echo Practice Page (`/echo/$id`)
 -   **Layout**: Split screen (Video on top/left, Text/Controls on bottom/right).
 -   **Immersive Mode**: Fullscreen option hiding navigation.
 -   **Shortcuts**:

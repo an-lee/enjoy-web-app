@@ -15,7 +15,12 @@
     "previous": "Précédent",
     "search": "Rechercher",
     "settings": "Paramètres",
-    "language": "Langue"
+    "language": "Langue",
+    "home": "Accueil",
+    "library": "Bibliothèque",
+    "vocabulary": "Vocabulaire",
+    "add": "Ajouter",
+    "navigation": "Navigation"
   },
   "header": {
     "title": "Enjoy Web App"
@@ -26,6 +31,38 @@
     "language": "Langue",
     "dailyGoal": "Objectif Quotidien",
     "minutes": "minutes"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue",
+    "ready": "Votre application est prête !",
+    "getStarted": "Commencer"
+  },
+  "library": {
+    "title": "Bibliothèque",
+    "materials": "Matériaux",
+    "noMaterials": "Aucun matériau pour le moment",
+    "addMaterial": "Ajouter un Matériau",
+    "importFile": "Importer un Fichier"
+  },
+  "echo": {
+    "title": "Pratique d'Écho",
+    "practice": "Pratiquer",
+    "material": "Matériau",
+    "play": "Lire",
+    "pause": "Pause",
+    "record": "Enregistrer",
+    "stop": "Arrêter",
+    "nextSentence": "Phrase Suivante",
+    "previousSentence": "Phrase Précédente"
+  },
+  "vocabulary": {
+    "title": "Vocabulaire",
+    "words": "Mots",
+    "noWords": "Aucun mot pour le moment",
+    "word": "Mot",
+    "meaning": "Signification",
+    "example": "Exemple"
   }
 }
 

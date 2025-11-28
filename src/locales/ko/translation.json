@@ -15,7 +15,12 @@
     "previous": "이전",
     "search": "검색",
     "settings": "설정",
-    "language": "언어"
+    "language": "언어",
+    "home": "홈",
+    "library": "라이브러리",
+    "vocabulary": "어휘",
+    "add": "추가",
+    "navigation": "내비게이션"
   },
   "header": {
     "title": "Enjoy Web App"
@@ -26,6 +31,38 @@
     "language": "언어",
     "dailyGoal": "일일 목표",
     "minutes": "분"
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "welcome": "환영합니다",
+    "ready": "애플리케이션이 준비되었습니다!",
+    "getStarted": "시작하기"
+  },
+  "library": {
+    "title": "라이브러리",
+    "materials": "자료",
+    "noMaterials": "자료가 없습니다",
+    "addMaterial": "자료 추가",
+    "importFile": "파일 가져오기"
+  },
+  "echo": {
+    "title": "에코 연습",
+    "practice": "연습",
+    "material": "자료",
+    "play": "재생",
+    "pause": "일시 정지",
+    "record": "녹음",
+    "stop": "중지",
+    "nextSentence": "다음 문장",
+    "previousSentence": "이전 문장"
+  },
+  "vocabulary": {
+    "title": "어휘",
+    "words": "단어",
+    "noWords": "단어가 없습니다",
+    "word": "단어",
+    "meaning": "의미",
+    "example": "예문"
   }
 }
 

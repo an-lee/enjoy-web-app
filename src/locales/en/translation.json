@@ -15,7 +15,12 @@
     "previous": "Previous",
     "search": "Search",
     "settings": "Settings",
-    "language": "Language"
+    "language": "Language",
+    "home": "Home",
+    "library": "Library",
+    "vocabulary": "Vocabulary",
+    "add": "Add",
+    "navigation": "Navigation"
   },
   "header": {
     "title": "Enjoy Web App"
@@ -26,5 +31,37 @@
     "language": "Language",
     "dailyGoal": "Daily Goal",
     "minutes": "minutes"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "ready": "Your application is ready to go!",
+    "getStarted": "Get Started"
+  },
+  "library": {
+    "title": "Library",
+    "materials": "Materials",
+    "noMaterials": "No materials yet",
+    "addMaterial": "Add Material",
+    "importFile": "Import File"
+  },
+  "echo": {
+    "title": "Echo Practice",
+    "practice": "Practice",
+    "material": "Material",
+    "play": "Play",
+    "pause": "Pause",
+    "record": "Record",
+    "stop": "Stop",
+    "nextSentence": "Next Sentence",
+    "previousSentence": "Previous Sentence"
+  },
+  "vocabulary": {
+    "title": "Vocabulary",
+    "words": "Words",
+    "noWords": "No words yet",
+    "word": "Word",
+    "meaning": "Meaning",
+    "example": "Example"
   }
 }

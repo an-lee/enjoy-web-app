@@ -15,7 +15,12 @@
     "previous": "前へ",
     "search": "検索",
     "settings": "設定",
-    "language": "言語"
+    "language": "言語",
+    "home": "ホーム",
+    "library": "ライブラリ",
+    "vocabulary": "語彙",
+    "add": "追加",
+    "navigation": "ナビゲーション"
   },
   "header": {
     "title": "Enjoy Web App"
@@ -26,6 +31,38 @@
     "language": "言語",
     "dailyGoal": "毎日の目標",
     "minutes": "分"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": "ようこそ",
+    "ready": "アプリケーションの準備ができました！",
+    "getStarted": "始める"
+  },
+  "library": {
+    "title": "ライブラリ",
+    "materials": "素材",
+    "noMaterials": "素材がありません",
+    "addMaterial": "素材を追加",
+    "importFile": "ファイルをインポート"
+  },
+  "echo": {
+    "title": "エコー練習",
+    "practice": "練習",
+    "material": "素材",
+    "play": "再生",
+    "pause": "一時停止",
+    "record": "録音",
+    "stop": "停止",
+    "nextSentence": "次の文",
+    "previousSentence": "前の文"
+  },
+  "vocabulary": {
+    "title": "語彙",
+    "words": "単語",
+    "noWords": "単語がありません",
+    "word": "単語",
+    "meaning": "意味",
+    "example": "例文"
   }
 }
 

@@ -15,7 +15,12 @@
     "previous": "上一步",
     "search": "搜索",
     "settings": "设置",
-    "language": "语言"
+    "language": "语言",
+    "home": "首页",
+    "library": "素材库",
+    "vocabulary": "词汇表",
+    "add": "添加",
+    "navigation": "导航"
   },
   "header": {
     "title": "Enjoy Web App"
@@ -26,6 +31,38 @@
     "language": "语言",
     "dailyGoal": "每日目标",
     "minutes": "分钟"
+  },
+  "dashboard": {
+    "title": "仪表盘",
+    "welcome": "欢迎",
+    "ready": "您的应用已准备就绪！",
+    "getStarted": "开始使用"
+  },
+  "library": {
+    "title": "素材库",
+    "materials": "素材",
+    "noMaterials": "暂无素材",
+    "addMaterial": "添加素材",
+    "importFile": "导入文件"
+  },
+  "echo": {
+    "title": "跟读练习",
+    "practice": "练习",
+    "material": "素材",
+    "play": "播放",
+    "pause": "暂停",
+    "record": "录音",
+    "stop": "停止",
+    "nextSentence": "下一句",
+    "previousSentence": "上一句"
+  },
+  "vocabulary": {
+    "title": "词汇表",
+    "words": "单词",
+    "noWords": "暂无单词",
+    "word": "单词",
+    "meaning": "含义",
+    "example": "例句"
   }
 }
 

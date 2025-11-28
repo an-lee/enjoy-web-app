@@ -15,7 +15,12 @@
     "previous": "Anterior",
     "search": "Buscar",
     "settings": "Configuración",
-    "language": "Idioma"
+    "language": "Idioma",
+    "home": "Inicio",
+    "library": "Biblioteca",
+    "vocabulary": "Vocabulario",
+    "add": "Agregar",
+    "navigation": "Navegación"
   },
   "header": {
     "title": "Enjoy Web App"
@@ -26,6 +31,38 @@
     "language": "Idioma",
     "dailyGoal": "Meta Diaria",
     "minutes": "minutos"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "welcome": "Bienvenido",
+    "ready": "¡Tu aplicación está lista para usar!",
+    "getStarted": "Comenzar"
+  },
+  "library": {
+    "title": "Biblioteca",
+    "materials": "Materiales",
+    "noMaterials": "Aún no hay materiales",
+    "addMaterial": "Agregar Material",
+    "importFile": "Importar Archivo"
+  },
+  "echo": {
+    "title": "Práctica de Eco",
+    "practice": "Practicar",
+    "material": "Material",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "record": "Grabar",
+    "stop": "Detener",
+    "nextSentence": "Siguiente Frase",
+    "previousSentence": "Frase Anterior"
+  },
+  "vocabulary": {
+    "title": "Vocabulario",
+    "words": "Palabras",
+    "noWords": "Aún no hay palabras",
+    "word": "Palabra",
+    "meaning": "Significado",
+    "example": "Ejemplo"
   }
 }
 

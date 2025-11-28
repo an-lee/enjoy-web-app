@@ -81,17 +81,17 @@ src/
 ├── components/          # Shared UI components
 │   ├── ui/              # Atom components (buttons, inputs)
 │   ├── player/          # Video/Audio player components
-│   ├── practice/        # Practice mode specific components
+│   ├── echo/            # Echo practice mode specific components
 │   └── dictionary/      # Dictionary popup/panel
 ├── routes/              # TanStack Router definitions
 │   ├── __root.tsx       # Root layout
 │   ├── index.tsx        # Dashboard
-│   ├── library/         # Material management
-│   ├── practice/        # Shadowing interface
-│   └── vocabulary/      # Vocabulary list
+│   ├── library.tsx      # Material management
+│   ├── echo.$id.tsx     # Echo practice interface
+│   └── vocabulary.tsx   # Vocabulary list
 ├── features/            # Business logic isolated by feature
 │   ├── materials/       # Hooks/utils for material management
-│   ├── practice/        # State machines for practice loop
+│   ├── echo/            # State machines for echo practice loop
 │   └── sync/            # Synchronization logic
 ├── db/                  # Dexie configuration and schema
 ├── services/            # API clients and AI service wrappers
