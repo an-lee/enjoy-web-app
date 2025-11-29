@@ -39,19 +39,20 @@ export const translationService = {
     // Local mode: use transformers.js
     if (useLocal) {
       try {
-        // Note: Local translation models may not support custom style prompts
-        // Only basic translation is available
-        const result = await localModelService.translate(
+        // Use smart translation for style support
+        const result = await localModelService.smartTranslate(
           request.sourceText,
           request.sourceLanguage,
           request.targetLanguage,
+          request.style,
+          request.customPrompt,
           request.config?.localModel
         )
         return {
           success: true,
           data: {
             translatedText: result.translatedText,
-            aiModel: 'local-transformers',
+            aiModel: 'local-smart-translation',
           },
           metadata: {
             serviceType: 'translation',

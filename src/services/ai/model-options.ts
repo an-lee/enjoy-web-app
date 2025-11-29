@@ -35,7 +35,26 @@ export const ASR_MODEL_OPTIONS: ModelOption[] = [
   },
 ]
 
-export const TRANSLATION_MODEL_OPTIONS: ModelOption[] = [
+// Fast translation models - dedicated translation models for speed
+export const FAST_TRANSLATION_MODEL_OPTIONS: ModelOption[] = [
+  {
+    value: 'Xenova/nllb-200-distilled-600M',
+    label: 'NLLB-200 (600M)',
+    description: 'Multilingual translation model supporting 200+ languages. Fast and optimized for subtitle translation.',
+    size: '~600MB',
+    performance: 'medium',
+  },
+  {
+    value: 'Xenova/m2m100_418M',
+    label: 'M2M100 (418M)',
+    description: 'Smaller multilingual translation model. Faster but slightly less accurate than NLLB.',
+    size: '~418MB',
+    performance: 'low',
+  },
+]
+
+// Smart translation models - generative models for style support
+export const SMART_TRANSLATION_MODEL_OPTIONS: ModelOption[] = [
   {
     value: 'onnx-community/Qwen3-0.6B-DQ-ONNX',
     label: 'Qwen3 0.6B DQ (ONNX)',
@@ -59,23 +78,38 @@ export const TRANSLATION_MODEL_OPTIONS: ModelOption[] = [
   },
 ]
 
+// Legacy: Keep for backward compatibility
+export const TRANSLATION_MODEL_OPTIONS = SMART_TRANSLATION_MODEL_OPTIONS
+
 // Get default model for a service type
-export function getDefaultModel(serviceType: 'asr' | 'translation'): string {
+export function getDefaultModel(
+  serviceType: 'asr' | 'translation' | 'fastTranslation' | 'smartTranslation'
+): string {
   if (serviceType === 'asr') {
     return ASR_MODEL_OPTIONS[0].value // whisper-tiny
   }
-  if (serviceType === 'translation') {
-    return TRANSLATION_MODEL_OPTIONS[0].value // onnx-community/Qwen3-0.6B-DQ-ONNX
+  if (serviceType === 'fastTranslation') {
+    return FAST_TRANSLATION_MODEL_OPTIONS[0].value // NLLB-200
+  }
+  if (serviceType === 'translation' || serviceType === 'smartTranslation') {
+    return SMART_TRANSLATION_MODEL_OPTIONS[0].value // Qwen3-0.6B-DQ-ONNX
   }
   return ''
 }
 
 // Get model option by value
 export function getModelOption(
-  serviceType: 'asr' | 'translation',
+  serviceType: 'asr' | 'translation' | 'fastTranslation' | 'smartTranslation',
   modelValue: string
 ): ModelOption | undefined {
-  const options = serviceType === 'asr' ? ASR_MODEL_OPTIONS : TRANSLATION_MODEL_OPTIONS
+  let options: ModelOption[]
+  if (serviceType === 'asr') {
+    options = ASR_MODEL_OPTIONS
+  } else if (serviceType === 'fastTranslation') {
+    options = FAST_TRANSLATION_MODEL_OPTIONS
+  } else {
+    options = SMART_TRANSLATION_MODEL_OPTIONS
+  }
   return options.find((opt) => opt.value === modelValue)
 }
 

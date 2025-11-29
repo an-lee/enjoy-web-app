@@ -1,6 +1,7 @@
 /**
- * Translation Web Worker
- * Handles translation model loading and inference in a separate thread
+ * Smart Translation Web Worker
+ * Handles smart translation using generative models (e.g., Qwen3) with style support
+ * Supports different translation styles via prompts, used for user-generated content
  */
 
 import { pipeline, env } from '@huggingface/transformers'
@@ -10,33 +11,35 @@ env.allowLocalModels = false
 env.allowRemoteModels = true
 
 // Model configuration
-const DEFAULT_TRANSLATION_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
+const DEFAULT_SMART_TRANSLATION_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
 
-interface TranslationWorkerMessage {
+interface SmartTranslationWorkerMessage {
   type: 'init' | 'translate' | 'checkStatus'
   data?: {
     model?: string
     text?: string
     srcLang?: string
     tgtLang?: string
+    style?: string
+    customPrompt?: string
     taskId?: string
   }
 }
 
-interface TranslationWorkerResponse {
+interface SmartTranslationWorkerResponse {
   type: 'progress' | 'ready' | 'result' | 'error' | 'status'
   data?: any
   taskId?: string
 }
 
-// Singleton pattern for Text Generation pipeline (for translation via prompts)
-class TranslationPipelineSingleton {
+// Singleton pattern for Text Generation pipeline (for smart translation via prompts)
+class SmartTranslationPipelineSingleton {
   static instance: any = null
   static modelName: string | null = null
   static loading: boolean = false
 
   static async getInstance(
-    modelName: string = DEFAULT_TRANSLATION_MODEL,
+    modelName: string = DEFAULT_SMART_TRANSLATION_MODEL,
     progressCallback?: (progress: any) => void
   ) {
     // If already loaded with the same model, return existing instance
@@ -71,7 +74,7 @@ class TranslationPipelineSingleton {
           self.postMessage({
             type: 'progress',
             data: progress,
-          } as TranslationWorkerResponse)
+          } as SmartTranslationWorkerResponse)
         },
       })
 
@@ -81,7 +84,7 @@ class TranslationPipelineSingleton {
       self.postMessage({
         type: 'ready',
         data: { model: modelName },
-      } as TranslationWorkerResponse)
+      } as SmartTranslationWorkerResponse)
 
       return this.instance
     } catch (error: any) {
@@ -118,37 +121,62 @@ function getLanguageName(code: string): string {
   return LANGUAGE_NAME_MAP[code] || code
 }
 
-// Build translation prompt for generative models
-function buildTranslationPrompt(
+// Translation style descriptions
+const STYLE_DESCRIPTIONS: Record<string, string> = {
+  literal: 'Translate word-for-word, preserving the original structure as much as possible.',
+  natural: 'Translate naturally and fluently, making it sound like native ${tgtLangName}.',
+  casual: 'Translate in a casual, conversational style, using everyday language.',
+  formal: 'Translate in a formal, professional style, suitable for business or academic contexts.',
+  simplified: 'Translate in a simplified way, using easier vocabulary and shorter sentences, suitable for language learners.',
+  detailed: 'Translate with detailed explanations, including cultural context and nuances.',
+  custom: '', // Custom prompt will be provided
+}
+
+// Build smart translation prompt with style support
+function buildSmartTranslationPrompt(
   text: string,
   sourceLanguage: string,
-  targetLanguage: string
+  targetLanguage: string,
+  style: string = 'natural',
+  customPrompt?: string
 ): string {
   const srcLangName = getLanguageName(sourceLanguage)
   const tgtLangName = getLanguageName(targetLanguage)
 
-  return `Translate the following text from ${srcLangName} to ${tgtLangName}. Only output the translation, without any explanation or additional text.
+  let prompt = ''
+
+  if (style === 'custom' && customPrompt) {
+    // Use custom prompt if provided
+    prompt = `${customPrompt}\n\nSource text (${srcLangName}): ${text}\n\nTranslation (${tgtLangName}):`
+  } else {
+    // Use style-based prompt
+    const styleDesc = STYLE_DESCRIPTIONS[style] || STYLE_DESCRIPTIONS.natural
+    const styleInstruction = styleDesc.replace('${tgtLangName}', tgtLangName)
+
+    prompt = `Translate the following text from ${srcLangName} to ${tgtLangName}. ${styleInstruction} Only output the translation, without any explanation or additional text.
 
 Source text (${srcLangName}): ${text}
 
 Translation (${tgtLangName}):`
+  }
+
+  return prompt
 }
 
-
 // Listen for messages from main thread
-self.addEventListener('message', async (event: MessageEvent<TranslationWorkerMessage>) => {
+self.addEventListener('message', async (event: MessageEvent<SmartTranslationWorkerMessage>) => {
   const { type, data } = event.data
 
   try {
     switch (type) {
       case 'init': {
         // Initialize model
-        const modelName = data?.model || DEFAULT_TRANSLATION_MODEL
-        await TranslationPipelineSingleton.getInstance(modelName, (progress) => {
+        const modelName = data?.model || DEFAULT_SMART_TRANSLATION_MODEL
+        await SmartTranslationPipelineSingleton.getInstance(modelName, (progress) => {
           self.postMessage({
             type: 'progress',
             data: progress,
-          } as TranslationWorkerResponse)
+          } as SmartTranslationWorkerResponse)
         })
         break
       }
@@ -158,24 +186,30 @@ self.addEventListener('message', async (event: MessageEvent<TranslationWorkerMes
         self.postMessage({
           type: 'status',
           data: {
-            loaded: TranslationPipelineSingleton.isLoaded(),
-            model: TranslationPipelineSingleton.getModelName(),
+            loaded: SmartTranslationPipelineSingleton.isLoaded(),
+            model: SmartTranslationPipelineSingleton.getModelName(),
           },
-        } as TranslationWorkerResponse)
+        } as SmartTranslationWorkerResponse)
         break
       }
 
       case 'translate': {
-        // Translate text using generative model with prompts
+        // Smart translation using generative model with style support
         if (!data?.text || !data?.srcLang || !data?.tgtLang) {
           throw new Error('Text, source language, and target language are required')
         }
 
-        const modelName = data?.model || DEFAULT_TRANSLATION_MODEL
-        const generator = await TranslationPipelineSingleton.getInstance(modelName)
+        const modelName = data?.model || DEFAULT_SMART_TRANSLATION_MODEL
+        const generator = await SmartTranslationPipelineSingleton.getInstance(modelName)
 
-        // Build translation prompt
-        const prompt = buildTranslationPrompt(data.text, data.srcLang, data.tgtLang)
+        // Build translation prompt with style
+        const prompt = buildSmartTranslationPrompt(
+          data.text,
+          data.srcLang,
+          data.tgtLang,
+          data.style || 'natural',
+          data.customPrompt
+        )
 
         // Generate translation
         const result = await generator(prompt, {
@@ -214,7 +248,7 @@ self.addEventListener('message', async (event: MessageEvent<TranslationWorkerMes
             targetLanguage: data.tgtLang,
           },
           taskId: data?.taskId,
-        } as TranslationWorkerResponse)
+        } as SmartTranslationWorkerResponse)
         break
       }
 
@@ -229,7 +263,7 @@ self.addEventListener('message', async (event: MessageEvent<TranslationWorkerMes
         stack: error.stack,
       },
       taskId: data?.taskId,
-    } as TranslationWorkerResponse)
+    } as SmartTranslationWorkerResponse)
   }
 })
 

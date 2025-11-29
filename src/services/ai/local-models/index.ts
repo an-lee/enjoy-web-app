@@ -1,0 +1,89 @@
+/**
+ * Local Model Service (using @huggingface/transformers)
+ * Supports free users and offline usage
+ *
+ * Note: Requires @huggingface/transformers package
+ * bun add @huggingface/transformers
+ */
+
+import type { LocalModelConfig } from '../types'
+import { useLocalModelsStore } from '@/stores/local-models'
+import { transcribe } from './services/asr-service'
+import { fastTranslate } from './services/fast-translation-service'
+import { smartTranslate } from './services/smart-translation-service'
+import { lookup } from './services/dictionary-service'
+import { synthesize } from './services/tts-service'
+import { initializeModel } from './services/model-initializer'
+import { DEFAULT_SMART_TRANSLATION_MODEL } from './config'
+
+// Re-export types
+export type {
+  LocalASRResult,
+  LocalTranslationResult,
+  LocalDictionaryResult,
+  LocalTTSResult,
+} from './types'
+
+/**
+ * Local Model Service
+ * Uses transformers.js to run models in the browser
+ */
+export const localModelService = {
+  /**
+   * Local ASR (using Whisper model)
+   * Must run in Web Worker to avoid blocking UI
+   */
+  transcribe,
+
+  /**
+   * Fast Translation (using dedicated translation models like NLLB)
+   * Optimized for speed, used for subtitle translation
+   */
+  fastTranslate,
+
+  /**
+   * Smart Translation (using generative models with style support)
+   * Supports different translation styles via prompts, used for user-generated content
+   */
+  smartTranslate,
+
+  /**
+   * Legacy: Local Translation (for backward compatibility)
+   * Maps to smart translation
+   */
+  async translate(
+    text: string,
+    sourceLanguage: string,
+    targetLanguage: string,
+    modelConfig?: LocalModelConfig
+  ) {
+    return smartTranslate(text, sourceLanguage, targetLanguage, 'natural', undefined, modelConfig)
+  },
+
+  /**
+   * Local Dictionary Lookup (using generative models with prompts)
+   * Uses dedicated dictionary worker with generative model (e.g., Qwen3)
+   */
+  lookup,
+
+  /**
+   * Local TTS (using browser Web Speech API or transformers.js TTS models)
+   */
+  synthesize,
+
+  /**
+   * Initialize model (preload for faster inference)
+   */
+  initializeModel,
+
+  /**
+   * Check model status
+   */
+  getModelStatus(modelType: 'asr' | 'translation' | 'dictionary' | 'tts') {
+    return useLocalModelsStore.getState().models[modelType]
+  },
+}
+
+// Note: Pronunciation assessment is not supported in local mode
+// It requires Azure Speech Services for accurate phoneme-level analysis
+
