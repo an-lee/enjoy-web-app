@@ -11,7 +11,7 @@ import { useLocalModelsStore } from '@/stores/local-models'
 
 // Default model names
 const DEFAULT_ASR_MODEL = 'Xenova/whisper-tiny'
-const DEFAULT_TRANSLATION_MODEL = 'Xenova/nllb-200-distilled-600M'
+const DEFAULT_TRANSLATION_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
 
 /**
  * Convert audio Blob to Float32Array (16kHz mono)
@@ -176,6 +176,39 @@ function getTranslationWorker(): Worker {
   }
 
   return translationWorker
+}
+
+/**
+ * Create and manage Dictionary worker
+ */
+let dictionaryWorker: Worker | null = null
+
+function getDictionaryWorker(): Worker {
+  if (!dictionaryWorker) {
+    dictionaryWorker = new Worker(
+      new URL('./workers/dictionary-worker.ts', import.meta.url),
+      { type: 'module' }
+    )
+
+      dictionaryWorker.addEventListener('message', (event) => {
+        const { type, data } = event.data
+
+        if (type === 'ready') {
+          useLocalModelsStore.getState().setModelLoaded('dictionary', data.model)
+        } else if (type === 'progress') {
+          // Normalize progress value to 0-1 range
+          const normalizedProgress = normalizeProgress(data)
+          useLocalModelsStore.getState().setModelProgress('dictionary', {
+            ...data,
+            progress: normalizedProgress,
+          })
+        } else if (type === 'error') {
+          useLocalModelsStore.getState().setModelError('dictionary', data.message)
+        }
+      })
+  }
+
+  return dictionaryWorker
 }
 
 export interface LocalASRResult {
@@ -416,21 +449,100 @@ export const localModelService = {
   },
 
   /**
-   * Local Dictionary Lookup (using small LLM models)
-   * Note: Dictionary lookup may require larger models, may not be suitable for local execution
-   * Or use lighter methods (e.g., pre-trained word vectors + simple generation)
+   * Local Dictionary Lookup (using generative models with prompts)
+   * Uses dedicated dictionary worker with generative model (e.g., Qwen3)
    */
   async lookup(
-    _word: string,
-    _context: string | undefined,
-    _sourceLanguage: string,
-    _targetLanguage: string,
-    _modelConfig?: LocalModelConfig
+    word: string,
+    context: string | undefined,
+    sourceLanguage: string,
+    targetLanguage: string,
+    modelConfig?: LocalModelConfig
   ): Promise<LocalDictionaryResult> {
-    // Dictionary lookup is not yet implemented for local models
-    // This would require a small LLM or specialized dictionary model
-    // For now, we'll throw an error to indicate it's not available
-    throw new Error('Local dictionary lookup is not yet implemented. Please use Enjoy API or BYOK.')
+    const modelName = modelConfig?.model || DEFAULT_TRANSLATION_MODEL
+    const store = useLocalModelsStore.getState()
+
+    // Check if model is already loaded
+    const modelStatus = store.models.dictionary
+    if (!modelStatus.loaded || modelStatus.modelName !== modelName) {
+      // Initialize model loading
+      store.setModelLoading('dictionary', true)
+
+      const worker = getDictionaryWorker()
+
+      // Wait for worker to be ready
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Model loading timeout'))
+        }, 300000) // 5 minutes timeout
+
+        const messageHandler = (event: MessageEvent) => {
+          const { type, data } = event.data
+
+          if (type === 'ready' && data.model === modelName) {
+            clearTimeout(timeout)
+            worker.removeEventListener('message', messageHandler)
+            resolve()
+          } else if (type === 'error') {
+            clearTimeout(timeout)
+            worker.removeEventListener('message', messageHandler)
+            reject(new Error(data.message))
+          }
+        }
+
+        worker.addEventListener('message', messageHandler)
+
+        // Send init message
+        worker.postMessage({
+          type: 'init',
+          data: { model: modelName },
+        })
+      })
+    }
+
+    // Lookup using dictionary worker
+    const worker = getDictionaryWorker()
+    const taskId = `dictionary-${Date.now()}-${Math.random()}`
+
+    return new Promise<LocalDictionaryResult>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Dictionary lookup timeout'))
+      }, 300000) // 5 minutes timeout
+
+      const messageHandler = (event: MessageEvent) => {
+        const { type, data, taskId: responseTaskId } = event.data
+
+        if (type === 'result' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+
+          resolve({
+            word: data.word || word,
+            definitions: data.definitions || [],
+            contextualExplanation: data.contextualExplanation,
+          })
+        } else if (type === 'error' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          reject(new Error(data.message || 'Dictionary lookup failed'))
+        }
+      }
+
+      worker.addEventListener('message', messageHandler)
+
+      // Send lookup request
+      worker.postMessage({
+        type: 'lookup',
+        data: {
+          word,
+          context,
+          srcLang: sourceLanguage,
+          tgtLang: targetLanguage,
+          model: modelName,
+          taskId,
+        },
+      })
+    })
   },
 
   /**
@@ -487,7 +599,7 @@ export const localModelService = {
    * Initialize model (preload for faster inference)
    */
   async initializeModel(
-    modelType: 'asr' | 'translation',
+    modelType: 'asr' | 'translation' | 'dictionary',
     modelConfig?: LocalModelConfig
   ): Promise<void> {
     const store = useLocalModelsStore.getState()
@@ -529,6 +641,38 @@ export const localModelService = {
       const worker = getTranslationWorker()
 
       store.setModelLoading('translation', true)
+
+      return new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Model initialization timeout'))
+        }, 300000)
+
+        const messageHandler = (event: MessageEvent) => {
+          const { type, data } = event.data
+
+          if (type === 'ready' && data.model === modelName) {
+            clearTimeout(timeout)
+            worker.removeEventListener('message', messageHandler)
+            resolve()
+          } else if (type === 'error') {
+            clearTimeout(timeout)
+            worker.removeEventListener('message', messageHandler)
+            reject(new Error(data.message))
+          }
+        }
+
+        worker.addEventListener('message', messageHandler)
+
+        worker.postMessage({
+          type: 'init',
+          data: { model: modelName },
+        })
+      })
+    } else if (modelType === 'dictionary') {
+      const modelName = modelConfig?.model || DEFAULT_TRANSLATION_MODEL
+      const worker = getDictionaryWorker()
+
+      store.setModelLoading('dictionary', true)
 
       return new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {

@@ -37,10 +37,24 @@ export const ASR_MODEL_OPTIONS: ModelOption[] = [
 
 export const TRANSLATION_MODEL_OPTIONS: ModelOption[] = [
   {
-    value: 'Xenova/nllb-200-distilled-600M',
-    label: 'NLLB-200 (600M)',
-    description: 'Multilingual translation model supporting 200+ languages.',
+    value: 'onnx-community/Qwen3-0.6B-DQ-ONNX',
+    label: 'Qwen3 0.6B DQ (ONNX)',
+    description: 'Deep quantized ONNX version of Qwen3 0.6B. Smallest size, optimized for browser. Best for low-end devices.',
+    size: '~300MB',
+    performance: 'low',
+  },
+  {
+    value: 'onnx-community/Qwen3-0.6B-ONNX',
+    label: 'Qwen3 0.6B (ONNX)',
+    description: 'ONNX version of Qwen3 0.6B. Standard quantization, slightly larger but better quality.',
     size: '~600MB',
+    performance: 'low',
+  },
+  {
+    value: 'Qwen/Qwen3-1.7B-Instruct',
+    label: 'Qwen3 1.7B',
+    description: 'Larger Qwen3 model with better quality. Good balance for most devices. (Non-ONNX)',
+    size: '~3.4GB',
     performance: 'medium',
   },
 ]
@@ -51,7 +65,7 @@ export function getDefaultModel(serviceType: 'asr' | 'translation'): string {
     return ASR_MODEL_OPTIONS[0].value // whisper-tiny
   }
   if (serviceType === 'translation') {
-    return TRANSLATION_MODEL_OPTIONS[0].value
+    return TRANSLATION_MODEL_OPTIONS[0].value // onnx-community/Qwen3-0.6B-DQ-ONNX
   }
   return ''
 }

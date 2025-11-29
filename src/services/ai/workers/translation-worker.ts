@@ -10,7 +10,7 @@ env.allowLocalModels = false
 env.allowRemoteModels = true
 
 // Model configuration
-const DEFAULT_TRANSLATION_MODEL = 'Xenova/nllb-200-distilled-600M'
+const DEFAULT_TRANSLATION_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
 
 interface TranslationWorkerMessage {
   type: 'init' | 'translate' | 'checkStatus'
@@ -29,7 +29,7 @@ interface TranslationWorkerResponse {
   taskId?: string
 }
 
-// Singleton pattern for Translation pipeline
+// Singleton pattern for Text Generation pipeline (for translation via prompts)
 class TranslationPipelineSingleton {
   static instance: any = null
   static modelName: string | null = null
@@ -61,7 +61,8 @@ class TranslationPipelineSingleton {
     this.modelName = modelName
 
     try {
-      this.instance = await pipeline('translation', modelName, {
+      // Use text-generation pipeline for generative models
+      this.instance = await pipeline('text-generation', modelName, {
         progress_callback: (progress: any) => {
           if (progressCallback) {
             progressCallback(progress)
@@ -100,24 +101,39 @@ class TranslationPipelineSingleton {
   }
 }
 
-// Language code mapping for NLLB models
-// NLLB uses specific language codes (e.g., 'eng_Latn', 'zho_Hans')
-// We'll map common ISO codes to NLLB codes
-const LANGUAGE_CODE_MAP: Record<string, string> = {
-  en: 'eng_Latn',
-  zh: 'zho_Hans',
-  ja: 'jpn_Jpan',
-  ko: 'kor_Hang',
-  es: 'spa_Latn',
-  fr: 'fra_Latn',
-  de: 'deu_Latn',
-  pt: 'por_Latn',
+// Language name mapping for translation prompts
+const LANGUAGE_NAME_MAP: Record<string, string> = {
+  en: 'English',
+  zh: 'Chinese',
+  ja: 'Japanese',
+  ko: 'Korean',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  pt: 'Portuguese',
   // Add more mappings as needed
 }
 
-function mapLanguageCode(code: string): string {
-  return LANGUAGE_CODE_MAP[code] || code
+function getLanguageName(code: string): string {
+  return LANGUAGE_NAME_MAP[code] || code
 }
+
+// Build translation prompt for generative models
+function buildTranslationPrompt(
+  text: string,
+  sourceLanguage: string,
+  targetLanguage: string
+): string {
+  const srcLangName = getLanguageName(sourceLanguage)
+  const tgtLangName = getLanguageName(targetLanguage)
+
+  return `Translate the following text from ${srcLangName} to ${tgtLangName}. Only output the translation, without any explanation or additional text.
+
+Source text (${srcLangName}): ${text}
+
+Translation (${tgtLangName}):`
+}
+
 
 // Listen for messages from main thread
 self.addEventListener('message', async (event: MessageEvent<TranslationWorkerMessage>) => {
@@ -150,29 +166,50 @@ self.addEventListener('message', async (event: MessageEvent<TranslationWorkerMes
       }
 
       case 'translate': {
-        // Translate text
+        // Translate text using generative model with prompts
         if (!data?.text || !data?.srcLang || !data?.tgtLang) {
           throw new Error('Text, source language, and target language are required')
         }
 
         const modelName = data?.model || DEFAULT_TRANSLATION_MODEL
-        const translator = await TranslationPipelineSingleton.getInstance(modelName)
+        const generator = await TranslationPipelineSingleton.getInstance(modelName)
 
-        // Map language codes
-        const srcLang = mapLanguageCode(data.srcLang)
-        const tgtLang = mapLanguageCode(data.tgtLang)
+        // Build translation prompt
+        const prompt = buildTranslationPrompt(data.text, data.srcLang, data.tgtLang)
 
-        // Run translation
-        const result = await translator(data.text, {
-          src_lang: srcLang,
-          tgt_lang: tgtLang,
+        // Generate translation
+        const result = await generator(prompt, {
+          max_new_tokens: 512,
+          temperature: 0.3,
+          top_p: 0.9,
+          return_full_text: false,
         })
+
+        // Extract translated text from generated result
+        let translatedText = ''
+        if (Array.isArray(result) && result.length > 0) {
+          translatedText = result[0].generated_text || result[0].text || ''
+        } else if (result.generated_text) {
+          translatedText = result.generated_text
+        } else if (result.text) {
+          translatedText = result.text
+        }
+
+        // Clean up the translation (remove any prompt remnants)
+        translatedText = translatedText.trim()
+        // Remove the prompt if it was included in the output
+        if (translatedText.includes('Translation (')) {
+          const parts = translatedText.split('Translation (')
+          if (parts.length > 1) {
+            translatedText = parts[parts.length - 1].split(':')[1]?.trim() || translatedText
+          }
+        }
 
         // Send result back to main thread
         self.postMessage({
           type: 'result',
           data: {
-            translatedText: result[0]?.translation_text || result.translatedText || '',
+            translatedText: translatedText || data.text,
             sourceLanguage: data.srcLang,
             targetLanguage: data.tgtLang,
           },
