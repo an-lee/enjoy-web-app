@@ -5,6 +5,7 @@
  */
 
 import { pipeline, env } from '@huggingface/transformers'
+import { buildSmartTranslationPrompt } from '../../prompts'
 
 // Configure transformers.js
 env.allowLocalModels = false
@@ -104,64 +105,6 @@ class SmartTranslationPipelineSingleton {
   }
 }
 
-// Language name mapping for translation prompts
-const LANGUAGE_NAME_MAP: Record<string, string> = {
-  en: 'English',
-  zh: 'Chinese',
-  ja: 'Japanese',
-  ko: 'Korean',
-  es: 'Spanish',
-  fr: 'French',
-  de: 'German',
-  pt: 'Portuguese',
-  // Add more mappings as needed
-}
-
-function getLanguageName(code: string): string {
-  return LANGUAGE_NAME_MAP[code] || code
-}
-
-// Translation style descriptions
-const STYLE_DESCRIPTIONS: Record<string, string> = {
-  literal: 'Translate word-for-word, preserving the original structure as much as possible.',
-  natural: 'Translate naturally and fluently, making it sound like native ${tgtLangName}.',
-  casual: 'Translate in a casual, conversational style, using everyday language.',
-  formal: 'Translate in a formal, professional style, suitable for business or academic contexts.',
-  simplified: 'Translate in a simplified way, using easier vocabulary and shorter sentences, suitable for language learners.',
-  detailed: 'Translate with detailed explanations, including cultural context and nuances.',
-  custom: '', // Custom prompt will be provided
-}
-
-// Build smart translation prompt with style support
-function buildSmartTranslationPrompt(
-  text: string,
-  sourceLanguage: string,
-  targetLanguage: string,
-  style: string = 'natural',
-  customPrompt?: string
-): string {
-  const srcLangName = getLanguageName(sourceLanguage)
-  const tgtLangName = getLanguageName(targetLanguage)
-
-  let prompt = ''
-
-  if (style === 'custom' && customPrompt) {
-    // Use custom prompt if provided
-    prompt = `${customPrompt}\n\nSource text (${srcLangName}): ${text}\n\nTranslation (${tgtLangName}):`
-  } else {
-    // Use style-based prompt
-    const styleDesc = STYLE_DESCRIPTIONS[style] || STYLE_DESCRIPTIONS.natural
-    const styleInstruction = styleDesc.replace('${tgtLangName}', tgtLangName)
-
-    prompt = `Translate the following text from ${srcLangName} to ${tgtLangName}. ${styleInstruction} Only output the translation, without any explanation or additional text.
-
-Source text (${srcLangName}): ${text}
-
-Translation (${tgtLangName}):`
-  }
-
-  return prompt
-}
 
 // Listen for messages from main thread
 self.addEventListener('message', async (event: MessageEvent<SmartTranslationWorkerMessage>) => {
@@ -202,12 +145,12 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
         const modelName = data?.model || DEFAULT_SMART_TRANSLATION_MODEL
         const generator = await SmartTranslationPipelineSingleton.getInstance(modelName)
 
-        // Build translation prompt with style
+        // Build translation prompt with style (using shared prompt builder)
         const prompt = buildSmartTranslationPrompt(
           data.text,
           data.srcLang,
           data.tgtLang,
-          data.style || 'natural',
+          (data.style || 'natural') as any,
           data.customPrompt
         )
 

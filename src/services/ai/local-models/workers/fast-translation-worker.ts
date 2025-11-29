@@ -5,6 +5,7 @@
  */
 
 import { pipeline, env } from '@huggingface/transformers'
+import { mapToNLLBCode } from '../../prompts'
 
 // Configure transformers.js
 env.allowLocalModels = false
@@ -102,23 +103,6 @@ class FastTranslationPipelineSingleton {
   }
 }
 
-// Language code mapping for NLLB models
-// NLLB uses specific language codes (e.g., 'eng_Latn', 'zho_Hans')
-const LANGUAGE_CODE_MAP: Record<string, string> = {
-  en: 'eng_Latn',
-  zh: 'zho_Hans',
-  ja: 'jpn_Jpan',
-  ko: 'kor_Hang',
-  es: 'spa_Latn',
-  fr: 'fra_Latn',
-  de: 'deu_Latn',
-  pt: 'por_Latn',
-  // Add more mappings as needed
-}
-
-function mapLanguageCode(code: string): string {
-  return LANGUAGE_CODE_MAP[code] || code
-}
 
 // Listen for messages from main thread
 self.addEventListener('message', async (event: MessageEvent<FastTranslationWorkerMessage>) => {
@@ -159,9 +143,9 @@ self.addEventListener('message', async (event: MessageEvent<FastTranslationWorke
         const modelName = data?.model || DEFAULT_FAST_TRANSLATION_MODEL
         const translator = await FastTranslationPipelineSingleton.getInstance(modelName)
 
-        // Map language codes for NLLB
-        const srcLang = mapLanguageCode(data.srcLang)
-        const tgtLang = mapLanguageCode(data.tgtLang)
+        // Map language codes for NLLB (using shared utility)
+        const srcLang = mapToNLLBCode(data.srcLang)
+        const tgtLang = mapToNLLBCode(data.tgtLang)
 
         // Run translation
         const result = await translator(data.text, {

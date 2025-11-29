@@ -4,6 +4,7 @@
  */
 
 import { pipeline, env } from '@huggingface/transformers'
+import { buildDictionaryPrompt, parseDictionaryResponse } from '../../prompts'
 
 // Configure transformers.js
 env.allowLocalModels = false
@@ -102,78 +103,6 @@ class DictionaryPipelineSingleton {
   }
 }
 
-// Language name mapping for dictionary prompts
-const LANGUAGE_NAME_MAP: Record<string, string> = {
-  en: 'English',
-  zh: 'Chinese',
-  ja: 'Japanese',
-  ko: 'Korean',
-  es: 'Spanish',
-  fr: 'French',
-  de: 'German',
-  pt: 'Portuguese',
-  // Add more mappings as needed
-}
-
-function getLanguageName(code: string): string {
-  return LANGUAGE_NAME_MAP[code] || code
-}
-
-// Build dictionary lookup prompt for generative models
-function buildDictionaryPrompt(
-  word: string,
-  context: string | undefined,
-  sourceLanguage: string,
-  targetLanguage: string
-): string {
-  const srcLangName = getLanguageName(sourceLanguage)
-  const tgtLangName = getLanguageName(targetLanguage)
-
-  let prompt = `Provide a dictionary entry for the word "${word}" in ${srcLangName}, with translation and explanation in ${tgtLangName}.`
-
-  if (context) {
-    prompt += ` The word appears in this context: "${context}". Please provide a contextual explanation.`
-  }
-
-  prompt += `\n\nFormat your response as JSON with the following structure:
-{
-  "word": "${word}",
-  "definitions": [
-    {
-      "partOfSpeech": "noun/verb/adjective/etc",
-      "definition": "definition in ${srcLangName}",
-      "translation": "translation in ${tgtLangName}",
-      "example": "example sentence (optional)"
-    }
-  ],
-  "contextualExplanation": "explanation of how the word is used in the given context (if context provided)",
-  "etymology": "word origin (optional)"
-}
-
-Only output the JSON, without any additional text or explanation.`
-
-  return prompt
-}
-
-// Parse dictionary response from generative model
-function parseDictionaryResponse(response: string): any {
-  try {
-    // Try to extract JSON from the response
-    const jsonMatch = response.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0])
-    }
-    // If no JSON found, try parsing the whole response
-    return JSON.parse(response)
-  } catch (error) {
-    // If parsing fails, return a basic structure
-    return {
-      word: '',
-      definitions: [],
-      contextualExplanation: response,
-    }
-  }
-}
 
 // Listen for messages from main thread
 self.addEventListener('message', async (event: MessageEvent<DictionaryWorkerMessage>) => {

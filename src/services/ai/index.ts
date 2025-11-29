@@ -12,6 +12,7 @@ export * from './azure-speech'
 export * from './local-models'
 export * from './provider-selector'
 export * from './key-management'
+export * from './prompts'
 
 // Unified service manager
 import { translationService } from './translation'
