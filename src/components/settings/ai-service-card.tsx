@@ -25,21 +25,24 @@ import { Loader2, Download, CheckCircle2, AlertCircle, Circle, Info, ChevronDown
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   ASR_MODEL_OPTIONS,
-  TRANSLATION_MODEL_OPTIONS,
+  FAST_TRANSLATION_MODEL_OPTIONS,
+  SMART_TRANSLATION_MODEL_OPTIONS,
   getDefaultModel,
 } from '@/services/ai/model-options'
 
 interface AIServiceCardProps {
-  service: 'translation' | 'tts' | 'asr' | 'dictionary' | 'assessment'
+  service: 'fastTranslation' | 'smartTranslation' | 'translation' | 'tts' | 'asr' | 'dictionary' | 'assessment'
   title: string
   description: string
   providers: AIProvider[]
 }
 
 // Map service types to model types
-const SERVICE_TO_MODEL_TYPE: Record<string, 'asr' | 'translation' | 'dictionary' | 'tts'> = {
+const SERVICE_TO_MODEL_TYPE: Record<string, 'asr' | 'fastTranslation' | 'smartTranslation' | 'dictionary' | 'tts'> = {
   asr: 'asr',
-  translation: 'translation',
+  fastTranslation: 'fastTranslation',
+  smartTranslation: 'smartTranslation',
+  translation: 'smartTranslation', // Legacy: map to smartTranslation
   dictionary: 'dictionary',
   tts: 'tts',
 }
@@ -56,7 +59,12 @@ export function AIServiceCard({
   const { models, setModelLoading, setModelError } = useLocalModelsStore()
   const [initializing, setInitializing] = useState(false)
 
-  const currentProvider = aiServices[service].defaultProvider
+  // Handle backward compatibility: map 'translation' to 'smartTranslation'
+  const actualService = service === 'translation' ? 'smartTranslation' : service
+
+  // Get service config with fallback to default
+  const serviceConfig = aiServices[actualService as keyof typeof aiServices] as any
+  const currentProvider = serviceConfig?.defaultProvider || 'enjoy' // Default to 'enjoy' if not set
   const isLocal = currentProvider === 'local'
   const modelType = SERVICE_TO_MODEL_TYPE[service]
   const modelStatus = modelType ? models[modelType] : null
@@ -65,16 +73,18 @@ export function AIServiceCard({
   const availableModels =
     modelType === 'asr'
       ? ASR_MODEL_OPTIONS
-      : modelType === 'translation'
-        ? TRANSLATION_MODEL_OPTIONS
-        : []
+      : modelType === 'fastTranslation'
+        ? FAST_TRANSLATION_MODEL_OPTIONS
+        : modelType === 'smartTranslation'
+          ? SMART_TRANSLATION_MODEL_OPTIONS
+          : []
 
   // Get current selected model or default
   const currentModel =
     (modelType &&
-      (modelType === 'asr' || modelType === 'translation') &&
-      (aiServices[service as keyof typeof aiServices] as any)?.localModel) ||
-    (modelType && (modelType === 'asr' || modelType === 'translation')
+      (modelType === 'asr' || modelType === 'fastTranslation' || modelType === 'smartTranslation') &&
+      serviceConfig?.localModel) ||
+    (modelType && (modelType === 'asr' || modelType === 'fastTranslation' || modelType === 'smartTranslation')
       ? getDefaultModel(modelType)
       : '')
 
@@ -104,7 +114,7 @@ export function AIServiceCard({
     setModelLoading(modelType, true)
 
     try {
-      if (modelType === 'asr' || modelType === 'translation') {
+      if (modelType === 'asr' || modelType === 'fastTranslation' || modelType === 'smartTranslation') {
         await localModelService.initializeModel(modelType, { model: currentModel })
       } else {
         throw new Error(t('settings.ai.modelNotSupported', { defaultValue: 'Model type not supported for local execution' }))
@@ -118,7 +128,7 @@ export function AIServiceCard({
 
   const handleModelChange = (modelValue: string) => {
     if (modelType) {
-      updateLocalModel(service, modelValue)
+      updateLocalModel(actualService, modelValue)
       // If model is already loaded but different model is selected, reset status
       if (modelStatus?.loaded && modelStatus.modelName !== modelValue) {
         useLocalModelsStore.getState().resetModel(modelType)
@@ -139,11 +149,13 @@ export function AIServiceCard({
               {t('settings.ai.provider', { defaultValue: 'Provider' })}
             </Label>
             <Select
-              value={currentProvider}
-              onValueChange={(value) => updateAIServiceProvider(service, value as AIProvider)}
+              value={currentProvider || 'enjoy'}
+              onValueChange={(value) => {
+                updateAIServiceProvider(actualService, value as AIProvider)
+              }}
             >
               <SelectTrigger id={`${service}-provider`} className="w-full max-w-sm">
-                <SelectValue />
+                <SelectValue placeholder={t('settings.ai.selectProvider', { defaultValue: 'Select provider' })} />
               </SelectTrigger>
               <SelectContent>
                 {providers.includes('enjoy') && (

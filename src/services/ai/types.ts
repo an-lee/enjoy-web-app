@@ -14,7 +14,9 @@ export type AIProvider = 'enjoy' | 'byok' | 'local'
  * Service Types
  */
 export type AIServiceType =
-  | 'translation'
+  | 'fastTranslation'
+  | 'smartTranslation'
+  | 'translation' // Legacy: kept for backward compatibility
   | 'tts'
   | 'assessment'
   | 'dictionary'

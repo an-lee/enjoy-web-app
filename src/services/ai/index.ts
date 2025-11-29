@@ -3,7 +3,9 @@
  */
 
 export * from './types'
-export * from './translation'
+export * from './fast-translation'
+export * from './smart-translation'
+export * from './translation' // Legacy: keep for backward compatibility
 export * from './tts'
 export * from './assessment'
 export * from './dictionary'
@@ -15,14 +17,18 @@ export * from './key-management'
 export * from './prompts'
 
 // Unified service manager
-import { translationService } from './translation'
+import { fastTranslationService } from './fast-translation'
+import { smartTranslationService } from './smart-translation'
+import { translationService } from './translation' // Legacy: maps to smartTranslationService
 import { ttsService } from './tts'
 import { assessmentService } from './assessment'
 import { dictionaryService } from './dictionary'
 import { asrService } from './asr'
 
 export const aiServices = {
-  translation: translationService,
+  fastTranslation: fastTranslationService,
+  smartTranslation: smartTranslationService,
+  translation: translationService, // Legacy: for backward compatibility
   tts: ttsService,
   assessment: assessmentService,
   dictionary: dictionaryService,

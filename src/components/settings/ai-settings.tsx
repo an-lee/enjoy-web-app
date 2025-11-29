@@ -35,11 +35,20 @@ export function AISettings({ searchQuery, settingsByCategory }: AISettingsProps)
 
   return (
     <>
-      {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'translation')) && (
+      {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'fastTranslation')) && (
         <AIServiceCard
-          service="translation"
-          title={t('settings.ai.translation')}
-          description={t('settings.ai.translationDescription', { defaultValue: 'Configure translation service provider' })}
+          service="fastTranslation"
+          title={t('settings.ai.fastTranslation', { defaultValue: 'Fast Translation' })}
+          description={t('settings.ai.fastTranslationDescription', { defaultValue: 'Fast translation optimized for subtitle translation. Uses dedicated translation models for speed.' })}
+          providers={['enjoy', 'local', 'byok']}
+        />
+      )}
+
+      {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'smartTranslation')) && (
+        <AIServiceCard
+          service="smartTranslation"
+          title={t('settings.ai.smartTranslation', { defaultValue: 'Smart Translation' })}
+          description={t('settings.ai.smartTranslationDescription', { defaultValue: 'Smart translation with style support. Uses generative models for user-generated content translation.' })}
           providers={['enjoy', 'local', 'byok']}
         />
       )}
