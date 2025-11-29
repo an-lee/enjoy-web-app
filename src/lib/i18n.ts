@@ -23,11 +23,34 @@ const resources = {
   pt: { translation: pt },
 }
 
+// Supported languages
+const supportedLanguages = Object.keys(resources)
+
+// Check if user has a saved language preference
+// SSR-safe: only access localStorage on the client
+const hasSavedLanguagePreference = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+  try {
+    const stored = localStorage.getItem('enjoy-settings')
+    if (stored) {
+      const settings = JSON.parse(stored)
+      if (settings?.state?.preferredLanguage) {
+        return true
+      }
+    }
+  } catch {
+    // Ignore parsing errors
+  }
+  return false
+}
+
 // Get initial language from settings store if available
 // SSR-safe: only access localStorage on the client
-const getInitialLanguage = (): string => {
+const getInitialLanguage = (): string | undefined => {
   if (typeof window === 'undefined') {
-    return 'en' // Default for SSR
+    return undefined // Let LanguageDetector handle it for SSR
   }
   try {
     const stored = localStorage.getItem('enjoy-settings')
@@ -40,9 +63,10 @@ const getInitialLanguage = (): string => {
   } catch {
     // Ignore parsing errors
   }
-  return 'en'
+  return undefined // No saved preference, let LanguageDetector detect
 }
 
+const hasSavedPreference = hasSavedLanguagePreference()
 const initialLanguage = getInitialLanguage()
 
 i18n
@@ -50,7 +74,8 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: initialLanguage,
+    // Only set lng if we have a saved preference, otherwise let LanguageDetector handle it
+    ...(initialLanguage ? { lng: initialLanguage } : {}),
     fallbackLng: 'en',
     debug: import.meta.env.DEV,
     defaultNS: 'translation',
@@ -58,28 +83,56 @@ i18n
       escapeValue: false, // React already escapes values
     },
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      // If no saved preference, prioritize browser language detection
+      // Otherwise, use saved preference from localStorage
+      order: hasSavedPreference
+        ? ['localStorage', 'navigator', 'htmlTag']
+        : ['navigator', 'htmlTag', 'localStorage'],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
     },
     react: {
       useSuspense: false, // Disable suspense for better compatibility
     },
+    supportedLngs: supportedLanguages,
   })
 
-// After initialization, manually trigger language detection on client only
-// This ensures the language is detected after hydration, avoiding mismatch
-if (typeof window !== 'undefined') {
-  // Only detect if we don't have a stored preference
-  if (initialLanguage === 'en') {
-    // Small delay to ensure hydration is complete
-    setTimeout(() => {
-      const detected = i18n.services.languageDetector?.detect()
-      if (detected && detected !== 'en') {
-        i18n.changeLanguage(detected as string)
-      }
-    }, 0)
-  }
+// After initialization, sync detected language to settings store if no saved preference
+// This ensures the language is detected and saved for first-time users
+if (typeof window !== 'undefined' && !hasSavedPreference) {
+  // Small delay to ensure hydration is complete and i18n is fully initialized
+  setTimeout(() => {
+    const detected = i18n.language || i18n.services.languageDetector?.detect()
+
+    // Normalize language code (e.g., 'zh-CN' -> 'zh', 'en-US' -> 'en')
+    const normalizeLanguage = (lang: string | string[] | undefined): string => {
+      if (!lang) return 'en'
+      const langStr = Array.isArray(lang) ? lang[0] : lang
+      // Extract base language code (e.g., 'zh-CN' -> 'zh')
+      const baseLang = langStr.split('-')[0].toLowerCase()
+      // Check if we support this language, fallback to 'en' if not
+      return supportedLanguages.includes(baseLang) ? baseLang : 'en'
+    }
+
+    const normalizedLang = normalizeLanguage(detected)
+
+    // Only update if detected language is different from current
+    if (normalizedLang && normalizedLang !== i18n.language) {
+      i18n.changeLanguage(normalizedLang).then(() => {
+        // Sync to settings store
+        // Use dynamic import to avoid circular dependency
+        import('../stores/settings').then(({ useSettingsStore }) => {
+          const store = useSettingsStore.getState()
+          // Only update if still no saved preference (user might have changed it)
+          if (!hasSavedLanguagePreference()) {
+            store.setPreferredLanguage(normalizedLang)
+          }
+        }).catch(() => {
+          // Ignore errors if store is not available yet
+        })
+      })
+    }
+  }, 100)
 }
 
 export default i18n
