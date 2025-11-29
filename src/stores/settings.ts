@@ -7,16 +7,20 @@ interface AIServiceSettings {
   translation: {
     defaultProvider: AIProvider
     defaultStyle: string
+    localModel?: string // Model name when using local provider
   }
   tts: {
     defaultProvider: AIProvider
     preferredVoice?: string
+    localModel?: string
   }
   asr: {
     defaultProvider: AIProvider
+    localModel?: string // Model name when using local provider, e.g., 'Xenova/whisper-tiny'
   }
   dictionary: {
     defaultProvider: AIProvider
+    localModel?: string
   }
   assessment: {
     defaultProvider: AIProvider
@@ -43,6 +47,7 @@ interface SettingsState {
   setDailyGoal: (goal: number) => void
   setAIServiceSettings: (settings: Partial<AIServiceSettings>) => void
   updateAIServiceProvider: (service: keyof AIServiceSettings, provider: AIProvider) => void
+  updateLocalModel: (service: keyof AIServiceSettings, modelName: string) => void
 }
 
 const defaultAISettings: AIServiceSettings = {
@@ -91,6 +96,16 @@ export const useSettingsStore = create<SettingsState>()(
             [service]: {
               ...state.aiServices[service],
               defaultProvider: provider,
+            },
+          },
+        })),
+      updateLocalModel: (service, modelName) =>
+        set((state) => ({
+          aiServices: {
+            ...state.aiServices,
+            [service]: {
+              ...state.aiServices[service],
+              localModel: modelName,
             },
           },
         })),

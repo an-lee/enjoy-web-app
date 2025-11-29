@@ -86,7 +86,9 @@
       "modelNotSupported": "Model type not supported for local execution",
       "loadingTooltip": "Model is being downloaded and loaded",
       "loadedTooltip": "Model is ready to use",
-      "notLoadedTooltip": "Model needs to be downloaded and loaded before use"
+      "notLoadedTooltip": "Model needs to be downloaded and loaded before use",
+      "model": "Model",
+      "localModelPerformanceWarning": "Local models require high computer performance. If your device has low specifications, they may not work properly."
     }
   },
   "dashboard": {

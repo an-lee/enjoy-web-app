@@ -86,7 +86,9 @@
       "modelNotSupported": "此模型类型不支持本地执行",
       "loadingTooltip": "模型正在下载和加载中",
       "loadedTooltip": "模型已就绪，可以使用",
-      "notLoadedTooltip": "模型需要先下载和加载才能使用"
+      "notLoadedTooltip": "模型需要先下载和加载才能使用",
+      "model": "模型",
+      "localModelPerformanceWarning": "本地模型对电脑性能有较高要求，如果配置较低，可能无法正常使用。"
     }
   },
   "dashboard": {
