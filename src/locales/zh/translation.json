@@ -33,10 +33,47 @@
   },
   "settings": {
     "title": "设置",
+    "description": "管理您的应用设置",
+    "searchPlaceholder": "搜索设置...",
+    "noResults": "未找到设置",
+    "tabs": {
+      "general": "通用",
+      "appearance": "外观",
+      "language": "语言",
+      "ai": "AI 服务"
+    },
     "theme": "主题",
-    "language": "语言",
+    "themeDescription": "选择您喜欢的主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSystem": "跟随系统",
+    "uiLanguage": "界面语言",
+    "uiLanguageDescription": "选择界面显示语言",
+    "nativeLanguage": "母语",
+    "nativeLanguageDescription": "您的母语（用作翻译的目标语言）",
+    "learningLanguage": "学习语言",
+    "learningLanguageDescription": "您正在学习的语言",
     "dailyGoal": "每日目标",
-    "minutes": "分钟"
+    "dailyGoalDescription": "设置您的每日练习目标（分钟）",
+    "minutes": "分钟/天",
+    "ai": {
+      "translation": "翻译",
+      "translationDescription": "配置翻译服务提供商",
+      "tts": "语音合成",
+      "ttsDescription": "配置文本转语音服务提供商",
+      "asr": "语音识别",
+      "asrDescription": "配置自动语音识别服务提供商",
+      "dictionary": "词典",
+      "dictionaryDescription": "配置词典查询服务提供商",
+      "assessment": "发音评估",
+      "assessmentDescription": "配置发音评估服务提供商",
+      "provider": "提供商",
+      "providers": {
+        "enjoy": "Enjoy API",
+        "local": "本地（免费）",
+        "byok": "BYOK（即将推出）"
+      }
+    }
   },
   "dashboard": {
     "title": "仪表盘",

@@ -1,6 +1,7 @@
 /**
  * Pronunciation Assessment Service
  * Uses Azure Speech Services
+ * Note: Local mode is not supported for pronunciation assessment
  * Future support for BYOK (user-provided Azure keys)
  */
 
@@ -33,6 +34,7 @@ export interface AssessmentResponse {
 export const assessmentService = {
   /**
    * Assess pronunciation
+   * Note: Local mode is not supported - pronunciation assessment requires Azure Speech Services
    */
   async assess(
     request: AssessmentRequest

@@ -33,10 +33,47 @@
   },
   "settings": {
     "title": "設定",
+    "description": "アプリケーション設定を管理",
+    "searchPlaceholder": "設定を検索...",
+    "noResults": "設定が見つかりません",
+    "tabs": {
+      "general": "一般",
+      "appearance": "外観",
+      "language": "言語",
+      "ai": "AI サービス"
+    },
     "theme": "テーマ",
-    "language": "言語",
+    "themeDescription": "お好みのテーマを選択",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "themeSystem": "システム",
+    "uiLanguage": "インターフェース言語",
+    "uiLanguageDescription": "インターフェースの表示言語を選択",
+    "nativeLanguage": "母国語",
+    "nativeLanguageDescription": "あなたの母国語（翻訳の目標言語として使用）",
+    "learningLanguage": "学習言語",
+    "learningLanguageDescription": "現在学習している言語",
     "dailyGoal": "毎日の目標",
-    "minutes": "分"
+    "dailyGoalDescription": "毎日の練習目標を分単位で設定",
+    "minutes": "分/日",
+    "ai": {
+      "translation": "翻訳",
+      "translationDescription": "翻訳サービスプロバイダーを設定",
+      "tts": "音声合成",
+      "ttsDescription": "テキスト読み上げサービスプロバイダーを設定",
+      "asr": "音声認識",
+      "asrDescription": "自動音声認識サービスプロバイダーを設定",
+      "dictionary": "辞書",
+      "dictionaryDescription": "辞書検索サービスプロバイダーを設定",
+      "assessment": "発音評価",
+      "assessmentDescription": "発音評価サービスプロバイダーを設定",
+      "provider": "プロバイダー",
+      "providers": {
+        "enjoy": "Enjoy API",
+        "local": "ローカル（無料）",
+        "byok": "BYOK（近日公開）"
+      }
+    }
   },
   "dashboard": {
     "title": "ダッシュボード",

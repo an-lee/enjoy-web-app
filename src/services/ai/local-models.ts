@@ -34,6 +34,15 @@ export interface LocalDictionaryResult {
   contextualExplanation?: string
 }
 
+export interface LocalTTSResult {
+  audioBlob: Blob
+  format: string
+  duration?: number
+}
+
+// Note: Pronunciation assessment is not supported in local mode
+// It requires Azure Speech Services for accurate phoneme-level analysis
+
 /**
  * Local Model Service
  * Uses transformers.js to run models in the browser
@@ -89,6 +98,22 @@ export const localModelService = {
     // Use small LLM or pre-trained word vectors
 
     throw new Error('Not implemented: transformers.js dictionary integration needed')
+  },
+
+  /**
+   * Local TTS (using browser Web Speech API or transformers.js TTS models)
+   */
+  async synthesize(
+    text: string,
+    language: string,
+    voice?: string,
+    modelConfig?: LocalModelConfig
+  ): Promise<LocalTTSResult> {
+    // TODO: Implement local TTS
+    // Option 1: Use Web Speech API (browser built-in, limited voices)
+    // Option 2: Use transformers.js TTS models (e.g., Coqui TTS)
+
+    throw new Error('Not implemented: Local TTS integration needed')
   },
 }
 

@@ -34,15 +34,46 @@
   "settings": {
     "title": "Settings",
     "description": "Manage your application settings",
+    "searchPlaceholder": "Search settings...",
+    "noResults": "No settings found",
+    "tabs": {
+      "general": "General",
+      "appearance": "Appearance",
+      "language": "Language",
+      "ai": "AI Services"
+    },
     "theme": "Theme",
     "themeDescription": "Choose your preferred theme",
     "themeLight": "Light",
     "themeDark": "Dark",
     "themeSystem": "System",
-    "language": "Language",
-    "languageDescription": "Choose your preferred language",
+    "uiLanguage": "Interface Language",
+    "uiLanguageDescription": "Choose the interface language",
+    "nativeLanguage": "Native Language",
+    "nativeLanguageDescription": "Your native language (used as translation target language)",
+    "learningLanguage": "Learning Language",
+    "learningLanguageDescription": "The language you are currently learning",
     "dailyGoal": "Daily Goal",
-    "minutes": "minutes"
+    "dailyGoalDescription": "Set your daily practice goal in minutes",
+    "minutes": "minutes per day",
+    "ai": {
+      "translation": "Translation",
+      "translationDescription": "Configure translation service provider",
+      "tts": "Text-to-Speech",
+      "ttsDescription": "Configure text-to-speech service provider",
+      "asr": "Speech Recognition",
+      "asrDescription": "Configure automatic speech recognition service provider",
+      "dictionary": "Dictionary",
+      "dictionaryDescription": "Configure dictionary lookup service provider",
+      "assessment": "Pronunciation Assessment",
+      "assessmentDescription": "Configure pronunciation assessment service provider",
+      "provider": "Provider",
+      "providers": {
+        "enjoy": "Enjoy API",
+        "local": "Local (Free)",
+        "byok": "BYOK (Coming Soon)"
+      }
+    }
   },
   "dashboard": {
     "title": "Dashboard",

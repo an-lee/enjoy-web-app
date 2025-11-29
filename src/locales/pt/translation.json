@@ -33,10 +33,47 @@
   },
   "settings": {
     "title": "Configurações",
+    "description": "Gerenciar as configurações do seu aplicativo",
+    "searchPlaceholder": "Pesquisar configurações...",
+    "noResults": "Nenhuma configuração encontrada",
+    "tabs": {
+      "general": "Geral",
+      "appearance": "Aparência",
+      "language": "Idioma",
+      "ai": "Serviços de IA"
+    },
     "theme": "Tema",
-    "language": "Idioma",
+    "themeDescription": "Escolha seu tema preferido",
+    "themeLight": "Claro",
+    "themeDark": "Escuro",
+    "themeSystem": "Sistema",
+    "uiLanguage": "Idioma da Interface",
+    "uiLanguageDescription": "Escolha o idioma da interface",
+    "nativeLanguage": "Idioma Nativo",
+    "nativeLanguageDescription": "Seu idioma nativo (usado como idioma de destino para tradução)",
+    "learningLanguage": "Idioma de Aprendizado",
+    "learningLanguageDescription": "O idioma que você está aprendendo atualmente",
     "dailyGoal": "Meta Diária",
-    "minutes": "minutos"
+    "dailyGoalDescription": "Defina sua meta de prática diária em minutos",
+    "minutes": "minutos por dia",
+    "ai": {
+      "translation": "Tradução",
+      "translationDescription": "Configurar provedor de serviço de tradução",
+      "tts": "Texto para Voz",
+      "ttsDescription": "Configurar provedor de serviço de texto para voz",
+      "asr": "Reconhecimento de Voz",
+      "asrDescription": "Configurar provedor de serviço de reconhecimento de voz automático",
+      "dictionary": "Dicionário",
+      "dictionaryDescription": "Configurar provedor de serviço de consulta de dicionário",
+      "assessment": "Avaliação de Pronúncia",
+      "assessmentDescription": "Configurar provedor de serviço de avaliação de pronúncia",
+      "provider": "Provedor",
+      "providers": {
+        "enjoy": "Enjoy API",
+        "local": "Local (Gratuito)",
+        "byok": "BYOK (Em Breve)"
+      }
+    }
   },
   "dashboard": {
     "title": "Painel",

@@ -164,9 +164,13 @@ Free users can use browser-local models powered by `@huggingface/transformers`:
 
 -   **ASR**: Whisper models (tiny/small variants)
 -   **Translation**: M2M100 or similar translation models
+-   **TTS**: Web Speech API or transformers.js TTS models
 -   **Dictionary**: Small LLM models (if feasible)
+-   **Assessment**: Not supported - requires Azure Speech Services for accurate phoneme-level analysis
 
 Local models run in Web Workers to avoid blocking the UI. Model weights are cached in browser storage after first download.
+
+**Note**: Pronunciation assessment does not support local mode as it requires specialized Azure Speech Services for accurate phoneme-level pronunciation scoring.
 
 ## 5. BYOK (Bring Your Own Key) - Future
 

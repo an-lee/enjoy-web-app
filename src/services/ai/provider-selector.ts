@@ -29,12 +29,15 @@ export function selectProvider(
       return isPro ? 'enjoy' : 'local'
 
     case 'dictionary':
-      // Dictionary lookup may require larger models, free users also use cloud (with quota)
-      return 'enjoy'
+      // Dictionary lookup supports local mode, free users default to local
+      return isPro ? 'enjoy' : 'local'
 
     case 'tts':
+      // TTS supports local mode, free users default to local
+      return isPro ? 'enjoy' : 'local'
+
     case 'assessment':
-      // TTS and pronunciation assessment don't support local mode, must use cloud
+      // Pronunciation assessment doesn't support local mode, must use cloud
       return 'enjoy'
 
     default:

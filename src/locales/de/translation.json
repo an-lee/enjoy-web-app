@@ -33,10 +33,47 @@
   },
   "settings": {
     "title": "Einstellungen",
+    "description": "Verwalten Sie Ihre Anwendungseinstellungen",
+    "searchPlaceholder": "Einstellungen suchen...",
+    "noResults": "Keine Einstellungen gefunden",
+    "tabs": {
+      "general": "Allgemein",
+      "appearance": "Erscheinungsbild",
+      "language": "Sprache",
+      "ai": "KI-Dienste"
+    },
     "theme": "Design",
-    "language": "Sprache",
+    "themeDescription": "Wählen Sie Ihr bevorzugtes Design",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "themeSystem": "System",
+    "uiLanguage": "Oberflächensprache",
+    "uiLanguageDescription": "Wählen Sie die Sprache der Oberfläche",
+    "nativeLanguage": "Muttersprache",
+    "nativeLanguageDescription": "Ihre Muttersprache (wird als Zielsprache für Übersetzungen verwendet)",
+    "learningLanguage": "Lernsprache",
+    "learningLanguageDescription": "Die Sprache, die Sie derzeit lernen",
     "dailyGoal": "Tagesziel",
-    "minutes": "Minuten"
+    "dailyGoalDescription": "Legen Sie Ihr tägliches Übungsziel in Minuten fest",
+    "minutes": "Minuten pro Tag",
+    "ai": {
+      "translation": "Übersetzung",
+      "translationDescription": "Übersetzungsdienst-Anbieter konfigurieren",
+      "tts": "Text-zu-Sprache",
+      "ttsDescription": "Text-zu-Sprache-Dienst-Anbieter konfigurieren",
+      "asr": "Spracherkennung",
+      "asrDescription": "Automatischen Spracherkennungsdienst-Anbieter konfigurieren",
+      "dictionary": "Wörterbuch",
+      "dictionaryDescription": "Wörterbuch-Abfragedienst-Anbieter konfigurieren",
+      "assessment": "Aussprachebewertung",
+      "assessmentDescription": "Aussprachebewertungsdienst-Anbieter konfigurieren",
+      "provider": "Anbieter",
+      "providers": {
+        "enjoy": "Enjoy API",
+        "local": "Lokal (Kostenlos)",
+        "byok": "BYOK (Demnächst)"
+      }
+    }
   },
   "dashboard": {
     "title": "Dashboard",

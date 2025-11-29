@@ -33,10 +33,47 @@
   },
   "settings": {
     "title": "Paramètres",
+    "description": "Gérer les paramètres de votre application",
+    "searchPlaceholder": "Rechercher des paramètres...",
+    "noResults": "Aucun paramètre trouvé",
+    "tabs": {
+      "general": "Général",
+      "appearance": "Apparence",
+      "language": "Langue",
+      "ai": "Services IA"
+    },
     "theme": "Thème",
-    "language": "Langue",
+    "themeDescription": "Choisissez votre thème préféré",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeSystem": "Système",
+    "uiLanguage": "Langue de l'Interface",
+    "uiLanguageDescription": "Choisissez la langue de l'interface",
+    "nativeLanguage": "Langue Maternelle",
+    "nativeLanguageDescription": "Votre langue maternelle (utilisée comme langue cible de traduction)",
+    "learningLanguage": "Langue d'Apprentissage",
+    "learningLanguageDescription": "La langue que vous apprenez actuellement",
     "dailyGoal": "Objectif Quotidien",
-    "minutes": "minutes"
+    "dailyGoalDescription": "Définissez votre objectif de pratique quotidienne en minutes",
+    "minutes": "minutes par jour",
+    "ai": {
+      "translation": "Traduction",
+      "translationDescription": "Configurer le fournisseur de service de traduction",
+      "tts": "Synthèse Vocale",
+      "ttsDescription": "Configurer le fournisseur de service de synthèse vocale",
+      "asr": "Reconnaissance Vocale",
+      "asrDescription": "Configurer le fournisseur de service de reconnaissance vocale automatique",
+      "dictionary": "Dictionnaire",
+      "dictionaryDescription": "Configurer le fournisseur de service de consultation de dictionnaire",
+      "assessment": "Évaluation de la Prononciation",
+      "assessmentDescription": "Configurer le fournisseur de service d'évaluation de la prononciation",
+      "provider": "Fournisseur",
+      "providers": {
+        "enjoy": "Enjoy API",
+        "local": "Local (Gratuit)",
+        "byok": "BYOK (Bientôt disponible)"
+      }
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",

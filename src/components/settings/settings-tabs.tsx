@@ -1,0 +1,68 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Settings as SettingsIcon, Languages, Brain, Palette } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { GeneralSettings } from './general-settings'
+import { AppearanceSettings } from './appearance-settings'
+import { LanguageSettings } from './language-settings'
+import { AISettings } from './ai-settings'
+
+interface SettingsTabsProps {
+  activeTab: string
+  onTabChange: (tab: string) => void
+  searchQuery: string
+  settingsByCategory: {
+    general: any[]
+    appearance: any[]
+    language: any[]
+    ai: any[]
+  }
+}
+
+export function SettingsTabs({
+  activeTab,
+  onTabChange,
+  searchQuery,
+  settingsByCategory,
+}: SettingsTabsProps) {
+  const { t } = useTranslation()
+
+  return (
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="general" className="flex items-center gap-2">
+          <SettingsIcon className="h-4 w-4" />
+          {t('settings.tabs.general', { defaultValue: 'General' })}
+        </TabsTrigger>
+        <TabsTrigger value="appearance" className="flex items-center gap-2">
+          <Palette className="h-4 w-4" />
+          {t('settings.tabs.appearance', { defaultValue: 'Appearance' })}
+        </TabsTrigger>
+        <TabsTrigger value="language" className="flex items-center gap-2">
+          <Languages className="h-4 w-4" />
+          {t('settings.tabs.language', { defaultValue: 'Language' })}
+        </TabsTrigger>
+        <TabsTrigger value="ai" className="flex items-center gap-2">
+          <Brain className="h-4 w-4" />
+          {t('settings.tabs.ai', { defaultValue: 'AI Services' })}
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="general" className="space-y-6 mt-6">
+        <GeneralSettings searchQuery={searchQuery} settingsByCategory={settingsByCategory} />
+      </TabsContent>
+
+      <TabsContent value="appearance" className="space-y-6 mt-6">
+        <AppearanceSettings searchQuery={searchQuery} settingsByCategory={settingsByCategory} />
+      </TabsContent>
+
+      <TabsContent value="language" className="space-y-6 mt-6">
+        <LanguageSettings searchQuery={searchQuery} settingsByCategory={settingsByCategory} />
+      </TabsContent>
+
+      <TabsContent value="ai" className="space-y-6 mt-6">
+        <AISettings searchQuery={searchQuery} settingsByCategory={settingsByCategory} />
+      </TabsContent>
+    </Tabs>
+  )
+}
+

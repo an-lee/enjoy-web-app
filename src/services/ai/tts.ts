@@ -1,11 +1,12 @@
 /**
  * Text-to-Speech Service (TTS)
- * Supports OpenAI-compatible API and Azure Speech
+ * Supports OpenAI-compatible API, Azure Speech, and local models
  * Future support for BYOK (user-provided keys)
  */
 
 import { apiClient } from '@/lib/api/client'
 import { azureSpeechService } from './azure-speech'
+import { localModelService } from './local-models'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 
 export type TTSProvider = 'openai' | 'azure'
@@ -36,7 +37,44 @@ export const ttsService = {
     request: TTSRequest
   ): Promise<AIServiceResponse<TTSResponse>> {
     const provider = request.provider || 'openai'
+    const useLocal = request.config?.provider === 'local'
     const useBYOK = request.config?.provider === 'byok'
+
+    // Local mode: use transformers.js or Web Speech API
+    if (useLocal) {
+      try {
+        const result = await localModelService.synthesize(
+          request.text,
+          request.language,
+          request.voice,
+          request.config?.localModel
+        )
+        return {
+          success: true,
+          data: {
+            audioBlob: result.audioBlob,
+            format: result.format,
+            duration: result.duration,
+          },
+          metadata: {
+            serviceType: 'tts',
+            provider: 'local',
+          },
+        }
+      } catch (error: any) {
+        return {
+          success: false,
+          error: {
+            code: 'LOCAL_TTS_ERROR',
+            message: error.message || 'Local TTS failed',
+          },
+          metadata: {
+            serviceType: 'tts',
+            provider: 'local',
+          },
+        }
+      }
+    }
 
     // Azure Speech special handling
     if (provider === 'azure') {

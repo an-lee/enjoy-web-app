@@ -33,10 +33,47 @@
   },
   "settings": {
     "title": "설정",
+    "description": "애플리케이션 설정 관리",
+    "searchPlaceholder": "설정 검색...",
+    "noResults": "설정을 찾을 수 없습니다",
+    "tabs": {
+      "general": "일반",
+      "appearance": "외관",
+      "language": "언어",
+      "ai": "AI 서비스"
+    },
     "theme": "테마",
-    "language": "언어",
+    "themeDescription": "선호하는 테마 선택",
+    "themeLight": "라이트",
+    "themeDark": "다크",
+    "themeSystem": "시스템",
+    "uiLanguage": "인터페이스 언어",
+    "uiLanguageDescription": "인터페이스 표시 언어 선택",
+    "nativeLanguage": "모국어",
+    "nativeLanguageDescription": "당신의 모국어 (번역 대상 언어로 사용)",
+    "learningLanguage": "학습 언어",
+    "learningLanguageDescription": "현재 학습 중인 언어",
     "dailyGoal": "일일 목표",
-    "minutes": "분"
+    "dailyGoalDescription": "일일 연습 목표를 분 단위로 설정",
+    "minutes": "분/일",
+    "ai": {
+      "translation": "번역",
+      "translationDescription": "번역 서비스 제공업체 설정",
+      "tts": "음성 합성",
+      "ttsDescription": "텍스트 음성 변환 서비스 제공업체 설정",
+      "asr": "음성 인식",
+      "asrDescription": "자동 음성 인식 서비스 제공업체 설정",
+      "dictionary": "사전",
+      "dictionaryDescription": "사전 조회 서비스 제공업체 설정",
+      "assessment": "발음 평가",
+      "assessmentDescription": "발음 평가 서비스 제공업체 설정",
+      "provider": "제공업체",
+      "providers": {
+        "enjoy": "Enjoy API",
+        "local": "로컬 (무료)",
+        "byok": "BYOK (출시 예정)"
+      }
+    }
   },
   "dashboard": {
     "title": "대시보드",
