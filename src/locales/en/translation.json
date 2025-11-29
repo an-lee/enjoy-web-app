@@ -72,7 +72,21 @@
         "enjoy": "Enjoy API",
         "local": "Local (Free)",
         "byok": "BYOK (Coming Soon)"
-      }
+      },
+      "modelStatus": "Model Status",
+      "currentModel": "Current Model",
+      "status": "Status",
+      "noModel": "Not loaded",
+      "loading": "Loading...",
+      "loaded": "Loaded",
+      "notLoaded": "Not loaded",
+      "downloading": "Downloading...",
+      "initializing": "Initializing...",
+      "downloadModel": "Download & Load Model",
+      "modelNotSupported": "Model type not supported for local execution",
+      "loadingTooltip": "Model is being downloaded and loaded",
+      "loadedTooltip": "Model is ready to use",
+      "notLoadedTooltip": "Model needs to be downloaded and loaded before use"
     }
   },
   "dashboard": {

@@ -72,7 +72,21 @@
         "enjoy": "Enjoy API",
         "local": "本地（免费）",
         "byok": "BYOK（即将推出）"
-      }
+      },
+      "modelStatus": "模型状态",
+      "currentModel": "当前模型",
+      "status": "状态",
+      "noModel": "未加载",
+      "loading": "加载中...",
+      "loaded": "已加载",
+      "notLoaded": "未加载",
+      "downloading": "下载中...",
+      "initializing": "初始化中...",
+      "downloadModel": "下载并加载模型",
+      "modelNotSupported": "此模型类型不支持本地执行",
+      "loadingTooltip": "模型正在下载和加载中",
+      "loadedTooltip": "模型已就绪，可以使用",
+      "notLoadedTooltip": "模型需要先下载和加载才能使用"
     }
   },
   "dashboard": {
