@@ -9,7 +9,6 @@
 import type { LocalModelConfig } from '../types'
 import { useLocalModelsStore } from '@/stores/local-models'
 import { transcribe } from './services/asr-service'
-import { fastTranslate } from './services/fast-translation-service'
 import { smartTranslate } from './services/smart-translation-service'
 import { lookup } from './services/dictionary-service'
 import { synthesize } from './services/tts-service'
@@ -33,12 +32,6 @@ export const localModelService = {
    * Must run in Web Worker to avoid blocking UI
    */
   transcribe,
-
-  /**
-   * Fast Translation (using dedicated translation models like NLLB)
-   * Optimized for speed, used for subtitle translation
-   */
-  fastTranslate,
 
   /**
    * Smart Translation (using generative models with style support)

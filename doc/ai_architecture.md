@@ -8,10 +8,10 @@ This document provides a comprehensive overview of the AI Service architecture, 
 
 ### 1. OpenAI-Compatible API Standard
 
-**Enjoy API** (our cloud service) follows OpenAI-compatible API specifications. This ensures:
-- Easy integration with existing tools and libraries
-- Familiar API patterns for developers
-- Simple provider switching (backend can use OpenAI, Cloudflare, or others)
+**Enjoy API** (our cloud service) follows OpenAI-compatible API specifications for most services:
+- Smart Translation, ASR, TTS, Dictionary (contextual) - OpenAI-compatible
+- Fast Translation, Dictionary (basic) - Custom Enjoy API (FREE)
+- Pronunciation Assessment - Azure Speech Services (token-based)
 
 ### 2. Three-Tier Provider Model
 
@@ -23,15 +23,32 @@ This document provides a comprehensive overview of the AI Service architecture, 
                  │             │             │
         ┌────────▼─────┐  ┌───▼────┐  ┌─────▼──────┐
         │  Enjoy API   │  │ Local  │  │    BYOK    │
-        │   (Cloud)    │  │ Models │  │   (✅)     │
+        │   (Cloud)    │  │ Models │  │  (FUTURE)  │
         └──────────────┘  └────────┘  └────────────┘
 ```
 
-- **Enjoy API**: Managed cloud service with quotas
-- **Local**: Browser-based transformers.js models
-- **BYOK**: User's own API keys (OpenAI, Claude, Gemini, Azure, Custom)
+- **Enjoy API**: Managed cloud service (OpenAI-compatible + FREE services)
+- **Local**: Browser-based transformers.js models (offline/free)
+- **BYOK**: User's own API keys (FUTURE - interface reserved)
 
-### 3. Unified Prompt Management
+### 3. Service Support Matrix
+
+| Service | Enjoy | Local | BYOK (Future) | Cost |
+|---------|-------|-------|---------------|------|
+| **Fast Translation** | ✅ | ❌ | ❌ | **FREE** |
+| **Smart Translation** | ✅ | ✅ | ✅ | Quota/BYOK |
+| **Dictionary (basic)** | ✅ | ❌ | ❌ | **FREE** |
+| **Dictionary (contextual)** | ✅ | ✅ | ✅ | Quota/BYOK |
+| **ASR (Whisper)** | ✅ | ✅ | ✅ | Quota/BYOK |
+| **TTS** | ✅ | ✅ | ✅ | Quota/BYOK |
+| **Assessment (Azure)** | ✅ | ❌ | ✅ (Azure only) | Quota/BYOK |
+
+**Key:**
+- **FREE**: Always available without configuration
+- **Quota**: Requires Enjoy account with quota
+- **BYOK**: Bring Your Own Key (future implementation)
+
+### 4. Unified Prompt Management
 
 All prompts are centrally managed in `/src/services/ai/prompts/`:
 
@@ -55,37 +72,12 @@ prompts/
 const prompt = buildSmartTranslationPrompt(text, 'en', 'zh', 'natural')
 
 // Works with:
-- Enjoy API (Cloudflare Workers AI)
+- Enjoy API (OpenAI-compatible)
 - Local (transformers.js)
 - BYOK OpenAI (GPT-4)
 - BYOK Claude (Claude 3)
 - BYOK Gemini (Gemini Pro)
 ```
-
-### 4. BYOK Provider Adapters
-
-BYOK implementation uses **Vercel AI SDK** for unified LLM access:
-
-```typescript
-// Unified interface for all LLM providers
-import { generateText } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
-import { createAnthropic } from '@ai-sdk/anthropic'
-import { createGoogleGenerativeAI } from '@ai-sdk/google'
-
-// Single function works with all providers
-const result = await generateText({
-  model: provider(modelName),
-  prompt: buildSmartTranslationPrompt(...),
-})
-```
-
-**Supported BYOK Providers**:
-- **OpenAI**: GPT, Whisper, TTS
-- **Claude**: Anthropic Claude models
-- **Gemini**: Google Gemini models
-- **Azure**: Azure OpenAI + Azure Speech
-- **Custom**: Any OpenAI-compatible endpoint
 
 ## Service Architecture
 
@@ -94,24 +86,19 @@ const result = await generateText({
 ```
 User Request
     │
-    ├─ provider: 'enjoy' (default)
-    │   └─> Enjoy API (OpenAI-compatible)
+    ├─ Fast Translation → Always Enjoy API (FREE)
+    ├─ Basic Dictionary → Always Enjoy API (FREE)
     │
-    ├─ provider: 'local'
-    │   └─> transformers.js (browser-based)
-    │
-    └─ provider: 'byok'
-        └─> BYOK Services
-            ├─ LLM (translation, dictionary)
-            │   └─> Vercel AI SDK
-            │       ├─> OpenAI
-            │       ├─> Claude
-            │       ├─> Gemini
-            │       └─> Custom
-            │
-            └─ Speech (ASR, TTS)
-                ├─> OpenAI SDK
-                └─> Azure Speech SDK
+    └─ Other Services (Smart Translation, ASR, TTS, etc.)
+        │
+        ├─ provider: 'enjoy' (default)
+        │   └─> Enjoy API (OpenAI-compatible or Azure token)
+        │
+        ├─ provider: 'local'
+        │   └─> Browser transformers.js (Web Workers)
+        │
+        └─ provider: 'byok' (FUTURE)
+            └─> Vercel AI SDK / Official SDKs
 ```
 
 ### Type System
@@ -125,12 +112,12 @@ type BYOKProvider = 'openai' | 'google' | 'claude' | 'azure' | 'custom'
 
 // Service Types
 type AIServiceType =
-  | 'fastTranslation'    // Quick translation (dedicated models)
+  | 'fastTranslation'    // Quick translation (FREE)
   | 'smartTranslation'   // Style-aware translation (LLM)
   | 'tts'                // Text-to-speech
   | 'asr'                // Speech-to-text
-  | 'dictionary'         // Contextual word lookup
-  | 'assessment'         // Pronunciation assessment
+  | 'dictionary'         // Word lookup (basic=FREE, contextual=AI)
+  | 'assessment'         // Pronunciation assessment (Azure only)
 
 // Configuration
 interface AIServiceConfig {
@@ -148,81 +135,227 @@ interface BYOKConfig {
 }
 ```
 
-## Service Implementation Patterns
+## Services Overview
 
-### Unified Service Pattern
+### 1. Fast Translation (FREE)
 
-Each service follows this pattern:
+- **File**: `fast-translation.ts`
+- **Purpose**: Quick subtitle translation using dedicated translation models
+- **Models**: M2M100, NLLB
+- **Providers**: **Enjoy API only** (no local/BYOK)
+- **Cost**: **Always FREE**
 
 ```typescript
-export const serviceName = {
-  async operation(request: ServiceRequest): Promise<AIServiceResponse<ServiceResponse>> {
-    const useLocal = request.config?.provider === 'local'
-    const useBYOK = request.config?.provider === 'byok'
-
-    // 1. Local mode
-    if (useLocal) {
-      return localModelService.operation(...)
-    }
-
-    // 2. BYOK mode
-    if (useBYOK && request.config?.byok) {
-      return byokService.operation(..., request.config.byok)
-    }
-
-    // 3. Enjoy API (default)
-    return apiClient.post('/api/v1/services/...', request)
+export const fastTranslationService = {
+  async translate(request: FastTranslationRequest) {
+    // Direct API call - always free
+    return await apiClient.post('/api/v1/services/fast-translation', request)
   }
 }
 ```
 
-### Unified Error Handling
+### 2. Smart Translation
+
+- **File**: `smart-translation.ts`
+- **Purpose**: Style-aware translation for user-generated content
+- **Models**: Generative LLMs
+- **Providers**: Enjoy API, Local, BYOK (OpenAI, Claude, Gemini, Azure, Custom)
+- **Styles**: literal, natural, casual, formal, simplified, detailed, custom
 
 ```typescript
-return {
-  success: false,
-  error: {
-    code: 'SERVICE_ERROR',
-    message: error.message,
-  },
-  metadata: {
-    serviceType: 'serviceName',
-    provider: request.config?.provider || 'enjoy',
-  },
+export const smartTranslationService = {
+  async translate(request) {
+    if (request.config?.provider === 'local') {
+      return localModelService.translate(...)
+    }
+    if (request.config?.provider === 'byok') {
+      return smartTranslateWithBYOK(...)  // FUTURE
+    }
+    return smartTranslateWithEnjoy(...)
+  }
 }
 ```
 
-## Services Overview
+### 3. Dictionary Lookup (Two-Tier)
 
-### 1. Smart Translation
-- **Purpose**: Style-aware translation for user-generated content
-- **Models**: Generative LLMs
-- **Providers**: Enjoy API, Local, BYOK (all LLM providers)
-- **Styles**: literal, natural, casual, formal, simplified, detailed, custom
+- **File**: `dictionary.ts`
+- **Purpose**: Word definitions and contextual explanations
 
-### 2. Fast Translation
-- **Purpose**: Quick subtitle translation
-- **Models**: Dedicated translation models (M2M100, NLLB)
-- **Providers**: Enjoy API, Local
-- **Note**: Optimized for speed, no style support
+#### Basic Lookup (FREE)
+- Simple definitions without AI
+- Always uses Enjoy API
+- Returns: definitions, translations, part of speech
 
-### 3. Dictionary Lookup
-- **Purpose**: Contextual word definitions
-- **Models**: Generative LLMs
-- **Providers**: Enjoy API, Local, BYOK (all LLM providers)
+#### Contextual Explanation (AI)
+- Context-aware detailed analysis
+- Uses LLM (same principle as smart translation)
+- **Providers**: Enjoy API, Local, BYOK
+
+```typescript
+export const dictionaryService = {
+  // Basic lookup - always FREE
+  async lookupBasic(word, sourceLanguage, targetLanguage) {
+    return await apiClient.post('/api/v1/services/dictionary/basic', ...)
+  },
+
+  // Contextual explanation - needs AI
+  async lookup(request) {
+    if (request.config?.provider === 'local') {
+      return localModelService.lookup(...)
+    }
+    if (request.config?.provider === 'byok') {
+      return dictionaryLookupWithBYOK(...)  // FUTURE
+    }
+    return dictionaryLookupWithEnjoy(...)
+  }
+}
+```
 
 ### 4. ASR (Speech-to-Text)
-- **Purpose**: Convert audio to text
-- **Providers**: Enjoy API (Whisper), Local (transformers.js), BYOK (OpenAI, Azure)
+
+- **File**: `asr.ts`
+- **Purpose**: Convert audio to timestamped text
+- **Primary Model**: Whisper
+- **Providers**: Enjoy API (OpenAI-compatible), Local (transformers.js), BYOK (OpenAI, Azure)
+
+```typescript
+export const asrService = {
+  async transcribe(request) {
+    if (request.config?.provider === 'local') {
+      return localModelService.transcribe(...)
+    }
+    if (request.config?.provider === 'byok') {
+      return transcribeWithBYOK(...)  // FUTURE
+    }
+    return transcribeWithEnjoy(...)
+  }
+}
+```
 
 ### 5. TTS (Text-to-Speech)
-- **Purpose**: Convert text to audio
-- **Providers**: Enjoy API (OpenAI), Azure (via token), Local (Web Speech API), BYOK (OpenAI, Azure)
 
-### 6. Pronunciation Assessment
+- **File**: `tts.ts`
+- **Purpose**: Convert text to audio for shadowing practice
+- **Providers**: Enjoy API (OpenAI-compatible), Local (Web Speech API), BYOK (OpenAI, Azure)
+
+```typescript
+export const ttsService = {
+  async synthesize(request) {
+    if (request.config?.provider === 'local') {
+      return localModelService.synthesize(...)
+    }
+    if (request.config?.provider === 'byok') {
+      return synthesizeWithBYOK(...)  // FUTURE
+    }
+    return synthesizeWithEnjoy(...)
+  }
+}
+```
+
+### 6. Pronunciation Assessment (Azure Only)
+
+- **File**: `assessment.ts`
 - **Purpose**: Evaluate pronunciation accuracy
-- **Providers**: Enjoy API (Azure Speech), BYOK (Azure only)
-- **Note**: Only Azure supports this service
+- **Provider**: **Azure Speech only** (only provider that supports phoneme-level assessment)
+- **Modes**:
+  1. **Enjoy Mode**: Enjoy API provides short-lived Azure Speech token
+  2. **BYOK Mode** (FUTURE): User provides own Azure Speech subscription key
+- **Implementation**: Frontend uses Azure Speech SDK directly with token or key
+
+```typescript
+export const assessmentService = {
+  async assess(request) {
+    if (request.config?.provider === 'byok' && request.config.byok.provider === 'azure') {
+      return azureSpeechService.assessPronunciationWithKey(...)  // FUTURE
+    }
+    // Default: use Enjoy API to get Azure token
+    return azureSpeechService.assessPronunciation(...)
+  }
+}
+```
+
+## File Structure
+
+```
+src/services/ai/
+├── types.ts                    # Core type definitions
+├── types-responses.ts          # Response type definitions
+├── index.ts                    # Unified exports
+│
+├── prompts/                    # Centralized prompts
+│   ├── index.ts
+│   ├── language-utils.ts
+│   ├── translation-prompts.ts
+│   └── dictionary-prompts.ts
+│
+├── enjoy/                      # Enjoy API implementation
+│   ├── index.ts
+│   ├── llm-service.ts          # Smart Translation, Dictionary (contextual)
+│   ├── speech-service.ts       # ASR, TTS
+│   └── azure-speech.ts         # Azure Speech token + SDK
+│
+├── local/                      # Local model implementation
+│   ├── index.ts
+│   ├── config.ts
+│   ├── services/               # Service implementations
+│   └── workers/                # Web Worker implementations
+│
+├── byok/                       # BYOK implementation (FUTURE)
+│   ├── index.ts
+│   ├── llm-service.ts          # Smart Translation, Dictionary (with Vercel AI SDK)
+│   └── speech-service.ts       # ASR, TTS (with OpenAI SDK)
+│
+├── fast-translation.ts         # Fast Translation (Enjoy only, FREE)
+├── smart-translation.ts        # Smart translation router
+├── dictionary.ts               # Dictionary router (basic=free, contextual=ai)
+├── asr.ts                      # ASR router
+├── tts.ts                      # TTS router
+├── assessment.ts               # Assessment router (Azure only)
+├── provider-adapters.ts        # Provider adapter interfaces (for BYOK)
+├── provider-selector.ts        # Provider selection logic
+├── key-management.ts           # API key management (BYOK, future)
+└── translation.ts              # Legacy translation service
+```
+
+## BYOK (Bring Your Own Key) - Future Implementation
+
+### Supported BYOK Providers
+
+1. **OpenAI**: GPT models (translation, dictionary), Whisper (ASR), TTS
+2. **Google (Gemini)**: Gemini models for translation and dictionary
+3. **Claude (Anthropic)**: Claude models for translation and dictionary
+4. **Azure**: Azure OpenAI Service, Azure Speech (ASR, TTS, Assessment)
+5. **Custom**: Any OpenAI-compatible endpoint
+
+### BYOK Implementation
+
+BYOK uses **Vercel AI SDK** for unified LLM access and **official SDKs** for speech services:
+
+```json
+{
+  "dependencies": {
+    "ai": "^5.0.0",                    // Vercel AI SDK core
+    "@ai-sdk/openai": "^2.0.0",        // OpenAI provider
+    "@ai-sdk/anthropic": "^2.0.0",     // Claude provider
+    "@ai-sdk/google": "^2.0.0",        // Gemini provider
+    "openai": "^6.0.0"                 // OpenAI SDK for speech
+  }
+}
+```
+
+### BYOK Service Support Matrix
+
+| Service | OpenAI | Claude | Gemini | Azure | Custom |
+|---------|--------|--------|--------|-------|--------|
+| Smart Translation | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Dictionary (contextual) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ASR | ✅ | ❌ | ❌ | ✅ | ✅ |
+| TTS | ✅ | ❌ | ❌ | ✅ | ✅ |
+| Assessment | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Fast Translation | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Dictionary (basic) | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+**Note**: Fast translation and basic dictionary are always free via Enjoy API.
 
 ## Best Practices
 
@@ -242,7 +375,7 @@ const prompt = `Translate ${text} from ${srcLang} to ${tgtLang}`
 ```typescript
 // ✅ Good: Handle all modes
 if (useLocal) { /* local logic */ }
-else if (useBYOK) { /* BYOK logic */ }
+else if (useBYOK) { /* BYOK logic - FUTURE */ }
 else { /* Enjoy API logic */ }
 
 // ❌ Bad: Assume Enjoy API only
@@ -263,62 +396,18 @@ return {
 return result
 ```
 
-## File Structure
-
-```
-src/services/ai/
-├── types.ts                    # Core type definitions
-├── types-responses.ts          # Response type definitions
-├── index.ts                    # Unified exports
-│
-├── prompts/                    # Centralized prompts
-│   ├── index.ts
-│   ├── language-utils.ts
-│   ├── translation-prompts.ts
-│   └── dictionary-prompts.ts
-│
-├── enjoy/                      # Enjoy API implementation
-│   ├── index.ts
-│   ├── llm-service.ts          # LLM services (translation, dictionary)
-│   ├── speech-service.ts       # Speech services (ASR, TTS)
-│   ├── fast-translation.ts     # Fast translation (dedicated models)
-│   └── azure-speech.ts         # Azure Speech SDK integration
-│
-├── local/                      # Local model implementation
-│   ├── index.ts
-│   ├── config.ts
-│   ├── services/
-│   └── workers/
-│
-├── byok/                       # BYOK implementation
-│   ├── index.ts
-│   ├── llm-service.ts          # LLM services (translation, dictionary)
-│   └── speech-service.ts       # Speech services (ASR, TTS)
-│
-├── smart-translation.ts        # Smart translation service (routes to enjoy/local/byok)
-├── fast-translation.ts         # Fast translation service (routes to enjoy/local)
-├── dictionary.ts               # Dictionary service (routes to enjoy/local/byok)
-├── asr.ts                      # ASR service (routes to enjoy/local/byok)
-├── tts.ts                      # TTS service (routes to enjoy/local/byok)
-├── assessment.ts               # Pronunciation assessment service (routes to enjoy/byok)
-├── provider-adapters.ts        # Provider adapter interfaces
-├── provider-selector.ts        # Provider selection logic
-├── key-management.ts           # API key management (future)
-└── translation.ts              # Legacy translation service
-```
-
 ## Technology Stack
 
 ### Core Dependencies
 
 ```json
 {
-  "ai": "^5.0.0",                    // Vercel AI SDK
-  "@ai-sdk/openai": "^2.0.0",        // OpenAI provider
-  "@ai-sdk/anthropic": "^2.0.0",     // Claude provider
-  "@ai-sdk/google": "^2.0.0",        // Gemini provider
-  "openai": "^6.0.0",                // OpenAI SDK (speech)
-  "@huggingface/transformers": "^3.0.0"  // Local models
+  "ai": "^5.0.0",                          // Vercel AI SDK (for BYOK)
+  "@ai-sdk/openai": "^2.0.0",              // OpenAI provider (for BYOK)
+  "@ai-sdk/anthropic": "^2.0.0",           // Claude provider (for BYOK)
+  "@ai-sdk/google": "^2.0.0",              // Gemini provider (for BYOK)
+  "openai": "^6.0.0",                      // OpenAI SDK for speech (for BYOK)
+  "@huggingface/transformers": "^3.0.0"    // Local models
 }
 ```
 
@@ -326,10 +415,11 @@ src/services/ai/
 
 The AI Service architecture is designed for:
 
+- **Clarity**: Clear separation of FREE services vs. AI-powered services
 - **Flexibility**: Multiple providers (Enjoy, Local, BYOK)
 - **Consistency**: Unified prompts and response formats
 - **Maintainability**: Centralized configuration and types
 - **Extensibility**: Easy to add new providers
-- **User Choice**: Free (local), managed (Enjoy), or BYOK
+- **User Choice**: Free services (fast translation, basic dictionary) + Optional AI (local/Enjoy/BYOK)
 
-All providers use the same prompt templates, ensuring consistent output quality regardless of the chosen provider.
+All AI-powered providers use the same prompt templates, ensuring consistent output quality regardless of the chosen provider.

@@ -1,6 +1,11 @@
 /**
  * Automatic Speech Recognition Service (ASR/STT)
- * Supports Azure Speech, OpenAI-compatible API, and local transformers.js models
+ * Uses Whisper model for speech-to-text with timestamps
+ *
+ * Supported providers:
+ * - enjoy: Enjoy API (OpenAI-compatible, uses Whisper)
+ * - local: Browser-based transformers.js (offline)
+ * - byok: User's own API keys (FUTURE - interface reserved)
  */
 
 import { azureSpeechService } from './enjoy/azure-speech'
@@ -69,7 +74,7 @@ export const asrService = {
       }
     }
 
-    // BYOK mode: use user's own API keys
+    // BYOK mode: use user's own API keys (FUTURE)
     if (useBYOK && request.config?.byok) {
       // For Azure, use existing Azure Speech service
       if (request.config.byok.provider === 'azure') {
@@ -105,7 +110,7 @@ export const asrService = {
         }
       }
 
-      // For OpenAI and custom providers, use BYOK speech service
+      // For OpenAI and custom providers, use BYOK speech service (FUTURE)
       return transcribeWithBYOK(
         request.audioBlob,
         request.language,

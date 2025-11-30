@@ -1,8 +1,14 @@
 /**
  * Smart Translation Service
- * Supports pre-defined styles and custom prompts
- * Uses generative models for style-based translation
- * Used for user-generated content translation
+ * Style-aware translation using LLM with unified prompts
+ *
+ * Supported providers:
+ * - enjoy: Enjoy API (OpenAI-compatible)
+ * - local: Browser-based transformers.js (limited features)
+ * - byok: User's own API keys (FUTURE - interface reserved)
+ *
+ * Translation styles: literal, natural, casual, formal, simplified, detailed, custom
+ * All providers use the same centralized prompts for consistent output
  */
 
 import { localModelService } from './local'
@@ -72,7 +78,7 @@ export const smartTranslationService = {
       }
     }
 
-    // BYOK mode: use user's own API keys with Vercel AI SDK
+    // BYOK mode: use user's own API keys with Vercel AI SDK (FUTURE)
     if (useBYOK && request.config?.byok) {
       return smartTranslateWithBYOK(
         request.sourceText,

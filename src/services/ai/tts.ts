@@ -1,7 +1,11 @@
 /**
  * Text-to-Speech Service (TTS)
- * Supports OpenAI-compatible API, Azure Speech, and local models
- * Future support for BYOK (user-provided keys)
+ * Generates audio from text for shadowing practice materials
+ *
+ * Supported providers:
+ * - enjoy: Enjoy API (OpenAI-compatible)
+ * - local: Browser-based Web Speech API or transformers.js
+ * - byok: User's own API keys (FUTURE - interface reserved)
  */
 
 import { azureSpeechService } from './enjoy/azure-speech'
@@ -71,7 +75,7 @@ export const ttsService = {
       }
     }
 
-    // BYOK mode: use user's own API keys
+    // BYOK mode: use user's own API keys (FUTURE)
     if (useBYOK && request.config?.byok) {
       // For Azure, use existing Azure Speech service
       if (request.config.byok.provider === 'azure') {
@@ -108,7 +112,7 @@ export const ttsService = {
         }
       }
 
-      // For OpenAI and custom providers, use BYOK speech service
+      // For OpenAI and custom providers, use BYOK speech service (FUTURE)
       return synthesizeWithBYOK(
         request.text,
         request.language,

@@ -1,80 +1,57 @@
 /**
  * Fast Translation Service
- * Optimized for speed, used for subtitle translation
- * Uses dedicated translation models (e.g., NLLB, M2M100)
+ * Free service provided by Enjoy API
+ * Uses dedicated translation models (M2M100, NLLB) for speed and low cost
+ *
+ * Note: This service is ALWAYS free and provided by Enjoy API.
+ * No local or BYOK options - use Smart Translation for advanced features.
  */
 
-import { localModelService } from './local'
-import { fastTranslateWithEnjoy } from './enjoy'
-import type { AIServiceConfig, AIServiceResponse } from './types'
+import { apiClient } from '@/lib/api/client'
+import type { AIServiceResponse } from './types'
+import type { FastTranslationResponse } from './types-responses'
 
 export interface FastTranslationRequest {
   sourceText: string
   sourceLanguage: string
   targetLanguage: string
-  config?: AIServiceConfig
-}
-
-export interface FastTranslationResponse {
-  translatedText: string
-  aiModel: string
-  tokensUsed?: number
 }
 
 /**
  * Fast Translation Service
  * Optimized for speed, used for subtitle translation
+ * Free service - no configuration needed
  */
 export const fastTranslationService = {
   /**
    * Fast translate text (direct translation, no style support)
+   * Always uses Enjoy API - no provider selection
    */
   async translate(
     request: FastTranslationRequest
   ): Promise<AIServiceResponse<FastTranslationResponse>> {
-    const useLocal = request.config?.provider === 'local'
+    try {
+      const response = await apiClient.post<
+        AIServiceResponse<FastTranslationResponse>
+      >('/api/v1/services/fast-translation', {
+        sourceText: request.sourceText,
+        sourceLanguage: request.sourceLanguage,
+        targetLanguage: request.targetLanguage,
+      })
 
-    // Local mode: use transformers.js with dedicated translation models
-    if (useLocal) {
-      try {
-        const result = await localModelService.fastTranslate(
-          request.sourceText,
-          request.sourceLanguage,
-          request.targetLanguage,
-          request.config?.localModel
-        )
-        return {
-          success: true,
-          data: {
-            translatedText: result.translatedText,
-            aiModel: 'local-fast-translation',
-          },
-          metadata: {
-            serviceType: 'fastTranslation',
-            provider: 'local',
-          },
-        }
-      } catch (error: any) {
-        return {
-          success: false,
-          error: {
-            code: 'LOCAL_FAST_TRANSLATION_ERROR',
-            message: error.message || 'Local fast translation failed',
-          },
-          metadata: {
-            serviceType: 'fastTranslation',
-            provider: 'local',
-          },
-        }
+      return response.data
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: 'FAST_TRANSLATION_ERROR',
+          message: error.message || 'Fast translation failed',
+        },
+        metadata: {
+          serviceType: 'fastTranslation',
+          provider: 'enjoy',
+        },
       }
     }
-
-    // Enjoy API (cloud service)
-    return fastTranslateWithEnjoy(
-      request.sourceText,
-      request.sourceLanguage,
-      request.targetLanguage
-    )
   },
 }
-

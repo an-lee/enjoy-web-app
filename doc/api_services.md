@@ -37,47 +37,69 @@ The Enjoy API follows **OpenAI-compatible specifications**, making it easy to in
 
 ### Service Provider Modes
 
-All AI services support three provider modes:
+AI services support different provider modes depending on the service:
 
-1. **`enjoy`** (default): Uses Enjoy API managed services with user quotas
-   - OpenAI-compatible API interface
+1. **`enjoy`** (default): Uses Enjoy API managed services
+   - OpenAI-compatible API interface (except for Fast Translation and Basic Dictionary)
    - Centralized authentication and quota management
-   - Supports multiple backend providers (OpenAI, Cloudflare Workers AI, etc.)
+   - **Free services**: Fast Translation, Basic Dictionary Lookup
+   - **AI services with quotas**: Smart Translation, ASR, TTS, Contextual Dictionary, Pronunciation Assessment
 
 2. **`local`**: Uses browser-local transformers.js models (free, offline-capable)
    - Runs entirely in browser using Web Workers
    - No API calls, completely offline
    - Uses the same prompt templates as cloud services
+   - **Supported**: Smart Translation, ASR, TTS, Dictionary (contextual)
+   - **Not supported**: Fast Translation (always uses Enjoy API), Basic Dictionary, Assessment
 
-3. **`byok`**: Uses user-provided API keys (future implementation)
-   - Planned support for: **OpenAI**, **Google (Gemini)**, **Claude (Anthropic)**, **Azure**, **Custom OpenAI-compatible endpoints**
-   - Provider adapters handle API differences and convert to OpenAI format
+3. **`byok`**: Uses user-provided API keys (FUTURE - interface reserved)
+   - **Planned support**: OpenAI, Google (Gemini), Claude (Anthropic), Azure, Custom OpenAI-compatible endpoints
+   - Provider adapters handle API differences
    - Uses the same prompt templates as other providers
+   - **Supported**: Smart Translation, ASR, TTS, Dictionary (contextual), Assessment (Azure only)
+   - **Not supported**: Fast Translation, Basic Dictionary (always free via Enjoy API)
 
-### A. Smart Translation
+### Service-Provider Matrix
 
-- **Providers**:
-  - **Enjoy API**: OpenAI-compatible API using Cloudflare Workers AI or other LLM services
-  - **Local**: transformers.js translation models (limited features)
-  - **BYOK** (future): OpenAI, Google Gemini, Claude, Azure, or custom endpoints
+| Service | Enjoy | Local | BYOK (Future) |
+|---------|-------|-------|---------------|
+| Fast Translation | ✅ (FREE) | ❌ | ❌ |
+| Smart Translation | ✅ (quota) | ✅ | ✅ |
+| Dictionary (basic) | ✅ (FREE) | ❌ | ❌ |
+| Dictionary (contextual) | ✅ (quota) | ✅ | ✅ |
+| ASR | ✅ (quota) | ✅ | ✅ |
+| TTS | ✅ (quota) | ✅ | ✅ |
+| Assessment | ✅ (quota, Azure) | ❌ | ✅ (Azure only) |
+
+**Key:**
+- **FREE**: Always available without configuration
+- **quota**: Requires Enjoy account with quota
+- **✅**: Supported
+- **❌**: Not supported
+
+### A. Fast Translation
+
+- **Purpose**: Quick subtitle translation using dedicated translation models
+- **Cost**: **FREE** - Always provided by Enjoy API
+- **Models**: Dedicated translation models (M2M100, NLLB)
+- **Providers**: Enjoy API only (no local/BYOK options)
 - **Features**:
-  - Pre-defined translation styles: literal, natural, casual, formal, simplified, detailed
-  - Custom prompt support for advanced users
-  - Context-aware translation
-  - **Unified prompts**: Same prompt templates used across all providers (enjoy, local, byok)
+  - Optimized for speed and low cost
+  - Direct translation without style support
+  - Ideal for subtitle translation
 - **Request Format**:
 
     ```json
     {
       "sourceText": "Hello world",
       "sourceLanguage": "en",
-      "targetLanguage": "zh",
-      "style": "natural",
-      "customPrompt": "optional custom prompt",
-      "config": {
-        "provider": "enjoy" | "local" | "byok",
-        "byok": {
-          "provider": "openai" | "google" | "claude" | "azure" | "custom",
+      "targetLanguage": "zh"
+    }
+    ```
+
+**Note**: Fast translation is always free and does not require AI service configuration. Use Smart Translation if you need style control or BYOK.
+
+### B. Smart Translation
           "apiKey": "your-api-key",
           "endpoint": "optional-custom-endpoint",
           "model": "optional-model-name"
@@ -86,17 +108,17 @@ All AI services support three provider modes:
     }
     ```
 
-### B. Text-to-Speech (TTS)
+### E. Text-to-Speech (TTS)
 
+- **Purpose**: Generate audio for shadowing practice materials
 - **Providers**:
-  - **Enjoy API**: OpenAI-compatible API or Azure Speech (via token)
-  - **Azure Direct**: Azure Speech SDK with token from Enjoy API
+  - **Enjoy API**: OpenAI-compatible API
   - **Local**: Web Speech API or transformers.js TTS models
-  - **BYOK** (future): OpenAI, Azure Speech, or custom endpoints
+  - **BYOK** (FUTURE): OpenAI, Azure, or custom endpoints
 - **Features**:
   - Multiple voice options
   - Language-specific voices
-  - High-quality neural voices (Azure)
+  - High-quality neural voices
 - **Request Format**:
 
     ```json
@@ -116,13 +138,14 @@ All AI services support three provider modes:
     }
     ```
 
-### C. Automatic Speech Recognition (ASR)
+### D. Automatic Speech Recognition (ASR)
 
+- **Purpose**: Generate timestamped subtitles from audio/video content
+- **Primary Model**: Whisper
 - **Providers**:
-  - **Enjoy API**: OpenAI-compatible API (Whisper) or Cloudflare Workers AI
-  - **Azure**: Azure Speech SDK with token from Enjoy API
-  - **Local**: transformers.js Whisper models (free users, offline)
-  - **BYOK** (future): OpenAI, Azure Speech, or custom endpoints
+  - **Enjoy API**: OpenAI-compatible API (Whisper)
+  - **Local**: Browser-based transformers.js Whisper models (offline)
+  - **BYOK** (FUTURE): OpenAI, Azure, or custom endpoints
 - **Features**:
   - Multi-language support
   - Timestamped segments
@@ -144,39 +167,71 @@ All AI services support three provider modes:
     }
     ```
 
-### D. Dictionary & Context (LLM)
+### C. Dictionary Lookup
 
-- **Providers**:
-  - **Enjoy API**: OpenAI-compatible API using Cloudflare Workers AI (Llama 3 or Mistral)
-  - **Local**: transformers.js small LLM models (may have limited capabilities)
-  - **BYOK** (future): OpenAI, Google Gemini, Claude, Azure, or custom endpoints
+- **Purpose**: Word definitions and contextual explanations
+- **Two-Tier Service**:
+  1. **Basic Lookup** (FREE): Simple word definitions without AI
+     - Always provided by Enjoy API
+     - No configuration needed
+     - Returns: definitions, translations, part of speech
+  2. **Contextual Explanation** (AI): Context-aware detailed analysis
+     - Requires AI configuration (enjoy/local/byok)
+     - Uses LLM to generate contextual explanations
+     - Same principle as smart translation
+- **Providers** (for contextual explanation):
+  - **Enjoy API**: OpenAI-compatible API using LLM services
+  - **Local**: Browser-based transformers.js (may have limited capabilities)
+  - **BYOK** (FUTURE): OpenAI, Google Gemini, Claude, Azure, or custom endpoints
 - **Features**:
   - Contextual word definitions
   - Translation with context explanation
   - Part-of-speech tagging
   - Example sentences
   - **Unified prompts**: Same prompt templates used across all providers
-- **Prompt Strategy**:
-  - Input: Target word, Full sentence context, User's native language.
-  - Output: JSON containing definition, translation, and explanation of why this meaning fits the context.
+- **Request Format**:
+
+    ```json
+    // Basic lookup (FREE)
+    {
+      "word": "ephemeral",
+      "sourceLanguage": "en",
+      "targetLanguage": "zh"
+    }
+
+    // Contextual explanation (with AI)
+    {
+      "word": "ephemeral",
+      "context": "The beauty of this moment is ephemeral.",
+      "sourceLanguage": "en",
+      "targetLanguage": "zh",
+      "config": {
+        "provider": "enjoy" | "local" | "byok",
+        "byok": { /* BYOK config */ }
+      }
+    }
+    ```
+
 - **Caching**: Results are cached in Redis to prevent re-generation for identical context queries.
 
-### E. Pronunciation Assessment
+### F. Pronunciation Assessment
 
-- **Providers**:
-  - **Enjoy API**: Azure Speech Services (via token)
-  - **BYOK** (future): User's own Azure Speech keys
-  - **Note**: Only Azure Speech Services supports pronunciation assessment
+- **Purpose**: Evaluate pronunciation accuracy for speaking practice
+- **Provider**: **Azure Speech only** (only provider that supports phoneme-level assessment)
+- **Two Modes**:
+  1. **Enjoy Mode**: Enjoy API provides short-lived Azure Speech token
+  2. **BYOK Mode** (FUTURE): User provides own Azure Speech subscription key
+- **Implementation**: Frontend uses Azure Speech SDK directly with token or subscription key
 - **Features**:
   - Overall Score (0-100)
   - Phoneme-level accuracy errors
   - Fluency and Prosody scores
   - Word-level detailed feedback
 - **Flow**:
-  1. Client records audio (WAV/WebM).
-  2. Uploads to Enjoy API (or uses Azure SDK directly with BYOK).
-  3. Backend streams to Azure (or client calls Azure directly).
-  4. Returns detailed JSON report to client.
+  1. Client records audio (WAV/WebM)
+  2. Obtain Azure token from Enjoy API OR use BYOK subscription key
+  3. Client uses Azure Speech SDK to assess pronunciation
+  4. Returns detailed JSON report
 - **Request Format**:
 
   ```multipart/form-data
@@ -187,11 +242,13 @@ All AI services support three provider modes:
     "provider": "enjoy" | "byok",
     "byok": {
       "provider": "azure",
-      "apiKey": "your-api-key",
+      "apiKey": "your-subscription-key",
       "region": "azure-region"
     }
   }
   ```
+
+**Note**: Both enjoy and byok modes use Azure Speech SDK on frontend. The difference is token source: enjoy provides temporary token, byok uses user's subscription key.
 
 ## 3. Azure Speech Token Management
 
@@ -205,15 +262,16 @@ For non-BYOK Azure Speech usage, clients obtain time-limited tokens from Enjoy A
 
 Free users can use browser-local models powered by `@huggingface/transformers`:
 
+- **Smart Translation**: LLM models (limited style support)
 - **ASR**: Whisper models (tiny/small variants)
-- **Translation**: M2M100 or similar translation models
 - **TTS**: Web Speech API or transformers.js TTS models
-- **Dictionary**: Small LLM models (if feasible)
-- **Assessment**: Not supported - requires Azure Speech Services for accurate phoneme-level analysis
+- **Dictionary**: Small LLM models (for contextual explanation, if feasible)
+- **Fast Translation**: Not supported - always uses Enjoy API (free)
+- **Assessment**: Not supported - requires Azure Speech Services
 
 Local models run in Web Workers to avoid blocking the UI. Model weights are cached in browser storage after first download.
 
-**Note**: Pronunciation assessment does not support local mode as it requires specialized Azure Speech Services for accurate phoneme-level pronunciation scoring.
+**Note**: Fast translation and basic dictionary lookup are always free via Enjoy API, so local mode is not needed for these services.
 
 ## 5. BYOK (Bring Your Own Key) - Future Implementation
 
@@ -226,15 +284,45 @@ The service interface is designed to support BYOK, allowing users to:
 
 ### Supported BYOK Providers (Planned)
 
-1. **OpenAI**: GPT models, Whisper (ASR), TTS
+1. **OpenAI**: GPT models (translation, dictionary), Whisper (ASR), TTS
 2. **Google (Gemini)**: Gemini models for translation and dictionary
 3. **Claude (Anthropic)**: Claude models for translation and dictionary
-4. **Azure**: Azure OpenAI Service and Azure Speech Services
+4. **Azure**: Azure OpenAI Service, Azure Speech (ASR, TTS, Assessment)
 5. **Custom**: Any OpenAI-compatible endpoint
+
+### Implementation
+
+BYOK uses **Vercel AI SDK** for unified LLM access and **official SDKs** for speech services:
+
+```json
+{
+  "dependencies": {
+    "ai": "^5.0.0",                    // Vercel AI SDK core
+    "@ai-sdk/openai": "^2.0.0",        // OpenAI provider
+    "@ai-sdk/anthropic": "^2.0.0",     // Claude provider
+    "@ai-sdk/google": "^2.0.0",        // Gemini provider
+    "openai": "^6.0.0"                 // OpenAI SDK for speech
+  }
+}
+```
+
+### BYOK Service Support Matrix
+
+| Service | OpenAI | Claude | Gemini | Azure | Custom |
+|---------|--------|--------|--------|-------|--------|
+| Smart Translation | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Dictionary (contextual) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ASR | ✅ | ❌ | ❌ | ✅ | ✅ |
+| TTS | ✅ | ❌ | ❌ | ✅ | ✅ |
+| Assessment | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Fast Translation | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Dictionary (basic) | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+**Note**: Fast translation and basic dictionary lookup are always free via Enjoy API and do not support BYOK.
 
 ### Provider Adapters
 
-All BYOK providers are accessed through **provider adapters** that convert their native APIs to OpenAI-compatible format. This ensures:
+All BYOK providers are accessed through **provider adapters** (implemented using Vercel AI SDK) that convert their native APIs to OpenAI-compatible format. This ensures:
 
 - Consistent interface across all providers
 - Easy addition of new providers

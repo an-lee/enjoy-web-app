@@ -1,9 +1,15 @@
 /**
  * Dictionary Lookup Service
- * Uses generative AI to generate dictionary content
- * Supports local models (may have limited capabilities)
+ *
+ * Two-tier service:
+ * 1. Basic word lookup - FREE via Enjoy API (always available)
+ * 2. Contextual explanation - Uses AI (enjoy/local/byok) for deeper analysis
+ *
+ * Basic lookup provides: word definitions, translations, part of speech
+ * Contextual explanation provides: context-aware meaning, usage examples, detailed explanation
  */
 
+import { apiClient } from '@/lib/api/client'
 import { localModelService } from './local'
 import { dictionaryLookupWithBYOK } from './byok'
 import { dictionaryLookupWithEnjoy } from './enjoy'
@@ -23,7 +29,44 @@ export interface DictionaryRequest {
  */
 export const dictionaryService = {
   /**
-   * Lookup word
+   * Basic word lookup (FREE)
+   * Always uses Enjoy API - no AI needed
+   * Provides: definitions, translations, part of speech
+   */
+  async lookupBasic(
+    word: string,
+    sourceLanguage: string,
+    targetLanguage: string
+  ): Promise<AIServiceResponse<DictionaryResponse>> {
+    try {
+      const response = await apiClient.post<
+        AIServiceResponse<DictionaryResponse>
+      >('/api/v1/services/dictionary/basic', {
+        word,
+        sourceLanguage,
+        targetLanguage,
+      })
+
+      return response.data
+    } catch (error: any) {
+      return {
+        success: false,
+        error: {
+          code: 'DICTIONARY_BASIC_ERROR',
+          message: error.message || 'Basic dictionary lookup failed',
+        },
+        metadata: {
+          serviceType: 'dictionary',
+          provider: 'enjoy',
+        },
+      }
+    }
+  },
+
+  /**
+   * Contextual word lookup with AI explanation
+   * Requires AI configuration (enjoy/local/byok)
+   * Provides: context-aware meanings, usage examples, detailed explanations
    */
   async lookup(
     request: DictionaryRequest
@@ -32,7 +75,6 @@ export const dictionaryService = {
     const useBYOK = request.config?.provider === 'byok'
 
     // Local mode: use transformers.js (if supported)
-    // Note: Dictionary lookup may require larger models, may not be suitable for local execution
     if (useLocal) {
       try {
         const result = await localModelService.lookup(
@@ -51,8 +93,6 @@ export const dictionaryService = {
           },
         }
       } catch (error: any) {
-        // If local model doesn't support, can fallback to cloud service
-        // Or return error prompting user to use cloud service
         return {
           success: false,
           error: {
@@ -68,7 +108,7 @@ export const dictionaryService = {
       }
     }
 
-    // BYOK mode: use user's own API keys with Vercel AI SDK
+    // BYOK mode: use user's own API keys with Vercel AI SDK (FUTURE)
     if (useBYOK && request.config?.byok) {
       return dictionaryLookupWithBYOK(
         request.word,
@@ -79,7 +119,7 @@ export const dictionaryService = {
       )
     }
 
-    // Enjoy API (cloud service)
+    // Enjoy API (cloud service) - contextual explanation with AI
     return dictionaryLookupWithEnjoy(
       request.word,
       request.context,
@@ -88,4 +128,3 @@ export const dictionaryService = {
     )
   },
 }
-

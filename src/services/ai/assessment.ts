@@ -1,8 +1,13 @@
 /**
  * Pronunciation Assessment Service
- * Uses Azure Speech Services
- * Note: Local mode is not supported for pronunciation assessment
- * Future support for BYOK (user-provided Azure keys)
+ * Uses Azure Speech Services for phoneme-level pronunciation scoring
+ *
+ * Supported providers:
+ * - enjoy: Enjoy API provides Azure Speech token (free/quota-based)
+ * - byok: User's own Azure Speech subscription key (FUTURE - interface reserved)
+ *
+ * Note: ONLY Azure Speech supports pronunciation assessment.
+ * Frontend uses Azure Speech SDK directly with token or subscription key.
  */
 
 import { apiClient } from '@/lib/api/client'
@@ -34,14 +39,15 @@ export interface AssessmentResponse {
 export const assessmentService = {
   /**
    * Assess pronunciation
-   * Note: Local mode is not supported - pronunciation assessment requires Azure Speech Services
+   * Uses Azure Speech Services (only provider that supports pronunciation assessment)
+   * Frontend uses Azure Speech SDK with token (enjoy) or subscription key (byok)
    */
   async assess(
     request: AssessmentRequest
   ): Promise<AIServiceResponse<AssessmentResponse>> {
     const useBYOK = request.config?.provider === 'byok'
 
-    // If using BYOK with Azure, use Azure SDK directly
+    // If using BYOK with Azure, use Azure SDK directly (FUTURE)
     if (useBYOK && request.config?.byok) {
       if (request.config.byok.provider === 'azure') {
         try {

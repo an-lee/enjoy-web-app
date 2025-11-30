@@ -1,14 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Card, CardContent } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
-import { useSettingsStore } from '@/stores'
 import { AIServiceCard } from './ai-service-card'
 
 interface AISettingsProps {
@@ -35,60 +26,65 @@ export function AISettings({ searchQuery, settingsByCategory }: AISettingsProps)
 
   return (
     <>
-      {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'fastTranslation')) && (
-        <AIServiceCard
-          service="fastTranslation"
-          title={t('settings.ai.fastTranslation', { defaultValue: 'Fast Translation' })}
-          description={t('settings.ai.fastTranslationDescription', { defaultValue: 'Fast translation optimized for subtitle translation. Uses dedicated translation models for speed.' })}
-          providers={['enjoy', 'local', 'byok']}
-        />
-      )}
-
+      {/* Smart Translation - Style-aware translation using LLM */}
       {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'smartTranslation')) && (
         <AIServiceCard
           service="smartTranslation"
           title={t('settings.ai.smartTranslation', { defaultValue: 'Smart Translation' })}
-          description={t('settings.ai.smartTranslationDescription', { defaultValue: 'Smart translation with style support. Uses generative models for user-generated content translation.' })}
+          description={t('settings.ai.smartTranslationDescription', {
+            defaultValue: 'Style-aware translation using LLM for user-generated content. Supports multiple translation styles.'
+          })}
           providers={['enjoy', 'local', 'byok']}
         />
       )}
 
-      {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'tts')) && (
-        <AIServiceCard
-          service="tts"
-          title={t('settings.ai.tts')}
-          description={t('settings.ai.ttsDescription', { defaultValue: 'Configure text-to-speech service provider' })}
-          providers={['enjoy', 'local', 'byok']}
-        />
-      )}
-
-      {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'asr')) && (
-        <AIServiceCard
-          service="asr"
-          title={t('settings.ai.asr')}
-          description={t('settings.ai.asrDescription', { defaultValue: 'Configure automatic speech recognition service provider' })}
-          providers={['enjoy', 'local', 'byok']}
-        />
-      )}
-
+      {/* Dictionary - Contextual word lookup with AI explanation */}
       {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'dictionary')) && (
         <AIServiceCard
           service="dictionary"
-          title={t('settings.ai.dictionary')}
-          description={t('settings.ai.dictionaryDescription', { defaultValue: 'Configure dictionary lookup service provider' })}
+          title={t('settings.ai.dictionary', { defaultValue: 'Dictionary (Contextual)' })}
+          description={t('settings.ai.dictionaryDescription', {
+            defaultValue: 'Contextual word lookup with AI-powered explanation. Basic dictionary is always free.'
+          })}
           providers={['enjoy', 'local', 'byok']}
         />
       )}
 
+      {/* ASR - Automatic Speech Recognition (Whisper) */}
+      {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'asr')) && (
+        <AIServiceCard
+          service="asr"
+          title={t('settings.ai.asr', { defaultValue: 'Speech Recognition (ASR)' })}
+          description={t('settings.ai.asrDescription', {
+            defaultValue: 'Automatic speech recognition using Whisper model for timestamped transcription.'
+          })}
+          providers={['enjoy', 'local', 'byok']}
+        />
+      )}
+
+      {/* TTS - Text-to-Speech */}
+      {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'tts')) && (
+        <AIServiceCard
+          service="tts"
+          title={t('settings.ai.tts', { defaultValue: 'Text-to-Speech (TTS)' })}
+          description={t('settings.ai.ttsDescription', {
+            defaultValue: 'Text-to-speech for generating audio for shadowing practice materials.'
+          })}
+          providers={['enjoy', 'local', 'byok']}
+        />
+      )}
+
+      {/* Pronunciation Assessment - Azure Speech only */}
       {(!searchQuery || settingsByCategory.ai.some(s => s.id === 'assessment')) && (
         <AIServiceCard
           service="assessment"
-          title={t('settings.ai.assessment')}
-          description={t('settings.ai.assessmentDescription', { defaultValue: 'Configure pronunciation assessment service provider' })}
+          title={t('settings.ai.assessment', { defaultValue: 'Pronunciation Assessment' })}
+          description={t('settings.ai.assessmentDescription', {
+            defaultValue: 'Pronunciation assessment using Azure Speech Services (only provider that supports phoneme-level scoring).'
+          })}
           providers={['enjoy', 'byok']}
         />
       )}
     </>
   )
 }
-

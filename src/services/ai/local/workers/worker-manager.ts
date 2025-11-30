@@ -40,39 +40,6 @@ export function getASRWorker(): Worker {
 }
 
 /**
- * Create and manage Fast Translation worker
- */
-let fastTranslationWorker: Worker | null = null
-
-export function getFastTranslationWorker(): Worker {
-  if (!fastTranslationWorker) {
-    fastTranslationWorker = new Worker(
-      new URL('./fast-translation-worker.ts', import.meta.url),
-      { type: 'module' }
-    )
-
-    fastTranslationWorker.addEventListener('message', (event) => {
-      const { type, data } = event.data
-
-      if (type === 'ready') {
-        useLocalModelsStore.getState().setModelLoaded('fastTranslation', data.model)
-      } else if (type === 'progress') {
-        // Normalize progress value to 0-1 range
-        const normalizedProgress = normalizeProgress(data)
-        useLocalModelsStore.getState().setModelProgress('fastTranslation', {
-          ...data,
-          progress: normalizedProgress,
-        })
-      } else if (type === 'error') {
-        useLocalModelsStore.getState().setModelError('fastTranslation', data.message)
-      }
-    })
-  }
-
-  return fastTranslationWorker
-}
-
-/**
  * Create and manage Smart Translation worker
  */
 let smartTranslationWorker: Worker | null = null
