@@ -3,10 +3,10 @@
  * Handles dictionary lookup using generative models with prompts
  */
 
-import type { LocalModelConfig } from '../../types'
+import type { LocalModelConfig } from '../../../types'
 import { useLocalModelsStore } from '@/stores/local-models'
 import { getDictionaryWorker } from '../workers/worker-manager'
-import { DEFAULT_SMART_TRANSLATION_MODEL } from '../config'
+import { DEFAULT_SMART_TRANSLATION_MODEL } from '../constants'
 import type { LocalDictionaryResult } from '../types'
 
 /**

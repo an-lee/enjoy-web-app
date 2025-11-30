@@ -3,11 +3,11 @@
  * Handles automatic speech recognition using local models
  */
 
-import type { LocalModelConfig } from '../../types'
+import type { LocalModelConfig } from '../../../types'
 import { useLocalModelsStore } from '@/stores/local-models'
 import { getASRWorker } from '../workers/worker-manager'
 import { audioBlobToFloat32Array } from '../utils/audio'
-import { DEFAULT_ASR_MODEL } from '../config'
+import { DEFAULT_ASR_MODEL } from '../constants'
 import type { LocalASRResult } from '../types'
 
 /**
