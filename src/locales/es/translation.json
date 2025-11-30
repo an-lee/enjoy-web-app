@@ -87,6 +87,7 @@
       "initializing": "Inicializando...",
       "downloadModel": "Descargar y Cargar Modelo",
       "modelNotSupported": "Tipo de modelo no compatible para ejecución local",
+      "failedToInitialize": "Error al inicializar el modelo",
       "loadingTooltip": "El modelo se está descargando y cargando",
       "loadedTooltip": "El modelo está listo para usar",
       "notLoadedTooltip": "El modelo debe descargarse y cargarse antes de usarlo",

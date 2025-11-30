@@ -87,6 +87,7 @@
       "initializing": "初始化中...",
       "downloadModel": "下载并加载模型",
       "modelNotSupported": "此模型类型不支持本地执行",
+      "failedToInitialize": "初始化模型失败",
       "loadingTooltip": "模型正在下载和加载中",
       "loadedTooltip": "模型已就绪，可以使用",
       "notLoadedTooltip": "模型需要先下载和加载才能使用",

@@ -87,6 +87,7 @@
       "initializing": "初期化中...",
       "downloadModel": "モデルをダウンロードして読み込む",
       "modelNotSupported": "ローカル実行ではサポートされていないモデルタイプ",
+      "failedToInitialize": "モデルの初期化に失敗しました",
       "loadingTooltip": "モデルをダウンロードして読み込んでいます",
       "loadedTooltip": "モデルは使用可能です",
       "notLoadedTooltip": "モデルは使用前にダウンロードして読み込む必要があります",

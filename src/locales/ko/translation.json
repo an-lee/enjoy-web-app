@@ -87,6 +87,7 @@
       "initializing": "초기화 중...",
       "downloadModel": "모델 다운로드 및 로드",
       "modelNotSupported": "로컬 실행에 지원되지 않는 모델 유형",
+      "failedToInitialize": "모델 초기화 실패",
       "loadingTooltip": "모델을 다운로드하고 로드하는 중입니다",
       "loadedTooltip": "모델을 사용할 준비가 되었습니다",
       "notLoadedTooltip": "모델을 사용하기 전에 다운로드하고 로드해야 합니다",
