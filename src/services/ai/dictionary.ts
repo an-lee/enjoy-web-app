@@ -9,14 +9,13 @@
 import { localModelService } from './local'
 import { dictionaryLookupWithBYOK } from './byok'
 import { dictionaryLookupWithEnjoy } from './enjoy'
-import type { AIServiceConfig, AIServiceResponse } from './types'
-import type { DictionaryResponse } from './types-responses'
-import {
-  ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED,
-  SERVICE_TYPES,
-  AI_PROVIDERS,
-  getErrorMessage,
-} from './constants'
+import type {
+  AIServiceConfig,
+  AIServiceResponse,
+  DictionaryResponse,
+} from './types'
+import { AIServiceType, AIProvider } from './types'
+import { ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED, getErrorMessage } from './constants'
 
 export interface DictionaryRequest {
   word: string
@@ -39,8 +38,8 @@ export const dictionaryService = {
   async lookup(
     request: DictionaryRequest
   ): Promise<AIServiceResponse<DictionaryResponse>> {
-    const useLocal = request.config?.provider === AI_PROVIDERS.LOCAL
-    const useBYOK = request.config?.provider === AI_PROVIDERS.BYOK
+    const useLocal = request.config?.provider === AIProvider.LOCAL
+    const useBYOK = request.config?.provider === AIProvider.BYOK
 
     // Local mode: use transformers.js (if supported)
     if (useLocal) {
@@ -56,8 +55,8 @@ export const dictionaryService = {
           success: true,
           data: result,
           metadata: {
-            serviceType: SERVICE_TYPES.DICTIONARY,
-            provider: AI_PROVIDERS.LOCAL,
+            serviceType: AIServiceType.DICTIONARY,
+            provider: AIProvider.LOCAL,
           },
         }
       } catch (error: any) {
@@ -68,8 +67,8 @@ export const dictionaryService = {
             message: getErrorMessage(ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED),
           },
           metadata: {
-            serviceType: SERVICE_TYPES.DICTIONARY,
-            provider: AI_PROVIDERS.LOCAL,
+            serviceType: AIServiceType.DICTIONARY,
+            provider: AIProvider.LOCAL,
           },
         }
       }

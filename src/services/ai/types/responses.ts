@@ -1,6 +1,6 @@
 /**
  * AI Service Response Type Definitions
- * Shared response types across all AI services
+ * Response types for each AI service
  */
 
 /**
@@ -14,6 +14,7 @@ export interface SmartTranslationResponse {
 
 /**
  * Fast Translation Response
+ * Note: Fast Translation is a regular API service (not AI service)
  */
 export interface FastTranslationResponse {
   translatedText: string

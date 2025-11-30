@@ -12,15 +12,12 @@ import { azureSpeechService } from './enjoy/azure-speech'
 import { localModelService } from './local'
 import { transcribeWithBYOK } from './byok'
 import { transcribeWithEnjoy } from './enjoy'
-import type { AIServiceConfig, AIServiceResponse } from './types'
-import type { ASRResponse } from './types-responses'
+import type { AIServiceConfig, AIServiceResponse, ASRResponse } from './types'
+import { AIServiceType, AIProvider, BYOKProvider } from './types'
 import {
   ERROR_ASR_LOCAL,
   ERROR_ASR_AZURE,
   ERROR_ASR_BYOK_AZURE,
-  SERVICE_TYPES,
-  AI_PROVIDERS,
-  BYOK_PROVIDERS,
   DEFAULT_AZURE_REGION,
   getErrorMessage,
 } from './constants'
@@ -45,12 +42,12 @@ export const asrService = {
   async transcribe(
     request: ASRRequest
   ): Promise<AIServiceResponse<ASRResponse>> {
-    const provider = request.provider || BYOK_PROVIDERS.OPENAI
-    const useLocal = request.config?.provider === AI_PROVIDERS.LOCAL
-    const useBYOK = request.config?.provider === AI_PROVIDERS.BYOK
+    const provider = request.provider || BYOKProvider.OPENAI
+    const useLocal = request.config?.provider === AIProvider.LOCAL
+    const useBYOK = request.config?.provider === AIProvider.BYOK
 
     // Local mode: use transformers.js
-    if (useLocal || provider === AI_PROVIDERS.LOCAL) {
+    if (useLocal || provider === AIProvider.LOCAL) {
       try {
         const result = await localModelService.transcribe(
           request.audioBlob,
@@ -65,8 +62,8 @@ export const asrService = {
             language: result.language,
           },
           metadata: {
-            serviceType: SERVICE_TYPES.ASR,
-            provider: AI_PROVIDERS.LOCAL,
+            serviceType: AIServiceType.ASR,
+            provider: AIProvider.LOCAL,
           },
         }
       } catch (error: any) {
@@ -77,8 +74,8 @@ export const asrService = {
             message: getErrorMessage(ERROR_ASR_LOCAL, error.message),
           },
           metadata: {
-            serviceType: SERVICE_TYPES.ASR,
-            provider: AI_PROVIDERS.LOCAL,
+            serviceType: AIServiceType.ASR,
+            provider: AIProvider.LOCAL,
           },
         }
       }
@@ -87,7 +84,7 @@ export const asrService = {
     // BYOK mode: use user's own API keys (FUTURE)
     if (useBYOK && request.config?.byok) {
       // For Azure, use existing Azure Speech service
-      if (request.config.byok.provider === BYOK_PROVIDERS.AZURE) {
+      if (request.config.byok.provider === BYOKProvider.AZURE) {
         try {
           const result = await azureSpeechService.transcribeWithKey(
             request.audioBlob,
@@ -101,8 +98,8 @@ export const asrService = {
             success: true,
             data: result,
             metadata: {
-              serviceType: SERVICE_TYPES.ASR,
-              provider: AI_PROVIDERS.BYOK,
+              serviceType: AIServiceType.ASR,
+              provider: AIProvider.BYOK,
             },
           }
         } catch (error: any) {
@@ -113,8 +110,8 @@ export const asrService = {
               message: getErrorMessage(ERROR_ASR_BYOK_AZURE, error.message),
             },
             metadata: {
-              serviceType: SERVICE_TYPES.ASR,
-              provider: AI_PROVIDERS.BYOK,
+              serviceType: AIServiceType.ASR,
+              provider: AIProvider.BYOK,
             },
           }
         }
@@ -130,7 +127,7 @@ export const asrService = {
     }
 
     // Azure Speech handling (Enjoy API managed)
-    if (provider === BYOK_PROVIDERS.AZURE) {
+    if (provider === BYOKProvider.AZURE) {
       try {
         const token = await azureSpeechService.getToken()
         const result = await azureSpeechService.transcribeWithToken(
@@ -142,8 +139,8 @@ export const asrService = {
           success: true,
           data: result,
           metadata: {
-            serviceType: SERVICE_TYPES.ASR,
-            provider: AI_PROVIDERS.ENJOY,
+            serviceType: AIServiceType.ASR,
+            provider: AIProvider.ENJOY,
           },
         }
       } catch (error: any) {
@@ -154,8 +151,8 @@ export const asrService = {
             message: getErrorMessage(ERROR_ASR_AZURE, error.message),
           },
           metadata: {
-            serviceType: SERVICE_TYPES.ASR,
-            provider: AI_PROVIDERS.ENJOY,
+            serviceType: AIServiceType.ASR,
+            provider: AIProvider.ENJOY,
           },
         }
       }

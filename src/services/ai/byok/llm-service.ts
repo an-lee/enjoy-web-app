@@ -8,17 +8,18 @@ import { generateText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import type { BYOKConfig, AIServiceResponse } from '../types'
+import type {
+  BYOKConfig,
+  AIServiceResponse,
+  SmartTranslationResponse,
+  DictionaryResponse,
+} from '../types'
 import type { TranslationStyle } from '@/db/schema'
 import {
   buildSmartTranslationPrompt,
   buildDictionaryPrompt,
   parseDictionaryResponse,
 } from '../prompts'
-import type {
-  SmartTranslationResponse,
-  DictionaryResponse,
-} from '../types-responses'
 
 /**
  * Get model provider function from Vercel AI SDK

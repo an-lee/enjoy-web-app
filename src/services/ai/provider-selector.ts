@@ -5,14 +5,14 @@
 
 import type { AIServiceConfig } from './types'
 import { useAuthStore } from '@/stores/auth'
-import { AI_PROVIDERS, SERVICE_TYPES } from './constants'
+import { AIProvider, AIServiceType } from './types'
 
 /**
  * Automatically select provider based on user status and configuration
  */
 export function selectProvider(
   preferredProvider?: AIServiceConfig['provider'],
-  serviceType?: 'asr' | 'smartTranslation' | 'dictionary' | 'tts' | 'assessment'
+  serviceType?: AIServiceType
 ): AIServiceConfig['provider'] {
   // If provider is explicitly specified, use it
   if (preferredProvider) {
@@ -24,25 +24,25 @@ export function selectProvider(
 
   // Select default provider based on service type and user status
   switch (serviceType) {
-    case SERVICE_TYPES.ASR:
-    case SERVICE_TYPES.SMART_TRANSLATION:
+    case AIServiceType.ASR:
+    case AIServiceType.SMART_TRANSLATION:
       // ASR and smart translation support local mode, free users default to local
-      return isPro ? AI_PROVIDERS.ENJOY : AI_PROVIDERS.LOCAL
+      return isPro ? AIProvider.ENJOY : AIProvider.LOCAL
 
-    case SERVICE_TYPES.DICTIONARY:
+    case AIServiceType.DICTIONARY:
       // Dictionary lookup supports local mode, free users default to local
-      return isPro ? AI_PROVIDERS.ENJOY : AI_PROVIDERS.LOCAL
+      return isPro ? AIProvider.ENJOY : AIProvider.LOCAL
 
-    case SERVICE_TYPES.TTS:
+    case AIServiceType.TTS:
       // TTS supports local mode, free users default to local
-      return isPro ? AI_PROVIDERS.ENJOY : AI_PROVIDERS.LOCAL
+      return isPro ? AIProvider.ENJOY : AIProvider.LOCAL
 
-    case SERVICE_TYPES.ASSESSMENT:
+    case AIServiceType.ASSESSMENT:
       // Pronunciation assessment doesn't support local mode, must use cloud
-      return AI_PROVIDERS.ENJOY
+      return AIProvider.ENJOY
 
     default:
-      return AI_PROVIDERS.ENJOY
+      return AIProvider.ENJOY
   }
 }
 

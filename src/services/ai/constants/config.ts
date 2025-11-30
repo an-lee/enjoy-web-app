@@ -1,7 +1,12 @@
 /**
  * AI Service Configuration Constants
  * Centralized configuration values for AI services
+ *
+ * Note: Enum definitions (AIServiceType, AIProvider, BYOKProvider) are in '../types'.
+ * Import them from '@/services/ai/types' or '@/services/ai'.
  */
+
+import type { AIProvider } from '../types'
 
 // ============================================================================
 // API Configuration
@@ -98,7 +103,7 @@ export const SERVICE_SUPPORT_MATRIX = {
  */
 export function isServiceSupported(
   service: keyof typeof SERVICE_SUPPORT_MATRIX,
-  provider: 'enjoy' | 'local' | 'byok'
+  provider: AIProvider
 ): boolean {
   return SERVICE_SUPPORT_MATRIX[service][provider]
 }
@@ -106,18 +111,6 @@ export function isServiceSupported(
 // ============================================================================
 // BYOK Provider Configuration
 // ============================================================================
-
-/**
- * Supported BYOK providers
- * Use these instead of hardcoded strings
- */
-export const BYOK_PROVIDERS = {
-  OPENAI: 'openai',
-  GOOGLE: 'google',
-  CLAUDE: 'claude',
-  AZURE: 'azure',
-  CUSTOM: 'custom',
-} as const
 
 /**
  * Default Azure region
@@ -175,35 +168,6 @@ export const BYOK_PROVIDER_SUPPORT = {
  * Import them from '@/lib/api' instead of '@/services/ai'.
  */
 
-// ============================================================================
-// Service Type Constants
-// ============================================================================
-
-/**
- * AI Service Type Constants
- * Use these instead of hardcoded strings
- */
-export const SERVICE_TYPES = {
-  SMART_TRANSLATION: 'smartTranslation',
-  DICTIONARY: 'dictionary',
-  ASR: 'asr',
-  TTS: 'tts',
-  ASSESSMENT: 'assessment',
-} as const
-
-// ============================================================================
-// Provider Constants
-// ============================================================================
-
-/**
- * AI Provider Constants
- * Use these instead of hardcoded strings
- */
-export const AI_PROVIDERS = {
-  ENJOY: 'enjoy',
-  LOCAL: 'local',
-  BYOK: 'byok',
-} as const
 
 // ============================================================================
 // Service Display Names

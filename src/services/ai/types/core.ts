@@ -1,35 +1,45 @@
 /**
- * AI Service Type Definitions
+ * AI Service Core Type Definitions
+ * Enums and configuration interfaces
  */
 
 /**
- * AI Service Provider Types
+ * AI Service Type Enum
+ * Use these instead of hardcoded strings
+ */
+export enum AIServiceType {
+  SMART_TRANSLATION = 'smartTranslation',
+  DICTIONARY = 'dictionary',
+  ASR = 'asr',
+  TTS = 'tts',
+  ASSESSMENT = 'assessment',
+}
+
+/**
+ * AI Provider Enum
+ * Use these instead of hardcoded strings
  * - 'enjoy': Use Enjoy API managed services (OpenAI-compatible, requires subscription or quota)
  * - 'byok': Use user's own API keys (future implementation for OpenAI, Google, Claude, etc.)
  * - 'local': Use browser-local transformers.js models (free, offline-capable)
  */
-export type AIProvider = 'enjoy' | 'byok' | 'local'
+export enum AIProvider {
+  ENJOY = 'enjoy',
+  LOCAL = 'local',
+  BYOK = 'byok',
+}
 
 /**
- * BYOK Provider Types
+ * BYOK Provider Enum
+ * Use these instead of hardcoded strings
  * Supported providers for Bring Your Own Key
  */
-export type BYOKProvider =
-  | 'openai' // OpenAI API (GPT models, Whisper, TTS)
-  | 'google' // Google AI (Gemini)
-  | 'claude' // Anthropic Claude
-  | 'azure' // Azure OpenAI Service & Azure Speech
-  | 'custom' // Custom OpenAI-compatible endpoint
-
-/**
- * Service Types
- */
-export type AIServiceType =
-  | 'smartTranslation'
-  | 'tts'
-  | 'assessment'
-  | 'dictionary' // Contextual dictionary (AI-powered)
-  | 'asr'
+export enum BYOKProvider {
+  OPENAI = 'openai',
+  GOOGLE = 'google',
+  CLAUDE = 'claude',
+  AZURE = 'azure',
+  CUSTOM = 'custom',
+}
 
 /**
  * Local Model Configuration

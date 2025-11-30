@@ -13,13 +13,11 @@
 import { apiClient } from '@/services/api/client'
 import { azureSpeechService } from './enjoy/azure-speech'
 import type { AIServiceConfig, AIServiceResponse } from './types'
+import { AIServiceType, AIProvider, BYOKProvider } from './types'
 import {
   ERROR_ASSESSMENT,
   ERROR_ASSESSMENT_BYOK,
   ERROR_ASSESSMENT_BYOK_PROVIDER_NOT_SUPPORTED,
-  SERVICE_TYPES,
-  AI_PROVIDERS,
-  BYOK_PROVIDERS,
   DEFAULT_AZURE_REGION,
   getErrorMessage,
 } from './constants'
@@ -55,11 +53,11 @@ export const assessmentService = {
   async assess(
     request: AssessmentRequest
   ): Promise<AIServiceResponse<AssessmentResponse>> {
-    const useBYOK = request.config?.provider === AI_PROVIDERS.BYOK
+    const useBYOK = request.config?.provider === AIProvider.BYOK
 
     // If using BYOK with Azure, use Azure SDK directly (FUTURE)
     if (useBYOK && request.config?.byok) {
-      if (request.config.byok.provider === BYOK_PROVIDERS.AZURE) {
+      if (request.config.byok.provider === BYOKProvider.AZURE) {
         try {
           const result = await azureSpeechService.assessPronunciationWithKey(
             request.audioBlob,
@@ -74,8 +72,8 @@ export const assessmentService = {
             success: true,
             data: result,
             metadata: {
-              serviceType: SERVICE_TYPES.ASSESSMENT,
-              provider: AI_PROVIDERS.BYOK,
+              serviceType: AIServiceType.ASSESSMENT,
+              provider: AIProvider.BYOK,
             },
           }
         } catch (error: any) {
@@ -86,8 +84,8 @@ export const assessmentService = {
               message: getErrorMessage(ERROR_ASSESSMENT_BYOK, error.message),
             },
             metadata: {
-              serviceType: SERVICE_TYPES.ASSESSMENT,
-              provider: AI_PROVIDERS.BYOK,
+              serviceType: AIServiceType.ASSESSMENT,
+              provider: AIProvider.BYOK,
             },
           }
         }
@@ -104,8 +102,8 @@ export const assessmentService = {
           ),
         },
         metadata: {
-          serviceType: SERVICE_TYPES.ASSESSMENT,
-          provider: AI_PROVIDERS.BYOK,
+          serviceType: AIServiceType.ASSESSMENT,
+          provider: AIProvider.BYOK,
         },
       }
     }
@@ -137,8 +135,8 @@ export const assessmentService = {
             getErrorMessage(ERROR_ASSESSMENT, error.message),
         },
         metadata: {
-          serviceType: SERVICE_TYPES.ASSESSMENT,
-          provider: AI_PROVIDERS.ENJOY,
+          serviceType: AIServiceType.ASSESSMENT,
+          provider: AIProvider.ENJOY,
         },
       }
     }

@@ -8,8 +8,7 @@
 // import OpenAI from 'openai'
 
 import { apiClient } from '@/services/api/client'
-import type { AIServiceResponse } from '../types'
-import type { ASRResponse, TTSResponse } from '../types-responses'
+import type { AIServiceResponse, ASRResponse, TTSResponse } from '../types'
 
 /**
  * ASR (Speech-to-Text) with Enjoy API

@@ -14,15 +14,15 @@
 import { localModelService } from './local'
 import { smartTranslateWithBYOK } from './byok'
 import { smartTranslateWithEnjoy } from './enjoy'
+import { DEFAULT_SMART_TRANSLATION_MODEL } from './local/constants'
 import type { TranslationStyle } from '@/db/schema'
-import type { AIServiceConfig, AIServiceResponse } from './types'
-import type { SmartTranslationResponse } from './types-responses'
-import {
-  ERROR_SMART_TRANSLATION_LOCAL,
-  SERVICE_TYPES,
-  AI_PROVIDERS,
-  getErrorMessage,
-} from './constants'
+import type {
+  AIServiceConfig,
+  AIServiceResponse,
+  SmartTranslationResponse,
+} from './types'
+import { AIServiceType, AIProvider } from './types'
+import { ERROR_SMART_TRANSLATION_LOCAL, getErrorMessage } from './constants'
 
 export interface SmartTranslationRequest {
   sourceText: string
@@ -44,12 +44,14 @@ export const smartTranslationService = {
   async translate(
     request: SmartTranslationRequest
   ): Promise<AIServiceResponse<SmartTranslationResponse>> {
-    const useLocal = request.config?.provider === AI_PROVIDERS.LOCAL
-    const useBYOK = request.config?.provider === AI_PROVIDERS.BYOK
+    const useLocal = request.config?.provider === AIProvider.LOCAL
+    const useBYOK = request.config?.provider === AIProvider.BYOK
 
     // Local mode: use transformers.js with generative models
     if (useLocal) {
       try {
+        const modelName =
+          request.config?.localModel?.model || DEFAULT_SMART_TRANSLATION_MODEL
         const result = await localModelService.smartTranslate(
           request.sourceText,
           request.sourceLanguage,
@@ -62,11 +64,11 @@ export const smartTranslationService = {
           success: true,
           data: {
             translatedText: result.translatedText,
-            aiModel: 'local-smart-translation',
+            aiModel: `local/${modelName}`,
           },
           metadata: {
-            serviceType: SERVICE_TYPES.SMART_TRANSLATION,
-            provider: AI_PROVIDERS.LOCAL,
+            serviceType: AIServiceType.SMART_TRANSLATION,
+            provider: AIProvider.LOCAL,
           },
         }
       } catch (error: any) {
@@ -77,8 +79,8 @@ export const smartTranslationService = {
             message: error.message || getErrorMessage(ERROR_SMART_TRANSLATION_LOCAL),
           },
           metadata: {
-            serviceType: SERVICE_TYPES.SMART_TRANSLATION,
-            provider: AI_PROVIDERS.LOCAL,
+            serviceType: AIServiceType.SMART_TRANSLATION,
+            provider: AIProvider.LOCAL,
           },
         }
       }

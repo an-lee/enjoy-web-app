@@ -9,14 +9,14 @@
 // import { createOpenAI } from '@ai-sdk/openai'
 
 import { apiClient } from '@/services/api/client'
-import type { AIServiceResponse } from '../types'
+import type {
+  AIServiceResponse,
+  SmartTranslationResponse,
+  DictionaryResponse,
+} from '../types'
 import type { TranslationStyle } from '@/db/schema'
 // Prompts will be used when switching to OpenAI SDK
 // import { buildSmartTranslationPrompt, buildDictionaryPrompt } from '../prompts'
-import type {
-  SmartTranslationResponse,
-  DictionaryResponse,
-} from '../types-responses'
 
 /**
  * Get Enjoy API configuration
