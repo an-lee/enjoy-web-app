@@ -7,7 +7,9 @@
 import { apiClient } from '@/lib/api/client'
 import { azureSpeechService } from './azure-speech'
 import { localModelService } from './local-models'
+import { synthesizeWithBYOK } from './byok'
 import type { AIServiceConfig, AIServiceResponse } from './types'
+import type { TTSResponse } from './types-responses'
 
 export type TTSProvider = 'openai' | 'azure'
 
@@ -17,13 +19,6 @@ export interface TTSRequest {
   voice?: string
   provider?: TTSProvider
   config?: AIServiceConfig
-}
-
-export interface TTSResponse {
-  audioUrl?: string
-  audioBlob?: Blob
-  duration?: number
-  format?: string
 }
 
 /**
@@ -76,16 +71,19 @@ export const ttsService = {
       }
     }
 
-    // Azure Speech special handling
-    if (provider === 'azure') {
-      // If using BYOK, use Azure SDK directly (user provides key)
-      if (useBYOK && request.config?.apiKeys?.azure) {
+    // BYOK mode: use user's own API keys
+    if (useBYOK && request.config?.byok) {
+      // For Azure, use existing Azure Speech service
+      if (request.config.byok.provider === 'azure') {
         try {
           const audioBlob = await azureSpeechService.synthesizeWithKey(
             request.text,
             request.language,
             request.voice,
-            request.config.apiKeys.azure
+            {
+              subscriptionKey: request.config.byok.apiKey,
+              region: request.config.byok.region || 'eastus',
+            }
           )
           return {
             success: true,
@@ -99,7 +97,7 @@ export const ttsService = {
           return {
             success: false,
             error: {
-              code: 'AZURE_TTS_ERROR',
+              code: 'BYOK_AZURE_TTS_ERROR',
               message: error.message,
             },
             metadata: {
@@ -108,36 +106,46 @@ export const ttsService = {
             },
           }
         }
-      } else {
-        // Use Azure token from Enjoy API
-        try {
-          const token = await azureSpeechService.getToken()
-          const audioBlob = await azureSpeechService.synthesizeWithToken(
-            request.text,
-            request.language,
-            request.voice,
-            token
-          )
-          return {
-            success: true,
-            data: { audioBlob, format: 'audio/mpeg' },
-            metadata: {
-              serviceType: 'tts',
-              provider: 'enjoy',
-            },
-          }
-        } catch (error: any) {
-          return {
-            success: false,
-            error: {
-              code: 'AZURE_TTS_ERROR',
-              message: error.message,
-            },
-            metadata: {
-              serviceType: 'tts',
-              provider: 'enjoy',
-            },
-          }
+      }
+
+      // For OpenAI and custom providers, use BYOK speech service
+      return synthesizeWithBYOK(
+        request.text,
+        request.language,
+        request.voice,
+        request.config.byok
+      )
+    }
+
+    // Azure Speech special handling (Enjoy API managed)
+    if (provider === 'azure') {
+      try {
+        const token = await azureSpeechService.getToken()
+        const audioBlob = await azureSpeechService.synthesizeWithToken(
+          request.text,
+          request.language,
+          request.voice,
+          token
+        )
+        return {
+          success: true,
+          data: { audioBlob, format: 'audio/mpeg' },
+          metadata: {
+            serviceType: 'tts',
+            provider: 'enjoy',
+          },
+        }
+      } catch (error: any) {
+        return {
+          success: false,
+          error: {
+            code: 'AZURE_TTS_ERROR',
+            message: error.message,
+          },
+          metadata: {
+            serviceType: 'tts',
+            provider: 'enjoy',
+          },
         }
       }
     }

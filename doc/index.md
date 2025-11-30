@@ -13,10 +13,12 @@ This documentation guides the development of the **Web App** and its integration
 2. [Data Models](./data_models.md)
    - Database schema (PostgreSQL) and local storage (IndexedDB) design.
 3. [API & AI Services](./api_services.md)
-   - Backend API endpoints and AI service integration (ASR, TTS, LLM).
-4. [Frontend Development](./frontend.md)
+   - Backend API endpoints, AI service integration, and BYOK implementation.
+4. [AI Service Architecture](./ai_architecture.md)
+   - Detailed AI service design patterns, provider abstraction, and implementation guide.
+5. [Frontend Development](./frontend.md)
    - UI/UX implementation, component hierarchy, state management, and routing.
-5. [Business Logic & Workflows](./business_logic.md)
+6. [Business Logic & Workflows](./business_logic.md)
    - Core algorithms, practice loops, data synchronization, and local ASR strategy.
 
 ## Core Development Principles

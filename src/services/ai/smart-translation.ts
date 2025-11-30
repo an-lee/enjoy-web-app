@@ -7,8 +7,10 @@
 
 import { apiClient } from '@/lib/api/client'
 import { localModelService } from './local-models'
+import { smartTranslateWithBYOK } from './byok'
 import type { TranslationStyle } from '@/db/schema'
 import type { AIServiceConfig, AIServiceResponse } from './types'
+import type { SmartTranslationResponse } from './types-responses'
 
 export interface SmartTranslationRequest {
   sourceText: string
@@ -17,12 +19,6 @@ export interface SmartTranslationRequest {
   style: TranslationStyle
   customPrompt?: string
   config?: AIServiceConfig
-}
-
-export interface SmartTranslationResponse {
-  translatedText: string
-  aiModel: string
-  tokensUsed?: number
 }
 
 /**
@@ -37,6 +33,7 @@ export const smartTranslationService = {
     request: SmartTranslationRequest
   ): Promise<AIServiceResponse<SmartTranslationResponse>> {
     const useLocal = request.config?.provider === 'local'
+    const useBYOK = request.config?.provider === 'byok'
 
     // Local mode: use transformers.js with generative models
     if (useLocal) {
@@ -75,7 +72,19 @@ export const smartTranslationService = {
       }
     }
 
-    // Cloud service
+    // BYOK mode: use user's own API keys with Vercel AI SDK
+    if (useBYOK && request.config?.byok) {
+      return smartTranslateWithBYOK(
+        request.sourceText,
+        request.sourceLanguage,
+        request.targetLanguage,
+        request.style,
+        request.customPrompt,
+        request.config.byok
+      )
+    }
+
+    // Enjoy API (cloud service)
     try {
       const response = await apiClient.post<
         AIServiceResponse<SmartTranslationResponse>

@@ -41,35 +41,53 @@ export const assessmentService = {
   ): Promise<AIServiceResponse<AssessmentResponse>> {
     const useBYOK = request.config?.provider === 'byok'
 
-    // If using BYOK, use Azure SDK directly
-    if (useBYOK && request.config?.apiKeys?.azure) {
-      try {
-        const result = await azureSpeechService.assessPronunciationWithKey(
-          request.audioBlob,
-          request.referenceText,
-          request.language,
-          request.config.apiKeys.azure
-        )
-        return {
-          success: true,
-          data: result,
-          metadata: {
-            serviceType: 'assessment',
-            provider: 'byok',
-          },
+    // If using BYOK with Azure, use Azure SDK directly
+    if (useBYOK && request.config?.byok) {
+      if (request.config.byok.provider === 'azure') {
+        try {
+          const result = await azureSpeechService.assessPronunciationWithKey(
+            request.audioBlob,
+            request.referenceText,
+            request.language,
+            {
+              subscriptionKey: request.config.byok.apiKey,
+              region: request.config.byok.region || 'eastus',
+            }
+          )
+          return {
+            success: true,
+            data: result,
+            metadata: {
+              serviceType: 'assessment',
+              provider: 'byok',
+            },
+          }
+        } catch (error: any) {
+          return {
+            success: false,
+            error: {
+              code: 'BYOK_ASSESSMENT_ERROR',
+              message: error.message,
+            },
+            metadata: {
+              serviceType: 'assessment',
+              provider: 'byok',
+            },
+          }
         }
-      } catch (error: any) {
-        return {
-          success: false,
-          error: {
-            code: 'ASSESSMENT_ERROR',
-            message: error.message,
-          },
-          metadata: {
-            serviceType: 'assessment',
-            provider: 'byok',
-          },
-        }
+      }
+
+      // Only Azure supports pronunciation assessment
+      return {
+        success: false,
+        error: {
+          code: 'BYOK_ASSESSMENT_PROVIDER_NOT_SUPPORTED',
+          message: `Provider ${request.config.byok.provider} does not support pronunciation assessment. Only Azure Speech is supported.`,
+        },
+        metadata: {
+          serviceType: 'assessment',
+          provider: 'byok',
+        },
       }
     }
 

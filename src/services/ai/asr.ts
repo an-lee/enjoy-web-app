@@ -6,7 +6,9 @@
 import { apiClient } from '@/lib/api/client'
 import { azureSpeechService } from './azure-speech'
 import { localModelService } from './local-models'
+import { transcribeWithBYOK } from './byok'
 import type { AIServiceConfig, AIServiceResponse } from './types'
+import type { ASRResponse } from './types-responses'
 
 export type ASRProvider = 'openai' | 'azure' | 'local'
 
@@ -16,17 +18,6 @@ export interface ASRRequest {
   prompt?: string
   provider?: ASRProvider
   config?: AIServiceConfig
-}
-
-export interface ASRResponse {
-  text: string
-  segments?: Array<{
-    text: string
-    start: number
-    end: number
-  }>
-  language?: string
-  duration?: number
 }
 
 /**
@@ -78,14 +69,18 @@ export const asrService = {
       }
     }
 
-    // Azure Speech handling
-    if (provider === 'azure') {
-      if (useBYOK && request.config?.apiKeys?.azure) {
+    // BYOK mode: use user's own API keys
+    if (useBYOK && request.config?.byok) {
+      // For Azure, use existing Azure Speech service
+      if (request.config.byok.provider === 'azure') {
         try {
           const result = await azureSpeechService.transcribeWithKey(
             request.audioBlob,
             request.language,
-            request.config.apiKeys.azure
+            {
+              subscriptionKey: request.config.byok.apiKey,
+              region: request.config.byok.region || 'eastus',
+            }
           )
           return {
             success: true,
@@ -99,7 +94,7 @@ export const asrService = {
           return {
             success: false,
             error: {
-              code: 'AZURE_ASR_ERROR',
+              code: 'BYOK_AZURE_ASR_ERROR',
               message: error.message,
             },
             metadata: {
@@ -108,34 +103,45 @@ export const asrService = {
             },
           }
         }
-      } else {
-        try {
-          const token = await azureSpeechService.getToken()
-          const result = await azureSpeechService.transcribeWithToken(
-            request.audioBlob,
-            request.language,
-            token
-          )
-          return {
-            success: true,
-            data: result,
-            metadata: {
-              serviceType: 'asr',
-              provider: 'enjoy',
-            },
-          }
-        } catch (error: any) {
-          return {
-            success: false,
-            error: {
-              code: 'AZURE_ASR_ERROR',
-              message: error.message,
-            },
-            metadata: {
-              serviceType: 'asr',
-              provider: 'enjoy',
-            },
-          }
+      }
+
+      // For OpenAI and custom providers, use BYOK speech service
+      return transcribeWithBYOK(
+        request.audioBlob,
+        request.language,
+        request.prompt,
+        request.config.byok
+      )
+    }
+
+    // Azure Speech handling (Enjoy API managed)
+    if (provider === 'azure') {
+      try {
+        const token = await azureSpeechService.getToken()
+        const result = await azureSpeechService.transcribeWithToken(
+          request.audioBlob,
+          request.language,
+          token
+        )
+        return {
+          success: true,
+          data: result,
+          metadata: {
+            serviceType: 'asr',
+            provider: 'enjoy',
+          },
+        }
+      } catch (error: any) {
+        return {
+          success: false,
+          error: {
+            code: 'AZURE_ASR_ERROR',
+            message: error.message,
+          },
+          metadata: {
+            serviceType: 'asr',
+            provider: 'enjoy',
+          },
         }
       }
     }

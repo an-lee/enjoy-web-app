@@ -3,6 +3,7 @@
  */
 
 export * from './types'
+export * from './types-responses'
 export * from './fast-translation'
 export * from './smart-translation'
 export * from './translation' // Legacy: keep for backward compatibility
@@ -13,8 +14,10 @@ export * from './asr'
 export * from './azure-speech'
 export * from './local-models'
 export * from './provider-selector'
+export * from './provider-adapters'
 export * from './key-management'
 export * from './prompts'
+export * from './byok' // BYOK services
 
 // Unified service manager
 import { fastTranslationService } from './fast-translation'

@@ -6,7 +6,9 @@
 
 import { apiClient } from '@/lib/api/client'
 import { localModelService } from './local-models'
+import { dictionaryLookupWithBYOK } from './byok'
 import type { AIServiceConfig, AIServiceResponse } from './types'
+import type { DictionaryResponse } from './types-responses'
 
 export interface DictionaryRequest {
   word: string
@@ -14,18 +16,6 @@ export interface DictionaryRequest {
   sourceLanguage: string
   targetLanguage: string
   config?: AIServiceConfig
-}
-
-export interface DictionaryResponse {
-  word: string
-  definitions: Array<{
-    partOfSpeech: string
-    definition: string
-    translation: string
-    example?: string
-  }>
-  contextualExplanation?: string
-  etymology?: string
 }
 
 /**
@@ -39,6 +29,7 @@ export const dictionaryService = {
     request: DictionaryRequest
   ): Promise<AIServiceResponse<DictionaryResponse>> {
     const useLocal = request.config?.provider === 'local'
+    const useBYOK = request.config?.provider === 'byok'
 
     // Local mode: use transformers.js (if supported)
     // Note: Dictionary lookup may require larger models, may not be suitable for local execution
@@ -66,7 +57,8 @@ export const dictionaryService = {
           success: false,
           error: {
             code: 'LOCAL_DICTIONARY_NOT_SUPPORTED',
-            message: 'Dictionary lookup is not supported in local mode. Please use cloud service.',
+            message:
+              'Dictionary lookup is not supported in local mode. Please use cloud service.',
           },
           metadata: {
             serviceType: 'dictionary',
@@ -76,7 +68,18 @@ export const dictionaryService = {
       }
     }
 
-    // Cloud service
+    // BYOK mode: use user's own API keys with Vercel AI SDK
+    if (useBYOK && request.config?.byok) {
+      return dictionaryLookupWithBYOK(
+        request.word,
+        request.context,
+        request.sourceLanguage,
+        request.targetLanguage,
+        request.config.byok
+      )
+    }
+
+    // Enjoy API (cloud service)
     try {
       const response = await apiClient.post<
         AIServiceResponse<DictionaryResponse>
