@@ -5,7 +5,7 @@
 
 import { apiClient } from '@/lib/api/client'
 import { azureSpeechService } from './azure-speech'
-import { localModelService } from './local-models'
+import { localModelService } from './local'
 import { transcribeWithBYOK } from './byok'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { ASRResponse } from './types-responses'

@@ -4,15 +4,19 @@
 
 export * from './types'
 export * from './types-responses'
-export * from './fast-translation'
+// Explicit re-exports to avoid naming conflicts with types-responses
+export type { FastTranslationRequest } from './fast-translation'
+export { fastTranslationService } from './fast-translation'
 export * from './smart-translation'
 export * from './translation' // Legacy: keep for backward compatibility
 export * from './tts'
-export * from './assessment'
+// Explicit re-exports to avoid naming conflicts with types-responses
+export type { AssessmentRequest } from './assessment'
+export { assessmentService } from './assessment'
 export * from './dictionary'
 export * from './asr'
 export * from './azure-speech'
-export * from './local-models'
+export * from './local'
 export * from './provider-selector'
 export * from './provider-adapters'
 export * from './key-management'

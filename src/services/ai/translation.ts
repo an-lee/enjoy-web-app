@@ -5,7 +5,7 @@
  */
 
 import { apiClient } from '@/lib/api/client'
-import { localModelService } from './local-models'
+import { localModelService } from './local'
 import type { TranslationStyle } from '@/db/schema'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 

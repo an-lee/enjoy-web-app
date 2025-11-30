@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
 import { useSettingsStore, useLocalModelsStore } from '@/stores'
-import { localModelService } from '@/services/ai/local-models'
+import { localModelService } from '@/services/ai/local'
 import type { AIProvider } from '@/services/ai/types'
 import { useState, useEffect } from 'react'
 import { Loader2, Download, CheckCircle2, AlertCircle, Circle, Info, ChevronDown } from 'lucide-react'

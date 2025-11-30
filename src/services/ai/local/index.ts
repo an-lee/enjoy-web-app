@@ -14,7 +14,6 @@ import { smartTranslate } from './services/smart-translation-service'
 import { lookup } from './services/dictionary-service'
 import { synthesize } from './services/tts-service'
 import { initializeModel } from './services/model-initializer'
-import { DEFAULT_SMART_TRANSLATION_MODEL } from './config'
 
 // Re-export types
 export type {

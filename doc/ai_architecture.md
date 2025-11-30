@@ -282,7 +282,7 @@ src/services/ai/
 │   ├── llm-service.ts          # LLM services (translation, dictionary)
 │   └── speech-service.ts       # Speech services (ASR, TTS)
 │
-├── local-models/               # Local model implementation
+├── local/                      # Local model implementation
 │   ├── index.ts
 │   ├── config.ts
 │   ├── services/

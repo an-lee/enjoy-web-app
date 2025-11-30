@@ -5,7 +5,7 @@
  */
 
 import { apiClient } from '@/lib/api/client'
-import { localModelService } from './local-models'
+import { localModelService } from './local'
 import { dictionaryLookupWithBYOK } from './byok'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { DictionaryResponse } from './types-responses'

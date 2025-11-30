@@ -5,7 +5,7 @@
  */
 
 import { apiClient } from '@/lib/api/client'
-import { localModelService } from './local-models'
+import { localModelService } from './local'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 
 export interface FastTranslationRequest {
