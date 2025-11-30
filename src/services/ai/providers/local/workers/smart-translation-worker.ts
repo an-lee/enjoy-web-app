@@ -64,8 +64,15 @@ class SmartTranslationPipelineSingleton {
 
     try {
       // Use text-generation pipeline for generative models
+      // dtype: Specifies the numerical precision/quantization level for model weights
+      // - "fp32": Full precision (highest accuracy, more memory)
+      // - "fp16": Half precision (balanced, requires GPU support)
+      // - "q8": 8-bit quantization (lower memory, slight accuracy loss)
+      // - "q4" / "q4f16": 4-bit quantization (lowest memory, more accuracy loss)
+      // For Qwen3-0.6B-DQ-ONNX (already quantized), "q4f16" is recommended for WebGPU
       this.instance = await pipeline('text-generation', modelName, {
         device: 'webgpu',
+        dtype: 'q4f16', // 4-bit quantization with fp16 activations - optimal for WebGPU performance
         progress_callback: (progress: any) => {
           if (progressCallback) {
             progressCallback(progress)
@@ -205,6 +212,56 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
 
         // Aggressive cleanup for smaller models that add explanations
         translatedText = translatedText.trim()
+
+        // Remove <think>...</think> tags and their content
+        // This pattern is used by some models to hide reasoning steps
+        // First, try regex-based removal (handles standard cases)
+        translatedText = translatedText
+          .replace(/<think>[\s\S]*?<\/think>/gi, '') // Remove <think>...</think>
+          .replace(/<redacted_reasoning[^>]*>[\s\S]*?<\/redacted_reasoning>/gi, '') // Remove <redacted_reasoning>...</redacted_reasoning>
+          .replace(/<redacted_reasoning[^>]*\/>/gi, '') // Handle self-closing tags
+          .trim()
+
+        // Fallback: More aggressive removal using indexOf for any remaining tags
+        // This handles edge cases where regex might not match (e.g., malformed tags, special characters)
+
+        // Remove <think> tags
+        while (translatedText.includes('<think>')) {
+          const startTagIndex = translatedText.indexOf('<think>')
+          if (startTagIndex < 0) break
+
+          const endTagIndex = translatedText.indexOf('</think>', startTagIndex)
+          if (endTagIndex >= 0) {
+            translatedText = (
+              translatedText.substring(0, startTagIndex) +
+              translatedText.substring(endTagIndex + '</think>'.length)
+            ).trim()
+          } else {
+            // If no closing tag found, remove everything from the start tag to the end
+            translatedText = translatedText.substring(0, startTagIndex).trim()
+            break
+          }
+        }
+
+        // Remove <redacted_reasoning> tags
+        while (translatedText.includes('<redacted_reasoning')) {
+          const startTagIndex = translatedText.indexOf('<redacted_reasoning')
+          if (startTagIndex < 0) break
+
+          // Find the closing tag
+          const endTagIndex = translatedText.indexOf('</redacted_reasoning>', startTagIndex)
+          if (endTagIndex >= 0) {
+            // Remove the entire tag including its content
+            translatedText = (
+              translatedText.substring(0, startTagIndex) +
+              translatedText.substring(endTagIndex + '</redacted_reasoning>'.length)
+            ).trim()
+          } else {
+            // If no closing tag found, remove everything from the start tag to the end
+            translatedText = translatedText.substring(0, startTagIndex).trim()
+            break
+          }
+        }
 
         // Remove repeated "Final Answer" sections
         if (translatedText.includes('**Final Answer**')) {
