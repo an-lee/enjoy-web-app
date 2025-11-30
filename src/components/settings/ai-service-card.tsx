@@ -18,8 +18,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
 import { useSettingsStore, useLocalModelsStore } from '@/stores'
-import { localModelService } from '@/services/ai/local'
-import type { AIProvider } from '@/services/ai/types'
+import type { ModelType } from '@/stores/local-models'
+import { localModelService } from '@/services/ai/providers/local'
+import { AIProvider, AIServiceType } from '@/services/ai/types'
 import { useState, useEffect } from 'react'
 import { Loader2, Download, CheckCircle2, AlertCircle, Circle, Info, ChevronDown } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -27,21 +28,22 @@ import {
   ASR_MODEL_OPTIONS,
   SMART_TRANSLATION_MODEL_OPTIONS,
   getDefaultModel,
-} from '@/services/ai/local/constants'
+  type ModelOption,
+} from '@/services/ai/providers/local/constants'
 
 interface AIServiceCardProps {
-  service: 'smartTranslation' | 'tts' | 'asr' | 'dictionary' | 'assessment'
+  service: AIServiceType
   title: string
   description: string
-  providers: AIProvider[]
+  providers: (AIProvider | string)[]
 }
 
 // Map service types to model types
-const SERVICE_TO_MODEL_TYPE: Record<string, 'asr' | 'smartTranslation' | 'dictionary' | 'tts'> = {
-  asr: 'asr',
-  smartTranslation: 'smartTranslation',
-  dictionary: 'dictionary',
-  tts: 'tts',
+const SERVICE_TO_MODEL_TYPE: Partial<Record<AIServiceType, ModelType>> = {
+  [AIServiceType.ASR]: 'asr',
+  [AIServiceType.SMART_TRANSLATION]: 'smartTranslation',
+  [AIServiceType.DICTIONARY]: 'dictionary',
+  [AIServiceType.TTS]: 'tts',
 }
 
 
@@ -57,9 +59,11 @@ export function AIServiceCard({
   const [initializing, setInitializing] = useState(false)
 
   // Get service config with fallback to default
-  const serviceConfig = aiServices[service as keyof typeof aiServices] as any
-  const currentProvider = serviceConfig?.defaultProvider || 'enjoy' // Default to 'enjoy' if not set
-  const isLocal = currentProvider === 'local'
+  // AIServiceType values match AIServiceSettings keys
+  const serviceKey = service as keyof typeof aiServices
+  const serviceConfig = aiServices[serviceKey] as any
+  const currentProvider = (serviceConfig?.defaultProvider || AIProvider.ENJOY) as AIProvider // Default to 'enjoy' if not set
+  const isLocal = currentProvider === AIProvider.LOCAL
   const modelType = SERVICE_TO_MODEL_TYPE[service]
   const modelStatus = modelType ? models[modelType] : null
 
@@ -109,7 +113,9 @@ export function AIServiceCard({
       if (modelType === 'asr' || modelType === 'smartTranslation') {
         await localModelService.initializeModel(modelType, { model: currentModel })
       } else {
-        throw new Error(t('settings.ai.modelNotSupported', { defaultValue: 'Model type not supported for local execution' }))
+        throw new Error(
+          t('settings.ai.modelNotSupported', { defaultValue: 'Model type not supported for local execution' })
+        )
       }
     } catch (error: any) {
       setModelError(modelType, error.message || 'Failed to initialize model')
@@ -120,7 +126,8 @@ export function AIServiceCard({
 
   const handleModelChange = (modelValue: string) => {
     if (modelType) {
-      updateLocalModel(service, modelValue)
+      // AIServiceType values match AIServiceSettings keys
+      updateLocalModel(serviceKey, modelValue)
       // If model is already loaded but different model is selected, reset status
       if (modelStatus?.loaded && modelStatus.modelName !== modelValue) {
         useLocalModelsStore.getState().resetModel(modelType)
@@ -141,27 +148,28 @@ export function AIServiceCard({
               {t('settings.ai.provider', { defaultValue: 'Provider' })}
             </Label>
             <Select
-              value={currentProvider || 'enjoy'}
+              value={currentProvider || AIProvider.ENJOY}
               onValueChange={(value) => {
-                updateAIServiceProvider(service, value as AIProvider)
+                // AIServiceType values match AIServiceSettings keys
+                updateAIServiceProvider(serviceKey, value as AIProvider)
               }}
             >
               <SelectTrigger id={`${service}-provider`} className="w-full max-w-sm">
                 <SelectValue placeholder={t('settings.ai.selectProvider', { defaultValue: 'Select provider' })} />
               </SelectTrigger>
               <SelectContent>
-                {providers.includes('enjoy') && (
-                  <SelectItem value="enjoy">
+                {providers.includes(AIProvider.ENJOY) && (
+                  <SelectItem value={AIProvider.ENJOY}>
                     {t('settings.ai.providers.enjoy', { defaultValue: 'Enjoy API' })}
                   </SelectItem>
                 )}
-                {providers.includes('local') && (
-                  <SelectItem value="local">
+                {providers.includes(AIProvider.LOCAL) && (
+                  <SelectItem value={AIProvider.LOCAL}>
                     {t('settings.ai.providers.local', { defaultValue: 'Local (Free)' })}
                   </SelectItem>
                 )}
-                {providers.includes('byok') && (
-                  <SelectItem value="byok" disabled>
+                {providers.includes(AIProvider.BYOK) && (
+                  <SelectItem value={AIProvider.BYOK} disabled>
                     {t('settings.ai.providers.byok', { defaultValue: 'BYOK (Coming Soon)' })}
                   </SelectItem>
                 )}
@@ -198,7 +206,7 @@ export function AIServiceCard({
                               : 'text-muted-foreground opacity-50'
                           }`}
                         >
-                          {availableModels.find((m) => m.value === currentModel)?.label ||
+                          {availableModels.find((m: ModelOption) => m.value === currentModel)?.label ||
                             modelStatus?.modelName ||
                             currentModel ||
                             t('settings.ai.noModel', { defaultValue: 'Not loaded' })}
@@ -207,7 +215,7 @@ export function AIServiceCard({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-56">
-                      {availableModels.map((model) => (
+                      {availableModels.map((model: ModelOption) => (
                         <DropdownMenuItem
                           key={model.value}
                           onClick={() => handleModelChange(model.value)}
