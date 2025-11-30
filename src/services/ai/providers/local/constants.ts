@@ -105,14 +105,6 @@ export const SMART_TRANSLATION_MODEL_OPTIONS: ModelOption[] = [
     size: '~600MB',
     performance: 'low',
   },
-  {
-    value: 'Qwen/Qwen3-1.7B-Instruct',
-    label: 'Qwen3 1.7B',
-    description:
-      'Larger Qwen3 model with better quality. Good balance for most devices. (Non-ONNX)',
-    size: '~3.4GB',
-    performance: 'medium',
-  },
 ]
 
 /**
