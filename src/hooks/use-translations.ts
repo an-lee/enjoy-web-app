@@ -7,7 +7,8 @@ const ITEMS_PER_PAGE = 10
 export const translationKeys = {
   all: ['translations'] as const,
   lists: () => [...translationKeys.all, 'list'] as const,
-  list: (page: number) => [...translationKeys.lists(), page] as const,
+  list: (page: number, searchQuery?: string) =>
+    [...translationKeys.lists(), page, searchQuery || ''] as const,
   detail: (id: string) => [...translationKeys.all, 'detail', id] as const,
   byParams: (params: {
     sourceText: string
@@ -18,21 +19,41 @@ export const translationKeys = {
 }
 
 /**
- * Fetch translation history with pagination
+ * Fetch translation history with pagination and optional search
  */
-async function fetchTranslationHistory(page: number): Promise<{
+async function fetchTranslationHistory(
+  page: number,
+  searchQuery?: string
+): Promise<{
   translations: Translation[]
   total: number
   totalPages: number
 }> {
-  const allTranslations = await db.translations
-    .orderBy('createdAt')
-    .reverse()
-    .toArray()
+  let query = db.translations.orderBy('createdAt').reverse()
 
+  // Apply search filter if provided
+  if (searchQuery && searchQuery.trim()) {
+    const searchTerm = searchQuery.toLowerCase().trim()
+    const allTranslations = await query.toArray()
+    const filtered = allTranslations.filter(
+      (item) =>
+        item.sourceText.toLowerCase().includes(searchTerm) ||
+        item.translatedText.toLowerCase().includes(searchTerm)
+    )
+
+    const total = filtered.length
+    const totalPages = Math.ceil(total / ITEMS_PER_PAGE)
+    const start = (page - 1) * ITEMS_PER_PAGE
+    const end = start + ITEMS_PER_PAGE
+    const translations = filtered.slice(start, end)
+
+    return { translations, total, totalPages }
+  }
+
+  // No search - get all and paginate
+  const allTranslations = await query.toArray()
   const total = allTranslations.length
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE)
-
   const start = (page - 1) * ITEMS_PER_PAGE
   const end = start + ITEMS_PER_PAGE
   const translations = allTranslations.slice(start, end)
@@ -94,12 +115,16 @@ async function updateTranslation(
 }
 
 /**
- * Hook to fetch translation history with pagination
+ * Hook to fetch translation history with pagination and optional search
  */
-export function useTranslationHistory(page: number, enabled: boolean = true) {
+export function useTranslationHistory(
+  page: number,
+  enabled: boolean = true,
+  searchQuery?: string
+) {
   return useQuery({
-    queryKey: translationKeys.list(page),
-    queryFn: () => fetchTranslationHistory(page),
+    queryKey: translationKeys.list(page, searchQuery),
+    queryFn: () => fetchTranslationHistory(page, searchQuery),
     enabled,
     staleTime: 1000 * 60, // 1 minute - history doesn't change frequently
   })

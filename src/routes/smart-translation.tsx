@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect } from 'react'
+import { useDebounce } from '@uidotdev/usehooks'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { type Translation, type TranslationStyle } from '@/db'
@@ -44,13 +45,18 @@ function SmartTranslation() {
   const [error, setError] = useState<string | null>(null)
   const [showHistory, setShowHistory] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+
+  // Debounce search query to avoid excessive database queries
+  // 300ms delay is a good balance between responsiveness and performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
   // React Query hooks
   const {
     data: historyData,
     isLoading: isLoadingHistory,
-  } = useTranslationHistory(currentPage, showHistory)
+  } = useTranslationHistory(currentPage, showHistory, debouncedSearchQuery)
 
   const saveTranslationMutation = useSaveTranslation()
   const updateTranslationMutation = useUpdateTranslation()
@@ -222,7 +228,16 @@ function SmartTranslation() {
     setShowHistory(!showHistory)
     if (!showHistory) {
       setCurrentPage(1)
+      setSearchQuery('')
     }
+  }
+
+  // Handle search change - reset to page 1 when search changes
+  // Note: We update searchQuery immediately for UI responsiveness,
+  // but the actual database query uses debouncedSearchQuery
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    setCurrentPage(1)
   }
 
   return (
@@ -301,8 +316,10 @@ function SmartTranslation() {
             currentPage={currentPage}
             totalPages={totalPages}
             isLoading={isLoadingHistory}
+            searchQuery={searchQuery}
             onToggleItem={toggleExpand}
             onPageChange={setCurrentPage}
+            onSearchChange={handleSearchChange}
           />
         )}
       </div>

@@ -173,6 +173,8 @@
     "showHistory": "履歴を表示",
     "hideHistory": "履歴を非表示",
     "noHistory": "翻訳履歴がありません",
+    "noSearchResults": "結果が見つかりません",
+    "searchPlaceholder": "原文または訳文で検索...",
     "sourceText": "原文",
     "translatedText": "訳文",
     "loading": "翻訳中...",

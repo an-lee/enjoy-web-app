@@ -173,6 +173,8 @@
     "showHistory": "기록 보기",
     "hideHistory": "기록 숨기기",
     "noHistory": "번역 기록이 없습니다",
+    "noSearchResults": "결과를 찾을 수 없습니다",
+    "searchPlaceholder": "원문 또는 번역문으로 검색...",
     "sourceText": "원문",
     "translatedText": "번역문",
     "loading": "번역 중...",

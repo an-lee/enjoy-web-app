@@ -173,6 +173,8 @@
     "showHistory": "Verlauf Anzeigen",
     "hideHistory": "Verlauf Ausblenden",
     "noHistory": "Kein Übersetzungsverlauf",
+    "noSearchResults": "Keine Ergebnisse gefunden",
+    "searchPlaceholder": "Nach Quell- oder übersetztem Text suchen...",
     "sourceText": "Quelltext",
     "translatedText": "Übersetzter Text",
     "loading": "Übersetze...",

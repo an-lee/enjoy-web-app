@@ -173,6 +173,8 @@
     "showHistory": "显示记录",
     "hideHistory": "收起记录",
     "noHistory": "暂无翻译记录",
+    "noSearchResults": "未找到结果",
+    "searchPlaceholder": "搜索原文或译文...",
     "sourceText": "原文",
     "translatedText": "译文",
     "loading": "翻译中...",

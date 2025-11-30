@@ -173,6 +173,8 @@
     "showHistory": "Afficher l'historique",
     "hideHistory": "Masquer l'historique",
     "noHistory": "Aucun historique de traduction",
+    "noSearchResults": "Aucun résultat trouvé",
+    "searchPlaceholder": "Rechercher par texte source ou traduit...",
     "sourceText": "Texte Source",
     "translatedText": "Texte Traduit",
     "loading": "Traduction en cours...",
