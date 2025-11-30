@@ -19,7 +19,7 @@ import {
  * Initialize model (preload for faster inference)
  */
 export async function initializeModel(
-  modelType: 'asr' | 'translation' | 'smartTranslation' | 'dictionary',
+  modelType: 'asr' | 'smartTranslation' | 'dictionary',
   modelConfig?: LocalModelConfig
 ): Promise<void> {
   const store = useLocalModelsStore.getState()
@@ -56,7 +56,7 @@ export async function initializeModel(
         data: { model: modelName },
       })
     })
-  } else if (modelType === 'translation' || modelType === 'smartTranslation') {
+  } else if (modelType === 'smartTranslation') {
     const modelName = modelConfig?.model || DEFAULT_SMART_TRANSLATION_MODEL
     const worker = getSmartTranslationWorker()
 

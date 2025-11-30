@@ -30,7 +30,7 @@ import {
 } from '@/services/ai/local/constants'
 
 interface AIServiceCardProps {
-  service: 'fastTranslation' | 'smartTranslation' | 'translation' | 'tts' | 'asr' | 'dictionary' | 'assessment'
+  service: 'smartTranslation' | 'tts' | 'asr' | 'dictionary' | 'assessment'
   title: string
   description: string
   providers: AIProvider[]
@@ -40,7 +40,6 @@ interface AIServiceCardProps {
 const SERVICE_TO_MODEL_TYPE: Record<string, 'asr' | 'smartTranslation' | 'dictionary' | 'tts'> = {
   asr: 'asr',
   smartTranslation: 'smartTranslation',
-  translation: 'smartTranslation', // Legacy: map to smartTranslation
   dictionary: 'dictionary',
   tts: 'tts',
 }
@@ -57,11 +56,8 @@ export function AIServiceCard({
   const { models, setModelLoading, setModelError } = useLocalModelsStore()
   const [initializing, setInitializing] = useState(false)
 
-  // Handle backward compatibility: map 'translation' to 'smartTranslation'
-  const actualService = service === 'translation' ? 'smartTranslation' : service
-
   // Get service config with fallback to default
-  const serviceConfig = aiServices[actualService as keyof typeof aiServices] as any
+  const serviceConfig = aiServices[service as keyof typeof aiServices] as any
   const currentProvider = serviceConfig?.defaultProvider || 'enjoy' // Default to 'enjoy' if not set
   const isLocal = currentProvider === 'local'
   const modelType = SERVICE_TO_MODEL_TYPE[service]
@@ -124,7 +120,7 @@ export function AIServiceCard({
 
   const handleModelChange = (modelValue: string) => {
     if (modelType) {
-      updateLocalModel(actualService, modelValue)
+      updateLocalModel(service, modelValue)
       // If model is already loaded but different model is selected, reset status
       if (modelStatus?.loaded && modelStatus.modelName !== modelValue) {
         useLocalModelsStore.getState().resetModel(modelType)
@@ -147,7 +143,7 @@ export function AIServiceCard({
             <Select
               value={currentProvider || 'enjoy'}
               onValueChange={(value) => {
-                updateAIServiceProvider(actualService, value as AIProvider)
+                updateAIServiceProvider(service, value as AIProvider)
               }}
             >
               <SelectTrigger id={`${service}-provider`} className="w-full max-w-sm">

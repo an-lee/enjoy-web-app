@@ -118,12 +118,12 @@ export const TRANSLATION_MODEL_OPTIONS = SMART_TRANSLATION_MODEL_OPTIONS
  * Get default model for a service type
  */
 export function getDefaultModel(
-  serviceType: 'asr' | 'translation' | 'smartTranslation'
+  serviceType: 'asr' | 'smartTranslation'
 ): string {
   if (serviceType === 'asr') {
     return DEFAULT_ASR_MODEL
   }
-  if (serviceType === 'translation' || serviceType === 'smartTranslation') {
+  if (serviceType === 'smartTranslation') {
     return DEFAULT_SMART_TRANSLATION_MODEL
   }
   return ''
@@ -133,7 +133,7 @@ export function getDefaultModel(
  * Get model option by value
  */
 export function getModelOption(
-  serviceType: 'asr' | 'translation' | 'smartTranslation',
+  serviceType: 'asr' | 'smartTranslation',
   modelValue: string
 ): ModelOption | undefined {
   let options: ModelOption[]

@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/auth'
  */
 export function selectProvider(
   preferredProvider?: AIServiceConfig['provider'],
-  serviceType?: 'asr' | 'translation' | 'dictionary' | 'tts' | 'assessment'
+  serviceType?: 'asr' | 'smartTranslation' | 'dictionary' | 'tts' | 'assessment'
 ): AIServiceConfig['provider'] {
   // If provider is explicitly specified, use it
   if (preferredProvider) {
@@ -24,8 +24,8 @@ export function selectProvider(
   // Select default provider based on service type and user status
   switch (serviceType) {
     case 'asr':
-    case 'translation':
-      // ASR and translation support local mode, free users default to local
+    case 'smartTranslation':
+      // ASR and smart translation support local mode, free users default to local
       return isPro ? 'enjoy' : 'local'
 
     case 'dictionary':

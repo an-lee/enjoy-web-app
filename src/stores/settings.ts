@@ -99,9 +99,7 @@ export const useSettingsStore = create<SettingsState>()(
         })),
       updateAIServiceProvider: (service, provider) =>
         set((state) => {
-          // Handle backward compatibility: map 'translation' to 'smartTranslation'
-          const actualService = service === 'translation' ? 'smartTranslation' : service
-          let serviceConfig = state.aiServices[actualService as keyof AIServiceSettings] as any
+          let serviceConfig = state.aiServices[service as keyof AIServiceSettings] as any
 
           // If service config doesn't exist, create it with defaults
           if (!serviceConfig) {
@@ -121,7 +119,7 @@ export const useSettingsStore = create<SettingsState>()(
           return {
             aiServices: {
               ...state.aiServices,
-              [actualService]: {
+              [service]: {
                 ...serviceConfig,
                 defaultProvider: provider,
               },
@@ -130,9 +128,7 @@ export const useSettingsStore = create<SettingsState>()(
         }),
       updateLocalModel: (service, modelName) =>
         set((state) => {
-          // Handle backward compatibility: map 'translation' to 'smartTranslation'
-          const actualService = service === 'translation' ? 'smartTranslation' : service
-          let serviceConfig = state.aiServices[actualService as keyof AIServiceSettings] as any
+          let serviceConfig = state.aiServices[service as keyof AIServiceSettings] as any
 
           // If service config doesn't exist, create it with defaults
           if (!serviceConfig) {
@@ -152,7 +148,7 @@ export const useSettingsStore = create<SettingsState>()(
           return {
             aiServices: {
               ...state.aiServices,
-              [actualService]: {
+              [service]: {
                 ...serviceConfig,
                 localModel: modelName,
               },

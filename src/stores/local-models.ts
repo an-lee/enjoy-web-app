@@ -6,7 +6,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type ModelType = 'asr' | 'translation' | 'smartTranslation' | 'dictionary' | 'tts'
+export type ModelType = 'asr' | 'smartTranslation' | 'dictionary' | 'tts'
 
 export interface ModelStatus {
   loaded: boolean
@@ -45,7 +45,6 @@ export const useLocalModelsStore = create<LocalModelsState>()(
     (set) => ({
       models: {
         asr: { ...defaultModelStatus },
-        translation: { ...defaultModelStatus }, // Legacy, maps to smartTranslation
         smartTranslation: { ...defaultModelStatus },
         dictionary: { ...defaultModelStatus },
         tts: { ...defaultModelStatus },
@@ -119,13 +118,6 @@ export const useLocalModelsStore = create<LocalModelsState>()(
             loaded: state.models.asr.loaded,
             loading: false,
             modelName: state.models.asr.modelName,
-            error: null,
-            progress: undefined,
-          },
-          translation: {
-            loaded: state.models.translation.loaded,
-            loading: false,
-            modelName: state.models.translation.modelName,
             error: null,
             progress: undefined,
           },

@@ -74,7 +74,7 @@ export const localModelService = {
   /**
    * Check model status
    */
-  getModelStatus(modelType: 'asr' | 'translation' | 'dictionary' | 'tts') {
+  getModelStatus(modelType: 'asr' | 'smartTranslation' | 'dictionary' | 'tts') {
     return useLocalModelsStore.getState().models[modelType]
   },
 }
