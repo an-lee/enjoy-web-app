@@ -25,10 +25,9 @@ import { Loader2, Download, CheckCircle2, AlertCircle, Circle, Info, ChevronDown
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   ASR_MODEL_OPTIONS,
-  FAST_TRANSLATION_MODEL_OPTIONS,
   SMART_TRANSLATION_MODEL_OPTIONS,
   getDefaultModel,
-} from '@/services/ai/model-options'
+} from '@/services/ai/local/constants'
 
 interface AIServiceCardProps {
   service: 'fastTranslation' | 'smartTranslation' | 'translation' | 'tts' | 'asr' | 'dictionary' | 'assessment'
@@ -38,9 +37,8 @@ interface AIServiceCardProps {
 }
 
 // Map service types to model types
-const SERVICE_TO_MODEL_TYPE: Record<string, 'asr' | 'fastTranslation' | 'smartTranslation' | 'dictionary' | 'tts'> = {
+const SERVICE_TO_MODEL_TYPE: Record<string, 'asr' | 'smartTranslation' | 'dictionary' | 'tts'> = {
   asr: 'asr',
-  fastTranslation: 'fastTranslation',
   smartTranslation: 'smartTranslation',
   translation: 'smartTranslation', // Legacy: map to smartTranslation
   dictionary: 'dictionary',
@@ -73,18 +71,16 @@ export function AIServiceCard({
   const availableModels =
     modelType === 'asr'
       ? ASR_MODEL_OPTIONS
-      : modelType === 'fastTranslation'
-        ? FAST_TRANSLATION_MODEL_OPTIONS
-        : modelType === 'smartTranslation'
-          ? SMART_TRANSLATION_MODEL_OPTIONS
-          : []
+      : modelType === 'smartTranslation'
+        ? SMART_TRANSLATION_MODEL_OPTIONS
+        : []
 
   // Get current selected model or default
   const currentModel =
     (modelType &&
-      (modelType === 'asr' || modelType === 'fastTranslation' || modelType === 'smartTranslation') &&
+      (modelType === 'asr' || modelType === 'smartTranslation') &&
       serviceConfig?.localModel) ||
-    (modelType && (modelType === 'asr' || modelType === 'fastTranslation' || modelType === 'smartTranslation')
+    (modelType && (modelType === 'asr' || modelType === 'smartTranslation')
       ? getDefaultModel(modelType)
       : '')
 
@@ -114,7 +110,7 @@ export function AIServiceCard({
     setModelLoading(modelType, true)
 
     try {
-      if (modelType === 'asr' || modelType === 'fastTranslation' || modelType === 'smartTranslation') {
+      if (modelType === 'asr' || modelType === 'smartTranslation') {
         await localModelService.initializeModel(modelType, { model: currentModel })
       } else {
         throw new Error(t('settings.ai.modelNotSupported', { defaultValue: 'Model type not supported for local execution' }))

@@ -4,6 +4,7 @@
 
 export * from './types'
 export * from './types-responses'
+export * from './constants' // Error codes and configuration constants
 // Explicit re-exports to avoid naming conflicts with types-responses
 export type { FastTranslationRequest } from './fast-translation'
 export { fastTranslationService } from './fast-translation'

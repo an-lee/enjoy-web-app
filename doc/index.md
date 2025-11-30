@@ -16,9 +16,11 @@ This documentation guides the development of the **Web App** and its integration
    - Backend API endpoints, AI service integration, and BYOK implementation.
 4. [AI Service Architecture](./ai_architecture.md)
    - Detailed AI service design patterns, provider abstraction, and implementation guide.
-5. [Frontend Development](./frontend.md)
+5. [Constants Management](./CONSTANTS_MANAGEMENT.md)
+   - Centralized constants management for error codes, configuration values, and service support matrix.
+6. [Frontend Development](./frontend.md)
    - UI/UX implementation, component hierarchy, state management, and routing.
-6. [Business Logic & Workflows](./business_logic.md)
+7. [Business Logic & Workflows](./business_logic.md)
    - Core algorithms, practice loops, data synchronization, and local ASR strategy.
 
 ## Core Development Principles

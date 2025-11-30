@@ -22,6 +22,9 @@ export type {
   LocalTTSResult,
 } from './types'
 
+// Re-export constants and model options
+export * from './constants'
+
 /**
  * Local Model Service
  * Uses transformers.js to run models in the browser

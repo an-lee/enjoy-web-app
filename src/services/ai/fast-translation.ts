@@ -10,6 +10,7 @@
 import { apiClient } from '@/lib/api/client'
 import type { AIServiceResponse } from './types'
 import type { FastTranslationResponse } from './types-responses'
+import { ERROR_FAST_TRANSLATION, API_ENDPOINTS } from './constants'
 
 export interface FastTranslationRequest {
   sourceText: string
@@ -33,7 +34,7 @@ export const fastTranslationService = {
     try {
       const response = await apiClient.post<
         AIServiceResponse<FastTranslationResponse>
-      >('/api/v1/services/fast-translation', {
+      >(API_ENDPOINTS.FAST_TRANSLATION, {
         sourceText: request.sourceText,
         sourceLanguage: request.sourceLanguage,
         targetLanguage: request.targetLanguage,
@@ -44,7 +45,7 @@ export const fastTranslationService = {
       return {
         success: false,
         error: {
-          code: 'FAST_TRANSLATION_ERROR',
+          code: ERROR_FAST_TRANSLATION,
           message: error.message || 'Fast translation failed',
         },
         metadata: {
