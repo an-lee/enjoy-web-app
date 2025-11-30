@@ -303,20 +303,44 @@ export function AIServiceCard({
               </div>
 
               {/* Progress bar - show when loading */}
-              {modelStatus?.progress && (modelStatus?.loading || !modelStatus?.loaded) && (
+              {(modelStatus?.loading || initializing) && (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="truncate">{modelStatus.progress.file || t('settings.ai.downloading', { defaultValue: 'Downloading...' })}</span>
-                    {modelStatus.progress.progress !== undefined && (
+                    <span className="truncate">
+                      {(() => {
+                        const progress = modelStatus?.progress
+                        if (!progress) {
+                          return t('settings.ai.downloading', { defaultValue: 'Downloading...' })
+                        }
+                        // Try multiple possible field names for file name
+                        const fileName = (progress as any)?.file || (progress as any)?.filename || (progress as any)?.name
+                        // Try multiple possible field names for status
+                        const status = progress.status || (progress as any)?.message || (progress as any)?.text
+
+                        if (fileName) {
+                          // Extract just the filename from full path if needed
+                          const name = typeof fileName === 'string' && fileName.includes('/')
+                            ? fileName.split('/').pop()
+                            : fileName
+                          return name || status || t('settings.ai.downloading', { defaultValue: 'Downloading...' })
+                        }
+                        return status || t('settings.ai.downloading', { defaultValue: 'Downloading...' })
+                      })()}
+                    </span>
+                    {modelStatus?.progress?.progress !== undefined && (
                       <span className="shrink-0 ml-2">{Math.min(100, Math.round(modelStatus.progress.progress * 100))}%</span>
                     )}
                   </div>
-                  {modelStatus.progress.progress !== undefined && (
+                  {modelStatus?.progress?.progress !== undefined ? (
                     <div className="w-full bg-secondary rounded-full h-1.5">
                       <div
-                        className="bg-primary h-1.5 rounded-full transition-all"
-                        style={{ width: `${Math.min(100, modelStatus.progress.progress * 100)}%` }}
+                        className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, Math.max(0, modelStatus.progress.progress * 100))}%` }}
                       />
+                    </div>
+                  ) : (
+                    <div className="w-full bg-secondary rounded-full h-1.5">
+                      <div className="bg-primary h-1.5 rounded-full animate-pulse" style={{ width: '30%' }} />
                     </div>
                   )}
                 </div>

@@ -26,6 +26,7 @@ export function getASRWorker(): Worker {
       } else if (type === 'progress') {
         // Normalize progress value to 0-1 range
         const normalizedProgress = normalizeProgress(data)
+        // Preserve all progress fields including file, filename, name, status, etc.
         useLocalModelsStore.getState().setModelProgress('asr', {
           ...data,
           progress: normalizedProgress,
