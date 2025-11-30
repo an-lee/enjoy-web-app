@@ -12,15 +12,13 @@ This documentation guides the development of the **Web App** and its integration
    - High-level architecture, technology stack, and project structure.
 2. [Data Models](./data_models.md)
    - Database schema (PostgreSQL) and local storage (IndexedDB) design.
-3. [API & AI Services](./api_services.md)
-   - Backend API endpoints, AI service integration, and BYOK implementation.
-4. [AI Service Architecture](./ai_architecture.md)
-   - Detailed AI service design patterns, provider abstraction, and implementation guide.
-5. [Constants Management](./CONSTANTS_MANAGEMENT.md)
-   - Centralized constants management for error codes, configuration values, and service support matrix.
-6. [Frontend Development](./frontend.md)
+3. [API Services](./api_services.md)
+   - Backend API endpoints for authentication, fast translation, and basic dictionary lookup.
+4. [AI Service Architecture](./ai_services.md)
+   - AI service design patterns, provider abstraction (Enjoy/Local/BYOK), and unified service interface.
+5. [Frontend Development](./frontend.md)
    - UI/UX implementation, component hierarchy, state management, and routing.
-7. [Business Logic & Workflows](./business_logic.md)
+6. [Business Logic & Workflows](./business_logic.md)
    - Core algorithms, practice loops, data synchronization, and local ASR strategy.
 
 ## Core Development Principles
