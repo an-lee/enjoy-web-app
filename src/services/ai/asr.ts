@@ -3,10 +3,10 @@
  * Supports Azure Speech, OpenAI-compatible API, and local transformers.js models
  */
 
-import { apiClient } from '@/lib/api/client'
-import { azureSpeechService } from './azure-speech'
+import { azureSpeechService } from './enjoy/azure-speech'
 import { localModelService } from './local'
 import { transcribeWithBYOK } from './byok'
+import { transcribeWithEnjoy } from './enjoy'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { ASRResponse } from './types-responses'
 
@@ -147,44 +147,7 @@ export const asrService = {
     }
 
     // OpenAI-compatible API (forwarded through Enjoy API)
-    try {
-      const formData = new FormData()
-      formData.append('audio', request.audioBlob, 'audio.wav')
-      if (request.language) {
-        formData.append('language', request.language)
-      }
-      if (request.prompt) {
-        formData.append('prompt', request.prompt)
-      }
-      formData.append('provider', provider)
-      if (request.config) {
-        formData.append('config', JSON.stringify(request.config))
-      }
-
-      const response = await apiClient.post<AIServiceResponse<ASRResponse>>(
-        '/api/v1/services/asr',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      )
-
-      return response.data
-    } catch (error: any) {
-      return {
-        success: false,
-        error: {
-          code: error.response?.data?.error?.code || 'ASR_ERROR',
-          message: error.response?.data?.error?.message || error.message,
-        },
-        metadata: {
-          serviceType: 'asr',
-          provider: request.config?.provider || 'enjoy',
-        },
-      }
-    }
+    return transcribeWithEnjoy(request.audioBlob, request.language, request.prompt)
   },
 }
 

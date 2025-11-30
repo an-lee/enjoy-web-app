@@ -277,10 +277,12 @@ src/services/ai/
 │   ├── translation-prompts.ts
 │   └── dictionary-prompts.ts
 │
-├── byok/                       # BYOK implementation
+├── enjoy/                      # Enjoy API implementation
 │   ├── index.ts
 │   ├── llm-service.ts          # LLM services (translation, dictionary)
-│   └── speech-service.ts       # Speech services (ASR, TTS)
+│   ├── speech-service.ts       # Speech services (ASR, TTS)
+│   ├── fast-translation.ts     # Fast translation (dedicated models)
+│   └── azure-speech.ts         # Azure Speech SDK integration
 │
 ├── local/                      # Local model implementation
 │   ├── index.ts
@@ -288,16 +290,21 @@ src/services/ai/
 │   ├── services/
 │   └── workers/
 │
-├── smart-translation.ts        # Smart translation service
-├── fast-translation.ts         # Fast translation service
-├── dictionary.ts               # Dictionary service
-├── asr.ts                      # ASR service
-├── tts.ts                      # TTS service
-├── assessment.ts               # Pronunciation assessment service
-├── azure-speech.ts             # Azure Speech SDK integration
+├── byok/                       # BYOK implementation
+│   ├── index.ts
+│   ├── llm-service.ts          # LLM services (translation, dictionary)
+│   └── speech-service.ts       # Speech services (ASR, TTS)
+│
+├── smart-translation.ts        # Smart translation service (routes to enjoy/local/byok)
+├── fast-translation.ts         # Fast translation service (routes to enjoy/local)
+├── dictionary.ts               # Dictionary service (routes to enjoy/local/byok)
+├── asr.ts                      # ASR service (routes to enjoy/local/byok)
+├── tts.ts                      # TTS service (routes to enjoy/local/byok)
+├── assessment.ts               # Pronunciation assessment service (routes to enjoy/byok)
 ├── provider-adapters.ts        # Provider adapter interfaces
 ├── provider-selector.ts        # Provider selection logic
-└── key-management.ts           # API key management (future)
+├── key-management.ts           # API key management (future)
+└── translation.ts              # Legacy translation service
 ```
 
 ## Technology Stack

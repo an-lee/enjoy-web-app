@@ -4,9 +4,9 @@
  * Supports local models (may have limited capabilities)
  */
 
-import { apiClient } from '@/lib/api/client'
 import { localModelService } from './local'
 import { dictionaryLookupWithBYOK } from './byok'
+import { dictionaryLookupWithEnjoy } from './enjoy'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { DictionaryResponse } from './types-responses'
 
@@ -80,31 +80,12 @@ export const dictionaryService = {
     }
 
     // Enjoy API (cloud service)
-    try {
-      const response = await apiClient.post<
-        AIServiceResponse<DictionaryResponse>
-      >('/api/v1/services/dictionary', {
-        word: request.word,
-        context: request.context,
-        sourceLanguage: request.sourceLanguage,
-        targetLanguage: request.targetLanguage,
-        config: request.config,
-      })
-
-      return response.data
-    } catch (error: any) {
-      return {
-        success: false,
-        error: {
-          code: error.response?.data?.error?.code || 'DICTIONARY_ERROR',
-          message: error.response?.data?.error?.message || error.message,
-        },
-        metadata: {
-          serviceType: 'dictionary',
-          provider: request.config?.provider || 'enjoy',
-        },
-      }
-    }
+    return dictionaryLookupWithEnjoy(
+      request.word,
+      request.context,
+      request.sourceLanguage,
+      request.targetLanguage
+    )
   },
 }
 

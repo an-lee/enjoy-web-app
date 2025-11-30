@@ -5,9 +5,9 @@
  * Used for user-generated content translation
  */
 
-import { apiClient } from '@/lib/api/client'
 import { localModelService } from './local'
 import { smartTranslateWithBYOK } from './byok'
+import { smartTranslateWithEnjoy } from './enjoy'
 import type { TranslationStyle } from '@/db/schema'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { SmartTranslationResponse } from './types-responses'
@@ -85,32 +85,13 @@ export const smartTranslationService = {
     }
 
     // Enjoy API (cloud service)
-    try {
-      const response = await apiClient.post<
-        AIServiceResponse<SmartTranslationResponse>
-      >('/api/v1/services/smart-translation', {
-        sourceText: request.sourceText,
-        sourceLanguage: request.sourceLanguage,
-        targetLanguage: request.targetLanguage,
-        style: request.style,
-        customPrompt: request.customPrompt,
-        config: request.config,
-      })
-
-      return response.data
-    } catch (error: any) {
-      return {
-        success: false,
-        error: {
-          code: error.response?.data?.error?.code || 'SMART_TRANSLATION_ERROR',
-          message: error.response?.data?.error?.message || error.message,
-        },
-        metadata: {
-          serviceType: 'smartTranslation',
-          provider: request.config?.provider || 'enjoy',
-        },
-      }
-    }
+    return smartTranslateWithEnjoy(
+      request.sourceText,
+      request.sourceLanguage,
+      request.targetLanguage,
+      request.style,
+      request.customPrompt
+    )
   },
 }
 

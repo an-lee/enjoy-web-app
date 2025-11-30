@@ -452,11 +452,16 @@ const asrResult = await asrService.transcribe({
 ### 7.4 Service Implementation
 
 BYOK services are located in `/src/services/ai/byok/`:
-
 - **`llm-service.ts`**: Smart translation and dictionary using Vercel AI SDK
 - **`speech-service.ts`**: ASR and TTS using OpenAI SDK
 
-All BYOK providers use the **same centralized prompts** from `/src/services/ai/prompts/`, ensuring consistent output across different providers.
+Enjoy API services are located in `/src/services/ai/enjoy/`:
+- **`llm-service.ts`**: Smart translation and dictionary (OpenAI-compatible API)
+- **`speech-service.ts`**: ASR and TTS (OpenAI-compatible API)
+- **`fast-translation.ts`**: Fast translation using dedicated models
+- **`azure-speech.ts`**: Azure Speech token management
+
+All providers use the **same centralized prompts** from `/src/services/ai/prompts/`, ensuring consistent output across different providers.
 
 ### 7.5 Provider Support Matrix
 

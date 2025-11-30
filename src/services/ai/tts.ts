@@ -4,10 +4,10 @@
  * Future support for BYOK (user-provided keys)
  */
 
-import { apiClient } from '@/lib/api/client'
-import { azureSpeechService } from './azure-speech'
+import { azureSpeechService } from './enjoy/azure-speech'
 import { localModelService } from './local'
 import { synthesizeWithBYOK } from './byok'
+import { synthesizeWithEnjoy } from './enjoy'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { TTSResponse } from './types-responses'
 
@@ -151,31 +151,7 @@ export const ttsService = {
     }
 
     // OpenAI-compatible API (forwarded through Enjoy API)
-    try {
-      const response = await apiClient.post<AIServiceResponse<TTSResponse>>(
-        '/api/v1/services/tts',
-        {
-          text: request.text,
-          language: request.language,
-          voice: request.voice,
-          provider,
-          config: request.config,
-        }
-      )
-      return response.data
-    } catch (error: any) {
-      return {
-        success: false,
-        error: {
-          code: error.response?.data?.error?.code || 'TTS_ERROR',
-          message: error.response?.data?.error?.message || error.message,
-        },
-        metadata: {
-          serviceType: 'tts',
-          provider: request.config?.provider || 'enjoy',
-        },
-      }
-    }
+    return synthesizeWithEnjoy(request.text, request.language, request.voice)
   },
 }
 

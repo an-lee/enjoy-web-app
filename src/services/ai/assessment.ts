@@ -6,7 +6,7 @@
  */
 
 import { apiClient } from '@/lib/api/client'
-import { azureSpeechService } from './azure-speech'
+import { azureSpeechService } from './enjoy/azure-speech'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 
 export interface AssessmentRequest {

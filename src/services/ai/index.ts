@@ -15,7 +15,7 @@ export type { AssessmentRequest } from './assessment'
 export { assessmentService } from './assessment'
 export * from './dictionary'
 export * from './asr'
-export * from './azure-speech'
+export * from './enjoy' // Enjoy API services (includes azure-speech)
 export * from './local'
 export * from './provider-selector'
 export * from './provider-adapters'

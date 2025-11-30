@@ -4,8 +4,8 @@
  * Uses dedicated translation models (e.g., NLLB, M2M100)
  */
 
-import { apiClient } from '@/lib/api/client'
 import { localModelService } from './local'
+import { fastTranslateWithEnjoy } from './enjoy'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 
 export interface FastTranslationRequest {
@@ -69,31 +69,12 @@ export const fastTranslationService = {
       }
     }
 
-    // Cloud service
-    try {
-      const response = await apiClient.post<
-        AIServiceResponse<FastTranslationResponse>
-      >('/api/v1/services/fast-translation', {
-        sourceText: request.sourceText,
-        sourceLanguage: request.sourceLanguage,
-        targetLanguage: request.targetLanguage,
-        config: request.config,
-      })
-
-      return response.data
-    } catch (error: any) {
-      return {
-        success: false,
-        error: {
-          code: error.response?.data?.error?.code || 'FAST_TRANSLATION_ERROR',
-          message: error.response?.data?.error?.message || error.message,
-        },
-        metadata: {
-          serviceType: 'fastTranslation',
-          provider: request.config?.provider || 'enjoy',
-        },
-      }
-    }
+    // Enjoy API (cloud service)
+    return fastTranslateWithEnjoy(
+      request.sourceText,
+      request.sourceLanguage,
+      request.targetLanguage
+    )
   },
 }
 
