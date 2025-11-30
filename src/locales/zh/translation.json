@@ -179,6 +179,8 @@
     "error": "翻译失败，请重试。",
     "sourceLanguage": "源语言",
     "targetLanguage": "目标语言",
+    "swapLanguages": "交换语言",
+    "clear": "清除",
     "previous": "上一页",
     "next": "下一页",
     "page": "第",

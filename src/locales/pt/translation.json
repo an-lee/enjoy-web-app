@@ -179,6 +179,8 @@
     "error": "A tradução falhou. Por favor, tente novamente.",
     "sourceLanguage": "Idioma de Origem",
     "targetLanguage": "Idioma de Destino",
+    "swapLanguages": "Trocar idiomas",
+    "clear": "Limpar",
     "previous": "Anterior",
     "next": "Próximo",
     "page": "Página",

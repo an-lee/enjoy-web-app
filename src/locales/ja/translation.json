@@ -179,6 +179,8 @@
     "error": "翻訳に失敗しました。もう一度お試しください。",
     "sourceLanguage": "元の言語",
     "targetLanguage": "目標言語",
+    "swapLanguages": "言語を入れ替える",
+    "clear": "クリア",
     "previous": "前へ",
     "next": "次へ",
     "page": "ページ",

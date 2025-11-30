@@ -179,6 +179,8 @@
     "error": "Übersetzung fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "sourceLanguage": "Ausgangssprache",
     "targetLanguage": "Zielsprache",
+    "swapLanguages": "Sprachen tauschen",
+    "clear": "Löschen",
     "previous": "Zurück",
     "next": "Weiter",
     "page": "Seite",

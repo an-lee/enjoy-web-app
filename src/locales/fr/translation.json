@@ -179,6 +179,8 @@
     "error": "La traduction a échoué. Veuillez réessayer.",
     "sourceLanguage": "Langue Source",
     "targetLanguage": "Langue Cible",
+    "swapLanguages": "Échanger les langues",
+    "clear": "Effacer",
     "previous": "Précédent",
     "next": "Suivant",
     "page": "Page",
