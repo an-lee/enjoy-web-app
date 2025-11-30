@@ -1,4 +1,3 @@
-export { SettingsSearch } from './settings-search'
 export { SettingsTabs } from './settings-tabs'
 export { GeneralSettings } from './general-settings'
 export { AppearanceSettings } from './appearance-settings'

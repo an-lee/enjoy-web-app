@@ -9,20 +9,11 @@ import { AISettings } from './ai-settings'
 interface SettingsTabsProps {
   activeTab: string
   onTabChange: (tab: string) => void
-  searchQuery: string
-  settingsByCategory: {
-    general: any[]
-    appearance: any[]
-    language: any[]
-    ai: any[]
-  }
 }
 
 export function SettingsTabs({
   activeTab,
   onTabChange,
-  searchQuery,
-  settingsByCategory,
 }: SettingsTabsProps) {
   const { t } = useTranslation()
 
@@ -48,19 +39,19 @@ export function SettingsTabs({
       </TabsList>
 
       <TabsContent value="general" className="space-y-6 mt-6">
-        <GeneralSettings searchQuery={searchQuery} settingsByCategory={settingsByCategory} />
+        <GeneralSettings />
       </TabsContent>
 
       <TabsContent value="appearance" className="space-y-6 mt-6">
-        <AppearanceSettings searchQuery={searchQuery} settingsByCategory={settingsByCategory} />
+        <AppearanceSettings />
       </TabsContent>
 
       <TabsContent value="language" className="space-y-6 mt-6">
-        <LanguageSettings searchQuery={searchQuery} settingsByCategory={settingsByCategory} />
+        <LanguageSettings />
       </TabsContent>
 
       <TabsContent value="ai" className="space-y-6 mt-6">
-        <AISettings searchQuery={searchQuery} settingsByCategory={settingsByCategory} />
+        <AISettings />
       </TabsContent>
     </Tabs>
   )

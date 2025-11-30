@@ -21,32 +21,9 @@ const languages = [
   { value: 'pt', label: 'Português' },
 ]
 
-interface LanguageSettingsProps {
-  searchQuery: string
-  settingsByCategory: {
-    language: any[]
-  }
-}
-
-export function LanguageSettings({ searchQuery, settingsByCategory }: LanguageSettingsProps) {
+export function LanguageSettings() {
   const { t } = useTranslation()
   const { nativeLanguage, learningLanguage, setNativeLanguage, setLearningLanguage } = useSettingsStore()
-
-  if (settingsByCategory.language.length === 0 && searchQuery) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground text-center">
-            {t('settings.noResults', { defaultValue: 'No settings found' })}
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (searchQuery && settingsByCategory.language.length === 0) {
-    return null
-  }
 
   return (
     <div className="space-y-6">

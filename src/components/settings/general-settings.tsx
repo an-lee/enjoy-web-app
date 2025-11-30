@@ -4,32 +4,9 @@ import { Label } from '@/components/ui/label'
 import { useTranslation } from 'react-i18next'
 import { useSettingsStore } from '@/stores'
 
-interface GeneralSettingsProps {
-  searchQuery: string
-  settingsByCategory: {
-    general: any[]
-  }
-}
-
-export function GeneralSettings({ searchQuery, settingsByCategory }: GeneralSettingsProps) {
+export function GeneralSettings() {
   const { t } = useTranslation()
   const { dailyGoal, setDailyGoal } = useSettingsStore()
-
-  if (settingsByCategory.general.length === 0 && searchQuery) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground text-center">
-            {t('settings.noResults', { defaultValue: 'No settings found' })}
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (searchQuery && settingsByCategory.general.length === 0) {
-    return null
-  }
 
   return (
     <Card>

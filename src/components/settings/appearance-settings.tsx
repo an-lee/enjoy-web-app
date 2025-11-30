@@ -23,33 +23,10 @@ const uiLanguages = [
   { value: 'pt', label: 'Português' },
 ]
 
-interface AppearanceSettingsProps {
-  searchQuery: string
-  settingsByCategory: {
-    appearance: any[]
-  }
-}
-
-export function AppearanceSettings({ searchQuery, settingsByCategory }: AppearanceSettingsProps) {
+export function AppearanceSettings() {
   const { t } = useTranslation()
   const { theme, setTheme } = useTheme()
   const { preferredLanguage, setPreferredLanguage } = useSettingsStore()
-
-  if (settingsByCategory.appearance.length === 0 && searchQuery) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground text-center">
-            {t('settings.noResults', { defaultValue: 'No settings found' })}
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (searchQuery && settingsByCategory.appearance.length === 0) {
-    return null
-  }
 
   return (
     <div className="space-y-6">
