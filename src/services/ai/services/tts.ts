@@ -1,0 +1,120 @@
+/**
+ * Text-to-Speech Service (TTS)
+ * Generates audio from text for shadowing practice materials
+ */
+
+import { azureSpeechService } from '../providers/enjoy/azure-speech'
+import { localModelService } from '../providers/local'
+import { synthesizeWithBYOK } from '../providers/byok'
+import { synthesizeWithEnjoy } from '../providers/enjoy'
+import type { AIServiceConfig, AIServiceResponse, TTSResponse } from '../types'
+import { AIServiceType, AIProvider, BYOKProvider } from '../types'
+import { ERROR_TTS_AZURE } from '../constants'
+import {
+  createSuccessResponse,
+  handleProviderError,
+} from '../core/error-handler'
+import { routeToProvider } from '../core/provider-router'
+
+export type TTSProvider = 'openai' | 'azure'
+
+export interface TTSRequest {
+  text: string
+  language: string
+  voice?: string
+  provider?: TTSProvider
+  config?: AIServiceConfig
+}
+
+/**
+ * Text-to-Speech Service
+ */
+export const ttsService = {
+  /**
+   * Synthesize speech
+   */
+  async synthesize(
+    request: TTSRequest
+  ): Promise<AIServiceResponse<TTSResponse>> {
+    try {
+      // Special case: Azure Speech via Enjoy API (legacy provider parameter)
+      if (request.provider === BYOKProvider.AZURE && !request.config?.provider) {
+        const token = await azureSpeechService.getToken()
+        const audioBlob = await azureSpeechService.synthesizeWithToken(
+          request.text,
+          request.language,
+          request.voice,
+          token
+        )
+        return createSuccessResponse(
+          { audioBlob, format: 'audio/mpeg' },
+          AIServiceType.TTS,
+          AIProvider.ENJOY
+        )
+      }
+
+      // Use unified provider router
+      const { response, provider } = await routeToProvider<TTSRequest, TTSResponse>({
+        serviceType: AIServiceType.TTS,
+        request,
+        config: request.config,
+        handlers: {
+          local: async (req, config) => {
+            const result = await localModelService.synthesize(
+              req.text,
+              req.language,
+              req.voice,
+              config?.localModel
+            )
+            return {
+              audioBlob: result.audioBlob,
+              format: result.format,
+              duration: result.duration,
+            }
+          },
+          enjoy: async (req) => {
+            const result = await synthesizeWithEnjoy(
+              req.text,
+              req.language,
+              req.voice
+            )
+            if (!result.success || !result.data) {
+              throw new Error(result.error?.message || 'Enjoy API TTS failed')
+            }
+            return result.data
+          },
+          byok: async (req, byokConfig) => {
+            const result = await synthesizeWithBYOK(
+              req.text,
+              req.language,
+              req.voice,
+              byokConfig
+            )
+            if (!result.success || !result.data) {
+              throw new Error(result.error?.message || 'BYOK TTS failed')
+            }
+            return result.data
+          },
+          byokAzure: async (req, azureConfig) => {
+            const audioBlob = await azureSpeechService.synthesizeWithKey(
+              req.text,
+              req.language,
+              req.voice,
+              azureConfig
+            )
+            return { audioBlob, format: 'audio/mpeg' }
+          },
+        },
+      })
+
+      return createSuccessResponse(response, AIServiceType.TTS, provider)
+    } catch (error) {
+      return handleProviderError(
+        error,
+        ERROR_TTS_AZURE,
+        AIServiceType.TTS,
+        AIProvider.ENJOY
+      )
+    }
+  },
+}

@@ -1,46 +1,44 @@
 /**
- * Smart Translation Web Worker
- * Handles smart translation using generative models (e.g., Qwen3) with style support
- * Supports different translation styles via prompts, used for user-generated content
+ * Dictionary Web Worker
+ * Handles dictionary lookup model loading and inference in a separate thread
  */
 
 import { pipeline, env } from '@huggingface/transformers'
-import { buildSmartTranslationPrompt } from '../../prompts'
+import { buildDictionaryPrompt, parseDictionaryResponse } from '../../../prompts'
 
 // Configure transformers.js
 env.allowLocalModels = false
 env.allowRemoteModels = true
 
 // Model configuration
-const DEFAULT_SMART_TRANSLATION_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
+const DEFAULT_DICTIONARY_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
 
-interface SmartTranslationWorkerMessage {
-  type: 'init' | 'translate' | 'checkStatus'
+interface DictionaryWorkerMessage {
+  type: 'init' | 'lookup' | 'checkStatus'
   data?: {
     model?: string
-    text?: string
+    word?: string
+    context?: string
     srcLang?: string
     tgtLang?: string
-    style?: string
-    customPrompt?: string
     taskId?: string
   }
 }
 
-interface SmartTranslationWorkerResponse {
+interface DictionaryWorkerResponse {
   type: 'progress' | 'ready' | 'result' | 'error' | 'status'
   data?: any
   taskId?: string
 }
 
-// Singleton pattern for Text Generation pipeline (for smart translation via prompts)
-class SmartTranslationPipelineSingleton {
+// Singleton pattern for Text Generation pipeline (for dictionary lookup via prompts)
+class DictionaryPipelineSingleton {
   static instance: any = null
   static modelName: string | null = null
   static loading: boolean = false
 
   static async getInstance(
-    modelName: string = DEFAULT_SMART_TRANSLATION_MODEL,
+    modelName: string = DEFAULT_DICTIONARY_MODEL,
     progressCallback?: (progress: any) => void
   ) {
     // If already loaded with the same model, return existing instance
@@ -75,7 +73,7 @@ class SmartTranslationPipelineSingleton {
           self.postMessage({
             type: 'progress',
             data: progress,
-          } as SmartTranslationWorkerResponse)
+          } as DictionaryWorkerResponse)
         },
       })
 
@@ -85,7 +83,7 @@ class SmartTranslationPipelineSingleton {
       self.postMessage({
         type: 'ready',
         data: { model: modelName },
-      } as SmartTranslationWorkerResponse)
+      } as DictionaryWorkerResponse)
 
       return this.instance
     } catch (error: any) {
@@ -107,19 +105,19 @@ class SmartTranslationPipelineSingleton {
 
 
 // Listen for messages from main thread
-self.addEventListener('message', async (event: MessageEvent<SmartTranslationWorkerMessage>) => {
+self.addEventListener('message', async (event: MessageEvent<DictionaryWorkerMessage>) => {
   const { type, data } = event.data
 
   try {
     switch (type) {
       case 'init': {
         // Initialize model
-        const modelName = data?.model || DEFAULT_SMART_TRANSLATION_MODEL
-        await SmartTranslationPipelineSingleton.getInstance(modelName, (progress) => {
+        const modelName = data?.model || DEFAULT_DICTIONARY_MODEL
+        await DictionaryPipelineSingleton.getInstance(modelName, (progress) => {
           self.postMessage({
             type: 'progress',
             data: progress,
-          } as SmartTranslationWorkerResponse)
+          } as DictionaryWorkerResponse)
         })
         break
       }
@@ -129,69 +127,62 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
         self.postMessage({
           type: 'status',
           data: {
-            loaded: SmartTranslationPipelineSingleton.isLoaded(),
-            model: SmartTranslationPipelineSingleton.getModelName(),
+            loaded: DictionaryPipelineSingleton.isLoaded(),
+            model: DictionaryPipelineSingleton.getModelName(),
           },
-        } as SmartTranslationWorkerResponse)
+        } as DictionaryWorkerResponse)
         break
       }
 
-      case 'translate': {
-        // Smart translation using generative model with style support
-        if (!data?.text || !data?.srcLang || !data?.tgtLang) {
-          throw new Error('Text, source language, and target language are required')
+      case 'lookup': {
+        // Dictionary lookup using generative model with prompts
+        if (!data?.word || !data?.srcLang || !data?.tgtLang) {
+          throw new Error('Word, source language, and target language are required')
         }
 
-        const modelName = data?.model || DEFAULT_SMART_TRANSLATION_MODEL
-        const generator = await SmartTranslationPipelineSingleton.getInstance(modelName)
+        const modelName = data?.model || DEFAULT_DICTIONARY_MODEL
+        const generator = await DictionaryPipelineSingleton.getInstance(modelName)
 
-        // Build translation prompt with style (using shared prompt builder)
-        const prompt = buildSmartTranslationPrompt(
-          data.text,
+        // Build dictionary prompt
+        const prompt = buildDictionaryPrompt(
+          data.word,
+          data.context,
           data.srcLang,
-          data.tgtLang,
-          (data.style || 'natural') as any,
-          data.customPrompt
+          data.tgtLang
         )
 
-        // Generate translation
+        // Generate dictionary entry
         const result = await generator(prompt, {
-          max_new_tokens: 512,
-          temperature: 0.3,
+          max_new_tokens: 1024,
+          temperature: 0.5,
           top_p: 0.9,
           return_full_text: false,
         })
 
-        // Extract translated text from generated result
-        let translatedText = ''
+        // Extract generated text
+        let generatedText = ''
         if (Array.isArray(result) && result.length > 0) {
-          translatedText = result[0].generated_text || result[0].text || ''
+          generatedText = result[0].generated_text || result[0].text || ''
         } else if (result.generated_text) {
-          translatedText = result.generated_text
+          generatedText = result.generated_text
         } else if (result.text) {
-          translatedText = result.text
+          generatedText = result.text
         }
 
-        // Clean up the translation (remove any prompt remnants)
-        translatedText = translatedText.trim()
-        // Remove the prompt if it was included in the output
-        if (translatedText.includes('Translation (')) {
-          const parts = translatedText.split('Translation (')
-          if (parts.length > 1) {
-            translatedText = parts[parts.length - 1].split(':')[1]?.trim() || translatedText
-          }
-        }
+        // Parse dictionary response
+        const dictionaryData = parseDictionaryResponse(generatedText.trim())
 
         // Send result back to main thread
         self.postMessage({
           type: 'result',
           data: {
-            translatedText: translatedText || data.text,
-            sourceLanguage: data.srcLang,
-            targetLanguage: data.tgtLang,
+            word: dictionaryData.word || data.word,
+            definitions: dictionaryData.definitions || [],
+            contextualExplanation: dictionaryData.contextualExplanation,
+            etymology: dictionaryData.etymology,
           },
           taskId: data?.taskId,
-        } as SmartTranslationWorkerResponse)
+        } as DictionaryWorkerResponse)
         break
       }
 
@@ -206,7 +197,7 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
         stack: error.stack,
       },
       taskId: data?.taskId,
-    } as SmartTranslationWorkerResponse)
+    } as DictionaryWorkerResponse)
   }
 })
 

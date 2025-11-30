@@ -6,7 +6,7 @@
  * bun add @huggingface/transformers
  */
 
-import type { LocalModelConfig } from '../types'
+import type { LocalModelConfig } from '../../types'
 import { useLocalModelsStore } from '@/stores/local-models'
 import { transcribe } from './services/asr-service'
 import { smartTranslate } from './services/smart-translation-service'

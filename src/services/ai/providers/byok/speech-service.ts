@@ -5,7 +5,7 @@
  */
 
 import OpenAI from 'openai'
-import type { BYOKConfig, AIServiceResponse, ASRResponse, TTSResponse } from '../types'
+import type { BYOKConfig, AIServiceResponse, ASRResponse, TTSResponse } from '../../types'
 
 /**
  * ASR - Automatic Speech Recognition (Speech-to-Text) with BYOK

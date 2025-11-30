@@ -79,6 +79,201 @@ const prompt = buildSmartTranslationPrompt(text, 'en', 'zh', 'natural')
 - BYOK Gemini (Gemini Pro)
 ```
 
+## Code Organization
+
+### Directory Structure
+
+The AI services module follows a clean, layered architecture with clear separation of concerns:
+
+```
+src/services/ai/
+├── core/                      # Core abstractions and utilities
+│   ├── config.ts              # Unified configuration management
+│   ├── error-handler.ts       # Unified error handling
+│   ├── provider-router.ts     # Provider routing abstraction
+│   └── index.ts               # Core exports
+│
+├── services/                  # Service routers (public API layer)
+│   ├── index.ts               # Services export
+│   ├── asr.ts                 # Automatic Speech Recognition
+│   ├── tts.ts                 # Text-to-Speech
+│   ├── smart-translation.ts   # Smart Translation
+│   ├── dictionary.ts          # Dictionary Lookup
+│   └── assessment.ts          # Pronunciation Assessment
+│
+├── providers/                 # Provider implementations (internal)
+│   ├── enjoy/                 # Enjoy API provider
+│   │   ├── index.ts
+│   │   ├── llm-service.ts     # Smart Translation, Dictionary
+│   │   ├── speech-service.ts  # ASR, TTS
+│   │   └── azure-speech.ts    # Azure Speech token + SDK
+│   │
+│   ├── local/                 # Local model provider
+│   │   ├── index.ts
+│   │   ├── config.ts
+│   │   ├── constants.ts
+│   │   ├── types.ts
+│   │   ├── services/          # Service implementations
+│   │   ├── utils/             # Utilities (audio, progress)
+│   │   └── workers/           # Web Worker implementations
+│   │
+│   └── byok/                  # BYOK provider
+│       ├── index.ts
+│       ├── llm-service.ts     # LLM services (Vercel AI SDK)
+│       └── speech-service.ts  # Speech services (OpenAI SDK)
+│
+├── types/                     # Type definitions
+│   ├── core.ts                # Core types (enums, configs)
+│   ├── responses.ts           # Response types
+│   └── index.ts               # Type exports
+│
+├── constants/                 # Constants and error codes
+│   ├── config.ts              # Configuration constants
+│   ├── error-codes.ts         # Error code definitions
+│   ├── error-messages.ts      # Error message mappings
+│   └── index.ts               # Constants exports
+│
+├── prompts/                   # Centralized prompts
+│   ├── index.ts
+│   ├── language-utils.ts
+│   ├── translation-prompts.ts
+│   └── dictionary-prompts.ts
+│
+├── key-management.ts          # BYOK key management utilities
+└── index.ts                   # Unified exports (public API)
+```
+
+### Architecture Layers
+
+The codebase is organized into clear layers:
+
+1. **Public API Layer** (`services/`)
+   - High-level service routers
+   - Clean, consistent interface
+   - Provider-agnostic
+
+2. **Core Abstraction Layer** (`core/`)
+   - Configuration management
+   - Error handling
+   - Provider routing
+
+3. **Provider Implementation Layer** (`providers/`)
+   - Provider-specific implementations
+   - Internal use (can be exported for advanced usage)
+   - Isolated from each other
+
+4. **Shared Resources** (`types/`, `constants/`, `prompts/`)
+   - Shared type definitions
+   - Configuration constants
+   - Prompt templates
+
+### Core Abstractions
+
+#### 1. Configuration Management (`core/config.ts`)
+
+Unified configuration handling that combines settings store access and provider selection:
+
+```typescript
+import { getAIServiceConfig, selectProvider } from '@/services/ai/core'
+
+// Get configuration from settings
+const config = getAIServiceConfig('smartTranslation')
+
+// Auto-select provider based on user status
+const provider = selectProvider(undefined, AIServiceType.SMART_TRANSLATION)
+```
+
+**Key Functions**:
+- `getAIServiceConfig()`: Get service configuration from settings store
+- `selectProvider()`: Automatically select provider based on user status and service type
+- `mergeAIServiceConfig()`: Merge user configuration with defaults
+
+#### 2. Error Handling (`core/error-handler.ts`)
+
+Unified error handling for consistent responses across all services:
+
+```typescript
+import { createSuccessResponse, handleProviderError } from '@/services/ai/core'
+
+// Create success response
+const response = createSuccessResponse(data, AIServiceType.ASR, AIProvider.LOCAL)
+
+// Handle errors
+const errorResponse = handleProviderError(
+  error,
+  ERROR_ASR_LOCAL,
+  AIServiceType.ASR,
+  AIProvider.LOCAL
+)
+```
+
+**Key Functions**:
+- `createSuccessResponse()`: Create standardized success response
+- `createErrorResponse()`: Create standardized error response
+- `handleProviderError()`: Handle provider-specific errors
+- `withErrorHandling()`: Wrap async calls with error handling
+
+#### 3. Provider Router (`core/provider-router.ts`)
+
+Unified routing layer that routes requests to appropriate providers:
+
+```typescript
+import { routeToProvider } from '@/services/ai/core'
+
+const { response, provider } = await routeToProvider({
+  serviceType: AIServiceType.ASR,
+  request,
+  config: request.config,
+  handlers: {
+    local: async (req, config) => { /* ... */ },
+    enjoy: async (req) => { /* ... */ },
+    byok: async (req, byokConfig) => { /* ... */ },
+    byokAzure: async (req, azureConfig) => { /* ... */ },
+  },
+})
+```
+
+**Benefits**:
+- Single routing logic for all services
+- Automatic provider selection
+- Consistent error handling
+- Easy to extend with new providers
+
+### Service Routers
+
+Service routers are high-level APIs located in `services/` that provide a clean interface for each AI service. They use the core abstractions to handle provider routing and error handling.
+
+**Example: ASR Service**
+
+```typescript
+export const asrService = {
+  async transcribe(request: ASRRequest): Promise<AIServiceResponse<ASRResponse>> {
+    try {
+      const { response, provider } = await routeToProvider({
+        serviceType: AIServiceType.ASR,
+        request,
+        config: request.config,
+        handlers: {
+          local: async (req, config) => { /* ... */ },
+          enjoy: async (req) => { /* ... */ },
+          byok: async (req, byokConfig) => { /* ... */ },
+          byokAzure: async (req, azureConfig) => { /* ... */ },
+        },
+      })
+      return createSuccessResponse(response, AIServiceType.ASR, provider)
+    } catch (error) {
+      return handleProviderError(error, ERROR_ASR_AZURE, AIServiceType.ASR, AIProvider.ENJOY)
+    }
+  },
+}
+```
+
+**Benefits**:
+- Clean, consistent API
+- Automatic provider routing
+- Unified error handling
+- Easy to maintain and extend
+
 ## Service Architecture
 
 ### Request Flow
@@ -91,33 +286,51 @@ User Request
     │
     └─ Other Services (Smart Translation, ASR, TTS, etc.)
         │
-        ├─ provider: 'enjoy' (default)
-        │   └─> Enjoy API (OpenAI-compatible or Azure token)
-        │
-        ├─ provider: 'local'
-        │   └─> Browser transformers.js (Web Workers)
-        │
-        └─ provider: 'byok' (FUTURE)
-            └─> Vercel AI SDK / Official SDKs
+        ├─ Service Router (services/asr.ts, services/tts.ts, etc.)
+        │   │
+        │   └─ Provider Router (core/provider-router.ts)
+        │       │
+        │       ├─ provider: 'enjoy' (default)
+        │       │   └─> Enjoy Provider (providers/enjoy/)
+        │       │       └─> Enjoy API (OpenAI-compatible or Azure token)
+        │       │
+        │       ├─ provider: 'local'
+        │       │   └─> Local Provider (providers/local/)
+        │       │       └─> Browser transformers.js (Web Workers)
+        │       │
+        │       └─ provider: 'byok' (FUTURE)
+        │           └─> BYOK Provider (providers/byok/)
+        │               └─> Vercel AI SDK / Official SDKs
 ```
 
 ### Type System
 
-All types are defined in `/src/services/ai/types.ts`:
+All types are defined in `/src/services/ai/types/`:
 
 ```typescript
 // Provider Types
-type AIProvider = 'enjoy' | 'byok' | 'local'
-type BYOKProvider = 'openai' | 'google' | 'claude' | 'azure' | 'custom'
+enum AIProvider {
+  ENJOY = 'enjoy',
+  LOCAL = 'local',
+  BYOK = 'byok',
+}
+
+enum BYOKProvider {
+  OPENAI = 'openai',
+  GOOGLE = 'google',
+  CLAUDE = 'claude',
+  AZURE = 'azure',
+  CUSTOM = 'custom',
+}
 
 // Service Types
-type AIServiceType =
-  | 'fastTranslation'    // Quick translation (FREE)
-  | 'smartTranslation'   // Style-aware translation (LLM)
-  | 'tts'                // Text-to-speech
-  | 'asr'                // Speech-to-text
-  | 'dictionary'         // Word lookup (basic=FREE, contextual=AI)
-  | 'assessment'         // Pronunciation assessment (Azure only)
+enum AIServiceType {
+  SMART_TRANSLATION = 'smartTranslation',
+  DICTIONARY = 'dictionary',
+  ASR = 'asr',
+  TTS = 'tts',
+  ASSESSMENT = 'assessment',
+}
 
 // Configuration
 interface AIServiceConfig {
@@ -125,60 +338,29 @@ interface AIServiceConfig {
   byok?: BYOKConfig              // For BYOK mode
   localModel?: LocalModelConfig  // For local mode
 }
-
-interface BYOKConfig {
-  provider: BYOKProvider
-  apiKey: string
-  endpoint?: string  // Custom endpoint (for Azure/custom)
-  region?: string    // Azure region
-  model?: string     // Model name
-}
 ```
 
 ## Services Overview
 
 ### 1. Fast Translation (FREE)
 
-- **File**: `fast-translation.ts`
+- **File**: Not in AI services (regular API service)
 - **Purpose**: Quick subtitle translation using dedicated translation models
 - **Models**: M2M100, NLLB
 - **Providers**: **Enjoy API only** (no local/BYOK)
 - **Cost**: **Always FREE**
 
-```typescript
-export const fastTranslationService = {
-  async translate(request: FastTranslationRequest) {
-    // Direct API call - always free
-    return await apiClient.post('/api/v1/services/fast-translation', request)
-  }
-}
-```
-
 ### 2. Smart Translation
 
-- **File**: `smart-translation.ts`
+- **File**: `services/smart-translation.ts`
 - **Purpose**: Style-aware translation for user-generated content
 - **Models**: Generative LLMs
 - **Providers**: Enjoy API, Local, BYOK (OpenAI, Claude, Gemini, Azure, Custom)
 - **Styles**: literal, natural, casual, formal, simplified, detailed, custom
 
-```typescript
-export const smartTranslationService = {
-  async translate(request) {
-    if (request.config?.provider === 'local') {
-      return localModelService.translate(...)
-    }
-    if (request.config?.provider === 'byok') {
-      return smartTranslateWithBYOK(...)  // FUTURE
-    }
-    return smartTranslateWithEnjoy(...)
-  }
-}
-```
-
 ### 3. Dictionary Lookup (Two-Tier)
 
-- **File**: `dictionary.ts`
+- **File**: `services/dictionary.ts`
 - **Purpose**: Word definitions and contextual explanations
 
 #### Basic Lookup (FREE)
@@ -191,131 +373,28 @@ export const smartTranslationService = {
 - Uses LLM (same principle as smart translation)
 - **Providers**: Enjoy API, Local, BYOK
 
-```typescript
-export const dictionaryService = {
-  // Basic lookup - always FREE
-  async lookupBasic(word, sourceLanguage, targetLanguage) {
-    return await apiClient.post('/api/v1/services/dictionary/basic', ...)
-  },
-
-  // Contextual explanation - needs AI
-  async lookup(request) {
-    if (request.config?.provider === 'local') {
-      return localModelService.lookup(...)
-    }
-    if (request.config?.provider === 'byok') {
-      return dictionaryLookupWithBYOK(...)  // FUTURE
-    }
-    return dictionaryLookupWithEnjoy(...)
-  }
-}
-```
-
 ### 4. ASR (Speech-to-Text)
 
-- **File**: `asr.ts`
+- **File**: `services/asr.ts`
 - **Purpose**: Convert audio to timestamped text
 - **Primary Model**: Whisper
 - **Providers**: Enjoy API (OpenAI-compatible), Local (transformers.js), BYOK (OpenAI, Azure)
 
-```typescript
-export const asrService = {
-  async transcribe(request) {
-    if (request.config?.provider === 'local') {
-      return localModelService.transcribe(...)
-    }
-    if (request.config?.provider === 'byok') {
-      return transcribeWithBYOK(...)  // FUTURE
-    }
-    return transcribeWithEnjoy(...)
-  }
-}
-```
-
 ### 5. TTS (Text-to-Speech)
 
-- **File**: `tts.ts`
+- **File**: `services/tts.ts`
 - **Purpose**: Convert text to audio for shadowing practice
 - **Providers**: Enjoy API (OpenAI-compatible), Local (Web Speech API), BYOK (OpenAI, Azure)
 
-```typescript
-export const ttsService = {
-  async synthesize(request) {
-    if (request.config?.provider === 'local') {
-      return localModelService.synthesize(...)
-    }
-    if (request.config?.provider === 'byok') {
-      return synthesizeWithBYOK(...)  // FUTURE
-    }
-    return synthesizeWithEnjoy(...)
-  }
-}
-```
-
 ### 6. Pronunciation Assessment (Azure Only)
 
-- **File**: `assessment.ts`
+- **File**: `services/assessment.ts`
 - **Purpose**: Evaluate pronunciation accuracy
 - **Provider**: **Azure Speech only** (only provider that supports phoneme-level assessment)
 - **Modes**:
   1. **Enjoy Mode**: Enjoy API provides short-lived Azure Speech token
   2. **BYOK Mode** (FUTURE): User provides own Azure Speech subscription key
 - **Implementation**: Frontend uses Azure Speech SDK directly with token or key
-
-```typescript
-export const assessmentService = {
-  async assess(request) {
-    if (request.config?.provider === 'byok' && request.config.byok.provider === 'azure') {
-      return azureSpeechService.assessPronunciationWithKey(...)  // FUTURE
-    }
-    // Default: use Enjoy API to get Azure token
-    return azureSpeechService.assessPronunciation(...)
-  }
-}
-```
-
-## File Structure
-
-```
-src/services/ai/
-├── types.ts                    # Core type definitions
-├── types-responses.ts          # Response type definitions
-├── index.ts                    # Unified exports
-│
-├── prompts/                    # Centralized prompts
-│   ├── index.ts
-│   ├── language-utils.ts
-│   ├── translation-prompts.ts
-│   └── dictionary-prompts.ts
-│
-├── enjoy/                      # Enjoy API implementation
-│   ├── index.ts
-│   ├── llm-service.ts          # Smart Translation, Dictionary (contextual)
-│   ├── speech-service.ts       # ASR, TTS
-│   └── azure-speech.ts         # Azure Speech token + SDK
-│
-├── local/                      # Local model implementation
-│   ├── index.ts
-│   ├── config.ts
-│   ├── services/               # Service implementations
-│   └── workers/                # Web Worker implementations
-│
-├── byok/                       # BYOK implementation (FUTURE)
-│   ├── index.ts
-│   ├── llm-service.ts          # Smart Translation, Dictionary (with Vercel AI SDK)
-│   └── speech-service.ts       # ASR, TTS (with OpenAI SDK)
-│
-├── fast-translation.ts         # Fast Translation (Enjoy only, FREE)
-├── smart-translation.ts        # Smart translation router
-├── dictionary.ts               # Dictionary router (basic=free, contextual=ai)
-├── asr.ts                      # ASR router
-├── tts.ts                      # TTS router
-├── assessment.ts               # Assessment router (Azure only)
-├── provider-adapters.ts        # Provider adapter interfaces (for BYOK)
-├── provider-selector.ts        # Provider selection logic
-├── key-management.ts           # API key management (BYOK, future)
-└── translation.ts              # Legacy translation service
-```
 
 ## BYOK (Bring Your Own Key) - Future Implementation
 
@@ -334,11 +413,11 @@ BYOK uses **Vercel AI SDK** for unified LLM access and **official SDKs** for spe
 ```json
 {
   "dependencies": {
-    "ai": "^5.0.0",                    // Vercel AI SDK core
-    "@ai-sdk/openai": "^2.0.0",        // OpenAI provider
-    "@ai-sdk/anthropic": "^2.0.0",     // Claude provider
-    "@ai-sdk/google": "^2.0.0",        // Gemini provider
-    "openai": "^6.0.0"                 // OpenAI SDK for speech
+    "ai": "^5.0.0",
+    "@ai-sdk/openai": "^2.0.0",
+    "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/google": "^2.0.0",
+    "openai": "^6.0.0"
   }
 }
 ```
@@ -359,41 +438,55 @@ BYOK uses **Vercel AI SDK** for unified LLM access and **official SDKs** for spe
 
 ## Best Practices
 
-### 1. Always Use Unified Prompts
+### 1. Always Use Core Abstractions
 
 ```typescript
-// ✅ Good: Use centralized prompt builder
-import { buildSmartTranslationPrompt } from '@/services/ai/prompts'
-const prompt = buildSmartTranslationPrompt(text, srcLang, tgtLang, style)
+// ✅ Good: Use core abstractions
+import { routeToProvider, createSuccessResponse } from '@/services/ai/core'
+const { response, provider } = await routeToProvider({ ... })
+return createSuccessResponse(response, serviceType, provider)
 
-// ❌ Bad: Build prompts inline
-const prompt = `Translate ${text} from ${srcLang} to ${tgtLang}`
+// ❌ Bad: Manual provider routing
+if (provider === 'local') { /* ... */ }
+else if (provider === 'byok') { /* ... */ }
 ```
 
-### 2. Handle All Provider Modes
+### 2. Use Unified Error Handling
 
 ```typescript
-// ✅ Good: Handle all modes
-if (useLocal) { /* local logic */ }
-else if (useBYOK) { /* BYOK logic - FUTURE */ }
-else { /* Enjoy API logic */ }
+// ✅ Good: Use error handler
+import { handleProviderError } from '@/services/ai/core'
+return handleProviderError(error, ERROR_CODE, serviceType, provider)
 
-// ❌ Bad: Assume Enjoy API only
-return apiClient.post(...)
-```
-
-### 3. Return Consistent Response Format
-
-```typescript
-// ✅ Good: Always use AIServiceResponse
+// ❌ Bad: Manual error handling
 return {
-  success: true,
-  data: result,
-  metadata: { serviceType, provider }
+  success: false,
+  error: { code: 'ERROR', message: error.message },
+  metadata: { serviceType, provider },
 }
+```
 
-// ❌ Bad: Return raw data
-return result
+### 3. Keep Service Routers Simple
+
+Service routers should only handle:
+- Request validation
+- Provider routing (via `routeToProvider`)
+- Response formatting (via `createSuccessResponse`)
+
+All provider-specific logic should be in provider implementations.
+
+### 4. Centralize Configuration
+
+Use `getAIServiceConfig()` and `selectProvider()` from core instead of accessing settings store directly.
+
+### 5. Import from Public API
+
+```typescript
+// ✅ Good: Import from public API
+import { asrService, aiServices } from '@/services/ai'
+
+// ⚠️  Advanced: Import specific providers if needed
+import { localModelService } from '@/services/ai/providers/local'
 ```
 
 ## Technology Stack
@@ -402,12 +495,12 @@ return result
 
 ```json
 {
-  "ai": "^5.0.0",                          // Vercel AI SDK (for BYOK)
-  "@ai-sdk/openai": "^2.0.0",              // OpenAI provider (for BYOK)
-  "@ai-sdk/anthropic": "^2.0.0",           // Claude provider (for BYOK)
-  "@ai-sdk/google": "^2.0.0",              // Gemini provider (for BYOK)
-  "openai": "^6.0.0",                      // OpenAI SDK for speech (for BYOK)
-  "@huggingface/transformers": "^3.0.0"    // Local models
+  "ai": "^5.0.0",
+  "@ai-sdk/openai": "^2.0.0",
+  "@ai-sdk/anthropic": "^2.0.0",
+  "@ai-sdk/google": "^2.0.0",
+  "openai": "^6.0.0",
+  "@huggingface/transformers": "^3.0.0"
 }
 ```
 
@@ -415,11 +508,11 @@ return result
 
 The AI Service architecture is designed for:
 
-- **Clarity**: Clear separation of FREE services vs. AI-powered services
-- **Flexibility**: Multiple providers (Enjoy, Local, BYOK)
-- **Consistency**: Unified prompts and response formats
-- **Maintainability**: Centralized configuration and types
-- **Extensibility**: Easy to add new providers
-- **User Choice**: Free services (fast translation, basic dictionary) + Optional AI (local/Enjoy/BYOK)
+- **Clarity**: Clear separation of concerns with layered architecture
+- **Flexibility**: Multiple providers (Enjoy, Local, BYOK) via unified routing
+- **Consistency**: Unified error handling and response formats
+- **Maintainability**: Centralized configuration, types, and prompts
+- **Extensibility**: Easy to add new providers or services
+- **User Choice**: Free services + Optional AI (local/Enjoy/BYOK)
 
-All AI-powered providers use the same prompt templates, ensuring consistent output quality regardless of the chosen provider.
+All AI-powered providers use the same prompt templates and core abstractions, ensuring consistent output quality and maintainable code regardless of the chosen provider.

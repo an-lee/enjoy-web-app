@@ -13,13 +13,13 @@ import type {
   AIServiceResponse,
   SmartTranslationResponse,
   DictionaryResponse,
-} from '../types'
+} from '../../types'
 import type { TranslationStyle } from '@/db/schema'
 import {
   buildSmartTranslationPrompt,
   buildDictionaryPrompt,
   parseDictionaryResponse,
-} from '../prompts'
+} from '../../prompts'
 
 /**
  * Get model provider function from Vercel AI SDK

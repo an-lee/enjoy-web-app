@@ -13,7 +13,7 @@ import type {
   AIServiceResponse,
   SmartTranslationResponse,
   DictionaryResponse,
-} from '../types'
+} from '../../types'
 import type { TranslationStyle } from '@/db/schema'
 // Prompts will be used when switching to OpenAI SDK
 // import { buildSmartTranslationPrompt, buildDictionaryPrompt } from '../prompts'
