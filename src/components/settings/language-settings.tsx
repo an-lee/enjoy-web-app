@@ -9,17 +9,7 @@ import {
 } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import { useSettingsStore } from '@/stores'
-
-const languages = [
-  { value: 'en', label: 'English' },
-  { value: 'zh', label: '中文' },
-  { value: 'ja', label: '日本語' },
-  { value: 'ko', label: '한국어' },
-  { value: 'es', label: 'Español' },
-  { value: 'fr', label: 'Français' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'pt', label: 'Português' },
-]
+import { LANGUAGES } from '@/lib/constants'
 
 export function LanguageSettings() {
   const { t } = useTranslation()
@@ -43,7 +33,7 @@ export function LanguageSettings() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {languages.map((lang) => (
+                {LANGUAGES.map((lang) => (
                   <SelectItem key={lang.value} value={lang.value}>
                     {lang.label}
                   </SelectItem>
@@ -70,7 +60,7 @@ export function LanguageSettings() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {languages.map((lang) => (
+                {LANGUAGES.map((lang) => (
                   <SelectItem key={lang.value} value={lang.value}>
                     {lang.label}
                   </SelectItem>
