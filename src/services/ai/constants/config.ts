@@ -109,6 +109,7 @@ export function isServiceSupported(
 
 /**
  * Supported BYOK providers
+ * Use these instead of hardcoded strings
  */
 export const BYOK_PROVIDERS = {
   OPENAI: 'openai',
@@ -117,6 +118,11 @@ export const BYOK_PROVIDERS = {
   AZURE: 'azure',
   CUSTOM: 'custom',
 } as const
+
+/**
+ * Default Azure region
+ */
+export const DEFAULT_AZURE_REGION = 'eastus'
 
 /**
  * BYOK service support by provider
@@ -168,6 +174,36 @@ export const BYOK_PROVIDER_SUPPORT = {
  * They are always free and don't require AI configuration.
  * Import them from '@/lib/api' instead of '@/services/ai'.
  */
+
+// ============================================================================
+// Service Type Constants
+// ============================================================================
+
+/**
+ * AI Service Type Constants
+ * Use these instead of hardcoded strings
+ */
+export const SERVICE_TYPES = {
+  SMART_TRANSLATION: 'smartTranslation',
+  DICTIONARY: 'dictionary',
+  ASR: 'asr',
+  TTS: 'tts',
+  ASSESSMENT: 'assessment',
+} as const
+
+// ============================================================================
+// Provider Constants
+// ============================================================================
+
+/**
+ * AI Provider Constants
+ * Use these instead of hardcoded strings
+ */
+export const AI_PROVIDERS = {
+  ENJOY: 'enjoy',
+  LOCAL: 'local',
+  BYOK: 'byok',
+} as const
 
 // ============================================================================
 // Service Display Names

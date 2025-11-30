@@ -14,6 +14,16 @@ import { synthesizeWithBYOK } from './byok'
 import { synthesizeWithEnjoy } from './enjoy'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { TTSResponse } from './types-responses'
+import {
+  ERROR_TTS_LOCAL,
+  ERROR_TTS_AZURE,
+  ERROR_TTS_BYOK_AZURE,
+  SERVICE_TYPES,
+  AI_PROVIDERS,
+  BYOK_PROVIDERS,
+  DEFAULT_AZURE_REGION,
+  getErrorMessage,
+} from './constants'
 
 export type TTSProvider = 'openai' | 'azure'
 
@@ -35,9 +45,9 @@ export const ttsService = {
   async synthesize(
     request: TTSRequest
   ): Promise<AIServiceResponse<TTSResponse>> {
-    const provider = request.provider || 'openai'
-    const useLocal = request.config?.provider === 'local'
-    const useBYOK = request.config?.provider === 'byok'
+    const provider = request.provider || BYOK_PROVIDERS.OPENAI
+    const useLocal = request.config?.provider === AI_PROVIDERS.LOCAL
+    const useBYOK = request.config?.provider === AI_PROVIDERS.BYOK
 
     // Local mode: use transformers.js or Web Speech API
     if (useLocal) {
@@ -56,20 +66,20 @@ export const ttsService = {
             duration: result.duration,
           },
           metadata: {
-            serviceType: 'tts',
-            provider: 'local',
+            serviceType: SERVICE_TYPES.TTS,
+            provider: AI_PROVIDERS.LOCAL,
           },
         }
       } catch (error: any) {
         return {
           success: false,
           error: {
-            code: 'LOCAL_TTS_ERROR',
-            message: error.message || 'Local TTS failed',
+            code: ERROR_TTS_LOCAL,
+            message: getErrorMessage(ERROR_TTS_LOCAL, error.message),
           },
           metadata: {
-            serviceType: 'tts',
-            provider: 'local',
+            serviceType: SERVICE_TYPES.TTS,
+            provider: AI_PROVIDERS.LOCAL,
           },
         }
       }
@@ -78,7 +88,7 @@ export const ttsService = {
     // BYOK mode: use user's own API keys (FUTURE)
     if (useBYOK && request.config?.byok) {
       // For Azure, use existing Azure Speech service
-      if (request.config.byok.provider === 'azure') {
+      if (request.config.byok.provider === BYOK_PROVIDERS.AZURE) {
         try {
           const audioBlob = await azureSpeechService.synthesizeWithKey(
             request.text,
@@ -86,27 +96,27 @@ export const ttsService = {
             request.voice,
             {
               subscriptionKey: request.config.byok.apiKey,
-              region: request.config.byok.region || 'eastus',
+              region: request.config.byok.region || DEFAULT_AZURE_REGION,
             }
           )
           return {
             success: true,
             data: { audioBlob, format: 'audio/mpeg' },
             metadata: {
-              serviceType: 'tts',
-              provider: 'byok',
+              serviceType: SERVICE_TYPES.TTS,
+              provider: AI_PROVIDERS.BYOK,
             },
           }
         } catch (error: any) {
           return {
             success: false,
             error: {
-              code: 'BYOK_AZURE_TTS_ERROR',
-              message: error.message,
+              code: ERROR_TTS_BYOK_AZURE,
+              message: getErrorMessage(ERROR_TTS_BYOK_AZURE, error.message),
             },
             metadata: {
-              serviceType: 'tts',
-              provider: 'byok',
+              serviceType: SERVICE_TYPES.TTS,
+              provider: AI_PROVIDERS.BYOK,
             },
           }
         }
@@ -122,7 +132,7 @@ export const ttsService = {
     }
 
     // Azure Speech special handling (Enjoy API managed)
-    if (provider === 'azure') {
+    if (provider === BYOK_PROVIDERS.AZURE) {
       try {
         const token = await azureSpeechService.getToken()
         const audioBlob = await azureSpeechService.synthesizeWithToken(
@@ -135,20 +145,20 @@ export const ttsService = {
           success: true,
           data: { audioBlob, format: 'audio/mpeg' },
           metadata: {
-            serviceType: 'tts',
-            provider: 'enjoy',
+            serviceType: SERVICE_TYPES.TTS,
+            provider: AI_PROVIDERS.ENJOY,
           },
         }
       } catch (error: any) {
         return {
           success: false,
           error: {
-            code: 'AZURE_TTS_ERROR',
-            message: error.message,
+            code: ERROR_TTS_AZURE,
+            message: getErrorMessage(ERROR_TTS_AZURE, error.message),
           },
           metadata: {
-            serviceType: 'tts',
-            provider: 'enjoy',
+            serviceType: SERVICE_TYPES.TTS,
+            provider: AI_PROVIDERS.ENJOY,
           },
         }
       }

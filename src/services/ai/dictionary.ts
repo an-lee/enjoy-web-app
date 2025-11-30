@@ -11,6 +11,12 @@ import { dictionaryLookupWithBYOK } from './byok'
 import { dictionaryLookupWithEnjoy } from './enjoy'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { DictionaryResponse } from './types-responses'
+import {
+  ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED,
+  SERVICE_TYPES,
+  AI_PROVIDERS,
+  getErrorMessage,
+} from './constants'
 
 export interface DictionaryRequest {
   word: string
@@ -33,8 +39,8 @@ export const dictionaryService = {
   async lookup(
     request: DictionaryRequest
   ): Promise<AIServiceResponse<DictionaryResponse>> {
-    const useLocal = request.config?.provider === 'local'
-    const useBYOK = request.config?.provider === 'byok'
+    const useLocal = request.config?.provider === AI_PROVIDERS.LOCAL
+    const useBYOK = request.config?.provider === AI_PROVIDERS.BYOK
 
     // Local mode: use transformers.js (if supported)
     if (useLocal) {
@@ -50,21 +56,20 @@ export const dictionaryService = {
           success: true,
           data: result,
           metadata: {
-            serviceType: 'dictionary',
-            provider: 'local',
+            serviceType: SERVICE_TYPES.DICTIONARY,
+            provider: AI_PROVIDERS.LOCAL,
           },
         }
       } catch (error: any) {
         return {
           success: false,
           error: {
-            code: 'LOCAL_DICTIONARY_NOT_SUPPORTED',
-            message:
-              'Dictionary lookup is not supported in local mode. Please use cloud service.',
+            code: ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED,
+            message: getErrorMessage(ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED),
           },
           metadata: {
-            serviceType: 'dictionary',
-            provider: 'local',
+            serviceType: SERVICE_TYPES.DICTIONARY,
+            provider: AI_PROVIDERS.LOCAL,
           },
         }
       }

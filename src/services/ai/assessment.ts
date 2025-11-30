@@ -13,6 +13,16 @@
 import { apiClient } from '@/services/api/client'
 import { azureSpeechService } from './enjoy/azure-speech'
 import type { AIServiceConfig, AIServiceResponse } from './types'
+import {
+  ERROR_ASSESSMENT,
+  ERROR_ASSESSMENT_BYOK,
+  ERROR_ASSESSMENT_BYOK_PROVIDER_NOT_SUPPORTED,
+  SERVICE_TYPES,
+  AI_PROVIDERS,
+  BYOK_PROVIDERS,
+  DEFAULT_AZURE_REGION,
+  getErrorMessage,
+} from './constants'
 
 export interface AssessmentRequest {
   audioBlob: Blob
@@ -45,11 +55,11 @@ export const assessmentService = {
   async assess(
     request: AssessmentRequest
   ): Promise<AIServiceResponse<AssessmentResponse>> {
-    const useBYOK = request.config?.provider === 'byok'
+    const useBYOK = request.config?.provider === AI_PROVIDERS.BYOK
 
     // If using BYOK with Azure, use Azure SDK directly (FUTURE)
     if (useBYOK && request.config?.byok) {
-      if (request.config.byok.provider === 'azure') {
+      if (request.config.byok.provider === BYOK_PROVIDERS.AZURE) {
         try {
           const result = await azureSpeechService.assessPronunciationWithKey(
             request.audioBlob,
@@ -57,27 +67,27 @@ export const assessmentService = {
             request.language,
             {
               subscriptionKey: request.config.byok.apiKey,
-              region: request.config.byok.region || 'eastus',
+              region: request.config.byok.region || DEFAULT_AZURE_REGION,
             }
           )
           return {
             success: true,
             data: result,
             metadata: {
-              serviceType: 'assessment',
-              provider: 'byok',
+              serviceType: SERVICE_TYPES.ASSESSMENT,
+              provider: AI_PROVIDERS.BYOK,
             },
           }
         } catch (error: any) {
           return {
             success: false,
             error: {
-              code: 'BYOK_ASSESSMENT_ERROR',
-              message: error.message,
+              code: ERROR_ASSESSMENT_BYOK,
+              message: getErrorMessage(ERROR_ASSESSMENT_BYOK, error.message),
             },
             metadata: {
-              serviceType: 'assessment',
-              provider: 'byok',
+              serviceType: SERVICE_TYPES.ASSESSMENT,
+              provider: AI_PROVIDERS.BYOK,
             },
           }
         }
@@ -87,12 +97,15 @@ export const assessmentService = {
       return {
         success: false,
         error: {
-          code: 'BYOK_ASSESSMENT_PROVIDER_NOT_SUPPORTED',
-          message: `Provider ${request.config.byok.provider} does not support pronunciation assessment. Only Azure Speech is supported.`,
+          code: ERROR_ASSESSMENT_BYOK_PROVIDER_NOT_SUPPORTED,
+          message: getErrorMessage(
+            ERROR_ASSESSMENT_BYOK_PROVIDER_NOT_SUPPORTED,
+            request.config.byok.provider
+          ),
         },
         metadata: {
-          serviceType: 'assessment',
-          provider: 'byok',
+          serviceType: SERVICE_TYPES.ASSESSMENT,
+          provider: AI_PROVIDERS.BYOK,
         },
       }
     }
@@ -117,12 +130,15 @@ export const assessmentService = {
       return {
         success: false,
         error: {
-          code: error.response?.data?.error?.code || 'ASSESSMENT_ERROR',
-          message: error.response?.data?.error?.message || error.message,
+          code:
+            error.response?.data?.error?.code || ERROR_ASSESSMENT,
+          message:
+            error.response?.data?.error?.message ||
+            getErrorMessage(ERROR_ASSESSMENT, error.message),
         },
         metadata: {
-          serviceType: 'assessment',
-          provider: 'enjoy',
+          serviceType: SERVICE_TYPES.ASSESSMENT,
+          provider: AI_PROVIDERS.ENJOY,
         },
       }
     }

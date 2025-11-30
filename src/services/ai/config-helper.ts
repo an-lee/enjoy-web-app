@@ -6,6 +6,7 @@
 import { useSettingsStore } from '@/stores'
 import type { AIServiceConfig } from './types'
 import type { AIProvider } from './types'
+import { AI_PROVIDERS } from './constants'
 
 /**
  * Get AI service configuration from settings
@@ -17,14 +18,20 @@ export function getAIServiceConfig(
   const serviceSettings = aiServices[service]
 
   // Default to 'enjoy' provider if service settings don't exist
-  const provider: AIProvider = serviceSettings?.defaultProvider || 'enjoy'
+  const provider: AIProvider =
+    serviceSettings?.defaultProvider || AI_PROVIDERS.ENJOY
 
   const config: AIServiceConfig = {
     provider,
   }
 
   // Add local model configuration if provider is local
-  if (provider === 'local' && serviceSettings && 'localModel' in serviceSettings && serviceSettings.localModel) {
+  if (
+    provider === AI_PROVIDERS.LOCAL &&
+    serviceSettings &&
+    'localModel' in serviceSettings &&
+    serviceSettings.localModel
+  ) {
     config.localModel = {
       model: serviceSettings.localModel,
     }

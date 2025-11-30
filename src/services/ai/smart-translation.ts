@@ -17,6 +17,12 @@ import { smartTranslateWithEnjoy } from './enjoy'
 import type { TranslationStyle } from '@/db/schema'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 import type { SmartTranslationResponse } from './types-responses'
+import {
+  ERROR_SMART_TRANSLATION_LOCAL,
+  SERVICE_TYPES,
+  AI_PROVIDERS,
+  getErrorMessage,
+} from './constants'
 
 export interface SmartTranslationRequest {
   sourceText: string
@@ -38,8 +44,8 @@ export const smartTranslationService = {
   async translate(
     request: SmartTranslationRequest
   ): Promise<AIServiceResponse<SmartTranslationResponse>> {
-    const useLocal = request.config?.provider === 'local'
-    const useBYOK = request.config?.provider === 'byok'
+    const useLocal = request.config?.provider === AI_PROVIDERS.LOCAL
+    const useBYOK = request.config?.provider === AI_PROVIDERS.BYOK
 
     // Local mode: use transformers.js with generative models
     if (useLocal) {
@@ -59,20 +65,20 @@ export const smartTranslationService = {
             aiModel: 'local-smart-translation',
           },
           metadata: {
-            serviceType: 'smartTranslation',
-            provider: 'local',
+            serviceType: SERVICE_TYPES.SMART_TRANSLATION,
+            provider: AI_PROVIDERS.LOCAL,
           },
         }
       } catch (error: any) {
         return {
           success: false,
           error: {
-            code: 'LOCAL_SMART_TRANSLATION_ERROR',
-            message: error.message || 'Local smart translation failed',
+            code: ERROR_SMART_TRANSLATION_LOCAL,
+            message: error.message || getErrorMessage(ERROR_SMART_TRANSLATION_LOCAL),
           },
           metadata: {
-            serviceType: 'smartTranslation',
-            provider: 'local',
+            serviceType: SERVICE_TYPES.SMART_TRANSLATION,
+            provider: AI_PROVIDERS.LOCAL,
           },
         }
       }
