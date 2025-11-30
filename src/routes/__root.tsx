@@ -1,10 +1,10 @@
-import { HeadContent, Scripts, createRootRouteWithContext, Outlet, redirect, useLocation } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRouteWithContext, Outlet, redirect, useLocation, useNavigate } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useTranslation } from 'react-i18next'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { QueryClient } from '@tanstack/react-query'
 
 import '../lib/i18n'
@@ -42,6 +42,12 @@ export const Route = createRootRouteWithContext<{
   }),
 
   beforeLoad: ({ location }) => {
+    // Skip auth check during SSR - Zustand persist hasn't hydrated yet
+    // We'll handle auth check in the component on the client side
+    if (typeof window === 'undefined') {
+      return
+    }
+
     const { isAuthenticated } = useAuthStore.getState()
 
     // Allow access to login page without authentication
@@ -49,7 +55,7 @@ export const Route = createRootRouteWithContext<{
       return
     }
 
-    // Redirect to login if not authenticated
+    // Redirect to login if not authenticated (client-side only)
     if (!isAuthenticated) {
       throw redirect({
         to: '/login',
@@ -90,7 +96,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             },
           ]}
         />
-        <ReactQueryDevtools buttonPosition="bottom-left" />
         <Scripts />
       </body>
     </html>
@@ -99,8 +104,53 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const location = useLocation()
+  const navigate = useNavigate()
   const isLoginPage = location.pathname === '/login'
   const { queryClient } = Route.useRouteContext()
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+
+  // Client-side auth check after hydration
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') {
+      setIsCheckingAuth(false)
+      return
+    }
+
+    // Wait for Zustand persist to hydrate from localStorage
+    // Give it a brief moment to complete hydration
+    const timer = setTimeout(() => {
+      const state = useAuthStore.getState()
+      setIsCheckingAuth(false)
+
+      // If not authenticated and not on login page, redirect to login
+      if (!state.isAuthenticated && !isLoginPage) {
+        navigate({
+          to: '/login',
+          search: {
+            redirect: location.pathname,
+          },
+        })
+      }
+    }, 50) // Short delay to allow Zustand persist to hydrate
+
+    return () => clearTimeout(timer)
+  }, [isLoginPage, location.pathname, navigate])
+
+  // Show loading state during auth check to prevent flash
+  if (isCheckingAuth && !isLoginPage) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="system" storageKey="enjoy-ui-theme">
+          <div className="flex min-h-screen items-center justify-center">
+            <div className="text-center">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+            </div>
+          </div>
+        </ThemeProvider>
+      </QueryClientProvider>
+    )
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -134,6 +184,7 @@ function RootComponent() {
           </SidebarProvider>
         )}
       </ThemeProvider>
+      <ReactQueryDevtools buttonPosition="bottom-left" />
     </QueryClientProvider>
   )
 }
