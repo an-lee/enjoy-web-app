@@ -59,6 +59,7 @@ export function AIServiceCard({
   const { aiServices, updateAIServiceProvider, updateLocalModel } = useSettingsStore()
   const { models, setModelLoading, setModelError } = useLocalModelsStore()
   const [initializing, setInitializing] = useState(false)
+  const [loadingFromCache, setLoadingFromCache] = useState(false)
 
   // Get service config with fallback to default
   // AIServiceType values match AIServiceSettings keys
@@ -90,13 +91,36 @@ export function AIServiceCard({
       ? getDefaultModel(modelType)
       : '')
 
-  // Check model status when switching to local
+  // Check model cache status when switching models
+  const [isCached, setIsCached] = useState<boolean | null>(null)
+
   useEffect(() => {
-    if (isLocal && modelType && !modelStatus?.loaded && !modelStatus?.loading) {
-      // Optionally check status from worker
-      // This would require sending a message to the worker
+    if (isLocal && modelType && currentModel && !modelStatus?.loaded && !modelStatus?.loading) {
+      // First check if model is already loaded in worker
+      localModelService
+        .checkModelLoaded(modelType, { model: currentModel })
+        .then((workerStatus) => {
+          if (workerStatus.loaded && workerStatus.modelName === currentModel) {
+            // Model is already loaded in worker, update state
+            useLocalModelsStore.getState().setModelLoaded(modelType, currentModel)
+            setIsCached(null) // Don't show cache status if already loaded
+          } else {
+            // Check if model is cached
+            return localModelService.checkModelCache(modelType, { model: currentModel })
+          }
+        })
+        .then((cached) => {
+          if (typeof cached === 'boolean') {
+            setIsCached(cached)
+          }
+        })
+        .catch(() => {
+          setIsCached(false)
+        })
+    } else {
+      setIsCached(null)
     }
-  }, [isLocal, modelType, modelStatus])
+  }, [isLocal, modelType, currentModel, modelStatus?.loaded, modelStatus?.loading])
 
   // Clear progress when model is loaded
   useEffect(() => {
@@ -112,10 +136,33 @@ export function AIServiceCard({
   const handleInitializeModel = async () => {
     if (!modelType || !currentModel) return
 
+    // First check if model is already loaded in worker
+    try {
+      const workerStatus = await localModelService.checkModelLoaded(modelType, { model: currentModel })
+      if (workerStatus.loaded && workerStatus.modelName === currentModel) {
+        // Model is already loaded, just update state
+        useLocalModelsStore.getState().setModelLoaded(modelType, currentModel)
+        setInitializing(false)
+        return
+      }
+    } catch (error) {
+      console.warn('[AIServiceCard] Failed to check worker status:', error)
+    }
+
     setInitializing(true)
     setModelLoading(modelType, true)
 
     try {
+      // Check if model is cached before loading
+      const cached = await localModelService.checkModelCache(modelType, { model: currentModel })
+      if (cached) {
+        // Model is cached, loading should be fast
+        setLoadingFromCache(true)
+        console.log(`[AIServiceCard] Model ${currentModel} is cached, loading from cache...`)
+      } else {
+        setLoadingFromCache(false)
+      }
+
       if (modelType === 'asr' || modelType === 'smartTranslation' || modelType === 'dictionary' || modelType === 'tts') {
         await localModelService.initializeModel(modelType, { model: currentModel })
       } else {
@@ -124,16 +171,47 @@ export function AIServiceCard({
         )
       }
     } catch (error: any) {
-      setModelError(modelType, error.message || 'Failed to initialize model')
+      // Log detailed error for debugging
+      console.error('[AIServiceCard] Model initialization error')
+      console.error('Model type:', modelType)
+      console.error('Current model:', currentModel)
+      console.error('Error object:', error)
+      console.error('Error message:', error?.message)
+      console.error('Error stack:', error?.stack)
+      console.error('Error name:', error?.name)
+      console.error('Error cause:', error?.cause)
+      console.error('Error string:', String(error))
+      try {
+        console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+      } catch (e) {
+        console.error('Cannot stringify error:', e)
+      }
+
+      const errorMessage = error?.message || error?.toString() || 'Failed to initialize model'
+      setModelError(modelType, errorMessage)
     } finally {
       setInitializing(false)
+      setLoadingFromCache(false)
     }
   }
 
-  const handleModelChange = (modelValue: string) => {
+  const handleModelChange = async (modelValue: string) => {
     if (modelType) {
       // AIServiceType values match AIServiceSettings keys
       updateLocalModel(serviceKey, modelValue)
+
+      // Check if the new model is already loaded in worker
+      try {
+        const workerStatus = await localModelService.checkModelLoaded(modelType, { model: modelValue })
+        if (workerStatus.loaded && workerStatus.modelName === modelValue) {
+          // Model is already loaded in worker, update state directly
+          useLocalModelsStore.getState().setModelLoaded(modelType, modelValue)
+          return
+        }
+      } catch (error) {
+        console.warn('[AIServiceCard] Failed to check worker status:', error)
+      }
+
       // If model is already loaded but different model is selected, reset status
       if (modelStatus?.loaded && modelStatus.modelName !== modelValue) {
         useLocalModelsStore.getState().resetModel(modelType)
@@ -189,7 +267,38 @@ export function AIServiceCard({
               {modelStatus?.error && (
                 <Alert variant="destructive" className="py-2">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-xs">{modelStatus.error}</AlertDescription>
+                  <AlertDescription className="text-xs space-y-1">
+                    <div className="font-medium">{modelStatus.error}</div>
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+                        {t('settings.ai.showErrorDetails', { defaultValue: 'Show error details' })}
+                      </summary>
+                      <pre className="mt-2 text-xs bg-destructive/10 p-2 rounded overflow-auto max-h-40">
+                        {JSON.stringify(
+                          {
+                            error: modelStatus.error,
+                            errorDetails: modelStatus.errorDetails,
+                            modelType,
+                            modelName: modelStatus.modelName,
+                            loaded: modelStatus.loaded,
+                            loading: modelStatus.loading,
+                          },
+                          null,
+                          2
+                        )}
+                      </pre>
+                      {modelStatus.errorDetails?.stack && (
+                        <pre className="mt-2 text-xs bg-destructive/10 p-2 rounded overflow-auto max-h-40 font-mono">
+                          {modelStatus.errorDetails.stack}
+                        </pre>
+                      )}
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {t('settings.ai.errorDebugHint', {
+                          defaultValue: 'Check browser console (F12) for detailed error logs',
+                        })}
+                      </div>
+                    </details>
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -256,7 +365,13 @@ export function AIServiceCard({
                             {t('settings.ai.loaded', { defaultValue: 'Loaded' })}
                           </Badge>
                         )}
-                        {!modelStatus?.loaded && !modelStatus?.loading && (
+                        {!modelStatus?.loaded && !modelStatus?.loading && isCached === true && (
+                          <Badge variant="secondary" className="gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <Circle className="h-3 w-3 fill-current" />
+                            {t('settings.ai.cached', { defaultValue: 'Cached' })}
+                          </Badge>
+                        )}
+                        {!modelStatus?.loaded && !modelStatus?.loading && isCached !== true && (
                           <Badge variant="secondary" className="gap-1 bg-muted text-muted-foreground">
                             <Circle className="h-3 w-3 fill-current" />
                             {t('settings.ai.notLoaded', { defaultValue: 'Not loaded' })}
@@ -271,7 +386,10 @@ export function AIServiceCard({
                       {modelStatus?.loaded && !modelStatus?.loading && (
                         <p>{t('settings.ai.loadedTooltip', { defaultValue: 'Model is ready to use' })}</p>
                       )}
-                      {!modelStatus?.loaded && !modelStatus?.loading && (
+                      {!modelStatus?.loaded && !modelStatus?.loading && isCached === true && (
+                        <p>{t('settings.ai.cachedTooltip', { defaultValue: 'Model files are cached. Click Download to load from cache (fast)' })}</p>
+                      )}
+                      {!modelStatus?.loaded && !modelStatus?.loading && isCached !== true && (
                         <p>{t('settings.ai.notLoadedTooltip', { defaultValue: 'Model needs to be downloaded and loaded before use' })}</p>
                       )}
                     </TooltipContent>
@@ -302,46 +420,145 @@ export function AIServiceCard({
                 )}
               </div>
 
-              {/* Progress bar - show when loading */}
+              {/* Progress bars - show when loading */}
               {(modelStatus?.loading || initializing) && (
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="truncate">
-                      {(() => {
-                        const progress = modelStatus?.progress
-                        if (!progress) {
-                          return t('settings.ai.downloading', { defaultValue: 'Downloading...' })
-                        }
-                        // Try multiple possible field names for file name
-                        const fileName = (progress as any)?.file || (progress as any)?.filename || (progress as any)?.name
-                        // Try multiple possible field names for status
-                        const status = progress.status || (progress as any)?.message || (progress as any)?.text
-
-                        if (fileName) {
-                          // Extract just the filename from full path if needed
-                          const name = typeof fileName === 'string' && fileName.includes('/')
-                            ? fileName.split('/').pop()
-                            : fileName
-                          return name || status || t('settings.ai.downloading', { defaultValue: 'Downloading...' })
-                        }
-                        return status || t('settings.ai.downloading', { defaultValue: 'Downloading...' })
-                      })()}
-                    </span>
-                    {modelStatus?.progress?.progress !== undefined && (
-                      <span className="shrink-0 ml-2">{Math.min(100, Math.round(modelStatus.progress.progress * 100))}%</span>
-                    )}
-                  </div>
-                  {modelStatus?.progress?.progress !== undefined ? (
-                    <div className="w-full bg-secondary rounded-full h-1.5">
-                      <div
-                        className="bg-primary h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min(100, Math.max(0, modelStatus.progress.progress * 100))}%` }}
-                      />
+                <div className="space-y-2">
+                  {loadingFromCache && (!modelStatus?.files || Object.keys(modelStatus.files).length === 0) ? (
+                    // Loading from cache, show simple loading indicator
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{t('settings.ai.loadingFromCache', { defaultValue: 'Loading from cache...' })}</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-1.5">
+                        <div className="bg-primary h-1.5 rounded-full animate-pulse" style={{ width: '30%' }} />
+                      </div>
                     </div>
                   ) : (
-                    <div className="w-full bg-secondary rounded-full h-1.5">
-                      <div className="bg-primary h-1.5 rounded-full animate-pulse" style={{ width: '30%' }} />
-                    </div>
+                    <>
+                      {(() => {
+                        const files = modelStatus?.files
+                        const fileEntries = files ? Object.entries(files) : []
+
+                        // If we have multiple files, show all of them
+                        if (fileEntries.length > 0) {
+                      // Sort files: in-progress first, then completed
+                      const sortedFiles = [...fileEntries].sort(([, a], [, b]) => {
+                        const aComplete = a.progress >= 1.0
+                        const bComplete = b.progress >= 1.0
+                        if (aComplete && !bComplete) return 1
+                        if (!aComplete && bComplete) return -1
+                        return 0
+                      })
+
+                      return sortedFiles.map(([fileKey, fileProgress]) => {
+                        const fileName = fileProgress.name.includes('/')
+                          ? fileProgress.name.split('/').pop() || fileProgress.name
+                          : fileProgress.name
+                        const progressPercent = Math.min(100, Math.max(0, fileProgress.progress * 100))
+                        const isComplete = fileProgress.progress >= 1.0
+                        const fileSize = fileProgress.size
+                          ? fileProgress.size > 1024 * 1024
+                            ? `${(fileProgress.size / (1024 * 1024)).toFixed(2)} MB`
+                            : fileProgress.size > 1024
+                              ? `${(fileProgress.size / 1024).toFixed(2)} KB`
+                              : `${fileProgress.size} B`
+                          : null
+                        const loadedSize = fileProgress.loaded && fileProgress.size
+                          ? fileProgress.loaded > 1024 * 1024
+                            ? `${(fileProgress.loaded / (1024 * 1024)).toFixed(2)} MB`
+                            : fileProgress.loaded > 1024
+                              ? `${(fileProgress.loaded / 1024).toFixed(2)} KB`
+                              : `${fileProgress.loaded} B`
+                          : null
+
+                        return (
+                          <div key={fileKey} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span className={`truncate font-mono ${isComplete ? 'text-green-600 dark:text-green-400' : ''}`} title={fileProgress.name}>
+                                {fileName}
+                                {fileSize && (
+                                  <span className="ml-1.5 text-muted-foreground/70">
+                                    {isComplete ? (
+                                      <span className="text-green-600 dark:text-green-400">({fileSize})</span>
+                                    ) : (
+                                      `(${loadedSize && `${loadedSize} / `}${fileSize})`
+                                    )}
+                                  </span>
+                                )}
+                              </span>
+                              <span className={`shrink-0 ml-2 ${isComplete ? 'text-green-600 dark:text-green-400 font-medium' : ''}`}>
+                                {isComplete ? t('settings.ai.completed', { defaultValue: 'Completed' }) : `${Math.round(progressPercent)}%`}
+                              </span>
+                            </div>
+                            <div className="w-full bg-secondary rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full transition-all duration-300 ${
+                                  isComplete ? 'bg-green-500' : 'bg-primary'
+                                }`}
+                                style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })
+                    }
+
+                      // Fallback to legacy single file progress
+                      const progress = modelStatus?.progress
+                      if (progress) {
+                      const fileName = (progress as any)?.file || (progress as any)?.filename || (progress as any)?.name
+                      const status = progress.status || (progress as any)?.message || (progress as any)?.text
+                      const progressPercent = progress.progress !== undefined
+                        ? Math.min(100, Math.max(0, progress.progress * 100))
+                        : undefined
+
+                      return (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="truncate">
+                              {fileName
+                                ? (typeof fileName === 'string' && fileName.includes('/')
+                                    ? fileName.split('/').pop()
+                                    : fileName)
+                                : status || t('settings.ai.downloading', { defaultValue: 'Downloading...' })}
+                            </span>
+                            {progressPercent !== undefined && (
+                              <span className="shrink-0 ml-2">{Math.round(progressPercent)}%</span>
+                            )}
+                          </div>
+                          {progressPercent !== undefined ? (
+                            <div className="w-full bg-secondary rounded-full h-1.5">
+                              <div
+                                className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                                style={{ width: `${progressPercent}%` }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-full bg-secondary rounded-full h-1.5">
+                              <div className="bg-primary h-1.5 rounded-full animate-pulse" style={{ width: '30%' }} />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
+
+                        // No progress data yet
+                        return (
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>
+                                {loadingFromCache
+                                  ? t('settings.ai.loadingFromCache', { defaultValue: 'Loading from cache...' })
+                                  : t('settings.ai.downloading', { defaultValue: 'Downloading...' })}
+                              </span>
+                            </div>
+                            <div className="w-full bg-secondary rounded-full h-1.5">
+                              <div className="bg-primary h-1.5 rounded-full animate-pulse" style={{ width: '30%' }} />
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </>
                   )}
                 </div>
               )}

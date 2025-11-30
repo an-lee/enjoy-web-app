@@ -90,6 +90,17 @@ class SmartTranslationPipelineSingleton {
       this.loading = false
       this.instance = null
       this.modelName = null
+
+      // Log detailed error for debugging
+      console.error('[SmartTranslationPipeline] Failed to load model:', modelName)
+      console.error('Error object:', error)
+      console.error('Error message:', error?.message)
+      console.error('Error stack:', error?.stack)
+      console.error('Error name:', error?.name)
+      console.error('Error cause:', error?.cause)
+      console.error('Error string:', String(error))
+      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+
       throw error
     }
   }
@@ -197,11 +208,41 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
         throw new Error(`Unknown message type: ${type}`)
     }
   } catch (error: any) {
+    // Log detailed error information for debugging
+    console.error('[SmartTranslationWorker] Error in message handler')
+    console.error('Message type:', type)
+    console.error('Error object:', error)
+    console.error('Error message:', error?.message)
+    console.error('Error stack:', error?.stack)
+    console.error('Error name:', error?.name)
+    console.error('Error cause:', error?.cause)
+    console.error('Error string:', String(error))
+    try {
+      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+    } catch (e) {
+      console.error('Cannot stringify error:', e)
+    }
+
+    // Extract detailed error message
+    let errorMessage = 'Unknown error'
+    if (error?.message) {
+      errorMessage = error.message
+    } else if (typeof error === 'string') {
+      errorMessage = error
+    } else if (error?.toString && error.toString() !== '[object Object]') {
+      errorMessage = error.toString()
+    } else {
+      errorMessage = JSON.stringify(error, null, 2)
+    }
+
     self.postMessage({
       type: 'error',
       data: {
-        message: error.message || 'Unknown error',
-        stack: error.stack,
+        message: errorMessage,
+        stack: error?.stack,
+        name: error?.name,
+        cause: error?.cause,
+        originalError: error?.toString?.(),
       },
       taskId: data?.taskId,
     } as SmartTranslationWorkerResponse)

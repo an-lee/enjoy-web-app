@@ -65,7 +65,20 @@ export function getSmartTranslationWorker(): Worker {
           progress: normalizedProgress,
         })
       } else if (type === 'error') {
-        useLocalModelsStore.getState().setModelError('smartTranslation', data.message)
+        // Log detailed error for debugging
+        console.error('[SmartTranslationWorker] Error received from worker')
+        console.error('Error message:', data.message)
+        console.error('Error stack:', data.stack)
+        console.error('Error name:', data.name)
+        console.error('Error cause:', data.cause)
+        console.error('Original error:', data.originalError)
+        console.error('Full error data:', data)
+        useLocalModelsStore.getState().setModelError('smartTranslation', data.message, {
+          stack: data.stack,
+          name: data.name,
+          cause: data.cause,
+          originalError: data.originalError,
+        })
       }
     })
   }

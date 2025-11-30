@@ -5,6 +5,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normalizeProgress } from '@/services/ai/providers/local/utils/progress'
 
 export type ModelType = 'asr' | 'smartTranslation' | 'dictionary' | 'tts'
 
@@ -21,6 +22,12 @@ export interface ModelStatus {
   loading: boolean
   modelName: string | null
   error: string | null
+  errorDetails?: {
+    stack?: string
+    name?: string
+    cause?: any
+    originalError?: string
+  }
   files?: Record<string, FileProgress> // Track progress for each file
   // Legacy single file progress (for backward compatibility during transition)
   progress?: {
@@ -43,7 +50,7 @@ interface LocalModelsState {
   setModelStatus: (type: ModelType, status: Partial<ModelStatus>) => void
   setModelLoading: (type: ModelType, loading: boolean) => void
   setModelLoaded: (type: ModelType, modelName: string) => void
-  setModelError: (type: ModelType, error: string | null) => void
+  setModelError: (type: ModelType, error: string | null, errorDetails?: ModelStatus['errorDetails']) => void
   setModelProgress: (type: ModelType, progress: ModelStatus['progress']) => void
   resetModel: (type: ModelType) => void
 }
@@ -77,7 +84,14 @@ export const useLocalModelsStore = create<LocalModelsState>()(
         set((state) => ({
           models: {
             ...state.models,
-            [type]: { ...defaultModelStatus, ...state.models[type], loading, error: null },
+            [type]: {
+              ...defaultModelStatus,
+              ...state.models[type],
+              loading,
+              error: null,
+              // Clear file progress when starting new load
+              ...(loading ? { files: undefined, progress: undefined } : {}),
+            },
           },
         })),
 
@@ -92,12 +106,13 @@ export const useLocalModelsStore = create<LocalModelsState>()(
               loading: false,
               modelName,
               error: null,
+              files: undefined, // Clear file progress when model is loaded
               progress: undefined, // Clear progress when model is loaded
             },
           },
         })),
 
-      setModelError: (type, error) =>
+      setModelError: (type, error, errorDetails) =>
         set((state) => ({
           models: {
             ...state.models,
@@ -106,6 +121,7 @@ export const useLocalModelsStore = create<LocalModelsState>()(
               ...state.models[type],
               loading: false,
               error,
+              errorDetails: error ? errorDetails : undefined,
             },
           },
         })),
@@ -113,7 +129,7 @@ export const useLocalModelsStore = create<LocalModelsState>()(
       setModelProgress: (type, progress) =>
         set((state) => {
           const currentModel = state.models[type] || defaultModelStatus
-          
+
           if (!progress) {
             return {
               models: {
@@ -126,18 +142,52 @@ export const useLocalModelsStore = create<LocalModelsState>()(
           // Extract file information from progress data
           const fileName = (progress as any)?.file || (progress as any)?.filename || (progress as any)?.name
           const normalizedProgress = normalizeProgress(progress)
-          
+
+          // If we have a file name, track it separately
           if (fileName) {
             // Multi-file progress tracking
             const currentFiles = currentModel.files || {}
             const fileKey = typeof fileName === 'string' ? fileName : String(fileName)
-            
+            const existingFile = currentFiles[fileKey]
+
+            // Don't overwrite completed files (progress >= 1.0) with lower progress
+            // This prevents completed files from being reset when a new file starts
+            if (existingFile && existingFile.progress >= 1.0 && normalizedProgress < 1.0) {
+              // Keep the completed file's progress, but update other fields if provided
+              const fileProgress: FileProgress = {
+                ...existingFile,
+                size: (progress as any)?.size || (progress as any)?.total || existingFile.size,
+                loaded: (progress as any)?.loaded || (progress as any)?.loadedBytes || existingFile.loaded,
+                status: progress.status || (progress as any)?.message || (progress as any)?.text || existingFile.status,
+              }
+
+              return {
+                models: {
+                  ...state.models,
+                  [type]: {
+                    ...defaultModelStatus,
+                    ...currentModel,
+                    files: {
+                      ...currentFiles,
+                      [fileKey]: fileProgress,
+                    },
+                    // Keep legacy progress for current file
+                    progress: {
+                      ...progress,
+                      progress: normalizedProgress,
+                    },
+                  },
+                },
+              }
+            }
+
+            // Update or create file progress
             const fileProgress: FileProgress = {
               name: fileKey,
               progress: normalizedProgress,
-              size: (progress as any)?.size || (progress as any)?.total,
-              loaded: (progress as any)?.loaded || (progress as any)?.loadedBytes,
-              status: progress.status || (progress as any)?.message || (progress as any)?.text,
+              size: (progress as any)?.size || (progress as any)?.total || existingFile?.size,
+              loaded: (progress as any)?.loaded || (progress as any)?.loadedBytes || existingFile?.loaded,
+              status: progress.status || (progress as any)?.message || (progress as any)?.text || existingFile?.status,
             }
 
             return {

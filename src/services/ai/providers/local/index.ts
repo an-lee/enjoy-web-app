@@ -12,7 +12,7 @@ import { transcribe } from './services/asr-service'
 import { smartTranslate } from './services/smart-translation-service'
 import { lookup } from './services/dictionary-service'
 import { synthesize } from './services/tts-service'
-import { initializeModel } from './services/model-initializer'
+import { initializeModel, checkModelCache, checkModelLoaded } from './services/model-initializer'
 
 // Re-export types
 export type {
@@ -70,6 +70,16 @@ export const localModelService = {
    * Initialize model (preload for faster inference)
    */
   initializeModel,
+
+  /**
+   * Check if model is cached
+   */
+  checkModelCache,
+
+  /**
+   * Check if model is already loaded in worker
+   */
+  checkModelLoaded,
 
   /**
    * Check model status
