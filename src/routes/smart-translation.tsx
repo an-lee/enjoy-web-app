@@ -3,10 +3,16 @@ import { useTranslation } from 'react-i18next'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-import { db, type Translation, type TranslationStyle } from '@/db'
+import { type Translation, type TranslationStyle } from '@/db'
 import { smartTranslationService } from '@/services/ai/services'
 import { getAIServiceConfig } from '@/services/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
+import {
+  useTranslationHistory,
+  useSaveTranslation,
+  useUpdateTranslation,
+  findExistingTranslation,
+} from '@/hooks/use-translations'
 import {
   LanguageSelector,
   TranslationStyleSelector,
@@ -21,8 +27,6 @@ import {
 export const Route = createFileRoute('/smart-translation')({
   component: SmartTranslation,
 })
-
-const ITEMS_PER_PAGE = 10
 
 function SmartTranslation() {
   const { t } = useTranslation()
@@ -39,10 +43,20 @@ function SmartTranslation() {
   const [isTranslating, setIsTranslating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showHistory, setShowHistory] = useState(false)
-  const [history, setHistory] = useState<Translation[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
-  const [totalPages, setTotalPages] = useState(0)
+
+  // React Query hooks
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+  } = useTranslationHistory(currentPage, showHistory)
+
+  const saveTranslationMutation = useSaveTranslation()
+  const updateTranslationMutation = useUpdateTranslation()
+
+  const history = historyData?.translations ?? []
+  const totalPages = historyData?.totalPages ?? 0
 
   // Update languages when settings change
   useEffect(() => {
@@ -76,33 +90,6 @@ function SmartTranslation() {
     setError(null)
   }
 
-  // Load translation history
-  useEffect(() => {
-    if (showHistory) {
-      loadHistory(currentPage)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showHistory, currentPage])
-
-
-  const loadHistory = async (page?: number) => {
-    try {
-      const pageToLoad = page ?? currentPage
-      const allTranslations = await db.translations
-        .orderBy('createdAt')
-        .reverse()
-        .toArray()
-
-      const total = allTranslations.length
-      setTotalPages(Math.ceil(total / ITEMS_PER_PAGE))
-
-      const start = (pageToLoad - 1) * ITEMS_PER_PAGE
-      const end = start + ITEMS_PER_PAGE
-      setHistory(allTranslations.slice(start, end))
-    } catch (err) {
-      console.error('Failed to load translation history:', err)
-    }
-  }
 
   const handleTranslate = async () => {
     if (!inputText.trim()) return
@@ -115,21 +102,13 @@ function SmartTranslation() {
     setError(null)
 
     try {
-      // For custom style, check if translation with same prompt exists
-      let existing: Translation | undefined
-      if (translationStyle === 'custom') {
-        // For custom style, we need to filter by customPrompt as well
-        const candidates = await db.translations
-          .where('[sourceText+targetLanguage+style]')
-          .equals([inputText.trim(), targetLanguage, translationStyle])
-          .toArray()
-        existing = candidates.find((item) => item.customPrompt === customPrompt.trim())
-      } else {
-        existing = await db.translations
-          .where('[sourceText+targetLanguage+style]')
-          .equals([inputText.trim(), targetLanguage, translationStyle])
-          .first()
-      }
+      // Check if translation already exists in database
+      const existing = await findExistingTranslation({
+        sourceText: inputText.trim(),
+        targetLanguage,
+        style: translationStyle,
+        customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
+      })
 
       if (existing) {
         setCurrentTranslation(existing)
@@ -166,19 +145,14 @@ function SmartTranslation() {
         updatedAt: Date.now(),
       }
 
-      // Save to database
-      await db.translations.add(newTranslation)
-      setCurrentTranslation(newTranslation)
+      // Save to database using React Query mutation
+      const savedTranslation = await saveTranslationMutation.mutateAsync(newTranslation)
+      setCurrentTranslation(savedTranslation)
 
-      // Always refresh history if it's shown (for real-time updates)
+      // If history is shown, navigate to page 1 and expand the new item
       if (showHistory) {
-        // Load history for page 1 directly to ensure immediate update
-        await loadHistory(1)
-        // Navigate to page 1 to show the latest translation
-        // This will trigger useEffect, but we've already loaded, so it's safe
         setCurrentPage(1)
-        // Expand the new translation item
-        setExpandedItems((prev) => new Set([...prev, newTranslation.id]))
+        setExpandedItems((prev) => new Set([...prev, savedTranslation.id]))
       }
     } catch (err) {
       setError(t('translation.error'))
@@ -199,7 +173,7 @@ function SmartTranslation() {
     setError(null)
 
     try {
-      // Call actual translation API with regenerate flag
+      // Call actual translation API
       const config = getAIServiceConfig('smartTranslation')
       const result = await smartTranslationService.translate({
         sourceText: inputText.trim(),
@@ -214,22 +188,17 @@ function SmartTranslation() {
         throw new Error(result.error?.message || t('translation.error'))
       }
 
-      const updatedTranslation: Translation = {
-        ...currentTranslation,
-        translatedText: result.data.translatedText,
-        customPrompt: translationStyle === 'custom' ? customPrompt.trim() : currentTranslation.customPrompt,
-        aiModel: result.data.aiModel,
-        updatedAt: Date.now(),
-      }
+      // Update in database using React Query mutation
+      const updatedTranslation = await updateTranslationMutation.mutateAsync({
+        id: currentTranslation.id,
+        updates: {
+          translatedText: result.data.translatedText,
+          customPrompt: translationStyle === 'custom' ? customPrompt.trim() : currentTranslation.customPrompt,
+          aiModel: result.data.aiModel,
+        },
+      })
 
-      // Update in database
-      await db.translations.update(currentTranslation.id, updatedTranslation)
       setCurrentTranslation(updatedTranslation)
-
-      // Refresh history if it's shown (for real-time updates)
-      if (showHistory) {
-        await loadHistory()
-      }
     } catch (err) {
       setError(t('translation.error'))
       console.error('Regeneration failed:', err)
@@ -331,6 +300,7 @@ function SmartTranslation() {
             expandedItems={expandedItems}
             currentPage={currentPage}
             totalPages={totalPages}
+            isLoading={isLoadingHistory}
             onToggleItem={toggleExpand}
             onPageChange={setCurrentPage}
           />

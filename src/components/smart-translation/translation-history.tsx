@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { type Translation } from '@/db'
 import { HistoryItem } from './history-item'
 
@@ -8,6 +9,7 @@ interface TranslationHistoryProps {
   expandedItems: Set<string>
   currentPage: number
   totalPages: number
+  isLoading?: boolean
   onToggleItem: (id: string) => void
   onPageChange: (page: number) => void
 }
@@ -17,6 +19,7 @@ export function TranslationHistory({
   expandedItems,
   currentPage,
   totalPages,
+  isLoading = false,
   onToggleItem,
   onPageChange,
 }: TranslationHistoryProps) {
@@ -25,7 +28,11 @@ export function TranslationHistory({
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">{t('translation.history')}</h2>
-      {history.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : history.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">
           {t('translation.noHistory')}
         </p>
