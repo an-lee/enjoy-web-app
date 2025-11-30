@@ -27,6 +27,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   ASR_MODEL_OPTIONS,
   SMART_TRANSLATION_MODEL_OPTIONS,
+  DICTIONARY_MODEL_OPTIONS,
+  TTS_MODEL_OPTIONS,
   getDefaultModel,
   type ModelOption,
 } from '@/services/ai/providers/local/constants'
@@ -73,14 +75,18 @@ export function AIServiceCard({
       ? ASR_MODEL_OPTIONS
       : modelType === 'smartTranslation'
         ? SMART_TRANSLATION_MODEL_OPTIONS
-        : []
+        : modelType === 'dictionary'
+          ? DICTIONARY_MODEL_OPTIONS
+          : modelType === 'tts'
+            ? TTS_MODEL_OPTIONS
+            : []
 
   // Get current selected model or default
   const currentModel =
     (modelType &&
-      (modelType === 'asr' || modelType === 'smartTranslation') &&
+      (modelType === 'asr' || modelType === 'smartTranslation' || modelType === 'dictionary' || modelType === 'tts') &&
       serviceConfig?.localModel) ||
-    (modelType && (modelType === 'asr' || modelType === 'smartTranslation')
+    (modelType && (modelType === 'asr' || modelType === 'smartTranslation' || modelType === 'dictionary' || modelType === 'tts')
       ? getDefaultModel(modelType)
       : '')
 
@@ -110,7 +116,7 @@ export function AIServiceCard({
     setModelLoading(modelType, true)
 
     try {
-      if (modelType === 'asr' || modelType === 'smartTranslation') {
+      if (modelType === 'asr' || modelType === 'smartTranslation' || modelType === 'dictionary' || modelType === 'tts') {
         await localModelService.initializeModel(modelType, { model: currentModel })
       } else {
         throw new Error(

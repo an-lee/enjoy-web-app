@@ -1,58 +1,108 @@
 /**
  * TTS Service
- * Handles text-to-speech synthesis using browser Web Speech API
+ * Handles text-to-speech synthesis using local TTS models (e.g., Supertonic TTS ONNX)
  */
 
+import type { LocalModelConfig } from '../../../types'
 import type { LocalTTSResult } from '../types'
+import { useLocalModelsStore } from '@/stores/local-models'
+import { getTTSWorker } from '../workers/worker-manager'
+import { DEFAULT_TTS_MODEL } from '../constants'
 
 /**
- * Synthesize speech from text using Web Speech API
- * Note: This has limited language and voice support
+ * Synthesize speech from text using local TTS model
  */
 export async function synthesize(
   text: string,
   language: string,
   voice?: string,
-  _modelConfig?: any
+  modelConfig?: LocalModelConfig
 ): Promise<LocalTTSResult> {
-  // Use Web Speech API as a simple local TTS solution
-  // Note: This has limited language and voice support
-  if (!('speechSynthesis' in window)) {
-    throw new Error('Web Speech API is not supported in this browser')
+  const modelName = modelConfig?.model || DEFAULT_TTS_MODEL
+  const store = useLocalModelsStore.getState()
+
+  // Check if model is already loaded
+  const modelStatus = store.models.tts
+  if (!modelStatus.loaded || modelStatus.modelName !== modelName) {
+    // Initialize model loading
+    store.setModelLoading('tts', true)
+
+    const worker = getTTSWorker()
+
+    // Wait for worker to be ready
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Model loading timeout'))
+      }, 300000) // 5 minutes timeout
+
+      const messageHandler = (event: MessageEvent) => {
+        const { type, data } = event.data
+
+        if (type === 'ready' && data.model === modelName) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          resolve()
+        } else if (type === 'error') {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          reject(new Error(data.message))
+        }
+      }
+
+      worker.addEventListener('message', messageHandler)
+
+      // Send init message
+      worker.postMessage({
+        type: 'init',
+        data: { model: modelName },
+      })
+    })
   }
 
+  // Synthesize using TTS worker
+  const worker = getTTSWorker()
+  const taskId = `tts-${Date.now()}-${Math.random()}`
+
   return new Promise<LocalTTSResult>((resolve, reject) => {
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = language
-    if (voice) {
-      utterance.voice = speechSynthesis.getVoices().find(v => v.name === voice) || null
+    const timeout = setTimeout(() => {
+      reject(new Error('TTS synthesis timeout'))
+    }, 300000) // 5 minutes timeout
+
+    const messageHandler = (event: MessageEvent) => {
+      const { type, data, taskId: responseTaskId } = event.data
+
+      if (type === 'result' && responseTaskId === taskId) {
+        clearTimeout(timeout)
+        worker.removeEventListener('message', messageHandler)
+
+        // Convert ArrayBuffer back to Blob
+        const audioBlob = new Blob([data.audioArrayBuffer], { type: 'audio/wav' })
+
+        resolve({
+          audioBlob,
+          format: data.format || 'wav',
+          duration: data.duration,
+        })
+      } else if (type === 'error' && responseTaskId === taskId) {
+        clearTimeout(timeout)
+        worker.removeEventListener('message', messageHandler)
+        reject(new Error(data.message || 'TTS synthesis failed'))
+      }
     }
 
-    let startTime = Date.now()
+    worker.addEventListener('message', messageHandler)
 
-    // Note: Web Speech API doesn't provide audio blob directly
-    // We'll use a workaround with MediaRecorder if available
-    // For now, we'll create a simple implementation
-
-    utterance.onend = () => {
-      const duration = (Date.now() - startTime) / 1000
-
-      // Create a placeholder audio blob
-      // In a real implementation, you'd capture the audio from speechSynthesis
-      const audioBlob = new Blob([''], { type: 'audio/wav' })
-
-      resolve({
-        audioBlob,
-        format: 'wav',
-        duration,
-      })
-    }
-
-    utterance.onerror = (error) => {
-      reject(new Error(`TTS synthesis failed: ${error.error}`))
-    }
-
-    speechSynthesis.speak(utterance)
+    // Send synthesize request
+    worker.postMessage({
+      type: 'synthesize',
+      data: {
+        text,
+        language,
+        voice,
+        model: modelName,
+        taskId,
+      },
+    })
   })
 }
 

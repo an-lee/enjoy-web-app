@@ -22,6 +22,16 @@ export const DEFAULT_SMART_TRANSLATION_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONN
  */
 export const DEFAULT_TRANSLATION_MODEL = DEFAULT_SMART_TRANSLATION_MODEL
 
+/**
+ * Default Dictionary model (uses generative model, same as Smart Translation)
+ */
+export const DEFAULT_DICTIONARY_MODEL = DEFAULT_SMART_TRANSLATION_MODEL
+
+/**
+ * Default TTS model (Supertonic TTS ONNX)
+ */
+export const DEFAULT_TTS_MODEL = 'onnx-community/Supertonic-TTS-ONNX'
+
 // ============================================================================
 // Timeout Configuration
 // ============================================================================
@@ -106,6 +116,25 @@ export const SMART_TRANSLATION_MODEL_OPTIONS: ModelOption[] = [
 ]
 
 /**
+ * Available Dictionary models (uses generative models, same as Smart Translation)
+ */
+export const DICTIONARY_MODEL_OPTIONS: ModelOption[] = SMART_TRANSLATION_MODEL_OPTIONS
+
+/**
+ * Available TTS models (text-to-speech)
+ */
+export const TTS_MODEL_OPTIONS: ModelOption[] = [
+  {
+    value: 'onnx-community/Supertonic-TTS-ONNX',
+    label: 'Supertonic TTS (ONNX)',
+    description:
+      'ONNX-optimized TTS model for high-quality speech synthesis. Supports multiple languages and voices.',
+    size: '~150MB',
+    performance: 'medium',
+  },
+]
+
+/**
  * Legacy: Keep for backward compatibility
  */
 export const TRANSLATION_MODEL_OPTIONS = SMART_TRANSLATION_MODEL_OPTIONS
@@ -118,13 +147,19 @@ export const TRANSLATION_MODEL_OPTIONS = SMART_TRANSLATION_MODEL_OPTIONS
  * Get default model for a service type
  */
 export function getDefaultModel(
-  serviceType: 'asr' | 'smartTranslation'
+  serviceType: 'asr' | 'smartTranslation' | 'dictionary' | 'tts'
 ): string {
   if (serviceType === 'asr') {
     return DEFAULT_ASR_MODEL
   }
   if (serviceType === 'smartTranslation') {
     return DEFAULT_SMART_TRANSLATION_MODEL
+  }
+  if (serviceType === 'dictionary') {
+    return DEFAULT_DICTIONARY_MODEL
+  }
+  if (serviceType === 'tts') {
+    return DEFAULT_TTS_MODEL
   }
   return ''
 }
@@ -133,12 +168,16 @@ export function getDefaultModel(
  * Get model option by value
  */
 export function getModelOption(
-  serviceType: 'asr' | 'smartTranslation',
+  serviceType: 'asr' | 'smartTranslation' | 'dictionary' | 'tts',
   modelValue: string
 ): ModelOption | undefined {
   let options: ModelOption[]
   if (serviceType === 'asr') {
     options = ASR_MODEL_OPTIONS
+  } else if (serviceType === 'dictionary') {
+    options = DICTIONARY_MODEL_OPTIONS
+  } else if (serviceType === 'tts') {
+    options = TTS_MODEL_OPTIONS
   } else {
     options = SMART_TRANSLATION_MODEL_OPTIONS
   }

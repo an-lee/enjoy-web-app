@@ -5,13 +5,11 @@
 
 import { pipeline, env } from '@huggingface/transformers'
 import { buildDictionaryPrompt, parseDictionaryResponse } from '../../../prompts'
+import { DEFAULT_DICTIONARY_MODEL } from '../constants'
 
 // Configure transformers.js
 env.allowLocalModels = false
 env.allowRemoteModels = true
-
-// Model configuration
-const DEFAULT_DICTIONARY_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
 
 interface DictionaryWorkerMessage {
   type: 'init' | 'lookup' | 'checkStatus'

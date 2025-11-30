@@ -6,13 +6,11 @@
 
 import { pipeline, env } from '@huggingface/transformers'
 import { buildSmartTranslationPrompt } from '../../../prompts'
+import { DEFAULT_SMART_TRANSLATION_MODEL } from '../constants'
 
 // Configure transformers.js
 env.allowLocalModels = false
 env.allowRemoteModels = true
-
-// Model configuration
-const DEFAULT_SMART_TRANSLATION_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
 
 interface SmartTranslationWorkerMessage {
   type: 'init' | 'translate' | 'checkStatus'

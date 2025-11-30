@@ -4,13 +4,11 @@
  */
 
 import { pipeline, env } from '@huggingface/transformers'
+import { DEFAULT_ASR_MODEL } from '../constants'
 
 // Configure transformers.js
 env.allowLocalModels = false
 env.allowRemoteModels = true
-
-// Model configuration
-const DEFAULT_ASR_MODEL = 'Xenova/whisper-tiny'
 
 interface ASRWorkerMessage {
   type: 'init' | 'transcribe' | 'checkStatus'

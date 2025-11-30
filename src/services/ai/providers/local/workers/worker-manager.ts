@@ -113,3 +113,36 @@ export function getDictionaryWorker(): Worker {
   return dictionaryWorker
 }
 
+/**
+ * Create and manage TTS worker
+ */
+let ttsWorker: Worker | null = null
+
+export function getTTSWorker(): Worker {
+  if (!ttsWorker) {
+    ttsWorker = new Worker(
+      new URL('./tts-worker.ts', import.meta.url),
+      { type: 'module' }
+    )
+
+    ttsWorker.addEventListener('message', (event) => {
+      const { type, data } = event.data
+
+      if (type === 'ready') {
+        useLocalModelsStore.getState().setModelLoaded('tts', data.model)
+      } else if (type === 'progress') {
+        // Normalize progress value to 0-1 range
+        const normalizedProgress = normalizeProgress(data)
+        useLocalModelsStore.getState().setModelProgress('tts', {
+          ...data,
+          progress: normalizedProgress,
+        })
+      } else if (type === 'error') {
+        useLocalModelsStore.getState().setModelError('tts', data.message)
+      }
+    })
+  }
+
+  return ttsWorker
+}
+
