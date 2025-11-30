@@ -65,6 +65,7 @@ class SmartTranslationPipelineSingleton {
     try {
       // Use text-generation pipeline for generative models
       this.instance = await pipeline('text-generation', modelName, {
+        device: 'webgpu',
         progress_callback: (progress: any) => {
           if (progressCallback) {
             progressCallback(progress)
@@ -155,7 +156,7 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
         const generator = await SmartTranslationPipelineSingleton.getInstance(modelName)
 
         // Build translation prompt with style (using shared prompt builder)
-        const prompt = buildSmartTranslationPrompt(
+        const { systemPrompt, userPrompt } = buildSmartTranslationPrompt(
           data.text,
           data.srcLang,
           data.tgtLang,
@@ -163,33 +164,90 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
           data.customPrompt
         )
 
-        // Generate translation
-        const result = await generator(prompt, {
-          max_new_tokens: 512,
-          temperature: 0.3,
-          top_p: 0.9,
-          return_full_text: false,
+        // Use messages format for transformers.js (supports system and user roles)
+        const messages = [
+          { role: 'system' as const, content: systemPrompt },
+          { role: 'user' as const, content: userPrompt },
+        ]
+
+        // Generate translation with stricter parameters for smaller models
+        const result = await generator(messages, {
+          max_new_tokens: 512, // Reduced to prevent excessive output
+          temperature: 0.1, // Lower temperature for more deterministic output
+          top_p: 0.8,
+          return_full_text: false
         })
 
         // Extract translated text from generated result
+        // When using messages format, the output structure may be different
         let translatedText = ''
         if (Array.isArray(result) && result.length > 0) {
-          translatedText = result[0].generated_text || result[0].text || ''
+          const firstResult = result[0]
+          // Check for messages format output: generated_text.at(-1).content
+          if (firstResult.generated_text && Array.isArray(firstResult.generated_text)) {
+            const lastMessage = firstResult.generated_text.at(-1)
+            translatedText = lastMessage?.content || ''
+          } else {
+            // Standard format
+            translatedText = firstResult.generated_text || firstResult.text || ''
+          }
         } else if (result.generated_text) {
-          translatedText = result.generated_text
+          // Check if it's an array (messages format)
+          if (Array.isArray(result.generated_text)) {
+            const lastMessage = result.generated_text.at(-1)
+            translatedText = lastMessage?.content || ''
+          } else {
+            translatedText = result.generated_text
+          }
         } else if (result.text) {
           translatedText = result.text
         }
 
-        // Clean up the translation (remove any prompt remnants)
+        // Aggressive cleanup for smaller models that add explanations
         translatedText = translatedText.trim()
-        // Remove the prompt if it was included in the output
+
+        // Remove repeated "Final Answer" sections
+        if (translatedText.includes('**Final Answer**')) {
+          // Extract only the last translation before any "Final Answer" marker
+          const parts = translatedText.split('**Final Answer**')
+          if (parts.length > 1) {
+            // Take the content after the last "Final Answer" marker
+            translatedText = parts[parts.length - 1].trim()
+          }
+        }
+
+        // Remove the original prompt if it was included in the output
+        if (translatedText.includes('Translate to')) {
+          const lines = translatedText.split('\n')
+          // Find the first line that doesn't look like part of the prompt
+          const startIdx = lines.findIndex(
+            (line) =>
+              !line.includes('Translate to') &&
+              !line.includes('Style:') &&
+              !line.trim().startsWith('Input:') &&
+              !line.trim().startsWith('Output:') &&
+              line.trim().length > 0
+          )
+          if (startIdx >= 0) {
+            translatedText = lines.slice(startIdx).join('\n').trim()
+          }
+        }
+
+        // Remove any remaining prompt remnants
         if (translatedText.includes('Translation (')) {
           const parts = translatedText.split('Translation (')
           if (parts.length > 1) {
             translatedText = parts[parts.length - 1].split(':')[1]?.trim() || translatedText
           }
         }
+
+        // Final cleanup: remove empty lines and excessive whitespace
+        translatedText = translatedText
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .join(' ')
+          .trim()
 
         // Send result back to main thread
         self.postMessage({

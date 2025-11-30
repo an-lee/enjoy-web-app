@@ -21,8 +21,18 @@ export const TRANSLATION_STYLE_DESCRIPTIONS: Record<TranslationStyle, string> = 
 }
 
 /**
+ * Translation prompt structure with system and user prompts
+ */
+export interface TranslationPrompt {
+  systemPrompt: string
+  userPrompt: string
+}
+
+/**
  * Build smart translation prompt with style support
+ * Returns system prompt and user prompt separately for better model control
  * This prompt is used by both local models and cloud services
+ * Optimized for smaller models (e.g., Qwen3-0.6B) with explicit format constraints
  */
 export function buildSmartTranslationPrompt(
   text: string,
@@ -30,28 +40,56 @@ export function buildSmartTranslationPrompt(
   targetLanguage: string,
   style: TranslationStyle = 'natural',
   customPrompt?: string
-): string {
+): TranslationPrompt {
   const srcLangName = getLanguageName(sourceLanguage)
   const tgtLangName = getLanguageName(targetLanguage)
 
-  let prompt = ''
+  let systemPrompt = ''
+  let userPrompt = ''
 
   if (style === 'custom' && customPrompt) {
     // Use custom prompt if provided
-    prompt = `${customPrompt}\n\nSource text (${srcLangName}): ${text}\n\nTranslation (${tgtLangName}):`
+    // System prompt contains the translation instruction
+    systemPrompt = customPrompt
+    // User prompt contains the text to translate
+    userPrompt = text
   } else {
-    // Use style-based prompt
+    // Use style-based prompt optimized for smaller models
     const styleDesc = TRANSLATION_STYLE_DESCRIPTIONS[style] || TRANSLATION_STYLE_DESCRIPTIONS.natural
     const styleInstruction = styleDesc.replace('${tgtLangName}', tgtLangName)
 
-    prompt = `Translate the following text from ${srcLangName} to ${tgtLangName}. ${styleInstruction} Only output the translation, without any explanation or additional text.
+    // System prompt: Clear instruction about translation task and constraints
+    systemPrompt = `You are a translation assistant. Translate text from ${srcLangName} to ${tgtLangName}. ${styleInstruction} Only output the translation, without any explanation, reasoning, or additional text. Do not repeat the output.`
 
-Source text (${srcLangName}): ${text}
-
-Translation (${tgtLangName}):`
+    // User prompt: Just the text to translate
+    userPrompt = text
   }
 
-  return prompt
+  return {
+    systemPrompt,
+    userPrompt,
+  }
+}
+
+/**
+ * Build combined prompt (for backward compatibility or models that don't support system prompts)
+ * @deprecated Use buildSmartTranslationPrompt instead for better control
+ */
+export function buildSmartTranslationPromptLegacy(
+  text: string,
+  sourceLanguage: string,
+  targetLanguage: string,
+  style: TranslationStyle = 'natural',
+  customPrompt?: string
+): string {
+  const { systemPrompt, userPrompt } = buildSmartTranslationPrompt(
+    text,
+    sourceLanguage,
+    targetLanguage,
+    style,
+    customPrompt
+  )
+  return `${systemPrompt}\n\n${userPrompt}`
 }
 
 /**

@@ -53,13 +53,15 @@ function getModelProvider(config: BYOKConfig) {
  */
 export async function generateWithBYOK(
   prompt: string,
-  config: BYOKConfig
+  config: BYOKConfig,
+  systemPrompt?: string
 ): Promise<string> {
   const provider = getModelProvider(config)
 
   try {
     const result = await generateText({
       model: provider(config.model || 'gpt-4'),
+      system: systemPrompt,
       prompt,
     })
 
@@ -85,7 +87,7 @@ export async function smartTranslateWithBYOK(
 ): Promise<AIServiceResponse<SmartTranslationResponse>> {
   try {
     // Use centralized prompt builder
-    const prompt = buildSmartTranslationPrompt(
+    const { systemPrompt, userPrompt } = buildSmartTranslationPrompt(
       text,
       sourceLanguage,
       targetLanguage,
@@ -93,8 +95,8 @@ export async function smartTranslateWithBYOK(
       customPrompt
     )
 
-    // Generate translation
-    const translatedText = await generateWithBYOK(prompt, config)
+    // Generate translation with system and user prompts
+    const translatedText = await generateWithBYOK(userPrompt, config, systemPrompt)
 
     return {
       success: true,

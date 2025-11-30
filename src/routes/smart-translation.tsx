@@ -15,6 +15,8 @@ import { Separator } from '@/components/ui/separator'
 import { db, type Translation, type TranslationStyle } from '@/db'
 import { ChevronDown, ChevronUp, RefreshCw, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { smartTranslationService } from '@/services/ai/services'
+import { getAIServiceConfig } from '@/services/ai/core/config'
 
 export const Route = createFileRoute('/smart-translation')({
   component: SmartTranslation,
@@ -106,29 +108,38 @@ function SmartTranslation() {
         return
       }
 
-      // TODO: Call actual translation API
-      // For now, simulate translation
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Call actual translation API
+      const config = getAIServiceConfig('smartTranslation')
+      const result = await smartTranslationService.translate({
+        sourceText: inputText.trim(),
+        sourceLanguage,
+        targetLanguage,
+        style: translationStyle,
+        customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
+        config,
+      })
 
-      const mockTranslation: Translation = {
+      if (!result.success || !result.data) {
+        throw new Error(result.error?.message || t('translation.error'))
+      }
+
+      const newTranslation: Translation = {
         id: `trans_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         sourceText: inputText.trim(),
         sourceLanguage,
         targetLanguage,
-        translatedText: translationStyle === 'custom'
-          ? `[Mock Translation with Custom Prompt] ${inputText.trim()} (${customPrompt.trim()})`
-          : `[Mock Translation] ${inputText.trim()} (${translationStyle})`,
+        translatedText: result.data.translatedText,
         style: translationStyle,
         customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
-        aiModel: 'mock',
+        aiModel: result.data.aiModel,
         syncStatus: 'local',
         createdAt: Date.now(),
         updatedAt: Date.now(),
       }
 
       // Save to database
-      await db.translations.add(mockTranslation)
-      setCurrentTranslation(mockTranslation)
+      await db.translations.add(newTranslation)
+      setCurrentTranslation(newTranslation)
 
       // Refresh history if it's shown
       if (showHistory) {
@@ -153,15 +164,26 @@ function SmartTranslation() {
     setError(null)
 
     try {
-      // TODO: Call actual translation API with regenerate flag
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Call actual translation API with regenerate flag
+      const config = getAIServiceConfig('smartTranslation')
+      const result = await smartTranslationService.translate({
+        sourceText: inputText.trim(),
+        sourceLanguage,
+        targetLanguage,
+        style: translationStyle,
+        customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
+        config,
+      })
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error?.message || t('translation.error'))
+      }
 
       const updatedTranslation: Translation = {
         ...currentTranslation,
-        translatedText: translationStyle === 'custom'
-          ? `[Regenerated Translation with Custom Prompt] ${inputText.trim()} (${customPrompt.trim()})`
-          : `[Regenerated Translation] ${inputText.trim()} (${translationStyle})`,
+        translatedText: result.data.translatedText,
         customPrompt: translationStyle === 'custom' ? customPrompt.trim() : currentTranslation.customPrompt,
+        aiModel: result.data.aiModel,
         updatedAt: Date.now(),
       }
 
