@@ -68,11 +68,36 @@
       "assessment": "Aussprachebewertung",
       "assessmentDescription": "Aussprachebewertungsdienst-Anbieter konfigurieren",
       "provider": "Anbieter",
+      "selectProvider": "Anbieter auswählen",
       "providers": {
         "enjoy": "Enjoy API",
         "local": "Lokal (Kostenlos)",
         "byok": "BYOK (Demnächst)"
-      }
+      },
+      "smartTranslation": "Intelligente Übersetzung",
+      "smartTranslationDescription": "Stilbewusste Übersetzung mit LLM für benutzergenerierte Inhalte. Unterstützt mehrere Übersetzungsstile.",
+      "modelStatus": "Modellstatus",
+      "currentModel": "Aktuelles Modell",
+      "status": "Status",
+      "noModel": "Nicht geladen",
+      "loading": "Laden...",
+      "loaded": "Geladen",
+      "notLoaded": "Nicht geladen",
+      "downloading": "Herunterladen...",
+      "initializing": "Initialisieren...",
+      "downloadModel": "Modell Herunterladen & Laden",
+      "modelNotSupported": "Modelltyp wird für lokale Ausführung nicht unterstützt",
+      "loadingTooltip": "Modell wird heruntergeladen und geladen",
+      "loadedTooltip": "Modell ist einsatzbereit",
+      "notLoadedTooltip": "Modell muss vor der Verwendung heruntergeladen und geladen werden",
+      "model": "Modell",
+      "localModelPerformanceWarning": "Lokale Modelle erfordern eine hohe Computerleistung. Wenn Ihr Gerät niedrige Spezifikationen hat, funktionieren sie möglicherweise nicht ordnungsgemäß.",
+      "showErrorDetails": "Fehlerdetails anzeigen",
+      "errorDebugHint": "Browser-Konsole (F12) für detaillierte Fehlerprotokolle überprüfen",
+      "cached": "Zwischengespeichert",
+      "cachedTooltip": "Modelldateien sind zwischengespeichert. Klicken Sie auf Herunterladen, um aus dem Cache zu laden (schnell)",
+      "loadingFromCache": "Laden aus Cache...",
+      "completed": "Abgeschlossen"
     }
   },
   "dashboard": {

@@ -68,11 +68,36 @@
       "assessment": "発音評価",
       "assessmentDescription": "発音評価サービスプロバイダーを設定",
       "provider": "プロバイダー",
+      "selectProvider": "プロバイダーを選択",
       "providers": {
         "enjoy": "Enjoy API",
         "local": "ローカル（無料）",
         "byok": "BYOK（近日公開）"
-      }
+      },
+      "smartTranslation": "スマート翻訳",
+      "smartTranslationDescription": "ユーザー生成コンテンツ向けのLLMを使用したスタイル認識翻訳。複数の翻訳スタイルをサポート。",
+      "modelStatus": "モデルステータス",
+      "currentModel": "現在のモデル",
+      "status": "ステータス",
+      "noModel": "未読み込み",
+      "loading": "読み込み中...",
+      "loaded": "読み込み済み",
+      "notLoaded": "未読み込み",
+      "downloading": "ダウンロード中...",
+      "initializing": "初期化中...",
+      "downloadModel": "モデルをダウンロードして読み込む",
+      "modelNotSupported": "ローカル実行ではサポートされていないモデルタイプ",
+      "loadingTooltip": "モデルをダウンロードして読み込んでいます",
+      "loadedTooltip": "モデルは使用可能です",
+      "notLoadedTooltip": "モデルは使用前にダウンロードして読み込む必要があります",
+      "model": "モデル",
+      "localModelPerformanceWarning": "ローカルモデルには高いコンピューター性能が必要です。デバイスのスペックが低い場合、正常に動作しない可能性があります。",
+      "showErrorDetails": "エラー詳細を表示",
+      "errorDebugHint": "詳細なエラーログについては、ブラウザのコンソール（F12）を確認してください",
+      "cached": "キャッシュ済み",
+      "cachedTooltip": "モデルファイルはキャッシュされています。ダウンロードをクリックしてキャッシュから読み込みます（高速）",
+      "loadingFromCache": "キャッシュから読み込み中...",
+      "completed": "完了"
     }
   },
   "dashboard": {

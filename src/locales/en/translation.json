@@ -68,11 +68,14 @@
       "assessment": "Pronunciation Assessment",
       "assessmentDescription": "Configure pronunciation assessment service provider",
       "provider": "Provider",
+      "selectProvider": "Select provider",
       "providers": {
         "enjoy": "Enjoy API",
         "local": "Local (Free)",
         "byok": "BYOK (Coming Soon)"
       },
+      "smartTranslation": "Smart Translation",
+      "smartTranslationDescription": "Style-aware translation using LLM for user-generated content. Supports multiple translation styles.",
       "modelStatus": "Model Status",
       "currentModel": "Current Model",
       "status": "Status",
@@ -88,7 +91,13 @@
       "loadedTooltip": "Model is ready to use",
       "notLoadedTooltip": "Model needs to be downloaded and loaded before use",
       "model": "Model",
-      "localModelPerformanceWarning": "Local models require high computer performance. If your device has low specifications, they may not work properly."
+      "localModelPerformanceWarning": "Local models require high computer performance. If your device has low specifications, they may not work properly.",
+      "showErrorDetails": "Show error details",
+      "errorDebugHint": "Check browser console (F12) for detailed error logs",
+      "cached": "Cached",
+      "cachedTooltip": "Model files are cached. Click Download to load from cache (fast)",
+      "loadingFromCache": "Loading from cache...",
+      "completed": "Completed"
     }
   },
   "dashboard": {

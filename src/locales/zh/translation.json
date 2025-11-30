@@ -68,11 +68,14 @@
       "assessment": "发音评估",
       "assessmentDescription": "配置发音评估服务提供商",
       "provider": "提供商",
+      "selectProvider": "选择提供商",
       "providers": {
         "enjoy": "Enjoy API",
         "local": "本地（免费）",
         "byok": "BYOK（即将推出）"
       },
+      "smartTranslation": "智能翻译",
+      "smartTranslationDescription": "使用 LLM 进行风格感知翻译，适用于用户生成的内容。支持多种翻译风格。",
       "modelStatus": "模型状态",
       "currentModel": "当前模型",
       "status": "状态",
@@ -88,7 +91,13 @@
       "loadedTooltip": "模型已就绪，可以使用",
       "notLoadedTooltip": "模型需要先下载和加载才能使用",
       "model": "模型",
-      "localModelPerformanceWarning": "本地模型对电脑性能有较高要求，如果配置较低，可能无法正常使用。"
+      "localModelPerformanceWarning": "本地模型对电脑性能有较高要求，如果配置较低，可能无法正常使用。",
+      "showErrorDetails": "显示错误详情",
+      "errorDebugHint": "检查浏览器控制台（F12）查看详细错误日志",
+      "cached": "已缓存",
+      "cachedTooltip": "模型文件已缓存。点击下载从缓存加载（快速）",
+      "loadingFromCache": "从缓存加载中...",
+      "completed": "已完成"
     }
   },
   "dashboard": {

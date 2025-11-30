@@ -24,6 +24,24 @@ alwaysApply: true
 - **Keep it Technical**: Documentation should be concise and developer-focused.
 - **Single Source of Truth**: The `doc/` directory is the source of truth. Keep it in sync with code.
 
+## Translation Maintenance
+
+- **Check Consistency**: Before committing translation changes, run the locale consistency checker:
+  ```bash
+  bun run check-locales
+  ```
+- **Fix Missing Translations**: When the script reports missing keys:
+  1. Review the missing keys for each language
+  2. Use the reference values (from English or other complete languages) as a guide
+  3. Add the missing translations to the corresponding `src/locales/{lang}/translation.json` file
+  4. Maintain the same JSON structure and nesting as the reference language
+  5. Re-run `bun run check-locales` to verify all keys are present
+- **Add New Translations**: When adding new translation keys:
+  1. Add the key to all language files in `src/locales/`
+  2. Use English (`en`) as the base language
+  3. Run `bun run check-locales` to ensure consistency
+- **Translation File Structure**: All translation files follow the same nested JSON structure. Keys use dot notation (e.g., `settings.ai.provider`).
+
 ## General
 
 - **Language**: Use English for all code, comments, and documentation.

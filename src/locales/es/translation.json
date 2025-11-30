@@ -68,11 +68,36 @@
       "assessment": "Evaluación de Pronunciación",
       "assessmentDescription": "Configurar proveedor de servicio de evaluación de pronunciación",
       "provider": "Proveedor",
+      "selectProvider": "Seleccionar proveedor",
       "providers": {
         "enjoy": "Enjoy API",
         "local": "Local (Gratis)",
         "byok": "BYOK (Próximamente)"
-      }
+      },
+      "smartTranslation": "Traducción Inteligente",
+      "smartTranslationDescription": "Traducción consciente del estilo usando LLM para contenido generado por el usuario. Admite múltiples estilos de traducción.",
+      "modelStatus": "Estado del Modelo",
+      "currentModel": "Modelo Actual",
+      "status": "Estado",
+      "noModel": "No cargado",
+      "loading": "Cargando...",
+      "loaded": "Cargado",
+      "notLoaded": "No cargado",
+      "downloading": "Descargando...",
+      "initializing": "Inicializando...",
+      "downloadModel": "Descargar y Cargar Modelo",
+      "modelNotSupported": "Tipo de modelo no compatible para ejecución local",
+      "loadingTooltip": "El modelo se está descargando y cargando",
+      "loadedTooltip": "El modelo está listo para usar",
+      "notLoadedTooltip": "El modelo debe descargarse y cargarse antes de usarlo",
+      "model": "Modelo",
+      "localModelPerformanceWarning": "Los modelos locales requieren un alto rendimiento informático. Si su dispositivo tiene especificaciones bajas, es posible que no funcionen correctamente.",
+      "showErrorDetails": "Mostrar detalles del error",
+      "errorDebugHint": "Verifique la consola del navegador (F12) para registros de error detallados",
+      "cached": "En caché",
+      "cachedTooltip": "Los archivos del modelo están en caché. Haga clic en Descargar para cargar desde la caché (rápido)",
+      "loadingFromCache": "Cargando desde caché...",
+      "completed": "Completado"
     }
   },
   "dashboard": {

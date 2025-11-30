@@ -68,11 +68,36 @@
       "assessment": "Évaluation de la Prononciation",
       "assessmentDescription": "Configurer le fournisseur de service d'évaluation de la prononciation",
       "provider": "Fournisseur",
+      "selectProvider": "Sélectionner un fournisseur",
       "providers": {
         "enjoy": "Enjoy API",
         "local": "Local (Gratuit)",
         "byok": "BYOK (Bientôt disponible)"
-      }
+      },
+      "smartTranslation": "Traduction Intelligente",
+      "smartTranslationDescription": "Traduction consciente du style utilisant LLM pour le contenu généré par l'utilisateur. Prend en charge plusieurs styles de traduction.",
+      "modelStatus": "État du Modèle",
+      "currentModel": "Modèle Actuel",
+      "status": "État",
+      "noModel": "Non chargé",
+      "loading": "Chargement...",
+      "loaded": "Chargé",
+      "notLoaded": "Non chargé",
+      "downloading": "Téléchargement...",
+      "initializing": "Initialisation...",
+      "downloadModel": "Télécharger et Charger le Modèle",
+      "modelNotSupported": "Type de modèle non pris en charge pour l'exécution locale",
+      "loadingTooltip": "Le modèle est en cours de téléchargement et de chargement",
+      "loadedTooltip": "Le modèle est prêt à être utilisé",
+      "notLoadedTooltip": "Le modèle doit être téléchargé et chargé avant utilisation",
+      "model": "Modèle",
+      "localModelPerformanceWarning": "Les modèles locaux nécessitent de hautes performances informatiques. Si votre appareil a des spécifications faibles, ils peuvent ne pas fonctionner correctement.",
+      "showErrorDetails": "Afficher les détails de l'erreur",
+      "errorDebugHint": "Vérifiez la console du navigateur (F12) pour les journaux d'erreur détaillés",
+      "cached": "En cache",
+      "cachedTooltip": "Les fichiers du modèle sont en cache. Cliquez sur Télécharger pour charger depuis le cache (rapide)",
+      "loadingFromCache": "Chargement depuis le cache...",
+      "completed": "Terminé"
     }
   },
   "dashboard": {
