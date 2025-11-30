@@ -1,12 +1,10 @@
 /**
  * AI Service Error Codes
  * Centralized error codes for all AI services
+ *
+ * Note: Fast Translation and Basic Dictionary are regular API services (not AI services).
+ * Their error codes are not included here.
  */
-
-// ============================================================================
-// Fast Translation Errors
-// ============================================================================
-export const ERROR_FAST_TRANSLATION = 'FAST_TRANSLATION_ERROR'
 
 // ============================================================================
 // Smart Translation Errors
@@ -18,9 +16,8 @@ export const ERROR_TRANSLATION = 'TRANSLATION_ERROR' // Legacy
 export const ERROR_TRANSLATION_LOCAL = 'LOCAL_TRANSLATION_ERROR' // Legacy
 
 // ============================================================================
-// Dictionary Errors
+// Dictionary Errors (Contextual - AI-powered only)
 // ============================================================================
-export const ERROR_DICTIONARY_BASIC = 'DICTIONARY_BASIC_ERROR'
 export const ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED = 'LOCAL_DICTIONARY_NOT_SUPPORTED'
 export const ERROR_DICTIONARY_ENJOY = 'ENJOY_DICTIONARY_ERROR'
 export const ERROR_DICTIONARY_BYOK = 'BYOK_DICTIONARY_ERROR'
@@ -58,7 +55,6 @@ export const ERROR_ASSESSMENT_BYOK_PROVIDER_NOT_SUPPORTED = 'BYOK_ASSESSMENT_PRO
 // Error Code Categories (for filtering/grouping)
 // ============================================================================
 export const ERROR_CATEGORIES = {
-  FAST_TRANSLATION: [ERROR_FAST_TRANSLATION],
   SMART_TRANSLATION: [
     ERROR_SMART_TRANSLATION_LOCAL,
     ERROR_SMART_TRANSLATION_ENJOY,
@@ -67,7 +63,6 @@ export const ERROR_CATEGORIES = {
     ERROR_TRANSLATION_LOCAL,
   ],
   DICTIONARY: [
-    ERROR_DICTIONARY_BASIC,
     ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED,
     ERROR_DICTIONARY_ENJOY,
     ERROR_DICTIONARY_BYOK,

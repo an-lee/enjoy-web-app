@@ -4,7 +4,7 @@
  * Supports local models (free users) and cloud services
  */
 
-import { apiClient } from '@/lib/api/client'
+import { apiClient } from '@/services/api/client'
 import { localModelService } from './local'
 import type { TranslationStyle } from '@/db/schema'
 import type { AIServiceConfig, AIServiceResponse } from './types'

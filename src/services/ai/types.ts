@@ -25,12 +25,11 @@ export type BYOKProvider =
  * Service Types
  */
 export type AIServiceType =
-  | 'fastTranslation'
   | 'smartTranslation'
   | 'translation' // Legacy: kept for backward compatibility
   | 'tts'
   | 'assessment'
-  | 'dictionary'
+  | 'dictionary' // Contextual dictionary (AI-powered)
   | 'asr'
 
 /**

@@ -29,14 +29,10 @@ export const LONG_API_TIMEOUT = 300000 // 5 minutes
 // ============================================================================
 
 export const API_ENDPOINTS = {
-  // Fast Translation (FREE)
-  FAST_TRANSLATION: '/api/v1/services/fast-translation',
-
   // Smart Translation
   SMART_TRANSLATION: '/api/v1/services/translation',
 
-  // Dictionary
-  DICTIONARY_BASIC: '/api/v1/services/dictionary/basic',
+  // Dictionary (contextual - AI-powered)
   DICTIONARY_CONTEXTUAL: '/api/v1/services/dictionary',
 
   // ASR (Speech-to-Text)
@@ -57,34 +53,9 @@ export const API_ENDPOINTS = {
 // ============================================================================
 
 /**
- * Default ASR model (Whisper)
- * @deprecated Import from '@/services/ai/local/constants' instead
+ * Note: Local model configuration constants have been moved to '@/services/ai/local/constants'.
+ * Import them from there instead.
  */
-export const DEFAULT_ASR_MODEL = 'Xenova/whisper-tiny'
-
-/**
- * Default Smart Translation model (Qwen3)
- * @deprecated Import from '@/services/ai/local/constants' instead
- */
-export const DEFAULT_SMART_TRANSLATION_MODEL = 'onnx-community/Qwen3-0.6B-DQ-ONNX'
-
-/**
- * Default Translation model (legacy, maps to Smart Translation)
- * @deprecated Import from '@/services/ai/local/constants' instead
- */
-export const DEFAULT_TRANSLATION_MODEL = DEFAULT_SMART_TRANSLATION_MODEL
-
-/**
- * Model loading timeout (milliseconds)
- * @deprecated Import from '@/services/ai/local/constants' instead
- */
-export const MODEL_LOADING_TIMEOUT = 300000 // 5 minutes
-
-/**
- * Model inference timeout (milliseconds)
- * @deprecated Import from '@/services/ai/local/constants' instead
- */
-export const MODEL_INFERENCE_TIMEOUT = 300000 // 5 minutes
 
 // ============================================================================
 // Service Feature Flags
@@ -95,20 +66,10 @@ export const MODEL_INFERENCE_TIMEOUT = 300000 // 5 minutes
  * Defines which providers support which services
  */
 export const SERVICE_SUPPORT_MATRIX = {
-  fastTranslation: {
-    enjoy: true,
-    local: false,
-    byok: false,
-  },
   smartTranslation: {
     enjoy: true,
     local: true,
     byok: true, // FUTURE
-  },
-  dictionaryBasic: {
-    enjoy: true,
-    local: false,
-    byok: false,
   },
   dictionaryContextual: {
     enjoy: true,
@@ -203,25 +164,17 @@ export const BYOK_PROVIDER_SUPPORT = {
 // ============================================================================
 
 /**
- * Services that are always FREE and don't require configuration
+ * Note: Fast Translation and Basic Dictionary are regular API services (not AI services).
+ * They are always free and don't require AI configuration.
+ * Import them from '@/lib/api' instead of '@/services/ai'.
  */
-export const FREE_SERVICES = ['fastTranslation', 'dictionaryBasic'] as const
-
-/**
- * Check if a service is always free
- */
-export function isFreeService(service: string): boolean {
-  return FREE_SERVICES.includes(service as any)
-}
 
 // ============================================================================
 // Service Display Names
 // ============================================================================
 
 export const SERVICE_NAMES = {
-  fastTranslation: 'Fast Translation',
   smartTranslation: 'Smart Translation',
-  dictionaryBasic: 'Basic Dictionary',
   dictionaryContextual: 'Dictionary (Contextual)',
   asr: 'Speech Recognition (ASR)',
   tts: 'Text-to-Speech (TTS)',

@@ -8,7 +8,7 @@
 // import { generateText } from 'ai'
 // import { createOpenAI } from '@ai-sdk/openai'
 
-import { apiClient } from '@/lib/api/client'
+import { apiClient } from '@/services/api/client'
 import type { AIServiceResponse } from '../types'
 import type { TranslationStyle } from '@/db/schema'
 // Prompts will be used when switching to OpenAI SDK

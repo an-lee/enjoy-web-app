@@ -4,11 +4,6 @@ import i18n from "../lib/i18n"
 import type { AIProvider } from "@/services/ai/types"
 
 interface AIServiceSettings {
-  // Fast translation - optimized for speed, used for subtitle translation
-  fastTranslation: {
-    defaultProvider: AIProvider
-    localModel?: string // Model name when using local provider
-  }
   // Smart translation - style-based translation, used for user-generated content
   smartTranslation: {
     defaultProvider: AIProvider
@@ -31,6 +26,7 @@ interface AIServiceSettings {
     localModel?: string // Model name when using local provider, e.g., 'Xenova/whisper-tiny'
   }
   dictionary: {
+    // Contextual dictionary (AI-powered) - requires AI configuration
     defaultProvider: AIProvider
     localModel?: string
   }
@@ -63,9 +59,6 @@ interface SettingsState {
 }
 
 const defaultAISettings: AIServiceSettings = {
-  fastTranslation: {
-    defaultProvider: 'enjoy',
-  },
   smartTranslation: {
     defaultProvider: 'enjoy',
     defaultStyle: 'natural',
@@ -112,9 +105,7 @@ export const useSettingsStore = create<SettingsState>()(
 
           // If service config doesn't exist, create it with defaults
           if (!serviceConfig) {
-            if (actualService === 'fastTranslation') {
-              serviceConfig = { ...defaultAISettings.fastTranslation }
-            } else if (actualService === 'smartTranslation') {
+            if (actualService === 'smartTranslation') {
               serviceConfig = { ...defaultAISettings.smartTranslation }
             } else {
               // For other services, try to get from defaults or return state
@@ -145,9 +136,7 @@ export const useSettingsStore = create<SettingsState>()(
 
           // If service config doesn't exist, create it with defaults
           if (!serviceConfig) {
-            if (actualService === 'fastTranslation') {
-              serviceConfig = { ...defaultAISettings.fastTranslation }
-            } else if (actualService === 'smartTranslation') {
+            if (actualService === 'smartTranslation') {
               serviceConfig = { ...defaultAISettings.smartTranslation }
             } else {
               // For other services, try to get from defaults or return state
@@ -178,11 +167,8 @@ export const useSettingsStore = create<SettingsState>()(
         if (state?.preferredLanguage) {
           i18n.changeLanguage(state.preferredLanguage)
         }
-        // Ensure fastTranslation and smartTranslation are initialized if missing
+        // Ensure smartTranslation is initialized if missing
         if (state?.aiServices) {
-          if (!state.aiServices.fastTranslation) {
-            state.aiServices.fastTranslation = defaultAISettings.fastTranslation
-          }
           if (!state.aiServices.smartTranslation) {
             state.aiServices.smartTranslation = defaultAISettings.smartTranslation
           }

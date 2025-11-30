@@ -10,7 +10,7 @@
  * Frontend uses Azure Speech SDK directly with token or subscription key.
  */
 
-import { apiClient } from '@/lib/api/client'
+import { apiClient } from '@/services/api/client'
 import { azureSpeechService } from './enjoy/azure-speech'
 import type { AIServiceConfig, AIServiceResponse } from './types'
 
