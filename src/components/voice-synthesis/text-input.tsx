@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { Icon } from '@iconify/react'
 
 interface TextInputProps {
   value: string
@@ -41,7 +41,7 @@ export function TextInput({
             disabled={disabled}
             title={t('tts.clear', { defaultValue: 'Clear' })}
           >
-            <X className="h-4 w-4" />
+            <Icon icon="lucide:x" className="h-4 w-4" />
           </Button>
         )}
       </div>

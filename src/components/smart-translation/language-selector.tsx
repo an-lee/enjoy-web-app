@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { ArrowLeftRight } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { LANGUAGES } from '@/lib/constants'
 
 interface LanguageSelectorProps {
@@ -62,7 +62,7 @@ export function LanguageSelector({
           className="h-9 w-9 shrink-0"
           title={t('translation.swapLanguages', { defaultValue: 'Swap languages' })}
         >
-          <ArrowLeftRight className="h-4 w-4" />
+          <Icon icon="lucide:arrow-left-right" className="h-4 w-4" />
         </Button>
       </div>
 

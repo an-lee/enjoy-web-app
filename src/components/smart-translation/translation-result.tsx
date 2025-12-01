@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { type Translation } from '@/db'
 
@@ -35,7 +35,8 @@ export function TranslationResult({
           onClick={onRegenerate}
           disabled={isRegenerating}
         >
-          <RefreshCw
+          <Icon
+            icon="lucide:refresh-cw"
             className={cn('mr-2 h-4 w-4', isRegenerating && 'animate-spin')}
           />
           {t('translation.regenerate')}

@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Settings as SettingsIcon, Languages, Brain, Palette } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { useTranslation } from 'react-i18next'
 import { GeneralSettings } from './general-settings'
 import { AppearanceSettings } from './appearance-settings'
@@ -21,19 +21,19 @@ export function SettingsTabs({
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="general" className="flex items-center gap-2">
-          <SettingsIcon className="h-4 w-4" />
+          <Icon icon="lucide:settings" className="h-4 w-4" />
           {t('settings.tabs.general', { defaultValue: 'General' })}
         </TabsTrigger>
         <TabsTrigger value="appearance" className="flex items-center gap-2">
-          <Palette className="h-4 w-4" />
+          <Icon icon="lucide:palette" className="h-4 w-4" />
           {t('settings.tabs.appearance', { defaultValue: 'Appearance' })}
         </TabsTrigger>
         <TabsTrigger value="language" className="flex items-center gap-2">
-          <Languages className="h-4 w-4" />
+          <Icon icon="lucide:languages" className="h-4 w-4" />
           {t('settings.tabs.language', { defaultValue: 'Language' })}
         </TabsTrigger>
         <TabsTrigger value="ai" className="flex items-center gap-2">
-          <Brain className="h-4 w-4" />
+          <Icon icon="lucide:brain" className="h-4 w-4" />
           {t('settings.tabs.ai', { defaultValue: 'AI Services' })}
         </TabsTrigger>
       </TabsList>

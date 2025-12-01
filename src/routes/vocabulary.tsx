@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Icon } from '@iconify/react'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 
 export const Route = createFileRoute('/vocabulary')({
   component: Vocabulary,
@@ -15,7 +15,7 @@ function Vocabulary() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">{t('vocabulary.title')}</h1>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
+          <Icon icon="lucide:plus" className="mr-2 h-4 w-4" />
           {t('common.add')}
         </Button>
       </div>

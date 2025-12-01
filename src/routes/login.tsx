@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
+import { Icon } from '@iconify/react'
 import { useAuthStore, type User } from '@/stores'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, AlertCircle } from 'lucide-react'
 import { api } from '@/services/api'
 
 export const Route = createFileRoute('/login')({
@@ -186,14 +186,14 @@ function LoginPage() {
           <CardContent className="space-y-6">
             {error && (
               <Alert variant="destructive" className="mb-2">
-                <AlertCircle className="h-4 w-4" />
+                <Icon icon="lucide:alert-circle" className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             {isLoading ? (
               <div className="flex flex-col items-center justify-center gap-3 py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <Icon icon="lucide:loader-2" className="h-8 w-8 animate-spin text-muted-foreground" />
                 <p className="text-sm text-muted-foreground" suppressHydrationWarning>
                   {t('auth.login.processing')}
                 </p>

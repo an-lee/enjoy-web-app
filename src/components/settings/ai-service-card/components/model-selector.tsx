@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import type { ModelOption } from '@/services/ai/providers/local/constants'
 import type { ModelStatus } from '@/stores/local-models'
 
@@ -47,7 +47,7 @@ export function ModelSelector({
           >
             {displayName}
           </span>
-          <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+          <Icon icon="lucide:chevron-down" className="h-3 w-3 shrink-0 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">

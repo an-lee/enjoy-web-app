@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
-import { Loader2, Search } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import type { Audio } from '@/db'
 import { AudioHistoryItem } from './history-item'
 
@@ -31,7 +31,7 @@ export function TTSHistory({
 
       {/* Search Box */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Icon icon="lucide:search" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
           placeholder={t('tts.searchPlaceholder')}
@@ -43,7 +43,7 @@ export function TTSHistory({
 
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Icon icon="lucide:loader-2" className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : history.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">

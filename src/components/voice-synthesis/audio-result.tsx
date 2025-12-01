@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Download } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { AudioPlayer } from './audio-player'
 
@@ -53,7 +53,7 @@ export function AudioResult({
             onClick={handleDownload}
             disabled={!audioBlob}
           >
-            <Download className="mr-2 h-4 w-4" />
+            <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
             {t('tts.download')}
           </Button>
         )}
@@ -63,7 +63,8 @@ export function AudioResult({
           onClick={onRegenerate}
           disabled={isRegenerating}
         >
-          <RefreshCw
+          <Icon
+            icon="lucide:refresh-cw"
             className={cn('mr-2 h-4 w-4', isRegenerating && 'animate-spin')}
           />
           {t('tts.regenerate')}

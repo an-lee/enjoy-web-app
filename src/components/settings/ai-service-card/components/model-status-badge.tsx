@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useTranslation } from 'react-i18next'
-import { Loader2, CheckCircle2, Circle } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import type { ModelStatus } from '@/stores/local-models'
 
 interface ModelStatusBadgeProps {
@@ -18,25 +18,25 @@ export function ModelStatusBadge({ modelStatus, isCached }: ModelStatusBadgeProp
         <div className="shrink-0">
           {modelStatus?.loading && (
             <Badge variant="secondary" className="gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Icon icon="lucide:loader-2" className="h-3 w-3 animate-spin" />
               {t('settings.ai.loading', { defaultValue: 'Loading' })}
             </Badge>
           )}
           {modelStatus?.loaded && !modelStatus?.loading && (
             <Badge variant="default" className="gap-1 bg-green-500 hover:bg-green-500">
-              <CheckCircle2 className="h-3 w-3" />
+              <Icon icon="lucide:check-circle-2" className="h-3 w-3" />
               {t('settings.ai.loaded', { defaultValue: 'Loaded' })}
             </Badge>
           )}
           {!modelStatus?.loaded && !modelStatus?.loading && isCached === true && (
             <Badge variant="secondary" className="gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              <Circle className="h-3 w-3 fill-current" />
+              <Icon icon="lucide:circle" className="h-3 w-3 fill-current" />
               {t('settings.ai.cached', { defaultValue: 'Cached' })}
             </Badge>
           )}
           {!modelStatus?.loaded && !modelStatus?.loading && isCached !== true && (
             <Badge variant="secondary" className="gap-1 bg-muted text-muted-foreground">
-              <Circle className="h-3 w-3 fill-current" />
+              <Icon icon="lucide:circle" className="h-3 w-3 fill-current" />
               {t('settings.ai.notLoaded', { defaultValue: 'Not loaded' })}
             </Badge>
           )}

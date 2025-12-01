@@ -9,7 +9,7 @@ import {
   SheetDescription,
   SheetFooter,
 } from '@/components/ui/sheet'
-import { Loader2 } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { VoiceSelector } from '@/components/voice-synthesis'
 
 export interface VoiceSynthesisSheetProps {
@@ -80,7 +80,7 @@ export function VoiceSynthesisSheet({
           >
             {isSynthesizing ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Icon icon="lucide:loader-2" className="mr-2 h-4 w-4 animate-spin" />
                 {t('tts.synthesizing')}
               </>
             ) : (

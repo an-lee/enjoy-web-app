@@ -9,7 +9,7 @@
 - **Global Store**: Zustand
 - **UI Components**: shadcn/ui (New York style, with CSS variables)
 - **Styling**: Tailwind CSS v4
-- **Icons**: Lucide React
+- **Icons**: @iconify/react (using Lucide icon set)
 
 ## 2. Component Architecture
 

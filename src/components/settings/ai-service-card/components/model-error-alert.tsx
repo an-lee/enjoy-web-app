@@ -1,5 +1,5 @@
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { useTranslation } from 'react-i18next'
 import type { ModelStatus } from '@/stores/local-models'
 import type { ModelType } from '@/stores/local-models'
@@ -16,7 +16,7 @@ export function ModelErrorAlert({ modelStatus, modelType }: ModelErrorAlertProps
 
   return (
     <Alert variant="destructive" className="py-2">
-      <AlertCircle className="h-4 w-4" />
+      <Icon icon="lucide:alert-circle" className="h-4 w-4" />
       <AlertDescription className="text-xs space-y-1">
         <div className="font-medium">{modelStatus.error}</div>
         <details className="mt-1">

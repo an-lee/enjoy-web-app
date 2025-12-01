@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
-import { Loader2, Download } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import type { ModelStatus } from '@/stores/local-models'
 
 interface DownloadButtonProps {
@@ -24,12 +24,12 @@ export function DownloadButton({ modelStatus, initializing, onDownload }: Downlo
     >
       {initializing ? (
         <>
-          <Loader2 className="h-3 w-3 animate-spin" />
+          <Icon icon="lucide:loader-2" className="h-3 w-3 animate-spin" />
           <span className="text-xs">{t('settings.ai.initializing', { defaultValue: 'Initializing...' })}</span>
         </>
       ) : (
         <>
-          <Download className="h-3 w-3" />
+          <Icon icon="lucide:download" className="h-3 w-3" />
           <span className="text-xs">{t('settings.ai.downloadModel', { defaultValue: 'Download' })}</span>
         </>
       )}

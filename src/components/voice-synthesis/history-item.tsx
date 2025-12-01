@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Label } from '@/components/ui/label'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import type { Audio } from '@/db'
 import { AudioPlayer } from './audio-player'
 
@@ -46,9 +46,9 @@ export function AudioHistoryItem({
             </p>
           </div>
           {isExpanded ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+            <Icon icon="lucide:chevron-up" className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
           ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+            <Icon icon="lucide:chevron-down" className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
           )}
         </div>
       </button>

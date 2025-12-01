@@ -7,13 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  Check,
-  Volume2,
-} from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { type Translation } from '@/db'
 import { getDefaultTTSVoice } from '@/services/ai/constants/tts-voices'
 import { useSettingsStore } from '@/stores/settings'
@@ -91,9 +85,9 @@ export function HistoryItem({
               </p>
             </div>
             {isExpanded ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+              <Icon icon="lucide:chevron-up" className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
             ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+              <Icon icon="lucide:chevron-down" className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
             )}
           </div>
         </button>
@@ -117,9 +111,9 @@ export function HistoryItem({
                         }}
                       >
                         {copied ? (
-                          <Check className="h-4 w-4 text-green-600" />
+                          <Icon icon="lucide:check" className="h-4 w-4 text-green-600" />
                         ) : (
-                          <Copy className="h-4 w-4" />
+                          <Icon icon="lucide:copy" className="h-4 w-4" />
                         )}
                       </Button>
                     </TooltipTrigger>
@@ -140,7 +134,7 @@ export function HistoryItem({
                           setIsSheetOpen(true)
                         }}
                       >
-                        <Volume2 className="h-4 w-4" />
+                        <Icon icon="lucide:volume-2" className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { Icon } from '@iconify/react'
 
 interface HistoryToggleProps {
   isExpanded: boolean
@@ -20,12 +20,12 @@ export function HistoryToggle({ isExpanded, onToggle }: HistoryToggleProps) {
       >
         {isExpanded ? (
           <>
-            <ChevronUp className="mr-1 h-4 w-4" />
+            <Icon icon="lucide:chevron-up" className="mr-1 h-4 w-4" />
             {t('translation.hideHistory')}
           </>
         ) : (
           <>
-            <ChevronDown className="mr-1 h-4 w-4" />
+            <Icon icon="lucide:chevron-down" className="mr-1 h-4 w-4" />
             {t('translation.showHistory')}
           </>
         )}

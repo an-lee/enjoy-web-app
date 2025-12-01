@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { ttsService } from '@/services/ai/services'
 import { getAIServiceConfig } from '@/services/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
@@ -333,7 +333,7 @@ function VoiceSynthesis() {
             >
               {isSynthesizing ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Icon icon="lucide:loader-2" className="mr-2 h-4 w-4 animate-spin" />
                   {t('tts.synthesizing')}
                 </>
               ) : (

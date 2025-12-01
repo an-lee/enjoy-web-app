@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
@@ -95,9 +95,9 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
           className="size-10 sm:size-12 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
         >
           {isPlaying ? (
-            <Pause className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Icon icon="lucide:pause" className="h-5 w-5 sm:h-6 sm:w-6" />
           ) : (
-            <Play className="h-5 w-5 sm:h-6 sm:w-6 ml-0.5" />
+            <Icon icon="lucide:play" className="h-5 w-5 sm:h-6 sm:w-6 ml-0.5" />
           )}
         </Button>
 
@@ -128,9 +128,9 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
               className="h-9 w-9 rounded-full hover:bg-accent transition-colors"
             >
               {isMuted || volume === 0 ? (
-                <VolumeX className="h-4 w-4" />
+                <Icon icon="lucide:volume-x" className="h-4 w-4" />
               ) : (
-                <Volume2 className="h-4 w-4" />
+                <Icon icon="lucide:volume-2" className="h-4 w-4" />
               )}
             </Button>
             {isVolumeOpen && (

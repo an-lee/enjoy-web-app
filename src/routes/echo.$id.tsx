@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Icon } from '@iconify/react'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Play, Pause, Mic, Square, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export const Route = createFileRoute('/echo/$id')({
   component: EchoPractice,
@@ -16,7 +16,7 @@ function EchoPractice() {
       <div className="mb-6">
         <Link to="/library">
           <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <Icon icon="lucide:arrow-left" className="mr-2 h-4 w-4" />
             {t('common.back')}
           </Button>
         </Link>
@@ -34,19 +34,19 @@ function EchoPractice() {
           </div>
           <div className="flex gap-2 justify-center">
             <Button variant="outline" size="sm">
-              <Play className="mr-2 h-4 w-4" />
+              <Icon icon="lucide:play" className="mr-2 h-4 w-4" />
               {t('echo.play')}
             </Button>
             <Button variant="outline" size="sm">
-              <Pause className="mr-2 h-4 w-4" />
+              <Icon icon="lucide:pause" className="mr-2 h-4 w-4" />
               {t('echo.pause')}
             </Button>
             <Button variant="outline" size="sm">
-              <Mic className="mr-2 h-4 w-4" />
+              <Icon icon="lucide:mic" className="mr-2 h-4 w-4" />
               {t('echo.record')}
             </Button>
             <Button variant="outline" size="sm">
-              <Square className="mr-2 h-4 w-4" />
+              <Icon icon="lucide:square" className="mr-2 h-4 w-4" />
               {t('echo.stop')}
             </Button>
           </div>
@@ -63,12 +63,12 @@ function EchoPractice() {
 
           <div className="flex gap-2 justify-between">
             <Button variant="outline" size="sm">
-              <ChevronLeft className="mr-2 h-4 w-4" />
+              <Icon icon="lucide:chevron-left" className="mr-2 h-4 w-4" />
               {t('echo.previousSentence')}
             </Button>
             <Button variant="outline" size="sm">
               {t('echo.nextSentence')}
-              <ChevronRight className="ml-2 h-4 w-4" />
+              <Icon icon="lucide:chevron-right" className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>
