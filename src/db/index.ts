@@ -39,13 +39,14 @@ export class EnjoyDatabase extends Dexie {
 
   constructor() {
     super('EnjoyDatabase')
-    this.version(3).stores({
+    this.version(4).stores({
       // Video: id (primary key, also used as vid for association), indexes for common queries
       videos:
         'id, serverId, provider, language, level, starred, syncStatus, createdAt, updatedAt',
       // Audio: id (primary key, also used as aid for association), indexes for common queries
+      // Added translationKey index for TTS audio lookup
       audios:
-        'id, serverId, provider, language, level, starred, syncStatus, createdAt, updatedAt',
+        'id, serverId, provider, language, level, starred, translationKey, syncStatus, createdAt, updatedAt',
       // Transcript: id (primary key), indexes for target lookup
       transcripts:
         'id, vid, aid, language, serverId, syncStatus, createdAt, updatedAt',
@@ -217,6 +218,32 @@ export async function getTranslationsBySyncStatus(
   status: SyncStatus
 ): Promise<Translation[]> {
   return db.translations.where('syncStatus').equals(status).toArray()
+}
+
+// Helper functions for Audio (including TTS audio)
+export async function getAudioByTranslationKey(
+  translationKey: string
+): Promise<Audio | undefined> {
+  return db.audios.where('translationKey').equals(translationKey).first()
+}
+
+export async function getAudiosByTranslationKey(
+  translationKey: string
+): Promise<Audio[]> {
+  return db.audios.where('translationKey').equals(translationKey).toArray()
+}
+
+export async function saveAudio(
+  audio: Omit<Audio, 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const now = Date.now()
+  const audioRecord: Audio = {
+    ...audio,
+    createdAt: now,
+    updatedAt: now,
+  }
+  await db.audios.put(audioRecord)
+  return audioRecord.id
 }
 
 // Helper functions for CachedDefinition

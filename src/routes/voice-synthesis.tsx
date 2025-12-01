@@ -15,12 +15,21 @@ import {
 } from '@/components/text-to-speech'
 import { getDefaultTTSVoice, getTTSVoices } from '@/services/ai/constants/tts-voices'
 import { AIProvider } from '@/services/ai/types'
+import { saveAudio, getAudioByTranslationKey } from '@/db'
+import type { Audio } from '@/db'
+import { VideoProvider } from '@/db/schema'
 
 export const Route = createFileRoute('/voice-synthesis')({
   component: VoiceSynthesis,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      translationKey: (search.translationKey as string) || undefined,
+    }
+  },
 })
 
 function VoiceSynthesis() {
+  const { translationKey } = Route.useSearch()
   const { t } = useTranslation()
   const { learningLanguage, aiServices } = useSettingsStore()
 
@@ -97,9 +106,25 @@ function VoiceSynthesis() {
     setAudioBlob(null)
 
     try {
+      const text = inputText.trim()
+
+      // Check if audio already exists (only if generated from translation)
+      if (translationKey) {
+        const existingAudio = await getAudioByTranslationKey(translationKey)
+        if (existingAudio && existingAudio.blob) {
+          // Use existing audio
+          setAudioBlob(existingAudio.blob)
+          const url = URL.createObjectURL(existingAudio.blob)
+          setAudioUrl(url)
+          setIsSynthesizing(false)
+          return
+        }
+      }
+
+      // Generate new audio
       const config = getAIServiceConfig('tts')
       const result = await ttsService.synthesize({
-        text: inputText.trim(),
+        text,
         language: targetLanguage,
         voice: selectedVoice,
         config,
@@ -117,6 +142,32 @@ function VoiceSynthesis() {
       setAudioBlob(blob)
       const url = URL.createObjectURL(blob)
       setAudioUrl(url)
+
+      // Get audio duration
+      const audio = new Audio(url)
+      await new Promise((resolve, reject) => {
+        audio.addEventListener('loadedmetadata', () => resolve(null))
+        audio.addEventListener('error', reject)
+      })
+      const duration = audio.duration || 0
+      audio.remove()
+
+      // Save to database
+      const audioId = `tts-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
+        id: audioId,
+        title: text.substring(0, 100), // Use text as title, limit length
+        duration,
+        language: targetLanguage,
+        provider: 'other' as VideoProvider,
+        sourceText: text,
+        voice: selectedVoice,
+        blob,
+        syncStatus: 'local',
+        ...(translationKey ? { translationKey } : {}),
+      }
+
+      await saveAudio(audioRecord)
     } catch (err) {
       setError(t('tts.error'))
       console.error('TTS synthesis failed:', err)
@@ -139,9 +190,10 @@ function VoiceSynthesis() {
     setAudioBlob(null)
 
     try {
+      const text = inputText.trim()
       const config = getAIServiceConfig('tts')
       const result = await ttsService.synthesize({
-        text: inputText.trim(),
+        text,
         language: targetLanguage,
         voice: selectedVoice,
         config,
@@ -159,6 +211,32 @@ function VoiceSynthesis() {
       setAudioBlob(blob)
       const url = URL.createObjectURL(blob)
       setAudioUrl(url)
+
+      // Get audio duration
+      const audio = new Audio(url)
+      await new Promise((resolve, reject) => {
+        audio.addEventListener('loadedmetadata', () => resolve(null))
+        audio.addEventListener('error', reject)
+      })
+      const duration = audio.duration || 0
+      audio.remove()
+
+      // Save to database (update existing or create new)
+      const audioId = `tts-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
+        id: audioId,
+        title: text.substring(0, 100),
+        duration,
+        language: targetLanguage,
+        provider: 'other' as VideoProvider,
+        sourceText: text,
+        voice: selectedVoice,
+        blob,
+        syncStatus: 'local',
+        ...(translationKey ? { translationKey } : {}),
+      }
+
+      await saveAudio(audioRecord)
     } catch (err) {
       setError(t('tts.error'))
       console.error('TTS regeneration failed:', err)
@@ -214,8 +292,6 @@ function VoiceSynthesis() {
           <AudioResult
             audioBlob={audioBlob}
             audioUrl={audioUrl}
-            text={inputText.trim()}
-            language={targetLanguage}
             onRegenerate={handleRegenerate}
             isRegenerating={isSynthesizing}
           />

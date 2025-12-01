@@ -57,8 +57,11 @@ export interface Video {
   starred?: boolean
   summary?: string
   // Local storage
-  mediaBlobKey?: string // Blob key for offline access
-  thumbnailBlobKey?: string
+  // For small files, store directly in blob field
+  // For large files, use mediaBlobKey to reference external storage (future optimization)
+  blob?: Blob // Video blob for offline access (stored directly in IndexedDB)
+  mediaBlobKey?: string // Reserved: Blob key for large file external storage (future use)
+  thumbnailBlobKey?: string // Reserved: Thumbnail blob key for external storage (future use)
   syncStatus?: SyncStatus
   serverId?: string // Links to backend ID if synced
   createdAt: number
@@ -67,6 +70,7 @@ export interface Video {
 
 /**
  * Audio content
+ * Can be from various sources: uploaded files, TTS generated, etc.
  */
 export interface Audio {
   id: string // Provider-specific audio ID (used as aid for association)
@@ -79,9 +83,16 @@ export interface Audio {
   level?: Level
   starred?: boolean
   summary?: string
+  // TTS-specific fields (for TTS-generated audio)
+  translationKey?: string // Reference to Translation.id (local ID) if generated from translation
+  sourceText?: string // Original text that was synthesized (for TTS audio)
+  voice?: string // Voice identifier used for synthesis (for TTS audio)
   // Local storage
-  mediaBlobKey?: string // Blob key for offline access
-  thumbnailBlobKey?: string
+  // For small files (TTS audio, etc.), store directly in blob field
+  // For large files (videos), use mediaBlobKey to reference external storage (future optimization)
+  blob?: Blob // Media blob for offline access (stored directly in IndexedDB)
+  mediaBlobKey?: string // Reserved: Blob key for large file external storage (future use)
+  thumbnailBlobKey?: string // Reserved: Thumbnail blob key for external storage (future use)
   syncStatus?: SyncStatus
   serverId?: string // Links to backend ID if synced
   createdAt: number

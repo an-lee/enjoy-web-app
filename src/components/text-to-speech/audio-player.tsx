@@ -1,0 +1,156 @@
+import { useTranslation } from 'react-i18next'
+import { useRef, useState, useEffect } from 'react'
+import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Slider } from '@/components/ui/slider'
+import { cn } from '@/lib/utils'
+
+interface AudioPlayerProps {
+  audioUrl: string
+  className?: string
+}
+
+export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
+  const { t } = useTranslation()
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume] = useState(1)
+  const [isMuted, setIsMuted] = useState(false)
+  const [isVolumeOpen, setIsVolumeOpen] = useState(false)
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const updateTime = () => setCurrentTime(audio.currentTime)
+    const updateDuration = () => setDuration(audio.duration || 0)
+    const handlePlay = () => setIsPlaying(true)
+    const handlePause = () => setIsPlaying(false)
+    const handleEnded = () => {
+      setIsPlaying(false)
+      setCurrentTime(0)
+    }
+
+    audio.addEventListener('timeupdate', updateTime)
+    audio.addEventListener('loadedmetadata', updateDuration)
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+    audio.addEventListener('ended', handleEnded)
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime)
+      audio.removeEventListener('loadedmetadata', updateDuration)
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+      audio.removeEventListener('ended', handleEnded)
+    }
+  }, [audioUrl])
+
+  const togglePlay = () => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (isPlaying) {
+      audio.pause()
+    } else {
+      audio.play()
+    }
+  }
+
+  const handleSeek = (value: number[]) => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.currentTime = value[0]
+    setCurrentTime(value[0])
+  }
+
+  const handleVolumeChange = (value: number[]) => {
+    const audio = audioRef.current
+    if (!audio) return
+    const newVolume = value[0]
+    audio.volume = newVolume
+    setVolume(newVolume)
+    setIsMuted(newVolume === 0)
+  }
+
+  const toggleVolumePanel = () => {
+    setIsVolumeOpen((prev) => !prev)
+  }
+
+  const formatTime = (seconds: number): string => {
+    if (!isFinite(seconds)) return '0:00'
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  return (
+    <div className={cn('space-y-3', className)}>
+      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+      <div className="relative flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={togglePlay}
+          className="size-8 sm:size-11 rounded-full border-2 border-primary bg-primary/10 shadow-sm hover:bg-primary/20"
+        >
+          {isPlaying ? (
+            <Pause className="h-4 w-4" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
+        </Button>
+
+        <div className="flex-1">
+          <div className="flex items-center gap-1 rounded-full bg-secondary/40 py-2">
+            <span className="w-10 text-xs tabular-nums text-muted-foreground text-center">
+              {formatTime(currentTime)}
+            </span>
+            <Slider
+              value={[currentTime]}
+              max={duration || 0}
+              step={0.1}
+              onValueChange={handleSeek}
+              className="flex-1"
+            />
+            <span className="w-10 text-center text-xs tabular-nums text-muted-foreground">
+              {formatTime(duration)}
+            </span>
+          </div>
+        </div>
+
+        <div className="ml-1 flex items-center gap-2">
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleVolumePanel}
+              className="h-9 w-9 rounded-full"
+            >
+              {isMuted || volume === 0 ? (
+                <VolumeX className="h-4 w-4" />
+              ) : (
+                <Volume2 className="h-4 w-4" />
+              )}
+            </Button>
+            {isVolumeOpen && (
+              <div className="absolute bottom-12 left-1/2 z-10 -translate-x-1/2 rounded-xl border bg-background/95 px-3 py-3 shadow-lg backdrop-blur-sm">
+                <Slider
+                  orientation="vertical"
+                  value={[isMuted ? 0 : volume]}
+                  max={1}
+                  step={0.01}
+                  onValueChange={handleVolumeChange}
+                  className="h-24 w-6"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
