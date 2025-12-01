@@ -14,7 +14,7 @@ import {
   ErrorAlert,
   TTSHistoryToggle,
   TTSHistory,
-} from '@/components/text-to-speech'
+} from '@/components/voice-synthesis'
 import { useAudioHistory } from '@/hooks/use-audios'
 import { getDefaultTTSVoice, getTTSVoices } from '@/services/ai/constants/tts-voices'
 import { AIProvider } from '@/services/ai/types'
