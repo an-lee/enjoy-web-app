@@ -31,26 +31,6 @@ function extractKeys(obj: TranslationData, prefix = ""): Set<string> {
 }
 
 /**
- * Check if a key exists in the translation object
- */
-function hasKey(obj: TranslationData, keyPath: string): boolean {
-  const parts = keyPath.split(".");
-  let current: any = obj;
-
-  for (const part of parts) {
-    if (current === null || current === undefined || typeof current !== "object") {
-      return false;
-    }
-    current = current[part];
-    if (current === undefined) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/**
  * Get the value at a key path
  */
 function getValue(obj: TranslationData, keyPath: string): any {

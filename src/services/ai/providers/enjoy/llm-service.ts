@@ -14,6 +14,7 @@ import type {
   SmartTranslationResponse,
   DictionaryResponse,
 } from '../../types'
+import { AIServiceType, AIProvider } from '../../types'
 import type { TranslationStyle } from '@/db/schema'
 // Prompts will be used when switching to OpenAI SDK
 // import { buildSmartTranslationPrompt, buildDictionaryPrompt } from '../prompts'
@@ -85,8 +86,8 @@ export async function smartTranslateWithEnjoy(
         message: error.message || 'Enjoy API smart translation failed',
       },
       metadata: {
-        serviceType: 'smartTranslation',
-        provider: 'enjoy',
+        serviceType: AIServiceType.SMART_TRANSLATION,
+        provider: AIProvider.ENJOY,
       },
     }
   }
@@ -129,8 +130,8 @@ export async function dictionaryLookupWithEnjoy(
         message: error.message || 'Enjoy API smart dictionary lookup failed',
       },
       metadata: {
-        serviceType: 'smartDictionary',
-        provider: 'enjoy',
+        serviceType: AIServiceType.SMART_DICTIONARY,
+        provider: AIProvider.ENJOY,
       },
     }
   }

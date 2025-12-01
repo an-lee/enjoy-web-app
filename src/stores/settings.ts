@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import i18n from "../lib/i18n"
-import type { AIProvider } from "@/services/ai/types"
+import { AIProvider } from "@/services/ai/types"
 
 interface AIServiceSettings {
   // Smart translation - style-based translation, used for user-generated content
@@ -60,20 +60,20 @@ interface SettingsState {
 
 const defaultAISettings: AIServiceSettings = {
   smartTranslation: {
-    defaultProvider: 'enjoy',
+    defaultProvider: AIProvider.ENJOY,
     defaultStyle: 'natural',
   },
   tts: {
-    defaultProvider: 'enjoy',
+    defaultProvider: AIProvider.ENJOY,
   },
   asr: {
-    defaultProvider: 'local',
+    defaultProvider: AIProvider.LOCAL,
   },
   smartDictionary: {
-    defaultProvider: 'enjoy',
+    defaultProvider: AIProvider.ENJOY,
   },
   assessment: {
-    defaultProvider: 'enjoy',
+    defaultProvider: AIProvider.ENJOY,
   },
 }
 

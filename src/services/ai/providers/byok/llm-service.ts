@@ -14,6 +14,7 @@ import type {
   SmartTranslationResponse,
   DictionaryResponse,
 } from '../../types'
+import { AIServiceType, AIProvider } from '../../types'
 import type { TranslationStyle } from '@/db/schema'
 import {
   buildSmartTranslationPrompt,
@@ -105,8 +106,8 @@ export async function smartTranslateWithBYOK(
         aiModel: `${config.provider}/${config.model || 'default'}`,
       },
       metadata: {
-        serviceType: 'smartTranslation',
-        provider: 'byok',
+        serviceType: AIServiceType.SMART_TRANSLATION,
+        provider: AIProvider.BYOK,
       },
     }
   } catch (error: any) {
@@ -117,8 +118,8 @@ export async function smartTranslateWithBYOK(
         message: error.message || 'BYOK smart translation failed',
       },
       metadata: {
-        serviceType: 'smartTranslation',
-        provider: 'byok',
+        serviceType: AIServiceType.SMART_TRANSLATION,
+        provider: AIProvider.BYOK,
       },
     }
   }
@@ -154,8 +155,8 @@ export async function dictionaryLookupWithBYOK(
       success: true,
       data: dictionaryData,
       metadata: {
-        serviceType: 'smartDictionary',
-        provider: 'byok',
+        serviceType: AIServiceType.SMART_DICTIONARY,
+        provider: AIProvider.BYOK,
       },
     }
   } catch (error: any) {
@@ -166,8 +167,8 @@ export async function dictionaryLookupWithBYOK(
         message: error.message || 'BYOK smart dictionary lookup failed',
       },
       metadata: {
-        serviceType: 'smartDictionary',
-        provider: 'byok',
+        serviceType: AIServiceType.SMART_DICTIONARY,
+        provider: AIProvider.BYOK,
       },
     }
   }

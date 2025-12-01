@@ -6,6 +6,7 @@
 
 import OpenAI from 'openai'
 import type { BYOKConfig, AIServiceResponse, ASRResponse, TTSResponse } from '../../types'
+import { AIServiceType, AIProvider } from '../../types'
 
 /**
  * ASR - Automatic Speech Recognition (Speech-to-Text) with BYOK
@@ -45,8 +46,8 @@ export async function transcribeWithBYOK(
           // language: transcription.language,
         },
         metadata: {
-          serviceType: 'asr',
-          provider: 'byok',
+          serviceType: AIServiceType.ASR,
+          provider: AIProvider.BYOK,
         },
       }
     }
@@ -63,8 +64,8 @@ export async function transcribeWithBYOK(
             'Azure Speech ASR with BYOK should use the existing azureSpeechService.transcribeWithKey() method',
         },
         metadata: {
-          serviceType: 'asr',
-          provider: 'byok',
+          serviceType: AIServiceType.ASR,
+          provider: AIProvider.BYOK,
         },
       }
     }
@@ -76,8 +77,8 @@ export async function transcribeWithBYOK(
         message: `Provider ${config.provider} does not support ASR`,
       },
       metadata: {
-        serviceType: 'asr',
-        provider: 'byok',
+        serviceType: AIServiceType.ASR,
+        provider: AIProvider.BYOK,
       },
     }
   } catch (error: any) {
@@ -89,8 +90,8 @@ export async function transcribeWithBYOK(
         details: error,
       },
       metadata: {
-        serviceType: 'asr',
-        provider: 'byok',
+        serviceType: AIServiceType.ASR,
+        provider: AIProvider.BYOK,
       },
     }
   }
@@ -129,8 +130,8 @@ export async function synthesizeWithBYOK(
           format: 'audio/mpeg',
         },
         metadata: {
-          serviceType: 'tts',
-          provider: 'byok',
+          serviceType: AIServiceType.TTS,
+          provider: AIProvider.BYOK,
         },
       }
     }
@@ -147,8 +148,8 @@ export async function synthesizeWithBYOK(
             'Azure Speech TTS with BYOK should use the existing azureSpeechService.synthesizeWithKey() method',
         },
         metadata: {
-          serviceType: 'tts',
-          provider: 'byok',
+          serviceType: AIServiceType.TTS,
+          provider: AIProvider.BYOK,
         },
       }
     }
@@ -160,8 +161,8 @@ export async function synthesizeWithBYOK(
         message: `Provider ${config.provider} does not support TTS`,
       },
       metadata: {
-        serviceType: 'tts',
-        provider: 'byok',
+        serviceType: AIServiceType.TTS,
+        provider: AIProvider.BYOK,
       },
     }
   } catch (error: any) {
@@ -173,8 +174,8 @@ export async function synthesizeWithBYOK(
         details: error,
       },
       metadata: {
-        serviceType: 'tts',
-        provider: 'byok',
+        serviceType: AIServiceType.TTS,
+        provider: AIProvider.BYOK,
       },
     }
   }

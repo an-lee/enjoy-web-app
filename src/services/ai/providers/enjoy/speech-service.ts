@@ -9,6 +9,7 @@
 
 import { apiClient } from '@/services/api/client'
 import type { AIServiceResponse, ASRResponse, TTSResponse } from '../../types'
+import { AIServiceType, AIProvider } from '../../types'
 
 /**
  * ASR (Speech-to-Text) with Enjoy API
@@ -60,8 +61,8 @@ export async function transcribeWithEnjoy(
         message: error.message || 'Enjoy API ASR failed',
       },
       metadata: {
-        serviceType: 'asr',
-        provider: 'enjoy',
+        serviceType: AIServiceType.ASR,
+        provider: AIProvider.ENJOY,
       },
     }
   }
@@ -110,8 +111,8 @@ export async function synthesizeWithEnjoy(
         message: error.message || 'Enjoy API TTS failed',
       },
       metadata: {
-        serviceType: 'tts',
-        provider: 'enjoy',
+        serviceType: AIServiceType.TTS,
+        provider: AIProvider.ENJOY,
       },
     }
   }
