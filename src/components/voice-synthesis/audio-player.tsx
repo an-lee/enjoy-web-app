@@ -87,23 +87,23 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
   return (
     <div className={cn('space-y-3', className)}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
-      <div className="relative flex items-center gap-2">
+      <div className="relative flex items-center gap-3">
         <Button
-          variant="outline"
+          variant="default"
           size="icon"
           onClick={togglePlay}
-          className="size-8 sm:size-11 rounded-full border-2 border-primary bg-primary/10 shadow-sm hover:bg-primary/20"
+          className="size-10 sm:size-12 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
         >
           {isPlaying ? (
-            <Pause className="h-4 w-4" />
+            <Pause className="h-5 w-5 sm:h-6 sm:w-6" />
           ) : (
-            <Play className="h-4 w-4" />
+            <Play className="h-5 w-5 sm:h-6 sm:w-6 ml-0.5" />
           )}
         </Button>
 
-        <div className="flex-1">
-          <div className="flex items-center gap-1 rounded-full bg-secondary/40 py-2">
-            <span className="w-10 text-xs tabular-nums text-muted-foreground text-center">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5 shadow-sm">
+            <span className="w-12 shrink-0 text-xs sm:text-sm tabular-nums text-muted-foreground text-center font-medium">
               {formatTime(currentTime)}
             </span>
             <Slider
@@ -113,19 +113,19 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
               onValueChange={handleSeek}
               className="flex-1"
             />
-            <span className="w-10 text-center text-xs tabular-nums text-muted-foreground">
+            <span className="w-12 shrink-0 text-center text-xs sm:text-sm tabular-nums text-muted-foreground font-medium">
               {formatTime(duration)}
             </span>
           </div>
         </div>
 
-        <div className="ml-1 flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <div className="relative">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleVolumePanel}
-              className="h-9 w-9 rounded-full"
+              className="h-9 w-9 rounded-full hover:bg-accent transition-colors"
             >
               {isMuted || volume === 0 ? (
                 <VolumeX className="h-4 w-4" />
@@ -134,7 +134,7 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
               )}
             </Button>
             {isVolumeOpen && (
-              <div className="absolute bottom-12 left-1/2 z-10 -translate-x-1/2 rounded-xl border bg-background/95 px-3 py-3 shadow-lg backdrop-blur-sm">
+              <div className="absolute bottom-12 left-1/2 z-10 -translate-x-1/2 rounded-xl border bg-popover px-3 py-3 shadow-lg backdrop-blur-sm">
                 <Slider
                   orientation="vertical"
                   value={[isMuted ? 0 : volume]}
