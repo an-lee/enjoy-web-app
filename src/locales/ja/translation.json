@@ -189,7 +189,12 @@
     "previous": "前へ",
     "next": "次へ",
     "page": "ページ",
-    "of": "/"
+    "of": "/",
+    "copy": "コピー",
+    "copied": "コピーしました！",
+    "copyFailed": "コピーに失敗しました",
+    "synthesizeAudio": "音声を合成",
+    "regenerateAudio": "音声を再生成"
   },
   "tts": {
     "title": "音声合成",
@@ -209,6 +214,9 @@
     "showHistory": "履歴を表示",
     "hideHistory": "履歴を非表示",
     "searchPlaceholder": "テキストを検索...",
-    "noHistory": "合成履歴がありません"
+    "noHistory": "合成履歴がありません",
+    "synthesizeAudio": "音声を合成",
+    "synthesizeDescription": "翻訳されたテキストから音声を生成",
+    "synthesized": "音声の合成に成功しました"
   }
 }

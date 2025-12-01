@@ -7,4 +7,5 @@ export { ErrorAlert } from './error-alert'
 export { HistoryToggle } from './history-toggle'
 export { TranslationHistory } from './translation-history'
 export { HistoryItem } from './history-item'
+export { VoiceSynthesisSheet } from './voice-synthesis-sheet'
 

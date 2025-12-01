@@ -189,7 +189,12 @@
     "previous": "Précédent",
     "next": "Suivant",
     "page": "Page",
-    "of": "sur"
+    "of": "sur",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "copyFailed": "Échec de la copie",
+    "synthesizeAudio": "Synthétiser l'audio",
+    "regenerateAudio": "Régénérer l'audio"
   },
   "tts": {
     "title": "Synthèse Vocale",
@@ -209,6 +214,9 @@
     "showHistory": "Afficher l'historique",
     "hideHistory": "Masquer l'historique",
     "searchPlaceholder": "Rechercher du texte...",
-    "noHistory": "Aucun historique de synthèse"
+    "noHistory": "Aucun historique de synthèse",
+    "synthesizeAudio": "Synthétiser l'Audio",
+    "synthesizeDescription": "Générer l'audio à partir du texte traduit",
+    "synthesized": "Audio synthétisé avec succès"
   }
 }

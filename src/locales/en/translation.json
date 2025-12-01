@@ -218,7 +218,12 @@
     "previous": "Previous",
     "next": "Next",
     "page": "Page",
-    "of": "of"
+    "of": "of",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "copyFailed": "Failed to copy",
+    "synthesizeAudio": "Synthesize audio",
+    "regenerateAudio": "Regenerate audio"
   },
   "tts": {
     "title": "Voice Synthesis",
@@ -238,6 +243,9 @@
     "showHistory": "Show History",
     "hideHistory": "Hide History",
     "searchPlaceholder": "Search text...",
-    "noHistory": "No synthesis history"
+    "noHistory": "No synthesis history",
+    "synthesizeAudio": "Synthesize Audio",
+    "synthesizeDescription": "Generate audio from the translated text",
+    "synthesized": "Audio synthesized successfully"
   }
 }

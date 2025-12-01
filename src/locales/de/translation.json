@@ -189,7 +189,12 @@
     "previous": "Zurück",
     "next": "Weiter",
     "page": "Seite",
-    "of": "von"
+    "of": "von",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "synthesizeAudio": "Audio synthetisieren",
+    "regenerateAudio": "Audio erneut generieren"
   },
   "tts": {
     "title": "Sprachsynthese",
@@ -209,6 +214,9 @@
     "showHistory": "Verlauf anzeigen",
     "hideHistory": "Verlauf ausblenden",
     "searchPlaceholder": "Text suchen...",
-    "noHistory": "Kein Synthese-Verlauf"
+    "noHistory": "Kein Synthese-Verlauf",
+    "synthesizeAudio": "Audio synthetisieren",
+    "synthesizeDescription": "Audio aus dem übersetzten Text generieren",
+    "synthesized": "Audio erfolgreich synthetisiert"
   }
 }
