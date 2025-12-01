@@ -11,6 +11,8 @@ import '../lib/i18n'
 
 import appCss from '../styles.css?url'
 import { AppSidebar, SiteHeader, ThemeProvider } from '@/components/layout'
+import { AppSidebarSkeleton } from '@/components/layout/app-sidebar-skeleton'
+import { SiteHeaderSkeleton } from '@/components/layout/site-header-skeleton'
 import {
   SidebarInset,
   SidebarProvider,
@@ -72,14 +74,16 @@ export const Route = createRootRouteWithContext<{
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation()
+  const [lang, setLang] = useState('en')
 
   useEffect(() => {
     // Update HTML lang attribute when language changes
+    setLang(i18n.language)
     document.documentElement.lang = i18n.language
   }, [i18n.language])
 
   return (
-    <html lang={i18n.language} suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -107,15 +111,27 @@ function RootComponent() {
   const navigate = useNavigate()
   const isLoginPage = location.pathname === '/login'
   const { queryClient } = Route.useRouteContext()
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Mark as hydrated after mount
+  // This is the key to avoiding hydration mismatches
+  useEffect(() => {
+    // Small delay to ensure React hydration is complete and i18n is initialized
+    const timer = setTimeout(() => {
+      setIsHydrated(true)
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Client-side auth check after hydration
   useEffect(() => {
-    // Only run on client side
-    if (typeof window === 'undefined') {
-      setIsCheckingAuth(false)
+    // Only run on client side after hydration
+    if (!isHydrated || isLoginPage) {
       return
     }
+
+    setIsCheckingAuth(true)
 
     // Wait for Zustand persist to hydrate from localStorage
     // Give it a brief moment to complete hydration
@@ -124,7 +140,7 @@ function RootComponent() {
       setIsCheckingAuth(false)
 
       // If not authenticated and not on login page, redirect to login
-      if (!state.isAuthenticated && !isLoginPage) {
+      if (!state.isAuthenticated) {
         navigate({
           to: '/login',
           search: {
@@ -135,9 +151,9 @@ function RootComponent() {
     }, 50) // Short delay to allow Zustand persist to hydrate
 
     return () => clearTimeout(timer)
-  }, [isLoginPage, location.pathname, navigate])
+  }, [isHydrated, isLoginPage, location.pathname, navigate])
 
-  // Show loading state during auth check to prevent flash
+  // Show loading state during auth check to prevent flash (client-side only)
   if (isCheckingAuth && !isLoginPage) {
     return (
       <QueryClientProvider client={queryClient}>
@@ -158,8 +174,32 @@ function RootComponent() {
         {isLoginPage ? (
           // Login page - no sidebar or header
           <Outlet />
+        ) : !isHydrated ? (
+          // Show skeleton during SSR and hydration to avoid i18n mismatch
+          <SidebarProvider
+            style={
+              {
+                "--sidebar-width": "calc(var(--spacing) * 72)",
+                "--header-height": "calc(var(--spacing) * 12)",
+              } as React.CSSProperties
+            }
+          >
+            <AppSidebarSkeleton variant="inset" />
+            <SidebarInset>
+              <SiteHeaderSkeleton />
+              <div className="flex flex-1 flex-col">
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                    <div className="px-4 lg:px-6">
+                      {/* Empty skeleton content area - real content shows after hydration */}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </SidebarInset>
+          </SidebarProvider>
         ) : (
-          // Authenticated pages - with sidebar and header
+          // Authenticated pages - with sidebar and header (after hydration)
           <SidebarProvider
             style={
               {

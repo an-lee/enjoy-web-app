@@ -50,7 +50,7 @@ const hasSavedLanguagePreference = (): boolean => {
 // SSR-safe: only access localStorage on the client
 const getInitialLanguage = (): string | undefined => {
   if (typeof window === 'undefined') {
-    return undefined // Let LanguageDetector handle it for SSR
+    return 'en' // Always use fallback for SSR to avoid hydration mismatch
   }
   try {
     const stored = localStorage.getItem('enjoy-settings')
@@ -63,7 +63,7 @@ const getInitialLanguage = (): string | undefined => {
   } catch {
     // Ignore parsing errors
   }
-  return undefined // No saved preference, let LanguageDetector detect
+  return 'en' // Use fallback until after hydration
 }
 
 const hasSavedPreference = hasSavedLanguagePreference()
@@ -74,8 +74,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    // Only set lng if we have a saved preference, otherwise let LanguageDetector handle it
-    ...(initialLanguage ? { lng: initialLanguage } : {}),
+    lng: initialLanguage, // Always set a language to avoid auto-detection during hydration
     fallbackLng: 'en',
     debug: import.meta.env.DEV,
     defaultNS: 'translation',
@@ -83,11 +82,8 @@ i18n
       escapeValue: false, // React already escapes values
     },
     detection: {
-      // If no saved preference, prioritize browser language detection
-      // Otherwise, use saved preference from localStorage
-      order: hasSavedPreference
-        ? ['localStorage', 'navigator', 'htmlTag']
-        : ['navigator', 'htmlTag', 'localStorage'],
+      // Detection config (used later after hydration)
+      order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
     },
@@ -97,42 +93,48 @@ i18n
     supportedLngs: supportedLanguages,
   })
 
-// After initialization, sync detected language to settings store if no saved preference
-// This ensures the language is detected and saved for first-time users
-if (typeof window !== 'undefined' && !hasSavedPreference) {
-  // Small delay to ensure hydration is complete and i18n is fully initialized
+// After hydration, detect and set the correct language
+// This ensures server and client render the same initial HTML
+if (typeof window !== 'undefined') {
+  // Wait for React hydration to complete (aligned with RootComponent hydration delay)
   setTimeout(() => {
-    const detected = i18n.language || i18n.services.languageDetector?.detect()
+    let targetLanguage: string | undefined
 
-    // Normalize language code (e.g., 'zh-CN' -> 'zh', 'en-US' -> 'en')
-    const normalizeLanguage = (lang: string | string[] | undefined): string => {
-      if (!lang) return 'en'
-      const langStr = Array.isArray(lang) ? lang[0] : lang
-      // Extract base language code (e.g., 'zh-CN' -> 'zh')
-      const baseLang = langStr.split('-')[0].toLowerCase()
-      // Check if we support this language, fallback to 'en' if not
-      return supportedLanguages.includes(baseLang) ? baseLang : 'en'
+    if (hasSavedPreference) {
+      // Use saved preference
+      targetLanguage = initialLanguage
+    } else {
+      // Detect browser language
+      const detected = i18n.services.languageDetector?.detect()
+
+      // Normalize language code (e.g., 'zh-CN' -> 'zh', 'en-US' -> 'en')
+      const normalizeLanguage = (lang: string | string[] | undefined): string => {
+        if (!lang) return 'en'
+        const langStr = Array.isArray(lang) ? lang[0] : lang
+        // Extract base language code (e.g., 'zh-CN' -> 'zh')
+        const baseLang = langStr.split('-')[0].toLowerCase()
+        // Check if we support this language, fallback to 'en' if not
+        return supportedLanguages.includes(baseLang) ? baseLang : 'en'
+      }
+
+      targetLanguage = normalizeLanguage(detected)
     }
 
-    const normalizedLang = normalizeLanguage(detected)
-
-    // Only update if detected language is different from current
-    if (normalizedLang && normalizedLang !== i18n.language) {
-      i18n.changeLanguage(normalizedLang).then(() => {
-        // Sync to settings store
-        // Use dynamic import to avoid circular dependency
-        import('../stores/settings').then(({ useSettingsStore }) => {
-          const store = useSettingsStore.getState()
-          // Only update if still no saved preference (user might have changed it)
-          if (!hasSavedLanguagePreference()) {
-            store.setPreferredLanguage(normalizedLang)
-          }
-        }).catch(() => {
-          // Ignore errors if store is not available yet
-        })
+    // Only change language if different from current and after hydration
+    if (targetLanguage && targetLanguage !== i18n.language) {
+      i18n.changeLanguage(targetLanguage).then(() => {
+        // Sync to settings store if no saved preference
+        if (!hasSavedPreference) {
+          import('../stores/settings').then(({ useSettingsStore }) => {
+            const store = useSettingsStore.getState()
+            store.setPreferredLanguage(targetLanguage)
+          }).catch(() => {
+            // Ignore errors if store is not available yet
+          })
+        }
       })
     }
-  }, 100)
+  }, 50) // Delay to allow hydration to start, language will be ready when skeleton hides
 }
 
 export default i18n
