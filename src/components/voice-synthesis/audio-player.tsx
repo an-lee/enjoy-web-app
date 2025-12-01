@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next'
 import { useRef, useState, useEffect } from 'react'
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,7 +10,6 @@ interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
-  const { t } = useTranslation()
   const audioRef = useRef<HTMLAudioElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)

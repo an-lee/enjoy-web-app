@@ -12,7 +12,10 @@ import {
   VoiceSelector,
   AudioResult,
   ErrorAlert,
+  TTSHistoryToggle,
+  TTSHistory,
 } from '@/components/text-to-speech'
+import { useAudioHistory } from '@/hooks/use-audios'
 import { getDefaultTTSVoice, getTTSVoices } from '@/services/ai/constants/tts-voices'
 import { AIProvider } from '@/services/ai/types'
 import { saveAudio, getAudioByTranslationKey } from '@/db'
@@ -50,6 +53,15 @@ function VoiceSynthesis() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [isSynthesizing, setIsSynthesizing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showHistory, setShowHistory] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+
+  const {
+    data: audioHistory = [],
+    isLoading: isLoadingHistory,
+    refetch: refetchHistory,
+  } = useAudioHistory(showHistory, searchQuery)
 
   // Update language when settings change
   useEffect(() => {
@@ -168,6 +180,9 @@ function VoiceSynthesis() {
       }
 
       await saveAudio(audioRecord)
+      if (showHistory) {
+        void refetchHistory()
+      }
     } catch (err) {
       setError(t('tts.error'))
       console.error('TTS synthesis failed:', err)
@@ -237,12 +252,35 @@ function VoiceSynthesis() {
       }
 
       await saveAudio(audioRecord)
+      if (showHistory) {
+        void refetchHistory()
+      }
     } catch (err) {
       setError(t('tts.error'))
       console.error('TTS regeneration failed:', err)
     } finally {
       setIsSynthesizing(false)
     }
+  }
+
+  const handleHistoryToggle = () => {
+    setShowHistory((prev) => !prev)
+  }
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+  }
+
+  const handleToggleHistoryItem = (id: string) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
   }
 
   return (
@@ -299,6 +337,21 @@ function VoiceSynthesis() {
 
         {/* Error Message */}
         {error && <ErrorAlert message={error} />}
+
+        {/* History Toggle */}
+        <TTSHistoryToggle isExpanded={showHistory} onToggle={handleHistoryToggle} />
+
+        {/* History List */}
+        {showHistory && (
+          <TTSHistory
+            history={audioHistory}
+            expandedItems={expandedItems}
+            isLoading={isLoadingHistory}
+            searchQuery={searchQuery}
+            onToggleItem={handleToggleHistoryItem}
+            onSearchChange={handleSearchChange}
+          />
+        )}
       </div>
     </div>
   )

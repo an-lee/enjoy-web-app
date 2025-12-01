@@ -4,4 +4,7 @@ export { VoiceSelector } from './voice-selector'
 export { AudioResult } from './audio-result'
 export { AudioPlayer } from './audio-player'
 export { ErrorAlert } from './error-alert'
+export { TTSHistoryToggle } from './history-toggle'
+export { TTSHistory } from './history-list'
+export { AudioHistoryItem } from './history-item'
 
