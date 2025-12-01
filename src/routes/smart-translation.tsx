@@ -24,6 +24,7 @@ import {
   HistoryToggle,
   TranslationHistory,
 } from '@/components/smart-translation'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/smart-translation')({
   component: SmartTranslation,
@@ -241,10 +242,27 @@ function SmartTranslation() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8">
-      <div className="space-y-6">
+    <div
+      className={cn(
+        'container mx-auto max-w-4xl transition-all duration-500 ease-in-out w-full',
+        showHistory
+          ? 'py-8'
+          : 'flex items-center h-full min-h-0'
+      )}
+    >
+      <div
+        className={cn(
+          'w-full space-y-6 transition-all duration-500 ease-in-out',
+          !showHistory && 'mx-auto'
+        )}
+      >
         {/* Input Section */}
-        <div className="space-y-4">
+        <div
+          className={cn(
+            'space-y-4 transition-all duration-500 ease-in-out',
+            !showHistory && 'opacity-100'
+          )}
+        >
           <LanguageSelector
             sourceLanguage={sourceLanguage}
             targetLanguage={targetLanguage}
@@ -295,33 +313,57 @@ function SmartTranslation() {
 
         {/* Translation Result */}
         {currentTranslation && (
-          <TranslationResult
-            translation={currentTranslation}
-            onRegenerate={handleRegenerate}
-            isRegenerating={isTranslating}
-          />
+          <div className="transition-all duration-500 ease-in-out">
+            <TranslationResult
+              translation={currentTranslation}
+              onRegenerate={handleRegenerate}
+              isRegenerating={isTranslating}
+            />
+          </div>
         )}
 
         {/* Error Message */}
-        {error && <ErrorAlert message={error} />}
-
-        {/* History Toggle Button */}
-        <HistoryToggle isExpanded={showHistory} onToggle={handleHistoryToggle} />
-
-        {/* History Section */}
-        {showHistory && (
-          <TranslationHistory
-            history={history}
-            expandedItems={expandedItems}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            isLoading={isLoadingHistory}
-            searchQuery={searchQuery}
-            onToggleItem={toggleExpand}
-            onPageChange={setCurrentPage}
-            onSearchChange={handleSearchChange}
-          />
+        {error && (
+          <div className="transition-all duration-500 ease-in-out">
+            <ErrorAlert message={error} />
+          </div>
         )}
+
+        {/* History Toggle */}
+        <div className="transition-all duration-500 ease-in-out">
+          <HistoryToggle isExpanded={showHistory} onToggle={handleHistoryToggle} />
+        </div>
+
+        {/* History List */}
+        <div
+          className={cn(
+            'transition-all duration-500 ease-in-out overflow-hidden',
+            showHistory
+              ? 'max-h-[2000px] opacity-100 mt-6'
+              : 'max-h-0 opacity-0 mt-0'
+          )}
+        >
+          <div
+            className={cn(
+              'transition-all duration-500 ease-in-out',
+              showHistory
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 -translate-y-4'
+            )}
+          >
+            <TranslationHistory
+              history={history}
+              expandedItems={expandedItems}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              isLoading={isLoadingHistory}
+              searchQuery={searchQuery}
+              onToggleItem={toggleExpand}
+              onPageChange={setCurrentPage}
+              onSearchChange={handleSearchChange}
+            />
+          </div>
+        </div>
       </div>
     </div>
   )
