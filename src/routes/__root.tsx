@@ -17,6 +17,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from '@/components/ui/sidebar'
+import { Toaster } from '@/components/ui/sonner'
 import { useAuthStore } from '@/stores'
 
 export const Route = createRootRouteWithContext<{
@@ -229,6 +230,7 @@ function RootComponent() {
           </SidebarProvider>
         )}
       </ThemeProvider>
+      <Toaster />
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </QueryClientProvider>
   )
