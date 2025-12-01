@@ -110,16 +110,16 @@ export function getDictionaryWorker(): Worker {
       const { type, data } = event.data
 
       if (type === 'ready') {
-        useLocalModelsStore.getState().setModelLoaded('dictionary', data.model)
+        useLocalModelsStore.getState().setModelLoaded('smartDictionary', data.model)
       } else if (type === 'progress') {
         // Normalize progress value to 0-1 range
         const normalizedProgress = normalizeProgress(data)
-        useLocalModelsStore.getState().setModelProgress('dictionary', {
+        useLocalModelsStore.getState().setModelProgress('smartDictionary', {
           ...data,
           progress: normalizedProgress,
         })
       } else if (type === 'error') {
-        useLocalModelsStore.getState().setModelError('dictionary', data.message)
+        useLocalModelsStore.getState().setModelError('smartDictionary', data.message)
       }
     })
   }

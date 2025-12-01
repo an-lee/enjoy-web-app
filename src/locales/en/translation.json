@@ -65,6 +65,8 @@
       "asrDescription": "Configure automatic speech recognition service provider",
       "dictionary": "Dictionary",
       "dictionaryDescription": "Configure dictionary lookup service provider",
+      "smartDictionary": "Smart Dictionary",
+      "smartDictionaryDescription": "Configure smart dictionary (contextual AI-powered) service provider. Basic dictionary is always free.",
       "assessment": "Pronunciation Assessment",
       "assessmentDescription": "Configure pronunciation assessment service provider",
       "provider": "Provider",

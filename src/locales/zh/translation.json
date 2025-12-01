@@ -65,6 +65,8 @@
       "asrDescription": "配置自动语音识别服务提供商",
       "dictionary": "词典",
       "dictionaryDescription": "配置词典查询服务提供商",
+      "smartDictionary": "智能词典",
+      "smartDictionaryDescription": "配置智能词典（基于 AI 的语境解释）服务提供商。基础词典始终免费。",
       "assessment": "发音评估",
       "assessmentDescription": "配置发音评估服务提供商",
       "provider": "提供商",

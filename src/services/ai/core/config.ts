@@ -12,7 +12,7 @@ import { AIProvider as AIProviderEnum, AIServiceType as AIServiceTypeEnum } from
  * Get AI service configuration from settings
  */
 export function getAIServiceConfig(
-  service: 'asr' | 'smartTranslation' | 'dictionary' | 'tts' | 'assessment'
+  service: 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts' | 'assessment'
 ): AIServiceConfig {
   const { aiServices } = useSettingsStore.getState()
   const serviceSettings = aiServices[service]
@@ -62,8 +62,8 @@ export function selectProvider(
       // ASR and smart translation support local mode, free users default to local
       return isPro ? AIProviderEnum.ENJOY : AIProviderEnum.LOCAL
 
-    case AIServiceTypeEnum.DICTIONARY:
-      // Dictionary lookup supports local mode, free users default to local
+    case AIServiceTypeEnum.SMART_DICTIONARY:
+      // Smart dictionary lookup supports local mode, free users default to local
       return isPro ? AIProviderEnum.ENJOY : AIProviderEnum.LOCAL
 
     case AIServiceTypeEnum.TTS:

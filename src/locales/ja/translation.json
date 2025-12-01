@@ -65,6 +65,8 @@
       "asrDescription": "自動音声認識サービスプロバイダーを設定",
       "dictionary": "辞書",
       "dictionaryDescription": "辞書検索サービスプロバイダーを設定",
+      "smartDictionary": "スマート辞書",
+      "smartDictionaryDescription": "スマート辞書（AI対応の文脈説明）サービスプロバイダーを設定。基本辞書は常に無料です。",
       "assessment": "発音評価",
       "assessmentDescription": "発音評価サービスプロバイダーを設定",
       "provider": "プロバイダー",

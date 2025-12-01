@@ -9,7 +9,7 @@
  */
 export enum AIServiceType {
   SMART_TRANSLATION = 'smartTranslation',
-  DICTIONARY = 'dictionary',
+  SMART_DICTIONARY = 'smartDictionary',
   ASR = 'asr',
   TTS = 'tts',
   ASSESSMENT = 'assessment',

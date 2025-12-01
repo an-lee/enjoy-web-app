@@ -7,7 +7,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { normalizeProgress } from '@/services/ai/providers/local/utils/progress'
 
-export type ModelType = 'asr' | 'smartTranslation' | 'dictionary' | 'tts'
+export type ModelType = 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts'
 
 export interface FileProgress {
   name: string // File name
@@ -68,7 +68,7 @@ export const useLocalModelsStore = create<LocalModelsState>()(
       models: {
         asr: { ...defaultModelStatus },
         smartTranslation: { ...defaultModelStatus },
-        dictionary: { ...defaultModelStatus },
+        smartDictionary: { ...defaultModelStatus },
         tts: { ...defaultModelStatus },
       },
 
@@ -253,10 +253,10 @@ export const useLocalModelsStore = create<LocalModelsState>()(
             error: null,
             progress: undefined,
           },
-          dictionary: {
-            loaded: state.models.dictionary.loaded,
+          smartDictionary: {
+            loaded: state.models.smartDictionary.loaded,
             loading: false,
-            modelName: state.models.dictionary.modelName,
+            modelName: state.models.smartDictionary.modelName,
             error: null,
             progress: undefined,
           },

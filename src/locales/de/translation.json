@@ -65,6 +65,8 @@
       "asrDescription": "Automatischen Spracherkennungsdienst-Anbieter konfigurieren",
       "dictionary": "Wörterbuch",
       "dictionaryDescription": "Wörterbuch-Abfragedienst-Anbieter konfigurieren",
+      "smartDictionary": "Smartes Wörterbuch",
+      "smartDictionaryDescription": "Smartes Wörterbuch (KI-gestützte kontextbezogene Erklärung) Dienst-Anbieter konfigurieren. Grundwörterbuch ist immer kostenlos.",
       "assessment": "Aussprachebewertung",
       "assessmentDescription": "Aussprachebewertungsdienst-Anbieter konfigurieren",
       "provider": "Anbieter",

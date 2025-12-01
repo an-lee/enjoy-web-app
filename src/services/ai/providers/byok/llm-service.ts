@@ -154,7 +154,7 @@ export async function dictionaryLookupWithBYOK(
       success: true,
       data: dictionaryData,
       metadata: {
-        serviceType: 'dictionary',
+        serviceType: 'smartDictionary',
         provider: 'byok',
       },
     }
@@ -162,11 +162,11 @@ export async function dictionaryLookupWithBYOK(
     return {
       success: false,
       error: {
-        code: 'BYOK_DICTIONARY_ERROR',
-        message: error.message || 'BYOK dictionary lookup failed',
+        code: 'BYOK_SMART_DICTIONARY_ERROR',
+        message: error.message || 'BYOK smart dictionary lookup failed',
       },
       metadata: {
-        serviceType: 'dictionary',
+        serviceType: 'smartDictionary',
         provider: 'byok',
       },
     }

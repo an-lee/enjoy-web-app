@@ -139,7 +139,7 @@ export const TRANSLATION_MODEL_OPTIONS = SMART_TRANSLATION_MODEL_OPTIONS
  * Get default model for a service type
  */
 export function getDefaultModel(
-  serviceType: 'asr' | 'smartTranslation' | 'dictionary' | 'tts'
+  serviceType: 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts'
 ): string {
   if (serviceType === 'asr') {
     return DEFAULT_ASR_MODEL
@@ -147,7 +147,7 @@ export function getDefaultModel(
   if (serviceType === 'smartTranslation') {
     return DEFAULT_SMART_TRANSLATION_MODEL
   }
-  if (serviceType === 'dictionary') {
+  if (serviceType === 'smartDictionary') {
     return DEFAULT_DICTIONARY_MODEL
   }
   if (serviceType === 'tts') {
@@ -160,13 +160,13 @@ export function getDefaultModel(
  * Get model option by value
  */
 export function getModelOption(
-  serviceType: 'asr' | 'smartTranslation' | 'dictionary' | 'tts',
+  serviceType: 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts',
   modelValue: string
 ): ModelOption | undefined {
   let options: ModelOption[]
   if (serviceType === 'asr') {
     options = ASR_MODEL_OPTIONS
-  } else if (serviceType === 'dictionary') {
+  } else if (serviceType === 'smartDictionary') {
     options = DICTIONARY_MODEL_OPTIONS
   } else if (serviceType === 'tts') {
     options = TTS_MODEL_OPTIONS

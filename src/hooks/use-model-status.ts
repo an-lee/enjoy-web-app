@@ -89,7 +89,7 @@ export function useModelStatus({ isLocal, modelType, currentModel }: UseModelSta
         setLoadingFromCache(false)
       }
 
-      if (modelType === 'asr' || modelType === 'smartTranslation' || modelType === 'dictionary' || modelType === 'tts') {
+      if (modelType === 'asr' || modelType === 'smartTranslation' || modelType === 'smartDictionary' || modelType === 'tts') {
         await localModelService.initializeModel(modelType, { model: currentModel })
       } else {
         throw new Error(

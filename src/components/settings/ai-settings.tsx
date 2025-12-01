@@ -17,11 +17,11 @@ export function AISettings() {
         providers={[AIProvider.ENJOY, AIProvider.LOCAL, AIProvider.BYOK]}
       />
 
-      {/* Dictionary - Contextual word lookup with AI explanation */}
+      {/* Smart Dictionary - Contextual word lookup with AI explanation */}
       <AIServiceCard
-        service={AIServiceType.DICTIONARY}
-        title={t('settings.ai.dictionary', { defaultValue: 'Dictionary (Contextual)' })}
-        description={t('settings.ai.dictionaryDescription', {
+        service={AIServiceType.SMART_DICTIONARY}
+        title={t('settings.ai.smartDictionary', { defaultValue: 'Smart Dictionary (Contextual)' })}
+        description={t('settings.ai.smartDictionaryDescription', {
           defaultValue: 'Contextual word lookup with AI-powered explanation. Basic dictionary is always free.'
         })}
         providers={[AIProvider.ENJOY, AIProvider.LOCAL, AIProvider.BYOK]}

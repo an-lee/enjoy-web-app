@@ -82,7 +82,7 @@ These endpoints use the authenticated `apiClient` instance, which automatically 
 ### AI Services (`@/services/ai`)
 
 - **Smart Translation**: Style-aware translation with LLMs
-- **Contextual Dictionary**: AI-powered contextual explanations
+- **Smart Dictionary**: AI-powered contextual explanations
 - **ASR/TTS**: Speech recognition and synthesis
 - **Assessment**: Pronunciation evaluation
 

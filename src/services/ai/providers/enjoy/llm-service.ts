@@ -125,11 +125,11 @@ export async function dictionaryLookupWithEnjoy(
     return {
       success: false,
       error: {
-        code: 'ENJOY_DICTIONARY_ERROR',
-        message: error.message || 'Enjoy API dictionary lookup failed',
+        code: 'ENJOY_SMART_DICTIONARY_ERROR',
+        message: error.message || 'Enjoy API smart dictionary lookup failed',
       },
       metadata: {
-        serviceType: 'dictionary',
+        serviceType: 'smartDictionary',
         provider: 'enjoy',
       },
     }

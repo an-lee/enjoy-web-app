@@ -16,11 +16,11 @@ export const ERROR_TRANSLATION = 'TRANSLATION_ERROR' // Legacy
 export const ERROR_TRANSLATION_LOCAL = 'LOCAL_TRANSLATION_ERROR' // Legacy
 
 // ============================================================================
-// Dictionary Errors (Contextual - AI-powered only)
+// Smart Dictionary Errors (Contextual - AI-powered only)
 // ============================================================================
-export const ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED = 'LOCAL_DICTIONARY_NOT_SUPPORTED'
-export const ERROR_DICTIONARY_ENJOY = 'ENJOY_DICTIONARY_ERROR'
-export const ERROR_DICTIONARY_BYOK = 'BYOK_DICTIONARY_ERROR'
+export const ERROR_SMART_DICTIONARY_LOCAL_NOT_SUPPORTED = 'LOCAL_SMART_DICTIONARY_NOT_SUPPORTED'
+export const ERROR_SMART_DICTIONARY_ENJOY = 'ENJOY_SMART_DICTIONARY_ERROR'
+export const ERROR_SMART_DICTIONARY_BYOK = 'BYOK_SMART_DICTIONARY_ERROR'
 
 // ============================================================================
 // ASR (Automatic Speech Recognition) Errors
@@ -62,10 +62,10 @@ export const ERROR_CATEGORIES = {
     ERROR_TRANSLATION,
     ERROR_TRANSLATION_LOCAL,
   ],
-  DICTIONARY: [
-    ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED,
-    ERROR_DICTIONARY_ENJOY,
-    ERROR_DICTIONARY_BYOK,
+  SMART_DICTIONARY: [
+    ERROR_SMART_DICTIONARY_LOCAL_NOT_SUPPORTED,
+    ERROR_SMART_DICTIONARY_ENJOY,
+    ERROR_SMART_DICTIONARY_BYOK,
   ],
   ASR: [
     ERROR_ASR_LOCAL,

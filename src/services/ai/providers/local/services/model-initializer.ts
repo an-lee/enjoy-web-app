@@ -99,7 +99,7 @@ async function isModelCached(modelName: string): Promise<boolean> {
  * Check if model is cached
  */
 export async function checkModelCache(
-  modelType: 'asr' | 'smartTranslation' | 'dictionary' | 'tts',
+  modelType: 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts',
   modelConfig?: LocalModelConfig
 ): Promise<boolean> {
   const modelName =
@@ -108,7 +108,7 @@ export async function checkModelCache(
       ? DEFAULT_ASR_MODEL
       : modelType === 'smartTranslation'
         ? DEFAULT_SMART_TRANSLATION_MODEL
-        : modelType === 'dictionary'
+        : modelType === 'smartDictionary'
           ? DEFAULT_DICTIONARY_MODEL
           : DEFAULT_TTS_MODEL)
 
@@ -119,7 +119,7 @@ export async function checkModelCache(
  * Check if model is already loaded in worker
  */
 export async function checkModelLoaded(
-  modelType: 'asr' | 'smartTranslation' | 'dictionary' | 'tts',
+  modelType: 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts',
   modelConfig?: LocalModelConfig
 ): Promise<{ loaded: boolean; modelName: string | null }> {
   const modelName =
@@ -128,7 +128,7 @@ export async function checkModelLoaded(
       ? DEFAULT_ASR_MODEL
       : modelType === 'smartTranslation'
         ? DEFAULT_SMART_TRANSLATION_MODEL
-        : modelType === 'dictionary'
+        : modelType === 'smartDictionary'
           ? DEFAULT_DICTIONARY_MODEL
           : DEFAULT_TTS_MODEL)
 
@@ -138,7 +138,7 @@ export async function checkModelLoaded(
       worker = getASRWorker()
     } else if (modelType === 'smartTranslation') {
       worker = getSmartTranslationWorker()
-    } else if (modelType === 'dictionary') {
+    } else if (modelType === 'smartDictionary') {
       worker = getDictionaryWorker()
     } else {
       worker = getTTSWorker()
@@ -170,7 +170,7 @@ export async function checkModelLoaded(
  * Initialize model (preload for faster inference)
  */
 export async function initializeModel(
-  modelType: 'asr' | 'smartTranslation' | 'dictionary' | 'tts',
+  modelType: 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts',
   modelConfig?: LocalModelConfig
 ): Promise<void> {
   const store = useLocalModelsStore.getState()
@@ -261,11 +261,11 @@ export async function initializeModel(
         data: { model: modelName },
       })
     })
-  } else if (modelType === 'dictionary') {
+  } else if (modelType === 'smartDictionary') {
     const modelName = modelConfig?.model || DEFAULT_DICTIONARY_MODEL
     const worker = getDictionaryWorker()
 
-    store.setModelLoading('dictionary', true)
+    store.setModelLoading('smartDictionary', true)
 
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -281,12 +281,12 @@ export async function initializeModel(
           clearTimeout(timeout)
           worker.removeEventListener('message', messageHandler)
           // Ensure loading state is cleared (setModelLoaded is called by worker-manager.ts)
-          store.setModelLoading('dictionary', false)
+          store.setModelLoading('smartDictionary', false)
           resolve()
         } else if (type === 'error') {
           clearTimeout(timeout)
           worker.removeEventListener('message', messageHandler)
-          store.setModelLoading('dictionary', false)
+          store.setModelLoading('smartDictionary', false)
           reject(new Error(data.message))
         }
         // Note: progress messages are handled by worker-manager.ts global listener

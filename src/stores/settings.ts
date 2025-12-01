@@ -25,7 +25,7 @@ interface AIServiceSettings {
     defaultProvider: AIProvider
     localModel?: string // Model name when using local provider, e.g., 'Xenova/whisper-tiny'
   }
-  dictionary: {
+  smartDictionary: {
     // Contextual dictionary (AI-powered) - requires AI configuration
     defaultProvider: AIProvider
     localModel?: string
@@ -69,7 +69,7 @@ const defaultAISettings: AIServiceSettings = {
   asr: {
     defaultProvider: 'local',
   },
-  dictionary: {
+  smartDictionary: {
     defaultProvider: 'enjoy',
   },
   assessment: {
@@ -103,16 +103,11 @@ export const useSettingsStore = create<SettingsState>()(
 
           // If service config doesn't exist, create it with defaults
           if (!serviceConfig) {
-            if (actualService === 'smartTranslation') {
-              serviceConfig = { ...defaultAISettings.smartTranslation }
+            const defaultConfig = defaultAISettings[service as keyof typeof defaultAISettings]
+            if (defaultConfig) {
+              serviceConfig = { ...defaultConfig }
             } else {
-              // For other services, try to get from defaults or return state
-              const defaultConfig = defaultAISettings[actualService as keyof typeof defaultAISettings]
-              if (defaultConfig) {
-                serviceConfig = { ...defaultConfig }
-              } else {
-                return state
-              }
+              return state
             }
           }
 
@@ -132,16 +127,11 @@ export const useSettingsStore = create<SettingsState>()(
 
           // If service config doesn't exist, create it with defaults
           if (!serviceConfig) {
-            if (actualService === 'smartTranslation') {
-              serviceConfig = { ...defaultAISettings.smartTranslation }
+            const defaultConfig = defaultAISettings[service as keyof typeof defaultAISettings]
+            if (defaultConfig) {
+              serviceConfig = { ...defaultConfig }
             } else {
-              // For other services, try to get from defaults or return state
-              const defaultConfig = defaultAISettings[actualService as keyof typeof defaultAISettings]
-              if (defaultConfig) {
-                serviceConfig = { ...defaultConfig }
-              } else {
-                return state
-              }
+              return state
             }
           }
 

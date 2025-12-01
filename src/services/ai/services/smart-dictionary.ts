@@ -1,6 +1,9 @@
 /**
- * Dictionary Contextual Lookup Service
+ * Smart Dictionary Service (Contextual AI-powered)
  * Uses AI (LLM) for context-aware word explanations
+ *
+ * Note: This is the AI-powered contextual dictionary service.
+ * For basic dictionary lookup (FREE), use @/services/api/dictionary
  */
 
 import { localModelService } from '../providers/local'
@@ -12,14 +15,14 @@ import type {
   DictionaryResponse,
 } from '../types'
 import { AIServiceType, AIProvider } from '../types'
-import { ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED } from '../constants'
+import { ERROR_SMART_DICTIONARY_LOCAL_NOT_SUPPORTED } from '../constants'
 import {
   createSuccessResponse,
   handleProviderError,
 } from '../core/error-handler'
 import { routeToProvider } from '../core/provider-router'
 
-export interface DictionaryRequest {
+export interface SmartDictionaryRequest {
   word: string
   context?: string
   sourceLanguage: string
@@ -28,22 +31,22 @@ export interface DictionaryRequest {
 }
 
 /**
- * Dictionary Contextual Lookup Service
+ * Smart Dictionary Service (Contextual AI-powered)
  * Provides context-aware word explanations using AI
  */
-export const dictionaryService = {
+export const smartDictionaryService = {
   /**
    * Contextual word lookup with AI explanation
    */
   async lookup(
-    request: DictionaryRequest
+    request: SmartDictionaryRequest
   ): Promise<AIServiceResponse<DictionaryResponse>> {
     try {
       const { response, provider } = await routeToProvider<
-        DictionaryRequest,
+        SmartDictionaryRequest,
         DictionaryResponse
       >({
-        serviceType: AIServiceType.DICTIONARY,
+        serviceType: AIServiceType.SMART_DICTIONARY,
         request,
         config: request.config,
         handlers: {
@@ -64,7 +67,7 @@ export const dictionaryService = {
               req.targetLanguage
             )
             if (!result.success || !result.data) {
-              throw new Error(result.error?.message || 'Enjoy API dictionary lookup failed')
+              throw new Error(result.error?.message || 'Enjoy API smart dictionary lookup failed')
             }
             return result.data
           },
@@ -77,21 +80,22 @@ export const dictionaryService = {
               byokConfig
             )
             if (!result.success || !result.data) {
-              throw new Error(result.error?.message || 'BYOK dictionary lookup failed')
+              throw new Error(result.error?.message || 'BYOK smart dictionary lookup failed')
             }
             return result.data
           },
         },
       })
 
-      return createSuccessResponse(response, AIServiceType.DICTIONARY, provider)
+      return createSuccessResponse(response, AIServiceType.SMART_DICTIONARY, provider)
     } catch (error) {
       return handleProviderError(
         error,
-        ERROR_DICTIONARY_LOCAL_NOT_SUPPORTED,
-        AIServiceType.DICTIONARY,
+        ERROR_SMART_DICTIONARY_LOCAL_NOT_SUPPORTED,
+        AIServiceType.SMART_DICTIONARY,
         AIProvider.ENJOY
       )
     }
   },
 }
+

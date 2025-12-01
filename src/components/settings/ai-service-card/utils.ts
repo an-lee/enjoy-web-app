@@ -13,7 +13,7 @@ import {
 export const SERVICE_TO_MODEL_TYPE: Partial<Record<AIServiceType, ModelType>> = {
   [AIServiceType.ASR]: 'asr',
   [AIServiceType.SMART_TRANSLATION]: 'smartTranslation',
-  [AIServiceType.DICTIONARY]: 'dictionary',
+  [AIServiceType.SMART_DICTIONARY]: 'smartDictionary',
   [AIServiceType.TTS]: 'tts',
 }
 
@@ -28,7 +28,7 @@ export function getAvailableModels(modelType: ModelType | null | undefined): Mod
       return ASR_MODEL_OPTIONS
     case 'smartTranslation':
       return SMART_TRANSLATION_MODEL_OPTIONS
-    case 'dictionary':
+    case 'smartDictionary':
       return DICTIONARY_MODEL_OPTIONS
     case 'tts':
       return TTS_MODEL_OPTIONS
@@ -46,7 +46,7 @@ export function getCurrentModel(
 ): string {
   if (!modelType) return ''
 
-  const validModelTypes: ModelType[] = ['asr', 'smartTranslation', 'dictionary', 'tts']
+  const validModelTypes: ModelType[] = ['asr', 'smartTranslation', 'smartDictionary', 'tts']
   if (!validModelTypes.includes(modelType)) return ''
 
   return serviceConfig?.localModel || getDefaultModel(modelType) || ''

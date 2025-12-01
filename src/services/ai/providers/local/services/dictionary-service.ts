@@ -23,10 +23,10 @@ export async function lookup(
   const store = useLocalModelsStore.getState()
 
   // Check if model is already loaded
-  const modelStatus = store.models.dictionary
+  const modelStatus = store.models.smartDictionary
   if (!modelStatus.loaded || modelStatus.modelName !== modelName) {
     // Initialize model loading
-    store.setModelLoading('dictionary', true)
+    store.setModelLoading('smartDictionary', true)
 
     const worker = getDictionaryWorker()
 

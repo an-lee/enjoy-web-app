@@ -37,8 +37,8 @@ export const API_ENDPOINTS = {
   // Smart Translation
   SMART_TRANSLATION: '/api/v1/services/translation',
 
-  // Dictionary (contextual - AI-powered)
-  DICTIONARY_CONTEXTUAL: '/api/v1/services/dictionary',
+  // Smart Dictionary (contextual - AI-powered)
+  SMART_DICTIONARY: '/api/v1/services/dictionary',
 
   // ASR (Speech-to-Text)
   ASR: '/api/v1/services/asr',
@@ -76,7 +76,7 @@ export const SERVICE_SUPPORT_MATRIX = {
     local: true,
     byok: true, // FUTURE
   },
-  dictionaryContextual: {
+  smartDictionary: {
     enjoy: true,
     local: true,
     byok: true, // FUTURE
@@ -123,35 +123,35 @@ export const DEFAULT_AZURE_REGION = 'eastus'
 export const BYOK_PROVIDER_SUPPORT = {
   openai: {
     smartTranslation: true,
-    dictionaryContextual: true,
+    smartDictionary: true,
     asr: true,
     tts: true,
     assessment: false,
   },
   google: {
     smartTranslation: true,
-    dictionaryContextual: true,
+    smartDictionary: true,
     asr: false,
     tts: false,
     assessment: false,
   },
   claude: {
     smartTranslation: true,
-    dictionaryContextual: true,
+    smartDictionary: true,
     asr: false,
     tts: false,
     assessment: false,
   },
   azure: {
     smartTranslation: true,
-    dictionaryContextual: true,
+    smartDictionary: true,
     asr: true,
     tts: true,
     assessment: true,
   },
   custom: {
     smartTranslation: true,
-    dictionaryContextual: true,
+    smartDictionary: true,
     asr: true,
     tts: true,
     assessment: false,
@@ -175,7 +175,7 @@ export const BYOK_PROVIDER_SUPPORT = {
 
 export const SERVICE_NAMES = {
   smartTranslation: 'Smart Translation',
-  dictionaryContextual: 'Dictionary (Contextual)',
+  smartDictionary: 'Smart Dictionary (Contextual)',
   asr: 'Speech Recognition (ASR)',
   tts: 'Text-to-Speech (TTS)',
   assessment: 'Pronunciation Assessment',

@@ -27,7 +27,7 @@ Services expose a clean, consistent API independent of the underlying provider. 
 | Service | Enjoy | Local | BYOK | Cost |
 |---------|-------|-------|------|------|
 | **Smart Translation** | ✅ | ✅ | ✅ | Quota/BYOK |
-| **Dictionary (contextual)** | ✅ | ✅ | ✅ | Quota/BYOK |
+| **Smart Dictionary (contextual)** | ✅ | ✅ | ✅ | Quota/BYOK |
 | **ASR (Whisper)** | ✅ | ✅ | ✅ | Quota/BYOK |
 | **TTS** | ✅ | ✅ | ✅ | Quota/BYOK |
 | **Assessment (Azure)** | ✅ | ❌ | ✅ (Azure only) | Quota/BYOK |
@@ -43,7 +43,7 @@ High-level service routers that provide clean, consistent interfaces:
 - `asrService` - Automatic Speech Recognition
 - `ttsService` - Text-to-Speech
 - `smartTranslationService` - Style-aware translation
-- `dictionaryService` - Contextual dictionary lookup
+- `smartDictionaryService` - Contextual dictionary lookup (AI-powered)
 - `assessmentService` - Pronunciation assessment
 
 ### 2. Core Abstraction Layer (`core/`)
@@ -122,12 +122,12 @@ The `routeToProvider` function handles:
 
 Style-aware translation using LLMs. Supports multiple styles (literal, natural, casual, formal, simplified, detailed, custom) and works with all providers that support text generation.
 
-### Dictionary Lookup
+### Smart Dictionary Lookup
 
 Two-tier dictionary service:
 
-- **Basic**: Simple definitions via Enjoy API (FREE)
-- **Contextual**: AI-powered detailed analysis with context awareness (all providers)
+- **Basic Dictionary**: Simple definitions via Enjoy API (FREE) - see `@/services/api/dictionary`
+- **Smart Dictionary**: AI-powered contextual detailed analysis with context awareness (all providers) - see `@/services/ai/services/smart-dictionary`
 
 ### ASR (Speech-to-Text)
 

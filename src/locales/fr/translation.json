@@ -65,6 +65,8 @@
       "asrDescription": "Configurer le fournisseur de service de reconnaissance vocale automatique",
       "dictionary": "Dictionnaire",
       "dictionaryDescription": "Configurer le fournisseur de service de consultation de dictionnaire",
+      "smartDictionary": "Dictionnaire Intelligent",
+      "smartDictionaryDescription": "Configurer le fournisseur de service de dictionnaire intelligent (explication contextuelle avec IA). Le dictionnaire de base est toujours gratuit.",
       "assessment": "Évaluation de la Prononciation",
       "assessmentDescription": "Configurer le fournisseur de service d'évaluation de la prononciation",
       "provider": "Fournisseur",

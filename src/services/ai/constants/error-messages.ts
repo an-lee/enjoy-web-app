@@ -16,11 +16,11 @@ export const ERROR_MESSAGES = {
   BYOK_SMART_TRANSLATION_ERROR: 'BYOK smart translation failed',
 
   // ============================================================================
-  // Dictionary Error Messages
+  // Smart Dictionary Error Messages
   // ============================================================================
-  LOCAL_DICTIONARY_NOT_SUPPORTED: 'Dictionary lookup is not supported in local mode. Please use cloud service.',
-  ENJOY_DICTIONARY_ERROR: 'Dictionary lookup via Enjoy API failed',
-  BYOK_DICTIONARY_ERROR: 'BYOK dictionary lookup failed',
+  LOCAL_SMART_DICTIONARY_NOT_SUPPORTED: 'Smart dictionary lookup is not supported in local mode. Please use cloud service.',
+  ENJOY_SMART_DICTIONARY_ERROR: 'Smart dictionary lookup via Enjoy API failed',
+  BYOK_SMART_DICTIONARY_ERROR: 'BYOK smart dictionary lookup failed',
 
   // ============================================================================
   // ASR Error Messages
