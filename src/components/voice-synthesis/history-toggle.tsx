@@ -21,12 +21,12 @@ export function TTSHistoryToggle({ isExpanded, onToggle }: TTSHistoryToggleProps
         {isExpanded ? (
           <>
             <ChevronUp className="mr-1 h-4 w-4" />
-            {t('tts.hideHistory', { defaultValue: t('translation.hideHistory') })}
+            {t('tts.hideHistory')}
           </>
         ) : (
           <>
             <ChevronDown className="mr-1 h-4 w-4" />
-            {t('tts.showHistory', { defaultValue: t('translation.showHistory') })}
+            {t('tts.showHistory')}
           </>
         )}
       </Button>

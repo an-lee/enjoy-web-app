@@ -26,7 +26,8 @@
     "voiceSynthesis": "Síntese de Voz",
     "plugins": "Plugins",
     "youtube": "YouTube",
-    "podcast": "Podcast"
+    "podcast": "Podcast",
+    "noSearchResults": "Nenhum resultado encontrado"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -203,6 +204,11 @@
     "download": "Baixar",
     "clear": "Limpar",
     "error": "A síntese falhou. Por favor, tente novamente.",
-    "noAudioGenerated": "Nenhum áudio foi gerado. Por favor, tente novamente."
+    "noAudioGenerated": "Nenhum áudio foi gerado. Por favor, tente novamente.",
+    "history": "Histórico de Síntese",
+    "showHistory": "Mostrar Histórico",
+    "hideHistory": "Ocultar Histórico",
+    "searchPlaceholder": "Pesquisar texto...",
+    "noHistory": "Sem histórico de síntese"
   }
 }

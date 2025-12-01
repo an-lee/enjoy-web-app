@@ -26,7 +26,8 @@
     "voiceSynthesis": "音声合成",
     "plugins": "プラグイン",
     "youtube": "YouTube",
-    "podcast": "ポッドキャスト"
+    "podcast": "ポッドキャスト",
+    "noSearchResults": "結果が見つかりません"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -203,6 +204,11 @@
     "download": "ダウンロード",
     "clear": "クリア",
     "error": "合成に失敗しました。もう一度お試しください。",
-    "noAudioGenerated": "音声が生成されませんでした。もう一度お試しください。"
+    "noAudioGenerated": "音声が生成されませんでした。もう一度お試しください。",
+    "history": "合成履歴",
+    "showHistory": "履歴を表示",
+    "hideHistory": "履歴を非表示",
+    "searchPlaceholder": "テキストを検索...",
+    "noHistory": "合成履歴がありません"
   }
 }

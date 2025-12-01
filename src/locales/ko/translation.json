@@ -26,7 +26,8 @@
     "voiceSynthesis": "음성 합성",
     "plugins": "플러그인",
     "youtube": "YouTube",
-    "podcast": "팟캐스트"
+    "podcast": "팟캐스트",
+    "noSearchResults": "결과를 찾을 수 없습니다"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -203,6 +204,11 @@
     "download": "다운로드",
     "clear": "지우기",
     "error": "합성에 실패했습니다. 다시 시도해주세요.",
-    "noAudioGenerated": "오디오가 생성되지 않았습니다. 다시 시도해주세요."
+    "noAudioGenerated": "오디오가 생성되지 않았습니다. 다시 시도해주세요.",
+    "history": "합성 기록",
+    "showHistory": "기록 보기",
+    "hideHistory": "기록 숨기기",
+    "searchPlaceholder": "텍스트 검색...",
+    "noHistory": "합성 기록이 없습니다"
   }
 }

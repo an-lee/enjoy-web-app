@@ -55,7 +55,7 @@ export function TranslationHistory({
       ) : history.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">
           {searchQuery.trim()
-            ? t('translation.noSearchResults')
+            ? t('common.noSearchResults')
             : t('translation.noHistory')}
         </p>
       ) : (

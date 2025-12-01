@@ -26,7 +26,8 @@
     "voiceSynthesis": "Sprachsynthese",
     "plugins": "Plugins",
     "youtube": "YouTube",
-    "podcast": "Podcast"
+    "podcast": "Podcast",
+    "noSearchResults": "Keine Ergebnisse gefunden"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -203,6 +204,11 @@
     "download": "Herunterladen",
     "clear": "Löschen",
     "error": "Synthese fehlgeschlagen. Bitte versuchen Sie es erneut.",
-    "noAudioGenerated": "Es wurde kein Audio generiert. Bitte versuchen Sie es erneut."
+    "noAudioGenerated": "Es wurde kein Audio generiert. Bitte versuchen Sie es erneut.",
+    "history": "Synthese-Verlauf",
+    "showHistory": "Verlauf anzeigen",
+    "hideHistory": "Verlauf ausblenden",
+    "searchPlaceholder": "Text suchen...",
+    "noHistory": "Kein Synthese-Verlauf"
   }
 }

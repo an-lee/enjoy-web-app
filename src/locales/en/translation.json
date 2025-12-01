@@ -28,6 +28,36 @@
     "youtube": "YouTube",
     "podcast": "Podcast"
   },
+  "common": {
+    "appName": "Enjoy Echo",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "settings": "Settings",
+    "language": "Language",
+    "home": "Home",
+    "library": "Library",
+    "vocabulary": "Vocabulary",
+    "add": "Add",
+    "navigation": "Navigation",
+    "generateContent": "Generate Content",
+    "smartTranslation": "Smart Translation",
+    "voiceSynthesis": "Voice Synthesis",
+    "plugins": "Plugins",
+    "youtube": "YouTube",
+    "podcast": "Podcast",
+    "noSearchResults": "No results found"
+  },
   "header": {
     "title": "Enjoy Echo"
   },
@@ -203,6 +233,11 @@
     "download": "Download",
     "clear": "Clear",
     "error": "Synthesis failed. Please try again.",
-    "noAudioGenerated": "No audio was generated. Please try again."
+    "noAudioGenerated": "No audio was generated. Please try again.",
+    "history": "Synthesis History",
+    "showHistory": "Show History",
+    "hideHistory": "Hide History",
+    "searchPlaceholder": "Search text...",
+    "noHistory": "No synthesis history"
   }
 }
