@@ -189,5 +189,20 @@
     "next": "Weiter",
     "page": "Seite",
     "of": "von"
+  },
+  "tts": {
+    "title": "Sprachsynthese",
+    "inputText": "Text",
+    "inputPlaceholder": "Text zur Synthese eingeben...",
+    "targetLanguage": "Zielsprache",
+    "voice": "Stimme",
+    "synthesize": "Synthetisieren",
+    "synthesizing": "Synthetisiere...",
+    "regenerate": "Erneut generieren",
+    "generatedAudio": "Generiertes Audio",
+    "download": "Herunterladen",
+    "clear": "Löschen",
+    "error": "Synthese fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "noAudioGenerated": "Es wurde kein Audio generiert. Bitte versuchen Sie es erneut."
   }
 }

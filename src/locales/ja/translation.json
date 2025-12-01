@@ -189,5 +189,20 @@
     "next": "次へ",
     "page": "ページ",
     "of": "/"
+  },
+  "tts": {
+    "title": "音声合成",
+    "inputText": "テキスト",
+    "inputPlaceholder": "合成するテキストを入力...",
+    "targetLanguage": "対象言語",
+    "voice": "音声",
+    "synthesize": "合成",
+    "synthesizing": "合成中...",
+    "regenerate": "再生成",
+    "generatedAudio": "生成された音声",
+    "download": "ダウンロード",
+    "clear": "クリア",
+    "error": "合成に失敗しました。もう一度お試しください。",
+    "noAudioGenerated": "音声が生成されませんでした。もう一度お試しください。"
   }
 }

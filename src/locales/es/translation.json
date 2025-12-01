@@ -189,5 +189,20 @@
     "next": "Siguiente",
     "page": "Página",
     "of": "de"
+  },
+  "tts": {
+    "title": "Síntesis de Voz",
+    "inputText": "Texto",
+    "inputPlaceholder": "Ingrese el texto para sintetizar...",
+    "targetLanguage": "Idioma de Destino",
+    "voice": "Voz",
+    "synthesize": "Sintetizar",
+    "synthesizing": "Sintetizando...",
+    "regenerate": "Regenerar",
+    "generatedAudio": "Audio Generado",
+    "download": "Descargar",
+    "clear": "Limpiar",
+    "error": "La síntesis falló. Por favor, inténtelo de nuevo.",
+    "noAudioGenerated": "No se generó audio. Por favor, inténtelo de nuevo."
   }
 }

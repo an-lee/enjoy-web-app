@@ -189,5 +189,20 @@
     "next": "下一页",
     "page": "第",
     "of": "页，共"
+  },
+  "tts": {
+    "title": "语音合成",
+    "inputText": "文本",
+    "inputPlaceholder": "输入要合成的文本...",
+    "targetLanguage": "目标语言",
+    "voice": "声音",
+    "synthesize": "合成",
+    "synthesizing": "合成中...",
+    "regenerate": "重新生成",
+    "generatedAudio": "生成的音频",
+    "download": "下载",
+    "clear": "清除",
+    "error": "合成失败，请重试。",
+    "noAudioGenerated": "未生成音频，请重试。"
   }
 }

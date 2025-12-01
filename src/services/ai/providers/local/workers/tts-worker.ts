@@ -150,6 +150,22 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
           options.voice = data.voice
         }
 
+        // Supertonic models require speaker_embeddings as a URL to a .bin file
+        // According to the documentation, speaker_embeddings should be a URL string
+        // pointing to a voice file (e.g., 'https://huggingface.co/onnx-community/Supertonic-TTS-ONNX/resolve/main/voices/F1.bin')
+        if (modelName.includes('Supertonic')) {
+          // Use default voice F1 if no voice is specified
+          // Available voices: F1, F2, M1, M2 (Female 1/2, Male 1/2)
+          const voiceName = data.voice || 'F1'
+          options.speaker_embeddings = `https://huggingface.co/onnx-community/Supertonic-TTS-ONNX/resolve/main/voices/${voiceName}.bin`
+
+          // Optional: Set quality and speed parameters
+          // Higher num_inference_steps = better quality (typically 1-50)
+          options.num_inference_steps = 5
+          // Higher speed = faster speech (typically 0.8-1.2)
+          options.speed = 1.0
+        }
+
         // Run TTS synthesis
         const result = await synthesizer(data.text, options)
 

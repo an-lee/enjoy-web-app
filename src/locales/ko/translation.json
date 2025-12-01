@@ -189,5 +189,20 @@
     "next": "다음",
     "page": "페이지",
     "of": "/"
+  },
+  "tts": {
+    "title": "음성 합성",
+    "inputText": "텍스트",
+    "inputPlaceholder": "합성할 텍스트를 입력하세요...",
+    "targetLanguage": "대상 언어",
+    "voice": "음성",
+    "synthesize": "합성",
+    "synthesizing": "합성 중...",
+    "regenerate": "다시 생성",
+    "generatedAudio": "생성된 오디오",
+    "download": "다운로드",
+    "clear": "지우기",
+    "error": "합성에 실패했습니다. 다시 시도해주세요.",
+    "noAudioGenerated": "오디오가 생성되지 않았습니다. 다시 시도해주세요."
   }
 }

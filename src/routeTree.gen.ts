@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VoiceSynthesisRouteImport } from './routes/voice-synthesis'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as SmartTranslationRouteImport } from './routes/smart-translation'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -17,6 +18,11 @@ import { Route as LibraryRouteImport } from './routes/library'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EchoIdRouteImport } from './routes/echo.$id'
 
+const VoiceSynthesisRoute = VoiceSynthesisRouteImport.update({
+  id: '/voice-synthesis',
+  path: '/voice-synthesis',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VocabularyRoute = VocabularyRouteImport.update({
   id: '/vocabulary',
   path: '/vocabulary',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
+  '/voice-synthesis': typeof VoiceSynthesisRoute
   '/echo/$id': typeof EchoIdRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
+  '/voice-synthesis': typeof VoiceSynthesisRoute
   '/echo/$id': typeof EchoIdRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
+  '/voice-synthesis': typeof VoiceSynthesisRoute
   '/echo/$id': typeof EchoIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/smart-translation'
     | '/vocabulary'
+    | '/voice-synthesis'
     | '/echo/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/smart-translation'
     | '/vocabulary'
+    | '/voice-synthesis'
     | '/echo/$id'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/smart-translation'
     | '/vocabulary'
+    | '/voice-synthesis'
     | '/echo/$id'
   fileRoutesById: FileRoutesById
 }
@@ -118,11 +130,19 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SmartTranslationRoute: typeof SmartTranslationRoute
   VocabularyRoute: typeof VocabularyRoute
+  VoiceSynthesisRoute: typeof VoiceSynthesisRoute
   EchoIdRoute: typeof EchoIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/voice-synthesis': {
+      id: '/voice-synthesis'
+      path: '/voice-synthesis'
+      fullPath: '/voice-synthesis'
+      preLoaderRoute: typeof VoiceSynthesisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vocabulary': {
       id: '/vocabulary'
       path: '/vocabulary'
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SmartTranslationRoute: SmartTranslationRoute,
   VocabularyRoute: VocabularyRoute,
+  VoiceSynthesisRoute: VoiceSynthesisRoute,
   EchoIdRoute: EchoIdRoute,
 }
 export const routeTree = rootRouteImport

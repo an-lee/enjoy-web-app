@@ -240,30 +240,30 @@ export const useLocalModelsStore = create<LocalModelsState>()(
       partialize: (state) => ({
         models: {
           asr: {
-            loaded: state.models.asr.loaded,
+            loaded: state.models.asr?.loaded ?? false,
             loading: false,
-            modelName: state.models.asr.modelName,
+            modelName: state.models.asr?.modelName ?? null,
             error: null,
             progress: undefined,
           },
           smartTranslation: {
-            loaded: state.models.smartTranslation.loaded,
+            loaded: state.models.smartTranslation?.loaded ?? false,
             loading: false,
-            modelName: state.models.smartTranslation.modelName,
+            modelName: state.models.smartTranslation?.modelName ?? null,
             error: null,
             progress: undefined,
           },
           smartDictionary: {
-            loaded: state.models.smartDictionary.loaded,
+            loaded: state.models.smartDictionary?.loaded ?? false,
             loading: false,
-            modelName: state.models.smartDictionary.modelName,
+            modelName: state.models.smartDictionary?.modelName ?? null,
             error: null,
             progress: undefined,
           },
           tts: {
-            loaded: state.models.tts.loaded,
+            loaded: state.models.tts?.loaded ?? false,
             loading: false,
-            modelName: state.models.tts.modelName,
+            modelName: state.models.tts?.modelName ?? null,
             error: null,
             progress: undefined,
           },
