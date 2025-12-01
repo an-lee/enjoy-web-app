@@ -1,5 +1,3 @@
-Welcome to your new TanStack app!
-
 # Getting Started
 
 To run this application:
@@ -9,7 +7,7 @@ bun install
 bun --bun run start
 ```
 
-# Building For Production
+## Building For Production
 
 To build this application for production:
 
@@ -32,10 +30,12 @@ This project includes GitHub Actions workflows for continuous integration and de
 ### CI Workflow
 
 The CI workflow (`.github/workflows/ci.yml`) runs automatically on:
+
 - Push to `main` or `develop` branches
 - Pull requests to `main` or `develop` branches
 
 It performs:
+
 - **Test**: Runs the test suite using Vitest
 - **Build**: Builds the project and verifies the build artifacts
 - **Type Check**: Validates TypeScript types without emitting files
@@ -43,6 +43,7 @@ It performs:
 ### Deployment Workflow
 
 The deployment workflow (`.github/workflows/deploy.yml`) automatically deploys to Cloudflare Workers when:
+
 - Code is pushed to the `main` branch
 - Manually triggered via GitHub Actions UI
 
@@ -55,7 +56,7 @@ Before deployment can work, you need to configure the following secrets in your 
 3. Add the following secrets:
 
    - `CLOUDFLARE_API_TOKEN`: Your Cloudflare API token
-     - Create one at: https://dash.cloudflare.com/profile/api-tokens
+     - Create one at: <https://dash.cloudflare.com/profile/api-tokens>
      - Click **Create Token** → **Get started** with **Custom token**
      - **Required permissions**:
        - `Account` → `Cloudflare Workers` → `Edit`
@@ -81,10 +82,8 @@ This will build the project and deploy it to Cloudflare Workers using Wrangler.
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
 
-
-
-
 ## Routing
+
 This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
 
 ### Adding A Route
@@ -144,7 +143,6 @@ export const Route = createRootRoute({
 The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
 
 More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
 
 ## Data Fetching
 
@@ -332,11 +330,3 @@ We use the `Derived` class to create a new store that is derived from another st
 Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
 
 You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
