@@ -209,12 +209,14 @@ function RootComponent() {
             }
           >
             <AppSidebar variant="inset" />
-            <SidebarInset>
-              <SiteHeader />
-              <div className="flex flex-1 flex-col">
-                <div className="flex flex-1 flex-col gap-2">
-                  <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                    <div className="px-4 lg:px-6">
+            <SidebarInset className="flex flex-col overflow-hidden">
+              <div className="shrink-0">
+                <SiteHeader />
+              </div>
+              <div className="flex flex-1 flex-col min-h-0">
+                <div className="flex flex-1 flex-col gap-2 min-h-0">
+                  <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 min-h-0 overflow-auto h-full">
+                    <div className="px-4 lg:px-6 flex-1 flex flex-col min-h-0 h-full">
                       <Outlet />
                     </div>
                   </div>

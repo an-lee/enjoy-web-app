@@ -21,6 +21,7 @@ import { AIProvider } from '@/services/ai/types'
 import { saveAudio, getAudioByTranslationKey } from '@/db'
 import type { Audio } from '@/db'
 import { VideoProvider } from '@/db/schema'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/voice-synthesis')({
   component: VoiceSynthesis,
@@ -284,10 +285,27 @@ function VoiceSynthesis() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8">
-      <div className="space-y-6">
+    <div
+      className={cn(
+        'container mx-auto max-w-4xl transition-all duration-500 ease-in-out w-full',
+        showHistory
+          ? 'py-8'
+          : 'flex items-center h-full min-h-0'
+      )}
+    >
+      <div
+        className={cn(
+          'w-full space-y-6 transition-all duration-500 ease-in-out',
+          !showHistory && 'mx-auto'
+        )}
+      >
         {/* Input Section */}
-        <div className="space-y-4">
+        <div
+          className={cn(
+            'space-y-4 transition-all duration-500 ease-in-out',
+            !showHistory && 'opacity-100'
+          )}
+        >
           <LanguageSelector
             language={targetLanguage}
             onLanguageChange={setTargetLanguage}
@@ -327,31 +345,55 @@ function VoiceSynthesis() {
 
         {/* Audio Result */}
         {audioUrl && (
-          <AudioResult
-            audioBlob={audioBlob}
-            audioUrl={audioUrl}
-            onRegenerate={handleRegenerate}
-            isRegenerating={isSynthesizing}
-          />
+          <div className="transition-all duration-500 ease-in-out">
+            <AudioResult
+              audioBlob={audioBlob}
+              audioUrl={audioUrl}
+              onRegenerate={handleRegenerate}
+              isRegenerating={isSynthesizing}
+            />
+          </div>
         )}
 
         {/* Error Message */}
-        {error && <ErrorAlert message={error} />}
+        {error && (
+          <div className="transition-all duration-500 ease-in-out">
+            <ErrorAlert message={error} />
+          </div>
+        )}
 
         {/* History Toggle */}
-        <TTSHistoryToggle isExpanded={showHistory} onToggle={handleHistoryToggle} />
+        <div className="transition-all duration-500 ease-in-out">
+          <TTSHistoryToggle isExpanded={showHistory} onToggle={handleHistoryToggle} />
+        </div>
 
         {/* History List */}
-        {showHistory && (
-          <TTSHistory
-            history={audioHistory}
-            expandedItems={expandedItems}
-            isLoading={isLoadingHistory}
-            searchQuery={searchQuery}
-            onToggleItem={handleToggleHistoryItem}
-            onSearchChange={handleSearchChange}
-          />
-        )}
+        <div
+          className={cn(
+            'transition-all duration-500 ease-in-out overflow-hidden',
+            showHistory
+              ? 'max-h-[2000px] opacity-100 mt-6'
+              : 'max-h-0 opacity-0 mt-0'
+          )}
+        >
+          <div
+            className={cn(
+              'transition-all duration-500 ease-in-out',
+              showHistory
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 -translate-y-4'
+            )}
+          >
+            <TTSHistory
+              history={audioHistory}
+              expandedItems={expandedItems}
+              isLoading={isLoadingHistory}
+              searchQuery={searchQuery}
+              onToggleItem={handleToggleHistoryItem}
+              onSearchChange={handleSearchChange}
+            />
+          </div>
+        </div>
       </div>
     </div>
   )
