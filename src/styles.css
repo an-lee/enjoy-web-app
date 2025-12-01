@@ -5,11 +5,19 @@
 
 body {
   @apply m-0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+  /* English font: Inter for modern, clean look */
+  /* Chinese fonts: System fonts for optimal performance and native feel */
+  font-family: "Inter",
+    /* Chinese fonts - system stack */
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑",
+    "WenQuanYi Micro Hei", "Noto Sans SC", "Source Han Sans SC",
+    /* Fallback system fonts */
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 code {
