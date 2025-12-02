@@ -18,6 +18,24 @@ export async function synthesize(
   voice?: string,
   modelConfig?: LocalModelConfig
 ): Promise<LocalTTSResult> {
+  // Validate input text
+  if (!text || typeof text !== 'string') {
+    throw new Error('Text must be a non-empty string')
+  }
+
+  const trimmedText = text.trim()
+  if (trimmedText.length === 0) {
+    throw new Error('Text cannot be empty or contain only whitespace')
+  }
+
+  // Check if text contains valid content (at least one letter or number)
+  const hasValidContent = /[\p{L}\p{N}]/u.test(trimmedText)
+  if (!hasValidContent) {
+    throw new Error(
+      'Text must contain at least one letter or number. Text containing only special characters cannot be synthesized.'
+    )
+  }
+
   const modelName = modelConfig?.model || DEFAULT_TTS_MODEL
   const store = useLocalModelsStore.getState()
 
@@ -92,11 +110,11 @@ export async function synthesize(
 
     worker.addEventListener('message', messageHandler)
 
-    // Send synthesize request
+    // Send synthesize request with validated text
     worker.postMessage({
       type: 'synthesize',
       data: {
-        text,
+        text: trimmedText,
         language,
         voice,
         model: modelName,

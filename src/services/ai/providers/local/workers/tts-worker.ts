@@ -138,6 +138,21 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
           throw new Error('Text is required for TTS synthesis')
         }
 
+        // Validate and normalize text input
+        const text = String(data.text).trim()
+        if (!text || text.length === 0) {
+          throw new Error('Text cannot be empty after trimming')
+        }
+
+        // Check if text contains only whitespace or special characters
+        // This helps prevent cases where text encoder produces empty sequences
+        const hasValidContent = /[\p{L}\p{N}]/u.test(text)
+        if (!hasValidContent) {
+          throw new Error(
+            'Text must contain at least one letter or number. Text containing only special characters or whitespace cannot be synthesized.'
+          )
+        }
+
         const modelName = data?.model || DEFAULT_TTS_MODEL
         const synthesizer = await TTSPipelineSingleton.getInstance(modelName)
 
@@ -167,7 +182,8 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
         }
 
         // Run TTS synthesis
-        const result = await synthesizer(data.text, options)
+        // Use normalized text instead of original data.text
+        const result = await synthesizer(text, options)
 
         // Extract audio data from result
         let audioData: ArrayBuffer | Float32Array | Uint8Array | Blob
