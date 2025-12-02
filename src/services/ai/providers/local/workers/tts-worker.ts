@@ -12,7 +12,7 @@ env.allowLocalModels = false
 env.allowRemoteModels = true
 
 interface TTSWorkerMessage {
-  type: 'init' | 'synthesize' | 'checkStatus'
+  type: 'init' | 'synthesize' | 'checkStatus' | 'cancel'
   data?: {
     model?: string
     text?: string
@@ -23,10 +23,13 @@ interface TTSWorkerMessage {
 }
 
 interface TTSWorkerResponse {
-  type: 'progress' | 'ready' | 'result' | 'error' | 'status'
+  type: 'progress' | 'ready' | 'result' | 'error' | 'status' | 'cancelled'
   data?: any
   taskId?: string
 }
+
+// Track active tasks for cancellation
+const activeTasks = new Set<string>()
 
 // Singleton pattern for TTS pipeline
 class TTSPipelineSingleton {
@@ -132,15 +135,38 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
         break
       }
 
+      case 'cancel': {
+        // Cancel a specific task
+        const taskId = data?.taskId
+        if (taskId) {
+          activeTasks.delete(taskId)
+          self.postMessage({
+            type: 'cancelled',
+            data: { message: 'Task cancelled' },
+            taskId,
+          } as TTSWorkerResponse)
+        }
+        break
+      }
+
       case 'synthesize': {
         // Synthesize speech from text
         if (!data?.text) {
           throw new Error('Text is required for TTS synthesis')
         }
 
+        const taskId = data?.taskId
+        if (!taskId) {
+          throw new Error('Task ID is required')
+        }
+
+        // Add task to active set
+        activeTasks.add(taskId)
+
         // Validate and normalize text input
         const text = String(data.text).trim()
         if (!text || text.length === 0) {
+          activeTasks.delete(taskId)
           throw new Error('Text cannot be empty after trimming')
         }
 
@@ -148,6 +174,7 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
         // This helps prevent cases where text encoder produces empty sequences
         const hasValidContent = /[\p{L}\p{N}]/u.test(text)
         if (!hasValidContent) {
+          activeTasks.delete(taskId)
           throw new Error(
             'Text must contain at least one letter or number. Text containing only special characters or whitespace cannot be synthesized.'
           )
@@ -155,6 +182,16 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
 
         const modelName = data?.model || DEFAULT_TTS_MODEL
         const synthesizer = await TTSPipelineSingleton.getInstance(modelName)
+
+        // Check again after model loading (in case cancelled during loading)
+        if (!activeTasks.has(taskId)) {
+          self.postMessage({
+            type: 'cancelled',
+            data: { message: 'Task cancelled' },
+            taskId,
+          } as TTSWorkerResponse)
+          break
+        }
 
         // Prepare options
         const options: any = {}
@@ -183,7 +220,18 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
 
         // Run TTS synthesis
         // Use normalized text instead of original data.text
+        // Note: transformers.js doesn't directly support AbortSignal, but we check task status
         const result = await synthesizer(text, options)
+
+        // Check if task was cancelled during synthesis
+        if (!activeTasks.has(taskId)) {
+          self.postMessage({
+            type: 'cancelled',
+            data: { message: 'Task cancelled' },
+            taskId,
+          } as TTSWorkerResponse)
+          break
+        }
 
         // Extract audio data from result
         let audioData: ArrayBuffer | Float32Array | Uint8Array | Blob
@@ -277,8 +325,21 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
           throw new Error('Unsupported audio data format')
         }
 
+        // Final check before sending result
+        if (!activeTasks.has(taskId)) {
+          self.postMessage({
+            type: 'cancelled',
+            data: { message: 'Task cancelled' },
+            taskId,
+          } as TTSWorkerResponse)
+          break
+        }
+
         // Calculate duration if available
         const duration = result.duration || (audioData instanceof Float32Array ? audioData.length / sampleRate : undefined)
+
+        // Remove task from active set
+        activeTasks.delete(taskId)
 
         // Send result back to main thread
         // Note: ArrayBuffer can be transferred efficiently via postMessage
@@ -291,7 +352,7 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
               duration: duration,
               sampleRate: sampleRate,
             },
-            taskId: data?.taskId,
+            taskId,
           } as TTSWorkerResponse,
           [audioArrayBuffer] // Transfer ownership for efficiency
         )

@@ -72,7 +72,8 @@ export const azureSpeechService = {
     _text: string,
     _language: string,
     _voice: string | undefined,
-    _config: AzureSpeechConfig
+    _config: AzureSpeechConfig,
+    _signal?: AbortSignal
   ): Promise<Blob> {
     // TODO: Call Azure Speech SDK directly with user-provided key
     // Bypass Enjoy API

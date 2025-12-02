@@ -13,7 +13,7 @@ env.allowLocalModels = false
 env.allowRemoteModels = true
 
 interface SmartTranslationWorkerMessage {
-  type: 'init' | 'translate' | 'checkStatus'
+  type: 'init' | 'translate' | 'checkStatus' | 'cancel'
   data?: {
     model?: string
     text?: string
@@ -26,10 +26,13 @@ interface SmartTranslationWorkerMessage {
 }
 
 interface SmartTranslationWorkerResponse {
-  type: 'progress' | 'ready' | 'result' | 'error' | 'status'
+  type: 'progress' | 'ready' | 'result' | 'error' | 'status' | 'cancelled'
   data?: any
   taskId?: string
 }
+
+// Track active tasks for cancellation
+const activeTasks = new Set<string>()
 
 // Singleton pattern for Text Generation pipeline (for smart translation via prompts)
 class SmartTranslationPipelineSingleton {
@@ -153,14 +156,46 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
         break
       }
 
+      case 'cancel': {
+        // Cancel a specific task
+        const taskId = data?.taskId
+        if (taskId) {
+          activeTasks.delete(taskId)
+          self.postMessage({
+            type: 'cancelled',
+            data: { message: 'Task cancelled' },
+            taskId,
+          } as SmartTranslationWorkerResponse)
+        }
+        break
+      }
+
       case 'translate': {
         // Smart translation using generative model with style support
         if (!data?.text || !data?.srcLang || !data?.tgtLang) {
           throw new Error('Text, source language, and target language are required')
         }
 
+        const taskId = data?.taskId
+        if (!taskId) {
+          throw new Error('Task ID is required')
+        }
+
+        // Add task to active set
+        activeTasks.add(taskId)
+
         const modelName = data?.model || DEFAULT_SMART_TRANSLATION_MODEL
         const generator = await SmartTranslationPipelineSingleton.getInstance(modelName)
+
+        // Check again after model loading (in case cancelled during loading)
+        if (!activeTasks.has(taskId)) {
+          self.postMessage({
+            type: 'cancelled',
+            data: { message: 'Task cancelled' },
+            taskId,
+          } as SmartTranslationWorkerResponse)
+          break
+        }
 
         // Build translation prompt with style (using shared prompt builder)
         const { systemPrompt, userPrompt } = buildSmartTranslationPrompt(
@@ -178,12 +213,23 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
         ]
 
         // Generate translation with stricter parameters for smaller models
+        // Note: transformers.js doesn't directly support AbortSignal, but we check task status
         const result = await generator(messages, {
           max_new_tokens: 512, // Reduced to prevent excessive output
           temperature: 0.1, // Lower temperature for more deterministic output
           top_p: 0.8,
           return_full_text: false
         })
+
+        // Check if task was cancelled during generation
+        if (!activeTasks.has(taskId)) {
+          self.postMessage({
+            type: 'cancelled',
+            data: { message: 'Task cancelled' },
+            taskId,
+          } as SmartTranslationWorkerResponse)
+          break
+        }
 
         // Extract translated text from generated result
         // When using messages format, the output structure may be different
@@ -306,6 +352,19 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
           .join(' ')
           .trim()
 
+        // Final check before sending result
+        if (!activeTasks.has(taskId)) {
+          self.postMessage({
+            type: 'cancelled',
+            data: { message: 'Task cancelled' },
+            taskId,
+          } as SmartTranslationWorkerResponse)
+          break
+        }
+
+        // Remove task from active set
+        activeTasks.delete(taskId)
+
         // Send result back to main thread
         self.postMessage({
           type: 'result',
@@ -314,7 +373,7 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
             sourceLanguage: data.srcLang,
             targetLanguage: data.tgtLang,
           },
-          taskId: data?.taskId,
+          taskId,
         } as SmartTranslationWorkerResponse)
         break
       }

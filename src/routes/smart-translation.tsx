@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useDebounce } from '@uidotdev/usehooks'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@iconify/react'
@@ -48,6 +48,9 @@ function SmartTranslation() {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+
+  // AbortController for cancelling requests
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Debounce search query to avoid excessive database queries
   // 300ms delay is a good balance between responsiveness and performance
@@ -97,6 +100,25 @@ function SmartTranslation() {
     setError(null)
   }
 
+  // Handle cancel request
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    setIsTranslating(false)
+    setError(null)
+  }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [])
+
 
   const handleTranslate = async () => {
     if (!inputText.trim()) return
@@ -104,6 +126,15 @@ function SmartTranslation() {
       setError(t('translation.customPromptRequired'))
       return
     }
+
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    // Create new AbortController
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
 
     setIsTranslating(true)
     setError(null)
@@ -132,6 +163,7 @@ function SmartTranslation() {
         style: translationStyle,
         customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
         config,
+        signal: abortController.signal,
       })
 
       if (!result.success || !result.data) {
@@ -166,11 +198,29 @@ function SmartTranslation() {
         setCurrentPage(1)
         setExpandedItems((prev) => new Set([...prev, savedTranslation.id]))
       }
-    } catch (err) {
+
+      // Clear abort controller and reset loading state on success
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+        setIsTranslating(false)
+      }
+    } catch (err: any) {
+      // Don't show error if request was cancelled
+      if (err.name === 'AbortError' || err.message === 'Request was cancelled') {
+        // Reset loading state on cancel
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null
+          setIsTranslating(false)
+        }
+        return
+      }
       setError(t('translation.error'))
       console.error('Translation failed:', err)
-    } finally {
-      setIsTranslating(false)
+      // Reset loading state on error
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+        setIsTranslating(false)
+      }
     }
   }
 
@@ -180,6 +230,15 @@ function SmartTranslation() {
       setError(t('translation.customPromptRequired'))
       return
     }
+
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    // Create new AbortController
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
 
     setIsTranslating(true)
     setError(null)
@@ -194,6 +253,7 @@ function SmartTranslation() {
         style: translationStyle,
         customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
         config,
+        signal: abortController.signal,
       })
 
       if (!result.success || !result.data) {
@@ -211,11 +271,29 @@ function SmartTranslation() {
       })
 
       setCurrentTranslation(updatedTranslation)
-    } catch (err) {
+
+      // Clear abort controller and reset loading state on success
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+        setIsTranslating(false)
+      }
+    } catch (err: any) {
+      // Don't show error if request was cancelled
+      if (err.name === 'AbortError' || err.message === 'Request was cancelled') {
+        // Reset loading state on cancel
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null
+          setIsTranslating(false)
+        }
+        return
+      }
       setError(t('translation.error'))
       console.error('Regeneration failed:', err)
-    } finally {
-      setIsTranslating(false)
+      // Reset loading state on error
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+        setIsTranslating(false)
+      }
     }
   }
 
@@ -299,7 +377,17 @@ function SmartTranslation() {
             disabled={isTranslating}
           />
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {isTranslating && (
+              <Button
+                onClick={handleCancel}
+                variant="outline"
+                type="button"
+              >
+                <Icon icon="lucide:x" className="mr-2 h-4 w-4" />
+                {t('common.cancel')}
+              </Button>
+            )}
             <Button
               onClick={handleTranslate}
               disabled={!inputText.trim() || isTranslating}

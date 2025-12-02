@@ -75,7 +75,8 @@ export async function transcribeWithEnjoy(
 export async function synthesizeWithEnjoy(
   text: string,
   language: string,
-  voice: string | undefined
+  voice: string | undefined,
+  signal?: AbortSignal
 ): Promise<AIServiceResponse<TTSResponse>> {
   try {
     // Note: Currently using apiClient
@@ -99,6 +100,9 @@ export async function synthesizeWithEnjoy(
         language,
         voice,
         provider: 'openai',
+      },
+      {
+        signal,
       }
     )
 

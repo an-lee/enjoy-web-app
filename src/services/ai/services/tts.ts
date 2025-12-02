@@ -24,6 +24,7 @@ export interface TTSRequest {
   voice?: string
   provider?: TTSProvider
   config?: AIServiceConfig
+  signal?: AbortSignal
 }
 
 /**
@@ -64,7 +65,8 @@ export const ttsService = {
               req.text,
               req.language,
               req.voice,
-              config?.localModel
+              config?.localModel,
+              req.signal
             )
             return {
               audioBlob: result.audioBlob,
@@ -76,7 +78,8 @@ export const ttsService = {
             const result = await synthesizeWithEnjoy(
               req.text,
               req.language,
-              req.voice
+              req.voice,
+              req.signal
             )
             if (!result.success || !result.data) {
               throw new Error(result.error?.message || 'Enjoy API TTS failed')
@@ -88,7 +91,8 @@ export const ttsService = {
               req.text,
               req.language,
               req.voice,
-              byokConfig
+              byokConfig,
+              req.signal
             )
             if (!result.success || !result.data) {
               throw new Error(result.error?.message || 'BYOK TTS failed')
@@ -100,7 +104,8 @@ export const ttsService = {
               req.text,
               req.language,
               req.voice,
-              azureConfig
+              azureConfig,
+              req.signal
             )
             return { audioBlob, format: 'audio/mpeg' }
           },

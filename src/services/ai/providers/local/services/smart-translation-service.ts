@@ -19,7 +19,8 @@ export async function smartTranslate(
   targetLanguage: string,
   style: string = 'natural',
   customPrompt?: string,
-  modelConfig?: LocalModelConfig
+  modelConfig?: LocalModelConfig,
+  signal?: AbortSignal
 ): Promise<LocalTranslationResult> {
   const modelName = modelConfig?.model || DEFAULT_SMART_TRANSLATION_MODEL
   const store = useLocalModelsStore.getState()
@@ -67,7 +68,31 @@ export async function smartTranslate(
   const taskId = `smart-translation-${Date.now()}-${Math.random()}`
 
   return new Promise<LocalTranslationResult>((resolve, reject) => {
+    // Handle abort signal
+    const abortHandler = () => {
+      clearTimeout(timeout)
+      worker.removeEventListener('message', messageHandler)
+      // Send cancel message to worker
+      worker.postMessage({
+        type: 'cancel',
+        data: { taskId },
+      })
+      reject(new Error('Request was cancelled'))
+    }
+
+    if (signal) {
+      if (signal.aborted) {
+        reject(new Error('Request was cancelled'))
+        return
+      }
+      signal.addEventListener('abort', abortHandler)
+    }
+
     const timeout = setTimeout(() => {
+      if (signal) {
+        signal.removeEventListener('abort', abortHandler)
+      }
+      worker.removeEventListener('message', messageHandler)
       reject(new Error('Smart translation timeout'))
     }, 300000) // 5 minutes timeout
 
@@ -76,6 +101,9 @@ export async function smartTranslate(
 
       if (type === 'result' && responseTaskId === taskId) {
         clearTimeout(timeout)
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler)
+        }
         worker.removeEventListener('message', messageHandler)
 
         resolve({
@@ -85,8 +113,18 @@ export async function smartTranslate(
         })
       } else if (type === 'error' && responseTaskId === taskId) {
         clearTimeout(timeout)
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler)
+        }
         worker.removeEventListener('message', messageHandler)
         reject(new Error(data.message || 'Smart translation failed'))
+      } else if (type === 'cancelled' && responseTaskId === taskId) {
+        clearTimeout(timeout)
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler)
+        }
+        worker.removeEventListener('message', messageHandler)
+        reject(new Error('Request was cancelled'))
       }
     }
 

@@ -49,7 +49,8 @@ export async function smartTranslateWithEnjoy(
   sourceLanguage: string,
   targetLanguage: string,
   style: TranslationStyle,
-  customPrompt: string | undefined
+  customPrompt: string | undefined,
+  signal?: AbortSignal
 ): Promise<AIServiceResponse<SmartTranslationResponse>> {
   try {
     // Build prompt using centralized prompt builder (for documentation purposes)
@@ -74,6 +75,9 @@ export async function smartTranslateWithEnjoy(
         targetLanguage,
         style,
         customPrompt,
+      },
+      {
+        signal,
       }
     )
 

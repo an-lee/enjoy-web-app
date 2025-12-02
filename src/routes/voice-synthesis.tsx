@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@iconify/react'
 import { ttsService } from '@/services/ai/services'
@@ -58,6 +58,9 @@ function VoiceSynthesis() {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
 
+  // AbortController for cancelling requests
+  const abortControllerRef = useRef<AbortController | null>(null)
+
   const {
     data: audioHistory = [],
     isLoading: isLoadingHistory,
@@ -94,6 +97,15 @@ function VoiceSynthesis() {
     }
   }, [audioUrl])
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [])
+
   // Handle input clear
   const handleClearInput = () => {
     setInputText('')
@@ -105,8 +117,27 @@ function VoiceSynthesis() {
     setError(null)
   }
 
+  // Handle cancel request
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    setIsSynthesizing(false)
+    setError(null)
+  }
+
   const handleSynthesize = async () => {
     if (!inputText.trim()) return
+
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    // Create new AbortController
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
 
     setIsSynthesizing(true)
     setError(null)
@@ -141,6 +172,7 @@ function VoiceSynthesis() {
         language: targetLanguage,
         voice: selectedVoice,
         config,
+        signal: abortController.signal,
       })
 
       if (!result.success || !result.data) {
@@ -188,16 +220,43 @@ function VoiceSynthesis() {
       if (showHistory) {
         void refetchHistory()
       }
-    } catch (err) {
+
+      // Clear abort controller and reset loading state on success
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+        setIsSynthesizing(false)
+      }
+    } catch (err: any) {
+      // Don't show error if request was cancelled
+      if (err.name === 'AbortError' || err.message === 'Request was cancelled') {
+        // Reset loading state on cancel
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null
+          setIsSynthesizing(false)
+        }
+        return
+      }
       setError(t('tts.error'))
       console.error('TTS synthesis failed:', err)
-    } finally {
-      setIsSynthesizing(false)
+      // Reset loading state on error
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+        setIsSynthesizing(false)
+      }
     }
   }
 
   const handleRegenerate = async () => {
     if (!inputText.trim()) return
+
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    // Create new AbortController
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
 
     setIsSynthesizing(true)
     setError(null)
@@ -217,6 +276,7 @@ function VoiceSynthesis() {
         language: targetLanguage,
         voice: selectedVoice,
         config,
+        signal: abortController.signal,
       })
 
       if (!result.success || !result.data) {
@@ -264,11 +324,29 @@ function VoiceSynthesis() {
       if (showHistory) {
         void refetchHistory()
       }
-    } catch (err) {
+
+      // Clear abort controller and reset loading state on success
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+        setIsSynthesizing(false)
+      }
+    } catch (err: any) {
+      // Don't show error if request was cancelled
+      if (err.name === 'AbortError' || err.message === 'Request was cancelled') {
+        // Reset loading state on cancel
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null
+          setIsSynthesizing(false)
+        }
+        return
+      }
       setError(t('tts.error'))
       console.error('TTS regeneration failed:', err)
-    } finally {
-      setIsSynthesizing(false)
+      // Reset loading state on error
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null
+        setIsSynthesizing(false)
+      }
     }
   }
 
@@ -334,7 +412,17 @@ function VoiceSynthesis() {
             disabled={isSynthesizing}
           />
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {isSynthesizing && (
+              <Button
+                onClick={handleCancel}
+                variant="outline"
+                type="button"
+              >
+                <Icon icon="lucide:x" className="mr-2 h-4 w-4" />
+                {t('common.cancel')}
+              </Button>
+            )}
             <Button
               onClick={handleSynthesize}
               disabled={!inputText.trim() || isSynthesizing}

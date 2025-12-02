@@ -55,7 +55,8 @@ function getModelProvider(config: BYOKConfig) {
 export async function generateWithBYOK(
   prompt: string,
   config: BYOKConfig,
-  systemPrompt?: string
+  systemPrompt?: string,
+  signal?: AbortSignal
 ): Promise<string> {
   const provider = getModelProvider(config)
 
@@ -64,10 +65,15 @@ export async function generateWithBYOK(
       model: provider(config.model || 'gpt-4'),
       system: systemPrompt,
       prompt,
+      abortSignal: signal,
     })
 
     return result.text
   } catch (error: any) {
+    // Check if error is due to abort
+    if (signal?.aborted || error.name === 'AbortError') {
+      throw new Error('Request was cancelled')
+    }
     throw new Error(
       `BYOK LLM generation failed: ${error.message || String(error)}`
     )
@@ -84,7 +90,8 @@ export async function smartTranslateWithBYOK(
   targetLanguage: string,
   style: TranslationStyle,
   customPrompt: string | undefined,
-  config: BYOKConfig
+  config: BYOKConfig,
+  signal?: AbortSignal
 ): Promise<AIServiceResponse<SmartTranslationResponse>> {
   try {
     // Use centralized prompt builder
@@ -97,7 +104,7 @@ export async function smartTranslateWithBYOK(
     )
 
     // Generate translation with system and user prompts
-    const translatedText = await generateWithBYOK(userPrompt, config, systemPrompt)
+    const translatedText = await generateWithBYOK(userPrompt, config, systemPrompt, signal)
 
     return {
       success: true,

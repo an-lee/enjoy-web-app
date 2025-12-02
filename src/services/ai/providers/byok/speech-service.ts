@@ -104,7 +104,8 @@ export async function synthesizeWithBYOK(
   text: string,
   _language: string,
   voice: string | undefined,
-  config: BYOKConfig
+  config: BYOKConfig,
+  signal?: AbortSignal
 ): Promise<AIServiceResponse<TTSResponse>> {
   try {
     if (config.provider === 'openai' || config.provider === 'custom') {
@@ -115,11 +116,16 @@ export async function synthesizeWithBYOK(
         dangerouslyAllowBrowser: true,
       })
 
-      const response = await openai.audio.speech.create({
-        model: config.model || 'tts-1',
-        voice: (voice as any) || 'alloy',
-        input: text,
-      })
+      const response = await openai.audio.speech.create(
+        {
+          model: config.model || 'tts-1',
+          voice: (voice as any) || 'alloy',
+          input: text,
+        },
+        {
+          signal,
+        }
+      )
 
       const audioBlob = await response.blob()
 

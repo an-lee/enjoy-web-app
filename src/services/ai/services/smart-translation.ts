@@ -28,6 +28,7 @@ export interface SmartTranslationRequest {
   style: TranslationStyle
   customPrompt?: string
   config?: AIServiceConfig
+  signal?: AbortSignal
 }
 
 /**
@@ -59,7 +60,8 @@ export const smartTranslationService = {
               req.targetLanguage,
               req.style,
               req.customPrompt,
-              config?.localModel
+              config?.localModel,
+              req.signal
             )
             return {
               translatedText: result.translatedText,
@@ -72,7 +74,8 @@ export const smartTranslationService = {
               req.sourceLanguage,
               req.targetLanguage,
               req.style,
-              req.customPrompt
+              req.customPrompt,
+              req.signal
             )
             if (!result.success || !result.data) {
               throw new Error(result.error?.message || 'Enjoy API translation failed')
@@ -86,7 +89,8 @@ export const smartTranslationService = {
               req.targetLanguage,
               req.style,
               req.customPrompt,
-              byokConfig
+              byokConfig,
+              req.signal
             )
             if (!result.success || !result.data) {
               throw new Error(result.error?.message || 'BYOK translation failed')

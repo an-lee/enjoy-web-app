@@ -16,7 +16,8 @@ export async function synthesize(
   text: string,
   language: string,
   voice?: string,
-  modelConfig?: LocalModelConfig
+  modelConfig?: LocalModelConfig,
+  signal?: AbortSignal
 ): Promise<LocalTTSResult> {
   // Validate input text
   if (!text || typeof text !== 'string') {
@@ -82,7 +83,31 @@ export async function synthesize(
   const taskId = `tts-${Date.now()}-${Math.random()}`
 
   return new Promise<LocalTTSResult>((resolve, reject) => {
+    // Handle abort signal
+    const abortHandler = () => {
+      clearTimeout(timeout)
+      worker.removeEventListener('message', messageHandler)
+      // Send cancel message to worker
+      worker.postMessage({
+        type: 'cancel',
+        data: { taskId },
+      })
+      reject(new Error('Request was cancelled'))
+    }
+
+    if (signal) {
+      if (signal.aborted) {
+        reject(new Error('Request was cancelled'))
+        return
+      }
+      signal.addEventListener('abort', abortHandler)
+    }
+
     const timeout = setTimeout(() => {
+      if (signal) {
+        signal.removeEventListener('abort', abortHandler)
+      }
+      worker.removeEventListener('message', messageHandler)
       reject(new Error('TTS synthesis timeout'))
     }, 300000) // 5 minutes timeout
 
@@ -91,6 +116,9 @@ export async function synthesize(
 
       if (type === 'result' && responseTaskId === taskId) {
         clearTimeout(timeout)
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler)
+        }
         worker.removeEventListener('message', messageHandler)
 
         // Convert ArrayBuffer back to Blob
@@ -103,8 +131,18 @@ export async function synthesize(
         })
       } else if (type === 'error' && responseTaskId === taskId) {
         clearTimeout(timeout)
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler)
+        }
         worker.removeEventListener('message', messageHandler)
         reject(new Error(data.message || 'TTS synthesis failed'))
+      } else if (type === 'cancelled' && responseTaskId === taskId) {
+        clearTimeout(timeout)
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler)
+        }
+        worker.removeEventListener('message', messageHandler)
+        reject(new Error('Request was cancelled'))
       }
     }
 
