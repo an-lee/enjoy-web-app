@@ -1,5 +1,6 @@
 import { db } from './database'
 import type { CachedDefinition } from './schema'
+import { generateCachedDefinitionId } from './id-generator'
 
 export async function getCachedDefinition(
   word: string,
@@ -23,8 +24,9 @@ export async function setCachedDefinition(
   ttl: number = 24 * 60 * 60 * 1000 // 24 hours default
 ): Promise<void> {
   const now = Date.now()
+  const id = generateCachedDefinitionId(word, languagePair)
   await db.cachedDefinitions.put({
-    id: `${word}-${languagePair}`,
+    id,
     word,
     languagePair,
     data,

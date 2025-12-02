@@ -21,31 +21,31 @@ export class EnjoyDatabase extends Dexie {
 
   constructor() {
     super('EnjoyDatabase')
-    this.version(4).stores({
-      // Video: id (primary key, also used as vid for association), indexes for common queries
+    this.version(5).stores({
+      // Video: id (UUID primary key), indexes for common queries
       videos:
-        'id, serverId, provider, language, level, starred, syncStatus, createdAt, updatedAt',
-      // Audio: id (primary key, also used as aid for association), indexes for common queries
+        'id, provider, language, level, starred, syncStatus, createdAt, updatedAt',
+      // Audio: id (UUID primary key), indexes for common queries
       // Added translationKey index for TTS audio lookup
       audios:
-        'id, serverId, provider, language, level, starred, translationKey, syncStatus, createdAt, updatedAt',
-      // Transcript: id (primary key), indexes for target lookup
+        'id, provider, language, level, starred, translationKey, syncStatus, createdAt, updatedAt',
+      // Transcript: id (UUID primary key), indexes for target lookup
       transcripts:
-        'id, vid, aid, language, serverId, syncStatus, createdAt, updatedAt',
-      // UserEcho: id (primary key), indexes for user and target lookup
+        'id, vid, aid, language, syncStatus, createdAt, updatedAt',
+      // UserEcho: id (UUID primary key), indexes for user and target lookup
       // Note: [userId+vid] and [userId+aid] are compound indexes for unique user practice sessions
       userEchos:
-        'id, userId, vid, aid, [userId+vid], [userId+aid], status, serverId, syncStatus, createdAt, updatedAt',
-      // Recording: id (primary key), indexes for target, user, and echo lookup
+        'id, userId, vid, aid, [userId+vid], [userId+aid], status, syncStatus, createdAt, updatedAt',
+      // Recording: id (UUID primary key), indexes for target, user, and echo lookup
       recordings:
-        'id, echoId, vid, aid, userId, serverId, syncStatus, createdAt, updatedAt',
-      // Translation: id (primary key), indexes for source and translation lookup
+        'id, echoId, vid, aid, userId, syncStatus, createdAt, updatedAt',
+      // Translation: id (UUID primary key), indexes for source and translation lookup
       // Note: [sourceText+targetLanguage+style] is a compound index for unique translations
       translations:
-        'id, sourceText, sourceLanguage, targetLanguage, style, [sourceText+targetLanguage+style], serverId, syncStatus, createdAt, updatedAt',
-      // CachedDefinition: composite primary key [word+languagePair]
+        'id, sourceText, sourceLanguage, targetLanguage, style, [sourceText+targetLanguage+style], syncStatus, createdAt, updatedAt',
+      // CachedDefinition: composite primary key [word+languagePair], id (UUID) for consistency
       cachedDefinitions:
-        '[word+languagePair], serverId, syncStatus, expiresAt, createdAt, updatedAt',
+        '[word+languagePair], id, syncStatus, expiresAt, createdAt, updatedAt',
     })
   }
 }

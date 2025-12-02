@@ -24,27 +24,30 @@ export interface TranscriptLine {
 
 /**
  * Complete transcript for a video or audio
+ * ID is generated using: uuid5(videoId/audioId + language)
  */
 export interface Transcript {
-  id: string // local unique ID
-  vid?: string // Video.vid (provider-specific ID, available locally)
-  aid?: string // Audio.aid (provider-specific ID, available locally)
+  id: string // UUID generated from videoId/audioId + language
+  vid?: string // Video.id (UUID)
+  aid?: string // Audio.id (UUID)
   // Note: Either vid or aid must be set, but not both
   language?: string
-  referenceId?: number // If exists, this is a translation of the reference transcript
+  referenceId?: string // If exists, this is a translation of the reference transcript (Transcript.id)
   timeline: TranscriptLine[]
   // local storage
   syncStatus?: SyncStatus
-  serverId?: number // Links to backend ID if synced
   createdAt?: number
   updatedAt?: number
 }
 
 /**
  * Video content
+ * ID generation:
+ * - Third-party videos (YouTube, Netflix, etc.): uuid5(vid + provider)
+ * - Local uploads: uuid5(hash(fileBlob))
  */
 export interface Video {
-  id: string // Provider-specific video ID (used as vid for association)
+  id: string // UUID generated from vid+provider or file hash
   title: string
   description?: string
   thumbnailUrl?: string
@@ -63,7 +66,6 @@ export interface Video {
   mediaBlobKey?: string // Reserved: Blob key for large file external storage (future use)
   thumbnailBlobKey?: string // Reserved: Thumbnail blob key for external storage (future use)
   syncStatus?: SyncStatus
-  serverId?: string // Links to backend ID if synced
   createdAt: number
   updatedAt: number
 }
@@ -71,9 +73,13 @@ export interface Video {
 /**
  * Audio content
  * Can be from various sources: uploaded files, TTS generated, etc.
+ * ID generation:
+ * - Third-party audio: uuid5(aid + provider)
+ * - TTS-generated: uuid5(translationId + voice) or uuid5(hash(blob) + voice)
+ * - Local uploads: uuid5(hash(fileBlob))
  */
 export interface Audio {
-  id: string // Provider-specific audio ID (used as aid for association)
+  id: string // UUID generated from aid+provider, translationId+voice, or file hash
   title: string
   description?: string
   thumbnailUrl?: string
@@ -84,7 +90,7 @@ export interface Audio {
   starred?: boolean
   summary?: string
   // TTS-specific fields (for TTS-generated audio)
-  translationKey?: string // Reference to Translation.id (local ID) if generated from translation
+  translationKey?: string // Reference to Translation.id (UUID) if generated from translation
   sourceText?: string // Original text that was synthesized (for TTS audio)
   voice?: string // Voice identifier used for synthesis (for TTS audio)
   // Local storage
@@ -94,7 +100,6 @@ export interface Audio {
   mediaBlobKey?: string // Reserved: Blob key for large file external storage (future use)
   thumbnailBlobKey?: string // Reserved: Thumbnail blob key for external storage (future use)
   syncStatus?: SyncStatus
-  serverId?: string // Links to backend ID if synced
   createdAt: number
   updatedAt: number
 }
@@ -102,12 +107,13 @@ export interface Audio {
 /**
  * User Echo - Practice session for a Video or Audio
  * Acts as an intermediate table between Video/Audio and Recording
+ * ID generation: uuid5(videoId/audioId + userId)
  */
 export interface UserEcho {
-  id: string // local unique ID
+  id: string // UUID generated from videoId/audioId + userId
   userId: number
-  vid?: string // Video.vid (provider-specific ID, available locally)
-  aid?: string // Audio.aid (provider-specific ID, available locally)
+  vid?: string // Video.id (UUID)
+  aid?: string // Audio.id (UUID)
   // Note: Either vid or aid must be set, but not both
   // Practice progress
   currentSegmentIndex?: number // Current segment being practiced
@@ -119,21 +125,21 @@ export interface UserEcho {
   lastPracticedAt?: number // Timestamp of last practice
   // Local storage
   syncStatus?: SyncStatus
-  serverId?: number // Links to backend ID if synced
   createdAt: number
   updatedAt: number
 }
 
 /**
  * User Recording
+ * ID generation: uuid5(hash(recordingBlob) + userId + referenceOffset) or uuid5(echoId + referenceOffset + hash)
  */
 export interface Recording {
-  id: string // local unique ID
-  echoId?: string // Reference to UserEcho.id (optional for backward compatibility)
+  id: string // UUID generated from recording blob hash + userId + referenceOffset
+  echoId?: string // Reference to UserEcho.id (UUID)
   duration: number // milliseconds
   userId: number
-  vid?: string // Video.vid (provider-specific ID, available locally)
-  aid?: string // Audio.aid (provider-specific ID, available locally)
+  vid?: string // Video.id (UUID)
+  aid?: string // Audio.id (UUID)
   // Note: Either vid or aid must be set, but not both
   referenceText?: string
   referenceOffset?: number // milliseconds
@@ -144,7 +150,6 @@ export interface Recording {
   // Local storage
   blob?: Blob // Audio blob for offline access
   syncStatus?: SyncStatus
-  serverId?: number // Links to backend ID if synced
   createdAt: number
   updatedAt?: number
 }
@@ -155,9 +160,10 @@ export interface Recording {
  * Supports custom translation styles via custom prompts
  * Note: If user generates TTS audio, a new Audio record will be created
  * with aid generated from translation (e.g., hash of translation id or content)
+ * ID generation: uuid5(sourceText + targetLanguage + style + customPrompt?)
  */
 export interface Translation {
-  id: string // local unique ID
+  id: string // UUID generated from sourceText + targetLanguage + style + customPrompt
   // Source text
   sourceText: string // Original text to translate
   sourceLanguage: string // Source language code (e.g., 'en', 'ja')
@@ -169,23 +175,23 @@ export interface Translation {
   aiModel?: string // AI model used for translation (e.g., 'gpt-4', 'claude-3')
   // Local storage
   syncStatus?: SyncStatus
-  serverId?: number // Links to backend ID if synced
   createdAt: number
   updatedAt: number
 }
 
 /**
  * Dictionary Cache to reduce API calls
+ * ID generation: uuid5(word + languagePair)
+ * Note: Also uses composite key [word, languagePair] for efficient lookups
  */
 export interface CachedDefinition {
-  id: string // local unique ID
+  id: string // UUID generated from word + languagePair
   word: string
   languagePair: string // e.g., 'en:zh'
   data: unknown // JSON data
   expiresAt: number // timestamp
   // local storage
   syncStatus?: SyncStatus
-  serverId?: number // Links to backend ID if synced
   createdAt: number
   updatedAt: number
 }

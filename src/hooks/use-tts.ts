@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ttsService } from '@/services/ai/services'
 import { getAIServiceConfig } from '@/services/ai/core/config'
-import { saveAudio, type Audio } from '@/db'
+import { saveAudio, generateAudioId, type Audio } from '@/db'
 import { VideoProvider } from '@/db/schema'
 
 export interface UseTTSOptions {
@@ -66,7 +66,11 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
         audioElement.remove()
 
         // Save to database
-        const audioId = `tts-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+        const audioId = await generateAudioId('other', {
+          blob,
+          translationKey,
+          voice,
+        })
         const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
           id: audioId,
           title: text.substring(0, 100),

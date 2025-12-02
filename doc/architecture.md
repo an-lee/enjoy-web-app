@@ -99,6 +99,10 @@ src/
 │   ├── echo/            # State machines for echo practice loop
 │   └── sync/            # Synchronization logic
 ├── db/                  # Dexie configuration and schema
+│   ├── schema.ts        # TypeScript interfaces for all entities
+│   ├── database.ts      # Dexie database configuration
+│   ├── id-generator.ts   # UUID v5 generators for deterministic IDs
+│   └── *.ts             # Entity-specific helper functions
 ├── services/            # API clients and AI service wrappers
 ├── stores/              # Zustand global stores (settings, auth)
 ├── locales/             # i18next translation files
@@ -112,3 +116,25 @@ src/
 │   └── pt/              # Portuguese translations
 └── lib/                 # Utility functions (i18n config)
 ```
+
+## 4. ID System Architecture
+
+### UUID v5 Deterministic IDs
+
+All entities use **UUID v5 (deterministic UUIDs)** for their primary keys. This design choice provides several key benefits:
+
+- **Unified IDs**: Same ID used locally (IndexedDB) and on server (PostgreSQL), eliminating the need for `serverId` mapping
+- **Deterministic**: Same inputs always produce the same UUID, ensuring consistency across devices
+- **Simplified Sync**: No ID mapping required during synchronization
+- **Idempotent Operations**: Safe to retry sync operations without creating duplicates
+
+ID generation is centralized in `src/db/id-generator.ts` with specific rules for each entity type:
+
+- **Video/Audio**: Based on provider ID + provider type, or file hash for local uploads
+- **UserEcho**: Based on media ID + user ID
+- **Recording**: Based on recording blob hash + user ID + reference offset
+- **Transcript**: Based on media ID + language
+- **Translation**: Based on source text + target language + style + custom prompt
+- **CachedDefinition**: Based on word + language pair
+
+See `doc/data-models.md` for detailed ID generation rules.

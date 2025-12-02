@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useDebounce } from '@uidotdev/usehooks'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@iconify/react'
-import { type Translation, type TranslationStyle } from '@/db'
+import { type Translation, type TranslationStyle, generateTranslationId } from '@/db'
 import { smartTranslationService } from '@/services/ai/services'
 import { getAIServiceConfig } from '@/services/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
@@ -139,7 +139,12 @@ function SmartTranslation() {
       }
 
       const newTranslation: Translation = {
-        id: `trans_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: generateTranslationId(
+          inputText.trim(),
+          targetLanguage,
+          translationStyle,
+          translationStyle === 'custom' ? customPrompt.trim() : undefined
+        ),
         sourceText: inputText.trim(),
         sourceLanguage,
         targetLanguage,

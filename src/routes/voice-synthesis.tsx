@@ -18,7 +18,7 @@ import {
 import { useAudioHistory } from '@/hooks/use-audios'
 import { getDefaultTTSVoice, getTTSVoices } from '@/services/ai/constants/tts-voices'
 import { AIProvider } from '@/services/ai/types'
-import { saveAudio, getAudioByTranslationKey } from '@/db'
+import { saveAudio, getAudioByTranslationKey, generateAudioId } from '@/db'
 import type { Audio } from '@/db'
 import { VideoProvider } from '@/db/schema'
 import { cn } from '@/lib/utils'
@@ -166,7 +166,11 @@ function VoiceSynthesis() {
       audio.remove()
 
       // Save to database
-      const audioId = `tts-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const audioId = await generateAudioId('other', {
+        blob,
+        translationKey,
+        voice: selectedVoice,
+      })
       const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
         id: audioId,
         title: text.substring(0, 100), // Use text as title, limit length
@@ -238,7 +242,11 @@ function VoiceSynthesis() {
       audio.remove()
 
       // Save to database (update existing or create new)
-      const audioId = `tts-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const audioId = await generateAudioId('other', {
+        blob,
+        translationKey,
+        voice: selectedVoice,
+      })
       const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
         id: audioId,
         title: text.substring(0, 100),

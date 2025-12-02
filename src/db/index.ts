@@ -86,3 +86,14 @@ export {
   setCachedDefinition,
   cleanupExpiredCache,
 } from './cached-definition'
+
+// Re-export ID generator functions
+export {
+  generateVideoId,
+  generateAudioId,
+  generateUserEchoId,
+  generateRecordingId,
+  generateTranscriptId,
+  generateTranslationId,
+  generateCachedDefinitionId,
+} from './id-generator'
