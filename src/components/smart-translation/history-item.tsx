@@ -16,7 +16,7 @@ import { getAIServiceConfig } from '@/services/ai/core/config'
 import { AudioPlayer } from '@/components/voice-synthesis'
 import { VoiceSynthesisSheet } from './voice-synthesis-sheet'
 import { useTTS } from '@/hooks/use-tts'
-import { useAudio } from '@/hooks/use-audio'
+import { useAudios } from '@/hooks/use-audios'
 import { useCopyWithToast } from '@/hooks/use-copy-with-toast'
 
 interface HistoryItemProps {
@@ -43,10 +43,8 @@ export function HistoryItem({
 
   // Use hooks for copy and audio management
   const { copy, copied } = useCopyWithToast()
-  const { audio, audioUrl, updateAudio } = useAudio({
-    loader: isExpanded
-      ? { type: 'translationKey', translationKey: translation.id }
-      : null,
+  const { audios, addAudio } = useAudios({
+    translationKey: isExpanded ? translation.id : null,
     enabled: isExpanded,
   })
 
@@ -56,8 +54,8 @@ export function HistoryItem({
     voice: selectedVoice,
     translationKey: translation.id,
     onSuccess: (newAudio) => {
-      // updateAudio will create the URL from the blob
-      updateAudio(newAudio)
+      // Add the new audio to the list (addAudio will create the URL from the blob)
+      addAudio(newAudio)
       setIsSheetOpen(false)
     },
   })
@@ -138,7 +136,7 @@ export function HistoryItem({
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {audio
+                      {audios.length > 0
                         ? t('translation.regenerateAudio', { defaultValue: 'Regenerate audio' })
                         : t('translation.synthesizeAudio', { defaultValue: 'Synthesize audio' })}
                     </TooltipContent>
@@ -148,14 +146,33 @@ export function HistoryItem({
               <p className="text-sm whitespace-pre-wrap">{translation.translatedText}</p>
             </div>
 
-            {/* Audio Player */}
-            {audioUrl && (
+            {/* Audio Players List */}
+            {audios.length > 0 && (
               <div className="space-y-2 pt-2 border-t">
                 <Label className="text-xs font-medium text-muted-foreground">
                   {t('tts.generatedAudio', { defaultValue: 'Generated Audio' })}
+                  {audios.length > 1 && (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      ({audios.length})
+                    </span>
+                  )}
                 </Label>
-                <div className="p-3 bg-background rounded-md">
-                  <AudioPlayer audioUrl={audioUrl} />
+                <div className="space-y-3">
+                  {audios.map(({ audio, audioUrl }) => (
+                    <div key={audio.id} className="p-3 bg-background rounded-md">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {audio.voice && (
+                            <span className="font-medium">{audio.voice}</span>
+                          )}
+                          <span>
+                            {new Date(audio.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                      <AudioPlayer audioUrl={audioUrl} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
