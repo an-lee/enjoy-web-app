@@ -27,12 +27,6 @@ export function createRateLimitMiddleware(service: ServiceType) {
 		const env = c.env
 		const kv = (env as any).RATE_LIMIT_KV as KVNamespace | undefined
 
-		// Validate user exists (should be set by auth middleware, but guard against undefined)
-		if (!user) {
-			console.error('User not found in context')
-			throw new Error('Authentication required: User not found in request context')
-		}
-
 		// Validate user subscription tier (should already be validated in auth middleware, but double-check)
 		if (!isValidSubscriptionTier(user.subscriptionTier)) {
 			console.error('Invalid subscription tier:', user.subscriptionTier, 'User:', user)
