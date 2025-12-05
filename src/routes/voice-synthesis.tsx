@@ -200,7 +200,7 @@ function VoiceSynthesis() {
       // Save to database
       const audioId = await generateAudioId('other', {
         blob,
-        translationKey,
+        translationId: translationKey,
         voice: selectedVoice,
       })
       const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
@@ -304,7 +304,7 @@ function VoiceSynthesis() {
       // Save to database (update existing or create new)
       const audioId = await generateAudioId('other', {
         blob,
-        translationKey,
+        translationId: translationKey,
         voice: selectedVoice,
       })
       const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {

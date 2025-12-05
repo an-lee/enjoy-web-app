@@ -68,7 +68,7 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
         // Save to database
         const audioId = await generateAudioId('other', {
           blob,
-          translationKey,
+          translationId: translationKey,
           voice,
         })
         const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
