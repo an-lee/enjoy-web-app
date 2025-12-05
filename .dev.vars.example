@@ -1,0 +1,24 @@
+# Cloudflare Workers Local Development Environment Variables
+#
+# This file is used for local development with `wrangler dev`
+# Copy this file to .dev.vars and fill in your actual values
+#
+# IMPORTANT: .dev.vars is gitignored and should NEVER be committed
+#
+# For production, use `wrangler secret put` instead:
+#   wrangler secret put AZURE_SPEECH_SUBSCRIPTION_KEY
+
+# Azure Speech Service Configuration
+# Get your subscription key from: https://portal.azure.com/
+AZURE_SPEECH_SUBSCRIPTION_KEY=your-azure-speech-subscription-key-here
+AZURE_SPEECH_REGION=eastus
+
+# Rails API Configuration
+# Base URL for the Rails API backend (for authentication)
+RAILS_API_BASE_URL=https://enjoy.bot
+
+# Optional: Alternative variable names (if needed)
+# AZURE_SPEECH_SUBSCRIPTION_KEY_SECRET=your-key-here
+# AZURE_SPEECH_SERVICE_REGION=eastus
+# VITE_API_BASE_URL=https://enjoy.bot
+
