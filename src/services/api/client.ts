@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'ax
 import { useAuthStore } from '@/stores/auth'
 
 // API base URL - should be configured via environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://echo.enjoy.bot'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://enjoy.bot'
 
 // Create axios instance
 export const apiClient: AxiosInstance = axios.create({

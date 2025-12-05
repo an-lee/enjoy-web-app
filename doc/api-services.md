@@ -13,7 +13,7 @@ This document focuses on the **Rails API Backend** client. For AI services via H
 
 | Feature | Rails API Backend | Hono API Worker |
 |---------|------------------|-----------------|
-| **Location** | External server (`https://echo.enjoy.bot`) | Cloudflare Worker (same domain) |
+| **Location** | External server (`https://enjoy.bot`) | Cloudflare Worker (same domain) |
 | **Route Prefix** | `/api/v1/*` | `/api/*` |
 | **Primary Responsibility** | **User information management** | **All AI services** |
 | **Services** | Auth, user profiles, data sync | Translation, dictionary, ASR, TTS, assessment |
@@ -32,7 +32,7 @@ The API Services module provides a clean, typed interface for interacting with t
 
 The `apiClient` is a configured Axios instance that:
 
-- **Base Configuration**: Uses `VITE_API_BASE_URL` environment variable (defaults to `https://echo.enjoy.bot`)
+- **Base Configuration**: Uses `VITE_API_BASE_URL` environment variable (defaults to `https://enjoy.bot`)
 - **Authentication**: Automatically adds Bearer token from auth store to all requests
 - **Error Handling**: Handles 401 errors by clearing auth state and dispatching `auth:unauthorized` event
 - **Timeout**: 30-second timeout for all requests
@@ -85,7 +85,7 @@ These endpoints use the authenticated `apiClient` instance, which automatically 
 
 **Characteristics**:
 
-- Always use Enjoy API backend (`https://echo.enjoy.bot`)
+- Always use Enjoy API backend (`https://enjoy.bot`)
 - Requires authentication (Bearer token)
 - Uses PostgreSQL for persistent storage
 - Uses Redis for caching/sessions
@@ -172,7 +172,7 @@ await userApi.updateProfile({
 The API base URL is configured via environment variable:
 
 - **Environment Variable**: `VITE_API_BASE_URL`
-- **Default**: `https://echo.enjoy.bot`
+- **Default**: `https://enjoy.bot`
 - **Usage**: Set in `.env` or deployment configuration
 
 ## When to Use Which API

@@ -40,7 +40,7 @@ function LoginPage() {
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
       // Security: Only accept messages from main site origin
-      const MAIN_SITE_URL = import.meta.env.VITE_MAIN_SITE_URL || 'https://echo.enjoy.bot'
+      const MAIN_SITE_URL = import.meta.env.VITE_MAIN_SITE_URL || 'https://enjoy.bot'
       const mainSiteOrigin = new URL(MAIN_SITE_URL).origin
 
       if (event.origin !== mainSiteOrigin && event.origin !== window.location.origin) {
@@ -123,7 +123,7 @@ function LoginPage() {
 
     try {
       // Main site URL - should be configured via environment variable
-      const MAIN_SITE_URL = import.meta.env.VITE_MAIN_SITE_URL || 'https://echo.enjoy.bot'
+      const MAIN_SITE_URL = import.meta.env.VITE_MAIN_SITE_URL || 'https://enjoy.bot'
 
       // Open main site login in popup
       // Must be called directly in user interaction event handler
