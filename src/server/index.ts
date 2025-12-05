@@ -1,5 +1,5 @@
 import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
-import { api } from './api'
+import { router } from './router'
 
 // Env type is declared globally in worker-configuration.d.ts
 // No need to import it
@@ -44,7 +44,7 @@ export default {
 			})
 
 			try {
-				return await api.fetch(apiRequest, env, ctx)
+				return await router.fetch(apiRequest, env, ctx)
 			} catch (error) {
 				console.error('API handler error:', error)
 				return new Response(
@@ -62,4 +62,3 @@ export default {
 		return tanstackHandler.fetch(request)
 	},
 }
-

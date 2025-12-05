@@ -7,25 +7,25 @@ import { azure } from './routes/azure'
 // You can extend it in wrangler.jsonc when adding bindings
 
 // Main API router
-const api = new Hono<{
+const router = new Hono<{
 	Bindings: Env
 }>()
 
 // Global error handler
-api.onError((err, c) => {
+router.onError((err, c) => {
 	return handleError(c, err)
 })
 
 // Health check endpoint (public)
-api.get('/health', (c: Context<{ Bindings: Env }>) => {
+router.get('/health', (c: Context<{ Bindings: Env }>) => {
 	return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
 // Mount route handlers
-api.route('/azure', azure)
+router.route('/azure', azure)
 
 // Example: Add more routes
 // import { translation } from './routes/translation'
-// api.route('/translation', translation)
+// router.route('/translation', translation)
 
-export { api }
+export { router }
