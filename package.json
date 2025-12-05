@@ -11,7 +11,7 @@
 		"preview": "bun run build && vite preview",
 		"cf-typegen": "wrangler types",
 		"check-locales": "bun run scripts/check-locales.ts",
-		"check-types": "tsc --noEmit"
+		"compile": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "^2.0.53",

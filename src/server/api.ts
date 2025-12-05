@@ -1,34 +1,31 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
+import { handleError } from './utils/errors'
+import { azure } from './routes/azure'
 
 // Env type is declared globally in worker-configuration.d.ts
 // You can extend it in wrangler.jsonc when adding bindings
 
-const api = new Hono<{ Bindings: Env }>()
+// Main API router
+const api = new Hono<{
+	Bindings: Env
+}>()
 
-// Health check endpoint
+// Global error handler
+api.onError((err, c) => {
+	return handleError(c, err)
+})
+
+// Health check endpoint (public)
 api.get('/health', (c: Context<{ Bindings: Env }>) => {
 	return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// Example API endpoint
-api.get('/hello', (c: Context<{ Bindings: Env }>) => {
-	return c.json({ message: 'Hello from Hono API!' })
-})
+// Mount route handlers
+api.route('/azure', azure)
 
-// Example endpoint with Cloudflare Bindings access
-api.get('/env', async (c: Context<{ Bindings: Env }>) => {
-	// Access Cloudflare Bindings if available
-	// Example: const value = await c.env.KV?.get('key')
-	return c.json({
-		message: 'Environment info',
-		// Add your bindings info here
-	})
-})
-
-// You can add more API routes here
-// api.post('/users', async (c) => { ... })
-// api.get('/users/:id', async (c) => { ... })
+// Example: Add more routes
+// import { translation } from './routes/translation'
+// api.route('/translation', translation)
 
 export { api }
-
