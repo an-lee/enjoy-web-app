@@ -6,16 +6,20 @@ Enjoy Echo consists of three main components:
 
 1. **Browser Extension** (Live): For online video platforms (YouTube, Netflix).
 2. **Web App** (In Development): For local files, offline study, and management.
-3. **Rails API Backend**: Central hub for auth, data sync, and AI service proxy.
+3. **Rails API Backend**: User information management (authentication, profiles, data sync).
+4. **Hono API Worker**: All AI services (translation, dictionary, ASR, TTS, assessment).
 
-The Web App acts as a Single Page Application (SPA) served via Cloudflare Pages.
+The Web App is a full-stack application deployed as a Cloudflare Worker, providing:
+- **SSR (Server-Side Rendering)**: Using TanStack Start
+- **API Layer**: Hono API Worker for serverless API endpoints
+- **Static Assets**: Workers Assets for client-side resources
 
 ### Diagram
 
 ```mermaid
 graph TD
     User[User] --> Extension[Browser Extension]
-    User --> WebApp[Web App (Vite/React)]
+    User --> WebApp[Web App Cloudflare Worker]
 
     subgraph "Client Side"
         Extension --> ChromeStorage[chrome.storage]
@@ -23,11 +27,18 @@ graph TD
         WebApp --> LocalASR[Local ASR (transformers.js)]
     end
 
+    subgraph "Cloudflare Worker"
+        WebApp --> SSR[TanStack Start SSR]
+        WebApp --> HonoAPI[Hono API Worker /api/*]
+        WebApp --> Assets[Workers Assets]
+    end
+
     Extension -- HTTPS --> RailsAPI
-    WebApp -- HTTPS --> RailsAPI
+    WebApp -- HTTPS --> RailsAPI[User Info Management]
+    WebApp -- /api/* --> HonoAPI[AI Services]
 
     subgraph "Backend Services"
-        RailsAPI[Rails API Server]
+        RailsAPI[Rails API Server<br/>User Info Only]
         DB[(PostgreSQL)]
         Redis[(Redis)]
         S3[Object Storage]
@@ -38,11 +49,12 @@ graph TD
     end
 
     subgraph "AI Services"
-        RailsAPI --> CF_AI[Cloudflare Workers AI]
-        RailsAPI --> Azure[Azure Speech Services]
+        HonoAPI --> CF_AI[Cloudflare Workers AI]
+        HonoAPI --> Azure[Azure Speech Services]
+        HonoAPI --> CF_Bindings[Cloudflare Bindings<br/>KV/D1/R2]
 
-        CF_AI -- LLM/ASR/Translation --> RailsAPI
-        Azure -- TTS/Assessment --> RailsAPI
+        CF_AI -- LLM/ASR/Translation --> HonoAPI
+        Azure -- TTS/Assessment --> HonoAPI
     end
 ```
 
@@ -50,8 +62,9 @@ graph TD
 
 ### Frontend (Web App)
 
-- **Build Tool**: Vite
+- **Build Tool**: Vite + `@cloudflare/vite-plugin`
 - **Framework**: React 19 + TypeScript
+- **SSR Framework**: TanStack Start
 - **Routing**: TanStack Router (File-based routing)
 - **State Management**:
   - Server State: TanStack Query
@@ -63,12 +76,22 @@ graph TD
 - **UI Components**: shadcn/ui (Radix UI based)
 - **I18n**: i18next
 
+### API Layer (Cloudflare Worker)
+
+- **API Framework**: Hono
+- **Deployment**: Cloudflare Worker (not Pages)
+- **Static Assets**: Workers Assets
+- **Bindings Support**: KV, D1, AI, R2, etc.
+- **Route Prefix**: `/api/*`
+- **Responsibility**: All AI services (translation, dictionary, ASR, TTS, assessment)
+
 ### Backend (Rails API)
 
 - **Framework**: Ruby on Rails (API Mode)
 - **Database**: PostgreSQL
 - **Cache/Queue**: Redis / Sidekiq
 - **Authentication**: Devise + JWT
+- **Responsibility**: User information management only (auth, profiles, data sync)
 
 ### External Services
 
@@ -94,6 +117,9 @@ src/
 │   ├── library.tsx      # Material management
 │   ├── echo.$id.tsx     # Echo practice interface
 │   └── vocabulary.tsx   # Vocabulary list
+├── server/              # Server-side code (Cloudflare Worker)
+│   ├── index.ts         # Custom server-entry (routes /api/* to Hono)
+│   └── api.ts           # Hono API routes definition
 ├── features/            # Business logic isolated by feature
 │   ├── materials/       # Hooks/utils for material management
 │   ├── echo/            # State machines for echo practice loop
@@ -104,6 +130,8 @@ src/
 │   ├── id-generator.ts   # UUID v5 generators for deterministic IDs
 │   └── *.ts             # Entity-specific helper functions
 ├── services/            # API clients and AI service wrappers
+│   ├── api/             # Rails API client (external backend)
+│   └── ai/              # AI service providers (Enjoy/Local/BYOK)
 ├── stores/              # Zustand global stores (settings, auth)
 ├── locales/             # i18next translation files
 │   ├── en/              # English translations
@@ -138,3 +166,40 @@ ID generation is centralized in `src/db/id-generator.ts` with specific rules for
 - **CachedDefinition**: Based on word + language pair
 
 See `doc/data-models.md` for detailed ID generation rules.
+
+## 5. Deployment Architecture
+
+### Cloudflare Worker Deployment
+
+The Web App is deployed as a **Cloudflare Worker** (not Pages), providing a unified runtime for:
+
+1. **SSR (Server-Side Rendering)**: TanStack Start handles all page requests
+2. **API Layer**: Hono API Worker handles `/api/*` routes
+3. **Static Assets**: Workers Assets serves client-side resources (JS, CSS, images)
+
+### Request Routing Flow
+
+```
+Request → Cloudflare Worker
+  ├─ /api/* → Hono API Handler → JSON Response
+  ├─ Static Assets (JS/CSS/images) → Workers Assets → File Response
+  └─ Page Requests → TanStack Start SSR → HTML Response
+```
+
+### Configuration
+
+The deployment is configured via `wrangler.jsonc`:
+
+- **Main Entry**: `./src/server/index.ts` - Custom server-entry that routes requests
+- **Assets**: `./dist/client` - Client-side build output
+- **Route Priority**: `/api/*` routes are handled by Worker first
+
+### Benefits
+
+- **Unified Runtime**: Single Worker handles all request types
+- **Edge Computing**: Low latency with global edge network
+- **Cloudflare Bindings**: Direct access to KV, D1, AI, R2, etc.
+- **Cost Effective**: Pay per request, no idle costs
+- **SSR Support**: Full server-side rendering capabilities
+
+For detailed API Worker setup and usage, see [API Worker Integration Guide](./api-worker-integration.md).

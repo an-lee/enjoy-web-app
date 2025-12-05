@@ -151,7 +151,7 @@ function LanguageSwitcher() {
       onChange={(e) => setPreferredLanguage(e.target.value)}
     >
       <option value="en">English</option>
-      <option value="zh">中文</option>
+      <option value="zh">Chinese</option>
       {/* ... */}
     </select>
   )

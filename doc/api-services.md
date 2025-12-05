@@ -2,6 +2,28 @@
 
 ## Overview
 
+The project uses **two API systems** with clear responsibility separation:
+
+1. **Rails API Backend** (`src/services/api/`): **User information management** - authentication, user profiles, and data synchronization
+2. **Hono API Worker** (`src/server/api.ts`): **All AI services** - translation, dictionary, ASR, TTS, assessment, and other AI-powered features
+
+This document focuses on the **Rails API Backend** client. For AI services via Hono API Worker, see [API Worker Integration Guide](./api-worker-integration.md) and [AI Service Architecture](./ai-services.md).
+
+## API Systems Comparison
+
+| Feature | Rails API Backend | Hono API Worker |
+|---------|------------------|-----------------|
+| **Location** | External server (`https://echo.enjoy.bot`) | Cloudflare Worker (same domain) |
+| **Route Prefix** | `/api/v1/*` | `/api/*` |
+| **Primary Responsibility** | **User information management** | **All AI services** |
+| **Services** | Auth, user profiles, data sync | Translation, dictionary, ASR, TTS, assessment |
+| **Client Module** | `src/services/api/` | Direct fetch calls or service wrappers |
+| **Authentication** | Bearer token (JWT) | Can use same JWT or Cloudflare-specific auth |
+| **Bindings** | N/A | KV, D1, AI, R2, etc. |
+| **AI Integration** | ❌ No AI services | ✅ Direct Cloudflare Workers AI access |
+
+## Rails API Backend
+
 The API Services module provides a clean, typed interface for interacting with the Enjoy API backend. It handles authentication, request/response formatting, and error handling in a unified way.
 
 ## Architecture
@@ -19,79 +41,85 @@ The `apiClient` is a configured Axios instance that:
 
 Each API service is a self-contained module exporting typed functions:
 
-- **Auth API** (`auth.ts`): User authentication endpoints
-- **User API** (`user.ts`): User profile and account endpoints
-- **Translation API** (`translation.ts`): Fast translation service (FREE)
-- **Dictionary API** (`dictionary.ts`): Basic dictionary lookup (FREE)
+- **Auth API** (`auth.ts`): User authentication endpoints (login, logout, token refresh)
+- **User API** (`user.ts`): User profile and account endpoints (get profile, update profile)
+
+> **Note**: Translation and Dictionary services have been moved to Hono API Worker. See [API Worker Integration Guide](./api-worker-integration.md) for AI services.
 
 ## Service Overview
 
-### Fast Translation
-
-**Purpose**: Quick subtitle translation using dedicated translation models (M2M100, NLLB)
-
-**Characteristics**:
-
-- **FREE** service - always available
-- Optimized for speed and low cost
-- Direct translation without style support
-- Not an AI service - uses dedicated translation models
-
-**Endpoint**: `POST /api/v1/services/fast-translation`
-
-**Usage**: Ideal for subtitle translation where style is not important.
-
-### Basic Dictionary Lookup
-
-**Purpose**: Simple word definitions without AI
-
-**Characteristics**:
-
-- **FREE** service - always available
-- Returns definitions, translations, and part of speech
-- No context awareness - simple word lookup
-- Not an AI service - uses traditional dictionary data
-
-**Endpoint**: `POST /api/v1/services/dictionary/basic`
-
-**Usage**: Quick word lookups when context is not needed.
-
 ### Authentication & User Services
+
+**Purpose**: User account management and authentication
 
 **Endpoints**:
 
-- `GET /api/profile`: Get current user profile
-
-These endpoints use the authenticated `apiClient` instance, which automatically includes the Bearer token.
-
-## API vs AI Services
-
-### API Services (This Module)
-
-- **Fast Translation**: Simple, fast translation (FREE)
-- **Basic Dictionary**: Word definitions without AI (FREE)
-- **Auth/User**: Authentication and user management
+- `POST /api/v1/auth/login`: User login
+- `POST /api/v1/auth/logout`: User logout
+- `POST /api/v1/auth/refresh`: Refresh authentication token
+- `GET /api/v1/profile`: Get current user profile
+- `PUT /api/v1/profile`: Update user profile
+- `POST /api/v1/sync`: Data synchronization endpoints
 
 **Characteristics**:
 
-- Always use Enjoy API backend
-- No provider selection needed
-- No configuration required
-- Simple REST API calls
+- All endpoints require authentication (Bearer token)
+- Handles user session management
+- Manages data synchronization between client and server
+- Uses PostgreSQL for persistent storage
+- Uses Redis for session/cache management
 
-### AI Services (`@/services/ai`)
+These endpoints use the authenticated `apiClient` instance, which automatically includes the Bearer token.
 
-- **Smart Translation**: Style-aware translation with LLMs
-- **Smart Dictionary**: AI-powered contextual explanations
-- **ASR/TTS**: Speech recognition and synthesis
+> **Note**: All AI services (translation, dictionary, ASR, TTS, assessment) are now handled by Hono API Worker. See [API Worker Integration Guide](./api-worker-integration.md).
+
+## API Systems Overview
+
+### Rails API Services (This Module) - User Information Management
+
+**Responsibility**: User account and data management
+
+- **Authentication**: Login, logout, token management
+- **User Profiles**: Get/update user information
+- **Data Synchronization**: Sync local data with server (PostgreSQL)
+
+**Characteristics**:
+
+- Always use Enjoy API backend (`https://echo.enjoy.bot`)
+- Requires authentication (Bearer token)
+- Uses PostgreSQL for persistent storage
+- Uses Redis for caching/sessions
+- External service (separate server)
+
+### Hono API Worker (`src/server/api.ts`) - All AI Services
+
+**Responsibility**: All AI-powered features
+
+- **Translation Services**: Fast translation, smart translation (style-aware)
+- **Dictionary Services**: Basic dictionary, smart dictionary (contextual)
+- **Speech Services**: ASR (Automatic Speech Recognition), TTS (Text-to-Speech)
 - **Assessment**: Pronunciation evaluation
 
 **Characteristics**:
 
-- Multiple provider support (Enjoy, Local, BYOK)
-- Configuration required
-- Unified response format with metadata
-- More complex routing and error handling
+- Same domain as frontend (no CORS issues)
+- Direct access to Cloudflare Workers AI
+- Access to Cloudflare Bindings (KV, D1, R2)
+- Edge computing (low latency, global network)
+- Serverless (no server maintenance)
+- Can use Cloudflare AI or route to external providers
+
+**Usage**: See [API Worker Integration Guide](./api-worker-integration.md) and [AI Service Architecture](./ai-services.md)
+
+### AI Service Client (`@/services/ai`)
+
+The frontend AI service client (`src/services/ai/`) provides:
+
+- **Unified Interface**: Provider-agnostic service layer
+- **Multiple Providers**: Support for Enjoy, Local, BYOK
+- **Service Routers**: High-level APIs for all AI services
+
+**Note**: The client layer calls Hono API Worker endpoints, which then handle the actual AI processing.
 
 ## Response Format
 
@@ -119,22 +147,25 @@ The API client handles errors at two levels:
 ## Usage Pattern
 
 ```typescript
-import { translationApi, dictionaryApi } from '@/services/api'
+import { authApi, userApi } from '@/services/api'
 
-// Fast translation
-const result = await translationApi.translate({
-  sourceText: 'Hello world',
-  sourceLanguage: 'en',
-  targetLanguage: 'zh'
+// Authentication
+const loginResult = await authApi.login({
+  email: 'user@example.com',
+  password: 'password'
 })
 
-// Basic dictionary lookup
-const dictResult = await dictionaryApi.lookupBasic({
-  word: 'hello',
-  sourceLanguage: 'en',
-  targetLanguage: 'zh'
+// Get user profile
+const profile = await userApi.getProfile()
+
+// Update user profile
+await userApi.updateProfile({
+  name: 'New Name',
+  preferences: { ... }
 })
 ```
+
+> **Note**: For AI services (translation, dictionary, ASR, TTS), use the AI Service Client (`@/services/ai`) which calls Hono API Worker endpoints.
 
 ## Environment Configuration
 
@@ -144,10 +175,35 @@ The API base URL is configured via environment variable:
 - **Default**: `https://echo.enjoy.bot`
 - **Usage**: Set in `.env` or deployment configuration
 
+## When to Use Which API
+
+### Use Rails API Backend (`src/services/api/`) when
+- ✅ **User authentication** (login, logout, token refresh)
+- ✅ **User profile management** (get/update profile)
+- ✅ **Data synchronization** (sync local data with server)
+- ✅ **Access to PostgreSQL/Redis/S3** (backend storage)
+
+### Use Hono API Worker (`/api/*`) when
+- ✅ **All AI services** (translation, dictionary, ASR, TTS, assessment)
+- ✅ **Cloudflare Workers AI** (direct access to AI models)
+- ✅ **Edge computing** (low latency, global network)
+- ✅ **Cloudflare Bindings** (KV, D1, R2 for caching/storage)
+- ✅ **Same-domain API** (no CORS issues)
+
+### Use AI Service Client (`@/services/ai`) when
+- ✅ **Frontend integration** (unified interface for AI services)
+- ✅ **Provider abstraction** (Enjoy, Local, BYOK support)
+- ✅ **Type-safe API calls** (TypeScript interfaces)
+
+**Note**: The AI Service Client calls Hono API Worker endpoints, which handle the actual AI processing.
+
 ## Best Practices
 
 1. **Always use service modules** - don't call `apiClient` directly
 2. **Handle response structure** - check `success` flag before accessing `data`
 3. **Use typed interfaces** - leverage TypeScript types for request/response
 4. **Let interceptors handle auth** - don't manually add tokens
-5. **Prefer AI services** for contextual features - use API services only for simple, free operations
+5. **Clear responsibility separation**:
+   - **Rails API**: User information management only
+   - **Hono API**: All AI services
+6. **Use AI Service Client** (`@/services/ai`) for AI features - it calls Hono API Worker internally

@@ -13,13 +13,15 @@ This documentation guides the development of the **Web App** and its integration
 2. [Data Models](./data-models.md)
    - Database schema (PostgreSQL) and local storage (IndexedDB) design.
 3. [API Services](./api-services.md)
-   - Backend API endpoints for authentication, fast translation, and basic dictionary lookup.
+   - Backend API endpoints (Rails API and Hono API Worker) for authentication, fast translation, and basic dictionary lookup.
 4. [AI Service Architecture](./ai-services.md)
    - AI service design patterns, provider abstraction (Enjoy/Local/BYOK), and unified service interface.
 5. [Frontend Development](./frontend.md)
    - UI/UX implementation, component hierarchy, state management, and routing.
 6. [Business Logic & Workflows](./business-logic.md)
    - Core algorithms, practice loops, data synchronization, and local ASR strategy.
+7. [API Worker Integration](./api-worker-integration.md)
+   - Hono API Worker setup, usage, and Cloudflare Workers integration guide.
 
 ## Core Development Principles
 

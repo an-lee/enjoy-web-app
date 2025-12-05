@@ -4,6 +4,17 @@
 
 The AI Service module provides a unified, provider-agnostic interface for all AI-powered features in the Enjoy Echo web application. It supports multiple providers (Enjoy API, Local models, and BYOK) through a clean abstraction layer, ensuring consistent behavior regardless of the underlying provider.
 
+**Important**: All AI services are now handled by **Hono API Worker** (`/api/*`). The frontend AI Service Client (`src/services/ai/`) calls Hono API Worker endpoints, which then process the requests using Cloudflare Workers AI or route to external providers.
+
+**Architecture Flow**:
+```
+Frontend (AI Service Client)
+  → Hono API Worker (/api/*)
+    → Cloudflare Workers AI / External Providers
+```
+
+See [API Worker Integration Guide](./api-worker-integration.md) for implementation details.
+
 ## Core Design Principles
 
 ### 1. Three-Tier Provider Model
@@ -32,7 +43,7 @@ Services expose a clean, consistent API independent of the underlying provider. 
 | **TTS** | ✅ | ✅ | ✅ | Quota/BYOK |
 | **Assessment (Azure)** | ✅ | ❌ | ✅ (Azure only) | Quota/BYOK |
 
-**Note**: Fast Translation and Basic Dictionary are regular API services (not AI services) and are always free via Enjoy API.
+**Note**: All AI services (including Fast Translation and Basic Dictionary) are now handled by Hono API Worker. The frontend AI Service Client provides a unified interface that calls Hono API endpoints.
 
 ## Architecture Layers
 
@@ -71,22 +82,33 @@ Provider-specific implementations isolated from each other:
 ## Request Flow
 
 ```text
-User Request
+User Request (Frontend)
     │
-    └─ Service Router (services/*.ts)
+    └─ AI Service Client (services/ai/services/*.ts)
         │
-        └─ Provider Router (core/provider-router.ts)
+        └─ HTTP Request to Hono API Worker (/api/*)
             │
-            ├─ Auto-select provider based on:
-            │   - User configuration
-            │   - Service availability
-            │   - User subscription status
-            │
-            └─ Route to Provider Implementation
-                ├─ Enjoy Provider → Enjoy API
-                ├─ Local Provider → transformers.js (Web Workers)
-                └─ BYOK Provider → Vercel AI SDK / Official SDKs
+            └─ Hono API Worker (src/server/api.ts)
+                │
+                └─ Provider Router (core/provider-router.ts)
+                    │
+                    ├─ Auto-select provider based on:
+                    │   - User configuration
+                    │   - Service availability
+                    │   - User subscription status
+                    │
+                    └─ Route to Provider Implementation
+                        ├─ Cloudflare Workers AI (via env.AI binding)
+                        ├─ Enjoy Provider → Enjoy API (external)
+                        ├─ Local Provider → transformers.js (Web Workers)
+                        └─ BYOK Provider → Vercel AI SDK / Official SDKs
 ```
+
+**Key Points**:
+- Frontend AI Service Client makes HTTP requests to Hono API Worker
+- Hono API Worker handles all AI processing
+- Cloudflare Workers AI is directly accessible via `env.AI` binding
+- External providers (Enjoy, BYOK) are called from the Worker
 
 ## Core Abstractions
 
