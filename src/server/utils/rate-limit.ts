@@ -49,7 +49,14 @@ const SERVICE_RATE_LIMITS: Record<ServiceType, ServiceRateLimit> = {
  */
 export function getDailyLimit(service: ServiceType, tier: 'free' | 'pro'): number {
 	const limits = SERVICE_RATE_LIMITS[service]
-	return limits[tier]
+	if (!limits) {
+		throw new Error(`Invalid service type: ${service}`)
+	}
+	const limit = limits[tier]
+	if (limit === undefined) {
+		throw new Error(`Invalid subscription tier: ${tier}. Expected 'free' or 'pro'.`)
+	}
+	return limit
 }
 
 /**

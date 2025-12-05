@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import viteReact from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [
@@ -17,6 +18,9 @@ export default defineConfig({
   resolve: {
     // Ensure proper handling of CommonJS modules
     conditions: ['import', 'module', 'browser', 'default'],
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
   },
 })
 

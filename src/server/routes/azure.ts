@@ -3,11 +3,12 @@
  */
 
 import { Hono } from 'hono'
-import { authMiddleware, type UserProfile } from '../middleware/auth'
+import { authMiddleware } from '../middleware/auth'
+import type { UserProfile } from '@/services/api/auth'
 import { createRateLimitMiddleware } from '../middleware/rate-limit'
-import type { RateLimitResult, ServiceType } from '../utils/rate-limit'
-import { getAzureConfig, generateAzureToken } from '../services/azure'
-import { handleError } from '../utils/errors'
+import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
+import { getAzureConfig, generateAzureToken } from '@/server/services/azure'
+import { handleError } from '@/server/utils/errors'
 
 const azure = new Hono<{
 	Bindings: Env

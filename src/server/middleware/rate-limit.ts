@@ -5,7 +5,8 @@
 import type { Context, Next } from 'hono'
 import { checkRateLimit, type ServiceType, type RateLimitResult } from '../utils/rate-limit'
 import { RateLimitError } from '../utils/errors'
-import type { UserProfile } from './auth'
+import type { UserProfile } from '@/services/api/auth'
+import { isValidSubscriptionTier } from './auth'
 
 /**
  * Create rate limiting middleware for a specific service
@@ -25,6 +26,20 @@ export function createRateLimitMiddleware(service: ServiceType) {
 		const user = c.get('user')
 		const env = c.env
 		const kv = (env as any).RATE_LIMIT_KV as KVNamespace | undefined
+
+		// Validate user exists (should be set by auth middleware, but guard against undefined)
+		if (!user) {
+			console.error('User not found in context')
+			throw new Error('Authentication required: User not found in request context')
+		}
+
+		// Validate user subscription tier (should already be validated in auth middleware, but double-check)
+		if (!isValidSubscriptionTier(user.subscriptionTier)) {
+			console.error('Invalid subscription tier:', user.subscriptionTier, 'User:', user)
+			throw new Error(
+				`Invalid subscription tier: ${user.subscriptionTier}. Expected 'free' or 'pro'.`
+			)
+		}
 
 		const rateLimit = await checkRateLimit(service, user.id, user.subscriptionTier, kv)
 

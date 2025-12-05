@@ -4,7 +4,7 @@
 
 import { incrementRateLimit } from '../utils/rate-limit'
 import { ConfigurationError, ServiceError } from '../utils/errors'
-import type { UserProfile } from '../middleware/auth'
+import type { UserProfile } from '../../services/api/auth'
 
 export interface AzureTokenResponse {
 	token: string

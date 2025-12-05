@@ -1,31 +1,33 @@
 import type { Context, Next } from 'hono'
+import type { UserProfile, SubscriptionTier } from '@/services/api/auth'
+import { convertSnakeToCamel } from '@/services/api/utils'
 
-// User profile type matching the Rails API response
-export interface UserProfile {
-	id: string
-	email: string
-	name: string
-	avatarUrl: string
-	subscriptionTier: 'free' | 'pro'
-	subscriptionExpireDate: string
-	createdAt: string
-}
+// Re-export for convenience
+export type { UserProfile, SubscriptionTier }
 
-// Cache entry with expiration timestamp
+// ============================================================================
+// Constants
+// ============================================================================
+
+const PROFILE_API_PATH = '/api/v1/profile'
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const CACHE_CLEANUP_INTERVAL = 10 * 60 * 1000 // 10 minutes
+const DEFAULT_RAILS_API_BASE_URL = 'https://enjoy.bot'
+
+// ============================================================================
+// Internal Types
+// ============================================================================
+
 interface CacheEntry {
 	profile: UserProfile
 	expiresAt: number
 }
 
-// In-memory cache for user profiles
-// Key: accessToken, Value: CacheEntry
+// ============================================================================
+// Cache Management
+// ============================================================================
+
 const profileCache = new Map<string, CacheEntry>()
-
-// Cache TTL: 5 minutes in milliseconds
-const CACHE_TTL_MS = 5 * 60 * 1000
-
-// Clean up expired entries periodically (every 10 minutes)
-const CACHE_CLEANUP_INTERVAL = 10 * 60 * 1000
 let lastCleanup = Date.now()
 
 function cleanupExpiredEntries() {
@@ -42,6 +44,10 @@ function cleanupExpiredEntries() {
 
 	lastCleanup = now
 }
+
+// ============================================================================
+// Token Extraction
+// ============================================================================
 
 /**
  * Get access token from request headers
@@ -66,14 +72,49 @@ function getAccessToken(c: Context): string | null {
 	return null
 }
 
+// ============================================================================
+// Utilities
+// ============================================================================
+
+/**
+ * Validate subscription tier
+ * @returns true if valid, false otherwise
+ */
+export function isValidSubscriptionTier(tier: unknown): tier is SubscriptionTier {
+	return tier === 'free' || tier === 'pro'
+}
+
+/**
+ * Validate user profile structure
+ * @throws Error if profile is invalid
+ */
+export function validateUserProfile(profile: Partial<UserProfile>): asserts profile is UserProfile {
+	if (!profile.id || !profile.email || !profile.name) {
+		throw new Error('Invalid user profile: missing required fields')
+	}
+
+	if (!isValidSubscriptionTier(profile.subscriptionTier)) {
+		throw new Error(
+			`Invalid subscription tier: ${profile.subscriptionTier}. Expected 'free' or 'pro'.`
+		)
+	}
+}
+
+// ============================================================================
+// Profile Fetching
+// ============================================================================
+
 /**
  * Fetch user profile from Rails API
+ * Uses native fetch API (required for Cloudflare Workers)
  */
 async function fetchUserProfile(
 	accessToken: string,
 	railsApiBaseUrl: string
 ): Promise<UserProfile> {
-	const url = `${railsApiBaseUrl}/api/v1/profile`
+	const url = `${railsApiBaseUrl}${PROFILE_API_PATH}`
+	console.log(`[Auth] Making request to: ${url}`)
+
 	const response = await fetch(url, {
 		method: 'GET',
 		headers: {
@@ -82,7 +123,11 @@ async function fetchUserProfile(
 		},
 	})
 
+	console.log(`[Auth] Response status: ${response.status} ${response.statusText}`)
+
 	if (!response.ok) {
+		const errorText = await response.text().catch(() => 'No error details')
+		console.error(`[Auth] Profile fetch failed: ${response.status} ${response.statusText}`, errorText)
 		if (response.status === 401) {
 			throw new Error('Unauthorized: Invalid or expired access token')
 		}
@@ -91,12 +136,24 @@ async function fetchUserProfile(
 		)
 	}
 
-	const profile = await response.json<UserProfile>()
+	// Parse Rails API response (snake_case)
+	const railsProfile = await response.json()
+	console.log(`[Auth] Profile response received (raw):`, railsProfile)
+
+	// Convert to camelCase format using shared utility
+	const profile = convertSnakeToCamel<UserProfile>(railsProfile)
+	console.log(`[Auth] Profile converted:`, {
+		id: profile.id,
+		email: profile.email,
+		subscriptionTier: profile.subscriptionTier,
+	})
+
 	return profile
 }
 
 /**
  * Get user profile from cache or fetch from Rails API
+ * Handles caching, validation, and error handling
  */
 async function getUserProfile(
 	accessToken: string,
@@ -108,11 +165,37 @@ async function getUserProfile(
 	// Check cache first
 	const cached = profileCache.get(accessToken)
 	if (cached && cached.expiresAt > Date.now()) {
-		return cached.profile
+		console.log(`[Auth] Using cached profile:`, {
+			id: cached.profile.id,
+			email: cached.profile.email,
+			subscriptionTier: cached.profile.subscriptionTier,
+		})
+		// Validate cached profile
+		if (!isValidSubscriptionTier(cached.profile.subscriptionTier)) {
+			console.warn(`[Auth] Invalid subscription tier in cached profile, fetching fresh profile`)
+			// Remove invalid cache entry and fetch fresh
+			profileCache.delete(accessToken)
+		} else {
+			return cached.profile
+		}
 	}
 
 	// Fetch from Rails API
+	console.log(`[Auth] Fetching user profile from: ${railsApiBaseUrl}${PROFILE_API_PATH}`)
 	const profile = await fetchUserProfile(accessToken, railsApiBaseUrl)
+	console.log(`[Auth] Profile fetched:`, {
+		id: profile.id,
+		email: profile.email,
+		subscriptionTier: profile.subscriptionTier,
+	})
+
+	// Validate profile structure
+	try {
+		validateUserProfile(profile)
+	} catch (error) {
+		console.error('[Auth] Invalid profile structure:', error, profile)
+		throw error
+	}
 
 	// Cache the profile
 	profileCache.set(accessToken, {
@@ -122,6 +205,10 @@ async function getUserProfile(
 
 	return profile
 }
+
+// ============================================================================
+// Middleware
+// ============================================================================
 
 /**
  * Authentication middleware for Hono
@@ -160,7 +247,7 @@ export async function authMiddleware(
 		const railsApiBaseUrl =
 			(c.env as any).RAILS_API_BASE_URL ||
 			(c.env as any).VITE_API_BASE_URL ||
-			'https://enjoy.bot'
+			DEFAULT_RAILS_API_BASE_URL
 
 		// Get user profile (from cache or API)
 		const profile = await getUserProfile(accessToken, railsApiBaseUrl)

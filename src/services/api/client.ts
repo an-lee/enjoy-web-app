@@ -1,5 +1,6 @@
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import { convertSnakeToCamel } from './utils'
 
 // API base URL - should be configured via environment variable
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://enjoy.bot'
@@ -28,9 +29,15 @@ apiClient.interceptors.request.use(
   }
 )
 
-// Response interceptor to handle errors
+// Response interceptor to convert snake_case to camelCase and handle errors
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response: AxiosResponse) => {
+    // Convert response data from snake_case to camelCase
+    if (response.data && typeof response.data === 'object') {
+      response.data = convertSnakeToCamel(response.data)
+    }
+    return response
+  },
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Token expired or invalid, clear auth

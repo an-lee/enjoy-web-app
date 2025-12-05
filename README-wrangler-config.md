@@ -53,12 +53,12 @@ Rate limiting requires a KV namespace:
 
 1. Create the namespace:
    ```bash
-   wrangler kv:namespace create "RATE_LIMIT_KV"
+   wrangler kv namespace create "RATE_LIMIT_KV"
    ```
 
 2. Create preview namespace (for local testing):
    ```bash
-   wrangler kv:namespace create "RATE_LIMIT_KV" --preview
+   wrangler kv namespace create "RATE_LIMIT_KV" --preview
    ```
 
 3. Update `wrangler.jsonc` with the returned IDs:
