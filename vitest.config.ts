@@ -48,19 +48,14 @@ export default defineConfig({
     testTimeout: 10000,
     // Timeout for hooks like beforeAll
     hookTimeout: 30000,
-    // Pool options for better isolation
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
     // Mock browser APIs
-    deps: {
-      inline: [
-        'uuid',
-        'zustand',
-      ],
+    server: {
+      deps: {
+        inline: [
+          'uuid',
+          'zustand',
+        ],
+      },
     },
   },
   resolve: {

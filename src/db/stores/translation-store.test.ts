@@ -39,10 +39,10 @@ vi.mock('../schema', () => ({
                 const fields = index.slice(1, -1).split('+')
                 const values = value as unknown[]
                 const matches = fields.every((field, i) =>
-                  (item as Record<string, unknown>)[field] === values[i]
+                  (item as any)[field] === values[i]
                 )
                 if (matches) return item
-              } else if ((item as Record<string, unknown>)[index] === value) {
+              } else if ((item as any)[index] === value) {
                 return item
               }
             }
@@ -55,10 +55,10 @@ vi.mock('../schema', () => ({
                 const fields = index.slice(1, -1).split('+')
                 const values = value as unknown[]
                 const matches = fields.every((field, i) =>
-                  (item as Record<string, unknown>)[field] === values[i]
+                  (item as any)[field] === values[i]
                 )
                 if (matches) results.push(item)
-              } else if ((item as Record<string, unknown>)[index] === value) {
+              } else if ((item as any)[index] === value) {
                 results.push(item)
               }
             }

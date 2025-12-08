@@ -44,19 +44,19 @@ describe('ID Generator', () => {
 
   describe('generateAudioId', () => {
     it('should generate consistent UUID v5 for same provider and aid', () => {
-      const id1 = generateAudioId('local', 'audio123')
-      const id2 = generateAudioId('local', 'audio123')
+      const id1 = generateAudioId('local_upload', 'audio123')
+      const id2 = generateAudioId('local_upload', 'audio123')
       expect(id1).toBe(id2)
     })
 
     it('should generate different UUIDs for different aids', () => {
-      const id1 = generateAudioId('local', 'audio1')
-      const id2 = generateAudioId('local', 'audio2')
+      const id1 = generateAudioId('local_upload', 'audio1')
+      const id2 = generateAudioId('local_upload', 'audio2')
       expect(id1).not.toBe(id2)
     })
 
     it('should generate different UUIDs for different providers', () => {
-      const id1 = generateAudioId('local', 'audio1')
+      const id1 = generateAudioId('local_upload', 'audio1')
       const id2 = generateAudioId('tts', 'audio1')
       expect(id1).not.toBe(id2)
     })
@@ -84,26 +84,26 @@ describe('ID Generator', () => {
 
   describe('generateTranscriptId', () => {
     it('should generate consistent UUID for same parameters', () => {
-      const id1 = generateTranscriptId('video', 'vid-123', 'en', 'whisper')
-      const id2 = generateTranscriptId('video', 'vid-123', 'en', 'whisper')
+      const id1 = generateTranscriptId('Video', 'vid-123', 'en', 'ai')
+      const id2 = generateTranscriptId('Video', 'vid-123', 'en', 'ai')
       expect(id1).toBe(id2)
     })
 
     it('should generate different UUIDs for different target types', () => {
-      const id1 = generateTranscriptId('video', 'target-123', 'en', 'whisper')
-      const id2 = generateTranscriptId('audio', 'target-123', 'en', 'whisper')
+      const id1 = generateTranscriptId('Video', 'target-123', 'en', 'ai')
+      const id2 = generateTranscriptId('Audio', 'target-123', 'en', 'ai')
       expect(id1).not.toBe(id2)
     })
 
     it('should generate different UUIDs for different languages', () => {
-      const id1 = generateTranscriptId('video', 'vid-123', 'en', 'whisper')
-      const id2 = generateTranscriptId('video', 'vid-123', 'ja', 'whisper')
+      const id1 = generateTranscriptId('Video', 'vid-123', 'en', 'ai')
+      const id2 = generateTranscriptId('Video', 'vid-123', 'ja', 'ai')
       expect(id1).not.toBe(id2)
     })
 
     it('should generate different UUIDs for different sources', () => {
-      const id1 = generateTranscriptId('video', 'vid-123', 'en', 'whisper')
-      const id2 = generateTranscriptId('video', 'vid-123', 'en', 'manual')
+      const id1 = generateTranscriptId('Video', 'vid-123', 'en', 'ai')
+      const id2 = generateTranscriptId('Video', 'vid-123', 'en', 'user')
       expect(id1).not.toBe(id2)
     })
   })

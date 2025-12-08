@@ -5,6 +5,7 @@
 
 import { act } from '@testing-library/react'
 import type { StateCreator, StoreApi } from 'zustand'
+import { createStore } from 'zustand/vanilla'
 
 // ============================================================================
 // Store Reset Utilities
@@ -57,9 +58,6 @@ export function createTestStore<T extends object>(
   createState: StateCreator<T>,
   initialState?: Partial<T>
 ): StoreApi<T> & { reset: () => void } {
-  // Import zustand dynamically to avoid hoisting issues
-  const { createStore } = require('zustand')
-
   const store = createStore<T>(createState)
   const originalState = { ...store.getState(), ...initialState }
 
@@ -87,8 +85,6 @@ export function createTestStore<T extends object>(
 export function createMockStore<T extends object>(
   state: T
 ): StoreApi<T> & { reset: () => void } {
-  const { createStore } = require('zustand')
-
   const store = createStore<T>(() => state)
   const initialState = { ...state }
 
@@ -171,9 +167,7 @@ export const defaultMockSettings: Omit<MockSettingsState, 'setPreferredLanguage'
  * Create a mock settings store for testing
  */
 export function createMockSettingsStore(overrides: Partial<MockSettingsState> = {}) {
-  const { createStore } = require('zustand')
-
-  return createStore<MockSettingsState>((set: (fn: (state: MockSettingsState) => Partial<MockSettingsState>) => void) => ({
+  return createStore<MockSettingsState>((set) => ({
     ...defaultMockSettings,
     ...overrides,
     setPreferredLanguage: (lang: string) => set(() => ({ preferredLanguage: lang })),
@@ -182,4 +176,3 @@ export function createMockSettingsStore(overrides: Partial<MockSettingsState> = 
     setDailyGoal: (goal: number) => set(() => ({ dailyGoal: Math.max(0, goal) })),
   }))
 }
-

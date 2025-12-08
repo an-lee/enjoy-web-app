@@ -18,7 +18,7 @@ import {
 import { useAudioHistory } from '@/hooks/use-audios'
 import { getDefaultTTSVoice, getTTSVoices } from '@/services/ai/constants/tts-voices'
 import { AIProvider } from '@/services/ai/types'
-import { saveAudio, getAudioByTranslationKey, type Audio, type TTSAudioInput } from '@/db'
+import { saveAudio, getAudioByTranslationKey, type TTSAudioInput } from '@/db'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/voice-synthesis')({

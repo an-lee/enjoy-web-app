@@ -36,7 +36,7 @@ describe('useIsMobile', () => {
       dispatchEvent: vi.fn(),
     }))
 
-    window.matchMedia = mockMatchMedia
+    window.matchMedia = mockMatchMedia as any
   })
 
   afterEach(() => {

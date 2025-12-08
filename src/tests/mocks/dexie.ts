@@ -56,7 +56,7 @@ interface Collection<T> {
 // Mock Store Factory
 // ============================================================================
 
-function createMockStore<T extends { id?: string }>(
+function createMockStore<T extends { id?: string | number }>(
   keyPath: string = 'id'
 ): InMemoryStore<T> {
   const data = new Map<string, T>()
@@ -65,6 +65,7 @@ function createMockStore<T extends { id?: string }>(
     if (providedKey) return providedKey
     const key = (item as Record<string, unknown>)[keyPath]
     if (typeof key === 'string') return key
+    if (typeof key === 'number') return key.toString()
     return crypto.randomUUID()
   }
 
@@ -159,7 +160,7 @@ function createMockStore<T extends { id?: string }>(
         const items: T[] = []
         data.forEach((item) => {
           const itemValue = (item as Record<string, unknown>)[index]
-          if (itemValue !== undefined && itemValue >= lower && itemValue <= upper) {
+          if (itemValue != null && (itemValue as any) >= (lower as any) && (itemValue as any) <= (upper as any)) {
             items.push(item)
           }
         })
@@ -168,8 +169,8 @@ function createMockStore<T extends { id?: string }>(
     }),
     orderBy: (index: string) => {
       const sortedItems = Array.from(data.values()).sort((a, b) => {
-        const aVal = (a as Record<string, unknown>)[index]
-        const bVal = (b as Record<string, unknown>)[index]
+        const aVal = (a as Record<string, unknown>)[index] as any
+        const bVal = (b as Record<string, unknown>)[index] as any
         if (aVal < bVal) return -1
         if (aVal > bVal) return 1
         return 0
@@ -196,15 +197,13 @@ export class MockEnjoyDatabase {
   cachedDefinitions = createMockStore<CachedDefinition>('id')
   syncQueue = createMockStore<SyncQueueItem>('id')
 
-  private isOpen = false
+  // private isOpen = false
 
   async open(): Promise<this> {
-    this.isOpen = true
     return this
   }
 
   async close(): Promise<void> {
-    this.isOpen = false
   }
 
   async delete(): Promise<void> {
@@ -266,7 +265,7 @@ export function createMockVideo(overrides: Partial<Video> = {}): Video {
     provider: 'youtube',
     title: 'Test Video',
     description: '',
-    coverUrl: '',
+    thumbnailUrl: '',
     duration: 120,
     language: 'en',
     starred: false,
@@ -281,10 +280,10 @@ export function createMockAudio(overrides: Partial<Audio> = {}): Audio {
   return {
     id: crypto.randomUUID(),
     aid: `audio-${Math.random().toString(36).slice(2, 10)}`,
-    provider: 'local',
-    name: 'Test Audio',
+    provider: 'local_upload',
+    title: 'Test Audio',
     description: '',
-    coverUrl: '',
+    thumbnailUrl: '',
     duration: 60,
     language: 'en',
     starred: false,
@@ -313,13 +312,13 @@ export function createMockTranscript(overrides: Partial<Transcript> = {}): Trans
   const now = new Date().toISOString()
   return {
     id: crypto.randomUUID(),
-    targetType: 'video',
+    targetType: 'Video',
     targetId: crypto.randomUUID(),
     language: 'en',
-    source: 'whisper',
-    content: [
-      { start: 0, end: 2, text: 'Hello' },
-      { start: 2, end: 4, text: 'World' },
+    source: 'ai',
+    timeline: [
+      { start: 0, duration: 2000, text: 'Hello' },
+      { start: 2000, duration: 2000, text: 'World' },
     ],
     createdAt: now,
     updatedAt: now,
@@ -331,13 +330,14 @@ export function createMockRecording(overrides: Partial<Recording> = {}): Recordi
   const now = new Date().toISOString()
   return {
     id: crypto.randomUUID(),
-    targetType: 'video',
+    targetType: 'Video',
     targetId: crypto.randomUUID(),
     referenceText: 'Hello world',
-    referenceId: crypto.randomUUID(),
-    startTime: 0,
-    endTime: 2,
+    // referenceId: crypto.randomUUID(),
+    referenceStart: 0,
+    referenceDuration: 2,
     language: 'en',
+    duration: 2000,
     blob: new Blob(['test'], { type: 'audio/webm' }),
     createdAt: now,
     updatedAt: now,

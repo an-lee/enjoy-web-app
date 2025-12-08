@@ -105,7 +105,7 @@ async function updateTranslation(
 ): Promise<Translation> {
   await db.translations.update(id, {
     ...updates,
-    updatedAt: Date.now(),
+    updatedAt: new Date().toISOString(),
   })
   const updated = await db.translations.get(id)
   if (!updated) {

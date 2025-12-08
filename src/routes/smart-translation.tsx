@@ -185,8 +185,8 @@ function SmartTranslation() {
         customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
         aiModel: result.data.aiModel,
         syncStatus: 'local',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
 
       // Save to database using React Query mutation

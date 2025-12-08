@@ -42,8 +42,8 @@ export type {
   TranscriptLine,
   // Pronunciation types
   PronunciationAssessmentResult,
-  PronunciationWordResult,
-  PronunciationSyllableResult,
+  WordAssessment,
+  SyllableAssessment,
   // Entity types
   Video,
   Audio,

@@ -3,7 +3,7 @@
  * Provides pre-configured wrappers with providers
  */
 
-import React, { type ReactElement, type ReactNode } from 'react'
+import { type ReactElement, type ReactNode } from 'react'
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 

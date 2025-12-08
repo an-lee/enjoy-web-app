@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 
 // Mock react-i18next - must be before imports that use it
 vi.mock('react-i18next', () => ({
