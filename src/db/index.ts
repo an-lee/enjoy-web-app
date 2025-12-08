@@ -1,99 +1,224 @@
-// Re-export database instance and initialization
-export { db, EnjoyDatabase } from './database'
-import { initDatabase as _initDatabase } from './database'
-import { cleanupExpiredCache } from './cached-definition'
+/**
+ * Database Module - Unified entry point
+ *
+ * Structure:
+ * - /types/db.ts     - Type definitions
+ * - /db/schema.ts    - Dexie database configuration
+ * - /db/stores/*     - Data operation layer
+ * - /db/id-generator.ts - UUID generation utilities
+ */
 
-// Initialize database with cleanup (call this on app startup)
-export async function initDatabase(): Promise<void> {
-  await _initDatabase()
-  // Clean up expired cache on startup
+// ============================================================================
+// Database Instance & Initialization
+// ============================================================================
+
+export { db, EnjoyDatabase, initDatabase } from './schema'
+import { cleanupExpiredCache } from './stores/cached-definition'
+
+/**
+ * Initialize database with cleanup (call this on app startup)
+ */
+export async function initDatabaseWithCleanup(): Promise<void> {
+  const { initDatabase } = await import('./schema')
+  await initDatabase()
   await cleanupExpiredCache()
 }
 
-// Re-export all types from schema
+// ============================================================================
+// Type Exports (from @/types/db)
+// ============================================================================
+
 export type {
+  // Enum types
+  VideoProvider,
+  AudioProvider,
+  TranscriptSource,
+  TargetType,
+  SyncStatus,
+  Level,
+  TranslationStyle,
+  // Base types
+  SyncableEntity,
+  TranscriptLine,
+  // Pronunciation types
+  PronunciationAssessmentResult,
+  PronunciationWordResult,
+  PronunciationSyllableResult,
+  // Entity types
   Video,
   Audio,
   Transcript,
-  UserEcho,
   Recording,
+  Dictation,
+  UserEcho,
   Translation,
   CachedDefinition,
-  TranscriptLine,
-  VideoProvider,
-  Level,
-  TranslationStyle,
-  SyncStatus,
-} from './schema'
+  SyncQueueItem,
+  // Input types
+  VideoInput,
+  TTSAudioInput,
+  PlatformAudioInput,
+  AudioInput,
+  TranscriptInput,
+  RecordingInput,
+  DictationInput,
+  UserEchoInput,
+  TranslationInput,
+} from '@/types/db'
 
-// Re-export Video helper functions
+// ============================================================================
+// Store Exports
+// ============================================================================
+
+// Video
 export {
-  getVideosBySyncStatus,
+  videoStore,
   getVideoById,
+  getVideoByProviderAndVid,
+  getVideosBySyncStatus,
   getStarredVideos,
-} from './video'
+  getVideosByProvider,
+  getVideosByLanguage,
+  getAllVideos,
+  saveVideo,
+  saveLocalVideo,
+  updateVideo,
+  deleteVideo,
+} from './stores/video'
 
-// Re-export Audio helper functions
+// Audio
 export {
-  getAudiosBySyncStatus,
+  audioStore,
   getAudioById,
+  getAudioByProviderAndAid,
+  getAudiosBySyncStatus,
   getStarredAudios,
   getAudioByTranslationKey,
   getAudiosByTranslationKey,
+  getAudiosByProvider,
+  getAudiosByLanguage,
+  getAudiosByVoice,
+  getAllAudios,
   saveAudio,
-} from './audio'
+  saveLocalAudio,
+  updateAudio,
+  deleteAudio,
+} from './stores/audio'
 
-// Re-export Transcript helper functions
+// Transcript
 export {
+  transcriptStore,
+  getTranscriptById,
+  getTranscriptsByTarget,
+  getTranscriptByTargetLanguageSource,
+  getTranscriptsBySyncStatus,
+  getTranscriptsByLanguage,
+  getTranscriptsBySource,
+  getAllTranscripts,
   getTranscriptsByVid,
   getTranscriptsByAid,
-  getTranscriptsBySyncStatus,
-} from './transcript'
+  saveTranscript,
+  updateTranscript,
+  deleteTranscript,
+  getTrackId,
+} from './stores/transcript'
 
-// Re-export UserEcho helper functions
+// Recording
 export {
-  getUserEchoByVideo,
-  getUserEchoByAudio,
-  getUserEchosByUserId,
-  getUserEchosByVid,
-  getUserEchosByAid,
-  getUserEchosByStatus,
-  getUserEchosBySyncStatus,
-} from './user-echo'
-
-// Re-export Recording helper functions
-export {
+  recordingStore,
+  getRecordingById,
+  getRecordingsByTarget,
+  getRecordingsBySyncStatus,
+  getRecordingsByLanguage,
+  getAllRecordings,
   getRecordingsByVid,
   getRecordingsByAid,
-  getRecordingsBySyncStatus,
   getRecordingsByUserId,
   getRecordingsByEchoId,
-} from './recording'
+  saveRecording,
+  updateRecording,
+  deleteRecording,
+} from './stores/recording'
 
-// Re-export Translation helper functions
+// Dictation
 export {
+  dictationStore,
+  getDictationById,
+  getDictationsByTarget,
+  getDictationsBySyncStatus,
+  getDictationsByLanguage,
+  getAllDictations,
+  saveDictation,
+  updateDictation,
+  deleteDictation,
+  calculateDictationAccuracy,
+} from './stores/dictation'
+
+// UserEcho
+export {
+  userEchoStore,
+  getUserEchoById,
+  getUserEchoByTarget,
+  getUserEchosByUserId,
+  getUserEchosByStatus,
+  getUserEchosBySyncStatus,
+  getAllUserEchos,
+  getUserEchoByVideo,
+  getUserEchoByAudio,
+  getUserEchosByVid,
+  getUserEchosByAid,
+  saveUserEcho,
+  updateUserEcho,
+  deleteUserEcho,
+} from './stores/user-echo'
+
+// Translation
+export {
+  translationStore,
+  getTranslationById,
   getTranslationByTextAndStyle,
   getTranslationsBySourceText,
   getTranslationsBySourceLanguage,
   getTranslationsByTargetLanguage,
   getTranslationsByStyle,
   getTranslationsBySyncStatus,
-} from './translation'
+  getAllTranslations,
+  saveTranslation,
+  updateTranslation,
+  deleteTranslation,
+} from './stores/translation'
 
-// Re-export CachedDefinition helper functions
+// CachedDefinition
 export {
+  cachedDefinitionStore,
   getCachedDefinition,
+  getAllCachedDefinitions,
   setCachedDefinition,
+  deleteCachedDefinition,
+  clearAllCachedDefinitions,
   cleanupExpiredCache,
-} from './cached-definition'
+} from './stores/cached-definition'
 
-// Re-export ID generator functions
+// ============================================================================
+// ID Generator Exports
+// ============================================================================
+
 export {
+  // Hash utilities
+  hashBlob,
+  generateMd5,
+  // Video ID
   generateVideoId,
+  generateLocalVideoId,
+  // Audio ID
   generateAudioId,
-  generateUserEchoId,
-  generateRecordingId,
+  generateTTSAudioId,
+  generateLocalAudioId,
+  // Other IDs
   generateTranscriptId,
+  generateRecordingId,
+  generateDictationId,
+  generateUserEchoId,
   generateTranslationId,
   generateCachedDefinitionId,
 } from './id-generator'

@@ -1,197 +1,96 @@
-// Database schema types for IndexedDB
-
-export type VideoProvider = 'youtube' | 'netflix' | 'local_upload' | 'other'
-export type Level = 'beginner' | 'intermediate' | 'advanced'
-export type SyncStatus = 'local' | 'synced' | 'pending'
-export type TranslationStyle =
-  | 'literal' // Word-for-word translation
-  | 'natural' // Natural, fluent translation
-  | 'casual' // Casual, conversational style
-  | 'formal' // Formal, professional style
-  | 'simplified' // Simplified for learners
-  | 'detailed' // Detailed with explanations
-  | 'custom' // Custom style with user-defined prompt
-
 /**
- * Transcript line with timing information
+ * Dexie database schema configuration
+ * Re-exports types from @/types/db for convenience
  */
-export interface TranscriptLine {
-  text: string
-  offset: number // milliseconds
-  duration: number // milliseconds
-  timeline?: TranscriptLine[] // nested word-level timing
+
+import Dexie, { type Table } from 'dexie'
+import type {
+  Video,
+  Audio,
+  Transcript,
+  UserEcho,
+  Recording,
+  Dictation,
+  Translation,
+  CachedDefinition,
+  SyncQueueItem,
+} from '@/types/db'
+
+// Re-export all types for backward compatibility
+export * from '@/types/db'
+
+// ============================================================================
+// Database Class
+// ============================================================================
+
+export class EnjoyDatabase extends Dexie {
+  videos!: Table<Video, string>
+  audios!: Table<Audio, string>
+  transcripts!: Table<Transcript, string>
+  userEchos!: Table<UserEcho, string>
+  recordings!: Table<Recording, string>
+  dictations!: Table<Dictation, string>
+  translations!: Table<Translation, string>
+  cachedDefinitions!: Table<CachedDefinition, [string, string]>
+  syncQueue!: Table<SyncQueueItem, number>
+
+  constructor() {
+    super('EnjoyDatabase')
+
+    // Version 6: Schema aligned with browser extension
+    this.version(6).stores({
+      // Video: id (UUID v5 primary key)
+      videos:
+        'id, [vid+provider], provider, language, level, starred, syncStatus, createdAt, updatedAt',
+
+      // Audio: id (UUID v5 primary key)
+      audios:
+        'id, [aid+provider], provider, language, level, starred, translationKey, voice, syncStatus, createdAt, updatedAt',
+
+      // Transcript: id (UUID v5 primary key)
+      transcripts:
+        'id, [targetType+targetId], [targetType+targetId+language+source], language, source, syncStatus, createdAt, updatedAt',
+
+      // UserEcho: id (UUID v5 primary key)
+      userEchos:
+        'id, userId, [userId+targetType+targetId], targetType, targetId, status, syncStatus, createdAt, updatedAt',
+
+      // Recording: id (UUID v4 primary key)
+      recordings:
+        'id, [targetType+targetId], targetType, targetId, language, syncStatus, createdAt, updatedAt',
+
+      // Dictation: id (UUID v4 primary key)
+      dictations:
+        'id, [targetType+targetId], targetType, targetId, language, syncStatus, createdAt, updatedAt',
+
+      // Translation: id (UUID v5 primary key)
+      translations:
+        'id, sourceText, sourceLanguage, targetLanguage, style, [sourceText+targetLanguage+style], syncStatus, createdAt, updatedAt',
+
+      // CachedDefinition: composite primary key
+      cachedDefinitions:
+        '[word+languagePair], id, syncStatus, expiresAt, createdAt, updatedAt',
+
+      // SyncQueue: auto-increment primary key
+      syncQueue: '++id, entityType, entityId, action, retryCount, createdAt',
+    })
+  }
 }
 
-/**
- * Complete transcript for a video or audio
- * ID is generated using: uuid5(videoId/audioId + language)
- */
-export interface Transcript {
-  id: string // UUID generated from videoId/audioId + language
-  vid?: string // Video.id (UUID)
-  aid?: string // Audio.id (UUID)
-  // Note: Either vid or aid must be set, but not both
-  language?: string
-  referenceId?: string // If exists, this is a translation of the reference transcript (Transcript.id)
-  timeline: TranscriptLine[]
-  // local storage
-  syncStatus?: SyncStatus
-  createdAt?: number
-  updatedAt?: number
-}
+// ============================================================================
+// Database Instance
+// ============================================================================
+
+export const db = new EnjoyDatabase()
 
 /**
- * Video content
- * ID generation:
- * - Third-party videos (YouTube, Netflix, etc.): uuid5(vid + provider)
- * - Local uploads: uuid5(hash(fileBlob))
+ * Initialize database (call this on app startup)
  */
-export interface Video {
-  id: string // UUID generated from vid+provider or file hash
-  title: string
-  description?: string
-  thumbnailUrl?: string
-  duration: number // seconds
-  language: string
-  provider: VideoProvider
-  season?: number
-  episode?: number
-  level?: Level
-  starred?: boolean
-  summary?: string
-  // Local storage
-  // For small files, store directly in blob field
-  // For large files, use mediaBlobKey to reference external storage (future optimization)
-  blob?: Blob // Video blob for offline access (stored directly in IndexedDB)
-  mediaBlobKey?: string // Reserved: Blob key for large file external storage (future use)
-  thumbnailBlobKey?: string // Reserved: Thumbnail blob key for external storage (future use)
-  syncStatus?: SyncStatus
-  createdAt: number
-  updatedAt: number
-}
-
-/**
- * Audio content
- * Can be from various sources: uploaded files, TTS generated, etc.
- * ID generation:
- * - Third-party audio: uuid5(aid + provider)
- * - TTS-generated: uuid5(translationId + voice) or uuid5(hash(blob) + voice)
- * - Local uploads: uuid5(hash(fileBlob))
- */
-export interface Audio {
-  id: string // UUID generated from aid+provider, translationId+voice, or file hash
-  title: string
-  description?: string
-  thumbnailUrl?: string
-  duration: number // seconds
-  language: string
-  provider: VideoProvider // Reuse VideoProvider for audio sources
-  level?: Level
-  starred?: boolean
-  summary?: string
-  // TTS-specific fields (for TTS-generated audio)
-  translationKey?: string // Reference to Translation.id (UUID) if generated from translation
-  sourceText?: string // Original text that was synthesized (for TTS audio)
-  voice?: string // Voice identifier used for synthesis (for TTS audio)
-  // Local storage
-  // For small files (TTS audio, etc.), store directly in blob field
-  // For large files (videos), use mediaBlobKey to reference external storage (future optimization)
-  blob?: Blob // Media blob for offline access (stored directly in IndexedDB)
-  mediaBlobKey?: string // Reserved: Blob key for large file external storage (future use)
-  thumbnailBlobKey?: string // Reserved: Thumbnail blob key for external storage (future use)
-  syncStatus?: SyncStatus
-  createdAt: number
-  updatedAt: number
-}
-
-/**
- * User Echo - Practice session for a Video or Audio
- * Acts as an intermediate table between Video/Audio and Recording
- * ID generation: uuid5(videoId/audioId + userId)
- */
-export interface UserEcho {
-  id: string // UUID generated from videoId/audioId + userId
-  userId: number
-  vid?: string // Video.id (UUID)
-  aid?: string // Audio.id (UUID)
-  // Note: Either vid or aid must be set, but not both
-  // Practice progress
-  currentSegmentIndex?: number // Current segment being practiced
-  totalSegments?: number // Total number of segments
-  status?: 'in_progress' | 'completed' | 'paused'
-  // Practice statistics
-  totalPracticeTime?: number // Total practice time in milliseconds
-  averageScore?: number // Average pronunciation score
-  lastPracticedAt?: number // Timestamp of last practice
-  // Local storage
-  syncStatus?: SyncStatus
-  createdAt: number
-  updatedAt: number
-}
-
-/**
- * User Recording
- * ID generation: uuid5(hash(recordingBlob) + userId + referenceOffset) or uuid5(echoId + referenceOffset + hash)
- */
-export interface Recording {
-  id: string // UUID generated from recording blob hash + userId + referenceOffset
-  echoId?: string // Reference to UserEcho.id (UUID)
-  duration: number // milliseconds
-  userId: number
-  vid?: string // Video.id (UUID)
-  aid?: string // Audio.id (UUID)
-  // Note: Either vid or aid must be set, but not both
-  referenceText?: string
-  referenceOffset?: number // milliseconds
-  referenceDuration?: number // milliseconds
-  pronunciationScore?: number
-  audioUrl?: string
-  assessmentUrl?: string
-  // Local storage
-  blob?: Blob // Audio blob for offline access
-  syncStatus?: SyncStatus
-  createdAt: number
-  updatedAt?: number
-}
-
-/**
- * Translation - AI-generated translation of a single text segment
- * Independent of videos/audios, users can translate any text
- * Supports custom translation styles via custom prompts
- * Note: If user generates TTS audio, a new Audio record will be created
- * with aid generated from translation (e.g., hash of translation id or content)
- * ID generation: uuid5(sourceText + targetLanguage + style + customPrompt?)
- */
-export interface Translation {
-  id: string // UUID generated from sourceText + targetLanguage + style + customPrompt
-  // Source text
-  sourceText: string // Original text to translate
-  sourceLanguage: string // Source language code (e.g., 'en', 'ja')
-  // Translation
-  targetLanguage: string // Target language code (e.g., 'zh', 'ja', 'es')
-  translatedText: string // Translated text
-  style: TranslationStyle // Translation style
-  customPrompt?: string // Custom prompt for AI translation (used when style is 'custom')
-  aiModel?: string // AI model used for translation (e.g., 'gpt-4', 'claude-3')
-  // Local storage
-  syncStatus?: SyncStatus
-  createdAt: number
-  updatedAt: number
-}
-
-/**
- * Dictionary Cache to reduce API calls
- * ID generation: uuid5(word + languagePair)
- * Note: Also uses composite key [word, languagePair] for efficient lookups
- */
-export interface CachedDefinition {
-  id: string // UUID generated from word + languagePair
-  word: string
-  languagePair: string // e.g., 'en:zh'
-  data: unknown // JSON data
-  expiresAt: number // timestamp
-  // local storage
-  syncStatus?: SyncStatus
-  createdAt: number
-  updatedAt: number
+export async function initDatabase(): Promise<void> {
+  try {
+    await db.open()
+  } catch (error) {
+    console.error('Failed to initialize database:', error)
+    throw error
+  }
 }

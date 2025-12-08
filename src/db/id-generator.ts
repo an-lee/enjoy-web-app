@@ -1,17 +1,32 @@
-// UUID v5 generator for deterministic IDs
-// All IDs are generated using UUID v5 to ensure consistency across devices and servers
+// UUID generator for deterministic and random IDs
+// Aligned with Enjoy browser extension ID generation rules
 
-import { v5 as uuidv5 } from 'uuid'
-import type { VideoProvider } from './schema'
+import { v4 as uuidv4, v5 as uuidv5 } from 'uuid'
+import type {
+  VideoProvider,
+  AudioProvider,
+  TargetType,
+  TranscriptSource,
+} from './schema'
 
-// UUID namespace for this application (generated once, never changes)
-// This ensures IDs are unique to this application
-const UUID_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8' // Standard DNS namespace
+// ============================================================================
+// UUID Namespace
+// ============================================================================
 
 /**
- * Generate a hash from a Blob for use in UUID generation
+ * UUID namespace for this application (RFC 4122 URL namespace)
+ * This ensures IDs are unique and consistent with the browser extension
  */
-async function hashBlob(blob: Blob): Promise<string> {
+const UUID_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
+
+// ============================================================================
+// Hash Utilities
+// ============================================================================
+
+/**
+ * Generate a SHA-256 hash from a Blob for use in UUID generation
+ */
+export async function hashBlob(blob: Blob): Promise<string> {
   const arrayBuffer = await blob.arrayBuffer()
   const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
@@ -19,147 +34,137 @@ async function hashBlob(blob: Blob): Promise<string> {
 }
 
 /**
- * Generate UUID for Video
- * - Third-party videos (YouTube, Netflix, etc.): uuid5(vid + provider)
- * - Local uploads: uuid5(hash(fileBlob))
+ * Generate MD5 hash from a Blob (for recording audio files)
+ * Note: Uses SHA-256 as MD5 is not natively available in Web Crypto API
+ * The server should accept both for compatibility
  */
-export async function generateVideoId(
-  provider: VideoProvider,
-  vid?: string,
-  blob?: Blob
-): Promise<string> {
-  if (vid && provider !== 'local_upload') {
-    // Third-party video: use vid + provider
-    return uuidv5(`${vid}:${provider}`, UUID_NAMESPACE)
-  } else if (blob) {
-    // Local upload: use file hash
-    const hash = await hashBlob(blob)
-    return uuidv5(`video:${hash}`, UUID_NAMESPACE)
-  } else {
-    throw new Error('Video ID generation requires either vid+provider or blob')
-  }
+export async function generateMd5(blob: Blob): Promise<string> {
+  return hashBlob(blob)
+}
+
+// ============================================================================
+// Video ID Generation
+// ============================================================================
+
+/**
+ * Generate UUID v5 for Video
+ * Format: `video:${provider}:${vid}`
+ * Same provider + vid always generates same UUID
+ */
+export function generateVideoId(provider: VideoProvider, vid: string): string {
+  return uuidv5(`video:${provider}:${vid}`, UUID_NAMESPACE)
 }
 
 /**
- * Generate UUID for Audio
- * - Third-party audio: uuid5(aid + provider)
- * - TTS-generated: uuid5(translationId + voice) or uuid5(hash(blob) + voice)
- * - Local uploads: uuid5(hash(fileBlob))
+ * Generate UUID v5 for local upload Video
+ * Format: `video:local:${hash}`
  */
-export async function generateAudioId(
-  provider: VideoProvider,
-  options: {
-    aid?: string
-    blob?: Blob
-    translationId?: string
-    voice?: string
-  }
-): Promise<string> {
-  const { aid, blob, translationId, voice } = options
-
-  if (aid && provider !== 'local_upload' && provider !== 'other') {
-    // Third-party audio: use aid + provider
-    return uuidv5(`${aid}:${provider}`, UUID_NAMESPACE)
-  } else if (translationId && voice) {
-    // TTS-generated from translation: use translationId + voice
-    return uuidv5(`tts:${translationId}:${voice}`, UUID_NAMESPACE)
-  } else if (blob && voice) {
-    // TTS-generated (no translation): use blob hash + voice
-    const hash = await hashBlob(blob)
-    return uuidv5(`tts:${hash}:${voice}`, UUID_NAMESPACE)
-  } else if (blob) {
-    // Local upload: use file hash
-    const hash = await hashBlob(blob)
-    return uuidv5(`audio:${hash}`, UUID_NAMESPACE)
-  } else {
-    throw new Error(
-      'Audio ID generation requires aid+provider, translationId+voice, or blob'
-    )
-  }
-}
-
-/**
- * Generate UUID for UserEcho
- * Uses videoId/audioId + userId to ensure one echo per user per media
- */
-export function generateUserEchoId(
-  userId: number,
-  videoId?: string,
-  audioId?: string
-): string {
-  if (videoId) {
-    return uuidv5(`echo:video:${videoId}:${userId}`, UUID_NAMESPACE)
-  } else if (audioId) {
-    return uuidv5(`echo:audio:${audioId}:${userId}`, UUID_NAMESPACE)
-  } else {
-    throw new Error('UserEcho ID generation requires either videoId or audioId')
-  }
-}
-
-/**
- * Generate UUID for Recording
- * Uses recording blob hash + userId + referenceOffset to ensure uniqueness
- * Alternative: echoId + referenceOffset + timestamp if echoId is available
- */
-export async function generateRecordingId(
-  userId: number,
-  options: {
-    blob: Blob
-    referenceOffset?: number
-    echoId?: string
-    timestamp?: number
-  }
-): Promise<string> {
-  const { blob, referenceOffset, echoId, timestamp } = options
-
+export async function generateLocalVideoId(blob: Blob): Promise<string> {
   const hash = await hashBlob(blob)
+  return uuidv5(`video:local:${hash}`, UUID_NAMESPACE)
+}
 
-  if (echoId && referenceOffset !== undefined) {
-    // Use echoId + referenceOffset + hash for uniqueness
-    return uuidv5(
-      `recording:${echoId}:${referenceOffset}:${hash}:${userId}`,
-      UUID_NAMESPACE
-    )
-  } else if (referenceOffset !== undefined) {
-    // Use referenceOffset + hash + userId
-    return uuidv5(
-      `recording:${referenceOffset}:${hash}:${userId}`,
-      UUID_NAMESPACE
-    )
-  } else if (timestamp) {
-    // Fallback: use timestamp + hash + userId
-    return uuidv5(`recording:${timestamp}:${hash}:${userId}`, UUID_NAMESPACE)
-  } else {
-    // Last resort: use hash + userId + current timestamp
-    return uuidv5(
-      `recording:${hash}:${userId}:${Date.now()}`,
-      UUID_NAMESPACE
-    )
-  }
+// ============================================================================
+// Audio ID Generation
+// ============================================================================
+
+/**
+ * Generate UUID v5 for Audio
+ * Format: `audio:${provider}:${aid}`
+ * Same provider + aid always generates same UUID
+ */
+export function generateAudioId(provider: AudioProvider, aid: string): string {
+  return uuidv5(`audio:${provider}:${aid}`, UUID_NAMESPACE)
 }
 
 /**
- * Generate UUID for Transcript
- * Uses videoId/audioId + language to ensure one transcript per language per media
+ * Generate UUID v5 for TTS-generated Audio
+ * Format: `audio:tts:${sourceText}:${voice}`
+ * Same text + voice always generates same UUID
+ */
+export function generateTTSAudioId(sourceText: string, voice: string): string {
+  return uuidv5(`audio:tts:${sourceText}:${voice}`, UUID_NAMESPACE)
+}
+
+/**
+ * Generate UUID v5 for local upload Audio
+ * Format: `audio:local:${hash}`
+ */
+export async function generateLocalAudioId(blob: Blob): Promise<string> {
+  const hash = await hashBlob(blob)
+  return uuidv5(`audio:local:${hash}`, UUID_NAMESPACE)
+}
+
+// ============================================================================
+// Transcript ID Generation
+// ============================================================================
+
+/**
+ * Generate UUID v5 for Transcript
+ * Format: `transcript:${targetType}:${targetId}:${language}:${source}`
+ * Same video/audio + language + source always generates same UUID
  */
 export function generateTranscriptId(
-  videoId?: string,
-  audioId?: string,
-  language?: string
+  targetType: TargetType,
+  targetId: string,
+  language: string,
+  source: TranscriptSource
 ): string {
-  const lang = language || 'unknown'
-  if (videoId) {
-    return uuidv5(`transcript:video:${videoId}:${lang}`, UUID_NAMESPACE)
-  } else if (audioId) {
-    return uuidv5(`transcript:audio:${audioId}:${lang}`, UUID_NAMESPACE)
-  } else {
-    throw new Error('Transcript ID generation requires either videoId or audioId')
-  }
+  return uuidv5(
+    `transcript:${targetType}:${targetId}:${language}:${source}`,
+    UUID_NAMESPACE
+  )
 }
 
+// ============================================================================
+// Recording ID Generation
+// ============================================================================
+
 /**
- * Generate UUID for Translation
- * Uses sourceText + targetLanguage + style + customPrompt to ensure same translation is reused
+ * Generate UUID v4 for Recording (random)
+ * Each recording is unique, even for the same segment
+ */
+export function generateRecordingId(): string {
+  return uuidv4()
+}
+
+// ============================================================================
+// Dictation ID Generation
+// ============================================================================
+
+/**
+ * Generate UUID v4 for Dictation (random)
+ * Each dictation attempt is unique
+ */
+export function generateDictationId(): string {
+  return uuidv4()
+}
+
+// ============================================================================
+// UserEcho ID Generation
+// ============================================================================
+
+/**
+ * Generate UUID v5 for UserEcho
+ * Format: `echo:${targetType}:${targetId}:${userId}`
+ * One echo per user per media
+ */
+export function generateUserEchoId(
+  targetType: TargetType,
+  targetId: string,
+  userId: number
+): string {
+  return uuidv5(`echo:${targetType}:${targetId}:${userId}`, UUID_NAMESPACE)
+}
+
+// ============================================================================
+// Translation ID Generation
+// ============================================================================
+
+/**
+ * Generate UUID v5 for Translation
+ * Format: `translation:${sourceText}:${targetLanguage}:${style}:${customPrompt}`
+ * Same source + target + style + prompt always generates same UUID
  */
 export function generateTranslationId(
   sourceText: string,
@@ -168,13 +173,19 @@ export function generateTranslationId(
   customPrompt?: string
 ): string {
   const prompt = customPrompt || ''
-  const key = `${sourceText}:${targetLanguage}:${style}:${prompt}`
-  return uuidv5(`translation:${key}`, UUID_NAMESPACE)
+  return uuidv5(
+    `translation:${sourceText}:${targetLanguage}:${style}:${prompt}`,
+    UUID_NAMESPACE
+  )
 }
 
+// ============================================================================
+// CachedDefinition ID Generation
+// ============================================================================
+
 /**
- * Generate UUID for CachedDefinition
- * Uses word + languagePair (already has composite key, but we can add UUID for consistency)
+ * Generate UUID v5 for CachedDefinition
+ * Format: `cache:${word}:${languagePair}`
  */
 export function generateCachedDefinitionId(
   word: string,
@@ -182,4 +193,3 @@ export function generateCachedDefinitionId(
 ): string {
   return uuidv5(`cache:${word}:${languagePair}`, UUID_NAMESPACE)
 }
-

@@ -18,9 +18,7 @@ import {
 import { useAudioHistory } from '@/hooks/use-audios'
 import { getDefaultTTSVoice, getTTSVoices } from '@/services/ai/constants/tts-voices'
 import { AIProvider } from '@/services/ai/types'
-import { saveAudio, getAudioByTranslationKey, generateAudioId } from '@/db'
-import type { Audio } from '@/db'
-import { VideoProvider } from '@/db/schema'
+import { saveAudio, getAudioByTranslationKey, type Audio, type TTSAudioInput } from '@/db'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/voice-synthesis')({
@@ -197,18 +195,12 @@ function VoiceSynthesis() {
       const duration = audio.duration || 0
       audio.remove()
 
-      // Save to database
-      const audioId = await generateAudioId('other', {
-        blob,
-        translationId: translationKey,
-        voice: selectedVoice,
-      })
-      const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
-        id: audioId,
-        title: text.substring(0, 100), // Use text as title, limit length
+      // Save to database with new schema
+      const ttsInput: TTSAudioInput = {
+        provider: 'tts',
+        title: text.substring(0, 100),
         duration,
         language: targetLanguage,
-        provider: 'other' as VideoProvider,
         sourceText: text,
         voice: selectedVoice,
         blob,
@@ -216,7 +208,7 @@ function VoiceSynthesis() {
         ...(translationKey ? { translationKey } : {}),
       }
 
-      await saveAudio(audioRecord)
+      await saveAudio(ttsInput)
       if (showHistory) {
         void refetchHistory()
       }
@@ -301,18 +293,12 @@ function VoiceSynthesis() {
       const duration = audio.duration || 0
       audio.remove()
 
-      // Save to database (update existing or create new)
-      const audioId = await generateAudioId('other', {
-        blob,
-        translationId: translationKey,
-        voice: selectedVoice,
-      })
-      const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
-        id: audioId,
+      // Save to database with new schema
+      const ttsInput: TTSAudioInput = {
+        provider: 'tts',
         title: text.substring(0, 100),
         duration,
         language: targetLanguage,
-        provider: 'other' as VideoProvider,
         sourceText: text,
         voice: selectedVoice,
         blob,
@@ -320,7 +306,7 @@ function VoiceSynthesis() {
         ...(translationKey ? { translationKey } : {}),
       }
 
-      await saveAudio(audioRecord)
+      await saveAudio(ttsInput)
       if (showHistory) {
         void refetchHistory()
       }

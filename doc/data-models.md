@@ -2,6 +2,8 @@
 
 This document defines the data structures for both the Backend (PostgreSQL) and the Client (IndexedDB).
 
+> **Note**: The local schema is aligned with the Enjoy browser extension schema specification ([SCHEMA_DESIGN.md](./SCHEMA_DESIGN.md)) to enable shared backend API compatibility.
+
 ## 1. Remote Schema (PostgreSQL)
 
 ### Users & Auth
@@ -46,176 +48,242 @@ This document defines the data structures for both the Backend (PostgreSQL) and 
 
 ## 2. Local Schema (IndexedDB via Dexie.js)
 
-The local database mirrors the remote schema but includes synchronization flags and handles large binary blobs.
+The local database implements an offline-first architecture aligned with the Enjoy browser extension schema specification.
 
-### Core Entities
+### Design Principles
+
+| Principle | Description |
+|-----------|-------------|
+| Offline-first | Data is stored locally in IndexedDB first, then synced to server |
+| Deterministic ID | Video/Audio/Transcript use UUID v5, ensuring same content generates same ID |
+| Time Units | Timeline uses milliseconds (integer); Video/Audio.duration uses seconds; timestamps use ISO 8601 |
+| Language Codes | Use BCP 47 format (e.g., `en`, `zh-TW`) |
+| Polymorphic Association | Recording/Dictation/Transcript associate with Video/Audio via `targetType` + `targetId` |
+
+### Core Entities (Synced with Server)
 
 ```typescript
-// db/schema.ts
+// src/db/schema.ts
 
-// Video content
-interface Video {
-  id: string; // UUID (see ID Generation Strategy below)
-  title: string;
-  provider: 'youtube' | 'netflix' | 'local_upload' | 'other';
-  language: string;
-  duration: number; // seconds
-  blob?: Blob; // Video blob for offline access
-  syncStatus?: 'local' | 'synced' | 'pending';
-  createdAt: number;
-  updatedAt: number;
+type VideoProvider = 'youtube' | 'netflix'
+type AudioProvider = 'youtube' | 'spotify' | 'podcast' | 'tts' | 'local_upload'
+type TranscriptSource = 'official' | 'auto' | 'ai' | 'user'
+type TargetType = 'Video' | 'Audio'
+type SyncStatus = 'local' | 'synced' | 'pending'
+
+// Base interface for syncable entities
+interface SyncableEntity {
+  syncStatus?: SyncStatus
+  serverUpdatedAt?: string // ISO 8601 - server version timestamp
 }
 
-// Audio content
-interface Audio {
-  id: string; // UUID (see ID Generation Strategy below)
-  title: string;
-  provider: 'youtube' | 'netflix' | 'local_upload' | 'other';
-  language: string;
-  duration: number; // seconds
-  blob?: Blob; // Audio blob for offline access
-  translationKey?: string; // Reference to Translation.id (for TTS audio)
-  sourceText?: string; // Original text (for TTS audio)
-  voice?: string; // Voice identifier (for TTS audio)
-  syncStatus?: 'local' | 'synced' | 'pending';
-  createdAt: number;
-  updatedAt: number;
+// Video content
+// ID generation: UUID v5 with `video:${provider}:${vid}`
+interface Video extends SyncableEntity {
+  id: string           // UUID v5
+  vid: string          // Platform video ID (e.g., YouTube: "dQw4w9WgXcQ")
+  provider: VideoProvider
+  title: string
+  description?: string
+  thumbnailUrl?: string
+  duration: number     // seconds
+  language: string     // BCP 47 (e.g., 'en', 'zh-TW')
+  season?: number      // for TV series
+  episode?: number     // for TV series
+  createdAt: string    // ISO 8601
+  updatedAt: string    // ISO 8601
+  // Local-only extensions
+  level?: Level
+  starred?: boolean
+  summary?: string
+  blob?: Blob          // Video blob for offline access
+}
+
+// Audio content (follows same design as Video)
+// ID generation: UUID v5 with `audio:${provider}:${aid}`
+interface Audio extends SyncableEntity {
+  id: string           // UUID v5
+  aid: string          // Platform audio ID or unique identifier
+  provider: AudioProvider
+  title: string
+  description?: string
+  thumbnailUrl?: string
+  duration: number     // seconds
+  language: string     // BCP 47
+  createdAt: string    // ISO 8601
+  updatedAt: string    // ISO 8601
+  // Local-only extensions
+  level?: Level
+  starred?: boolean
+  summary?: string
+  // TTS-specific fields (for provider: 'tts')
+  translationKey?: string  // Reference to Translation.id
+  sourceText?: string      // Original text synthesized
+  voice?: string           // Voice identifier used
+  blob?: Blob              // Audio blob for offline access
 }
 
 // Transcript for video or audio
-interface Transcript {
-  id: string; // UUID (see ID Generation Strategy below)
-  vid?: string; // Video.id (UUID)
-  aid?: string; // Audio.id (UUID)
-  language?: string;
-  timeline: TranscriptLine[];
-  syncStatus?: 'local' | 'synced' | 'pending';
-  createdAt?: number;
-  updatedAt?: number;
+// ID generation: UUID v5 with `transcript:${targetType}:${targetId}:${language}:${source}`
+// Track ID Convention: `${language}:${source}` (e.g., `en:official`, `zh-TW:ai`)
+interface Transcript extends SyncableEntity {
+  id: string                // UUID v5
+  targetType: TargetType    // 'Video' | 'Audio'
+  targetId: string          // Video.id or Audio.id
+  language: string          // BCP 47
+  source: TranscriptSource  // 'official' | 'auto' | 'ai' | 'user'
+  timeline: TranscriptLine[]
+  referenceId?: string      // Source transcript ID for translations
+  createdAt: string         // ISO 8601
+  updatedAt: string         // ISO 8601
 }
 
-// User Echo - Practice session
+interface TranscriptLine {
+  text: string
+  start: number        // milliseconds
+  duration: number     // milliseconds
+  timeline?: TranscriptLine[]  // nested: Line → Word → Phoneme
+  confidence?: number  // 0-1
+}
+
+// User Recording for pronunciation practice
+// ID generation: UUID v4 (random)
+interface Recording extends SyncableEntity {
+  id: string           // UUID v4
+  targetType: TargetType
+  targetId: string     // Video.id or Audio.id
+  referenceStart: number     // milliseconds
+  referenceDuration: number  // milliseconds
+  referenceText: string
+  language: string     // BCP 47
+  duration: number     // actual recording duration (milliseconds)
+  md5?: string         // audio file MD5
+  audioUrl?: string    // synced audio URL (CDN)
+  pronunciationScore?: number  // 0-100
+  assessment?: PronunciationAssessmentResult
+  createdAt: string    // ISO 8601
+  updatedAt: string    // ISO 8601
+  // Local-only
+  blob?: Blob          // Audio blob for offline access
+}
+
+// User Dictation for listening practice
+// ID generation: UUID v4 (random)
+interface Dictation extends SyncableEntity {
+  id: string           // UUID v4
+  targetType: TargetType
+  targetId: string     // Video.id or Audio.id
+  referenceStart: number     // milliseconds
+  referenceDuration: number  // milliseconds
+  referenceText: string
+  language: string     // BCP 47
+  userInput: string
+  accuracy: number     // 0-100
+  correctWords: number
+  missedWords: number
+  extraWords: number
+  createdAt: string    // ISO 8601
+  updatedAt: string    // ISO 8601
+}
+```
+
+### Local-Only Entities (Not Synced)
+
+```typescript
+// User Echo - Practice session (local tracking)
+// ID generation: UUID v5 with `echo:${targetType}:${targetId}:${userId}`
 interface UserEcho {
-  id: string; // UUID (see ID Generation Strategy below)
-  userId: number;
-  vid?: string; // Video.id (UUID)
-  aid?: string; // Audio.id (UUID)
-  status?: 'in_progress' | 'completed' | 'paused';
-  syncStatus?: 'local' | 'synced' | 'pending';
-  createdAt: number;
-  updatedAt: number;
+  id: string
+  userId: number
+  targetType: TargetType
+  targetId: string
+  currentSegmentIndex?: number
+  totalSegments?: number
+  status?: 'in_progress' | 'completed' | 'paused'
+  totalPracticeTime?: number  // milliseconds
+  averageScore?: number
+  lastPracticedAt?: string    // ISO 8601
+  syncStatus?: SyncStatus
+  createdAt: string           // ISO 8601
+  updatedAt: string           // ISO 8601
 }
 
-// User Recording
-interface Recording {
-  id: string; // UUID (see ID Generation Strategy below)
-  echoId?: string; // Reference to UserEcho.id (UUID)
-  userId: number;
-  vid?: string; // Video.id (UUID)
-  aid?: string; // Audio.id (UUID)
-  blob?: Blob; // Audio blob for offline access
-  syncStatus?: 'local' | 'synced' | 'pending';
-  createdAt: number;
-  updatedAt?: number;
-}
-
-// Translation
+// Translation - AI-generated translation
+// ID generation: UUID v5 with `translation:${sourceText}:${targetLanguage}:${style}:${customPrompt}`
 interface Translation {
-  id: string; // UUID (see ID Generation Strategy below)
-  sourceText: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  translatedText: string;
-  style: TranslationStyle;
-  customPrompt?: string;
-  syncStatus?: 'local' | 'synced' | 'pending';
-  createdAt: number;
-  updatedAt: number;
+  id: string
+  sourceText: string
+  sourceLanguage: string
+  targetLanguage: string
+  translatedText: string
+  style: TranslationStyle
+  customPrompt?: string
+  aiModel?: string
+  syncStatus?: SyncStatus
+  createdAt: string           // ISO 8601
+  updatedAt: string           // ISO 8601
 }
 
 // Dictionary Cache
+// ID generation: UUID v5 with `cache:${word}:${languagePair}`
 interface CachedDefinition {
-  id: string; // UUID (see ID Generation Strategy below)
-  word: string;
-  languagePair: string; // e.g., 'en:zh'
-  data: unknown; // JSON data
-  expiresAt: number;
-  createdAt: number;
-  updatedAt: number;
+  id: string
+  word: string
+  languagePair: string  // e.g., 'en:zh'
+  data: unknown
+  expiresAt: number     // timestamp (milliseconds)
+  syncStatus?: SyncStatus
+  createdAt: string     // ISO 8601
+  updatedAt: string     // ISO 8601
 }
 ```
 
 ## 3. UUID ID Generation Strategy
 
-**All entities use UUID v5 (deterministic UUIDs) to ensure consistency across devices and servers.** This eliminates the need for separate `serverId` fields and simplifies synchronization.
+**All entities use UUID v5 (deterministic) or UUID v4 (random) as specified in the schema design.**
 
-### Implementation
-
-ID generation functions are located in `src/db/id-generator.ts`. All functions use UUID v5 with a fixed namespace to ensure deterministic generation.
+- **Namespace**: `6ba7b811-9dad-11d1-80b4-00c04fd430c8` (RFC 4122 URL namespace)
+- **Implementation**: `src/db/id-generator.ts`
 
 ### ID Generation Rules
 
-#### Video
-
-- **Third-party videos** (YouTube, Netflix, etc.): `uuid5(vid + provider)`
-  - Example: YouTube video `LBiF4-GoMLE` → `uuid5("LBiF4-GoMLE:youtube", namespace)`
-- **Local uploads**: `uuid5(hash(fileBlob))`
-  - Uses SHA-256 hash of the file blob
-
-#### Audio
-
-- **Third-party audio**: `uuid5(aid + provider)`
-- **TTS-generated from translation**: `uuid5(translationId + voice)`
-- **TTS-generated (no translation)**: `uuid5(hash(blob) + voice)`
-- **Local uploads**: `uuid5(hash(fileBlob))`
-
-#### UserEcho
-
-- `uuid5(videoId/audioId + userId)`
-- Ensures one echo session per user per media item
-
-#### Recording
-
-- `uuid5(hash(recordingBlob) + userId + referenceOffset)` or
-- `uuid5(echoId + referenceOffset + hash(recordingBlob))`
-- Ensures uniqueness even for multiple recordings of the same text
-
-#### Transcript
-
-- `uuid5(videoId/audioId + language)`
-- Ensures one transcript per language per media item
-
-#### Translation
-
-- `uuid5(sourceText + targetLanguage + style + customPrompt?)`
-- Same translation parameters always generate the same ID (enables caching/reuse)
-
-#### CachedDefinition
-
-- `uuid5(word + languagePair)`
-- Also uses composite key `[word, languagePair]` for efficient lookups
+| Entity | ID Type | Generation Rule |
+|--------|---------|-----------------|
+| Video | UUID v5 | `video:${provider}:${vid}` |
+| Audio | UUID v5 | `audio:${provider}:${aid}` (or `audio:tts:${sourceText}:${voice}` for TTS) |
+| Transcript | UUID v5 | `transcript:${targetType}:${targetId}:${language}:${source}` |
+| Recording | UUID v4 | Random |
+| Dictation | UUID v4 | Random |
+| UserEcho | UUID v5 | `echo:${targetType}:${targetId}:${userId}` |
+| Translation | UUID v5 | `translation:${sourceText}:${targetLanguage}:${style}:${customPrompt}` |
+| CachedDefinition | UUID v5 | `cache:${word}:${languagePair}` |
 
 ### Benefits
 
-1. **Unified ID System**: Same ID used locally and on server, eliminating `serverId` mapping
-2. **Deterministic**: Same inputs always produce the same UUID, ensuring consistency
-3. **Simplified Sync**: No need to map local IDs to server IDs during synchronization
-4. **Cross-Device Consistency**: Same content generates the same ID on different devices
+1. **Unified ID System**: Same ID used locally and on server
+2. **Deterministic**: Same inputs always produce the same UUID (for UUID v5)
+3. **Cross-Platform**: Consistent with browser extension schema
+4. **Simplified Sync**: No need to map local IDs to server IDs
 
 ## 4. Synchronization Strategy
 
-### Initial Phase: One-way Backup
+### Sync Queue
 
-1. User creates data (imports material, records audio) -> Saved to `IndexedDB` with `syncStatus: 'local'`.
-2. Background worker detects `syncStatus: 'local'` or `'pending'`.
-3. Uploads to API using the same UUID as the local ID.
-4. On success, sets `syncStatus: 'synced'`.
+Local changes are queued first, then batch-synced to server:
 
-**Key Points**:
-
-- **No ID Mapping Required**: Since local and server use the same UUID, no `serverId` field is needed.
-- **Idempotent Operations**: Same content always generates the same ID, making sync operations safe to retry.
-- **Large Files**: Video/audio blobs might not be synced for free users or may be strictly local to save bandwidth, while metadata (progress, vocabulary) is always synced.
+```typescript
+interface SyncQueueItem {
+  id: number                // auto-increment
+  entityType: 'video' | 'transcript' | 'recording' | 'dictation'
+  entityId: string          // UUID
+  action: 'create' | 'update' | 'delete'
+  payload?: unknown
+  retryCount: number
+  lastAttempt?: string      // ISO 8601
+  error?: string
+  createdAt: string         // ISO 8601
+}
+```
 
 ### Sync Status Flow
 
@@ -228,3 +296,21 @@ local → pending → synced
 - **local**: Created locally, not yet attempted to sync
 - **pending**: Sync attempt in progress or failed (will retry)
 - **synced**: Successfully synced with server
+
+### API Endpoints
+
+See [SCHEMA_DESIGN.md](./SCHEMA_DESIGN.md) for the complete Sync API specification including:
+
+- `POST /api/v1/sync` - Batch sync endpoint
+- `POST /api/v1/recordings/:id/audio` - Upload recording audio
+- `GET /api/v1/videos/:id/transcripts` - Get server transcripts
+
+## 5. Related Files
+
+| File | Description |
+|------|-------------|
+| `src/db/schema.ts` | TypeScript type definitions |
+| `src/db/database.ts` | Dexie.js database configuration |
+| `src/db/id-generator.ts` | UUID generation utilities |
+| `src/db/*.ts` | Entity-specific helper functions |
+| `doc/SCHEMA_DESIGN.md` | Browser extension schema specification |

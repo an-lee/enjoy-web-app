@@ -31,16 +31,20 @@ function createAudiosWithUrls(audios: Audio[]): AudioWithUrl[] {
   return audios
     .map(createAudioWithUrl)
     .filter((item): item is AudioWithUrl => item !== null)
-    .sort((a, b) => (b.audio.createdAt || 0) - (a.audio.createdAt || 0)) // Sort by newest first
+    .sort((a, b) => {
+      // Sort by createdAt (ISO 8601 strings compare correctly)
+      const dateA = a.audio.createdAt || ''
+      const dateB = b.audio.createdAt || ''
+      return dateB.localeCompare(dateA) // Newest first
+    })
 }
 
 // Fetch functions
-async function fetchAudioHistory(
-  searchQuery?: string
-): Promise<Audio[]> {
-  let query = db.audios.orderBy('createdAt').reverse()
+async function fetchAudioHistory(searchQuery?: string): Promise<Audio[]> {
+  const query = db.audios.orderBy('createdAt').reverse()
   const allAudios = await query.toArray()
 
+  // Filter to TTS audios (those with sourceText)
   const ttsAudios = allAudios.filter((audio) => audio.sourceText)
 
   if (searchQuery && searchQuery.trim()) {
@@ -94,9 +98,7 @@ export interface UseAudiosReturn {
  * Supports loading audios by translation key
  * Automatically handles blob URL creation and cleanup
  */
-export function useAudios(
-  options: UseAudiosOptions = {}
-): UseAudiosReturn {
+export function useAudios(options: UseAudiosOptions = {}): UseAudiosReturn {
   const { translationKey, enabled = true } = options
   const queryClient = useQueryClient()
 

@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ttsService } from '@/services/ai/services'
 import { getAIServiceConfig } from '@/services/ai/core/config'
-import { saveAudio, generateAudioId, type Audio } from '@/db'
-import { VideoProvider } from '@/db/schema'
+import { saveAudio, type Audio, type TTSAudioInput } from '@/db'
 
 export interface UseTTSOptions {
   language: string
@@ -65,30 +64,35 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
         const duration = audioElement.duration || 0
         audioElement.remove()
 
-        // Save to database
-        const audioId = await generateAudioId('other', {
-          blob,
-          translationId: translationKey,
-          voice,
-        })
-        const audioRecord: Omit<Audio, 'createdAt' | 'updatedAt'> = {
-          id: audioId,
+        // Save to database with new schema
+        const ttsInput: TTSAudioInput = {
+          provider: 'tts',
           title: text.substring(0, 100),
-          duration,
+          duration, // seconds
           language,
-          provider: 'other' as VideoProvider,
           sourceText: text,
           voice,
           blob,
           translationKey,
           syncStatus: 'local',
         }
+        const audioId = await saveAudio(ttsInput)
 
-        await saveAudio(audioRecord)
+        // Construct audio record for callback
         const audio: Audio = {
-          ...audioRecord,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
+          id: audioId,
+          aid: audioId, // For TTS, aid is same as id
+          provider: 'tts',
+          title: text.substring(0, 100),
+          duration,
+          language,
+          sourceText: text,
+          voice,
+          blob,
+          translationKey,
+          syncStatus: 'local',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }
 
         toast.success(
@@ -118,4 +122,3 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
     reset,
   }
 }
-
