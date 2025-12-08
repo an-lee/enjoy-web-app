@@ -35,6 +35,13 @@
 		}
 	],
 	/**
+	 * Workers AI Binding
+	 * Required for OpenAI-compatible endpoints using Cloudflare Workers AI
+	 */
+	"ai": {
+		"binding": "AI"
+	},
+	/**
 	 * Environment Variables (Non-sensitive)
 	 * For sensitive data like API keys, use secrets instead (see below)
 	 *
@@ -42,7 +49,9 @@
 	 */
 	"vars": {
 		"AZURE_SPEECH_REGION": "southeastasia",
-		"RAILS_API_BASE_URL": "https://enjoy.bot"
+		"RAILS_API_BASE_URL": "https://enjoy.bot",
+		"WORKERS_AI_TEXT_MODEL": "@cf/meta/llama-3-8b-instruct-awq",
+		"WORKERS_AI_TTS_MODEL": "@cf/myshell-ai/melotts"
 	},
 	/**
 	 * Secrets (Sensitive Data)

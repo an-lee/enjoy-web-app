@@ -2,6 +2,9 @@ import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { handleError } from './utils/errors'
 import { azure } from './routes/azure'
+import { chat } from './routes/chat'
+import { audio } from './routes/audio'
+import { models } from './routes/models'
 
 // Env type is declared globally in worker-configuration.d.ts
 // You can extend it in wrangler.jsonc when adding bindings
@@ -23,9 +26,8 @@ router.get('/health', (c: Context<{ Bindings: Env }>) => {
 
 // Mount route handlers
 router.route('/azure', azure)
-
-// Example: Add more routes
-// import { translation } from './routes/translation'
-// router.route('/translation', translation)
+router.route('/chat', chat)
+router.route('/audio', audio)
+router.route('/models', models)
 
 export { router }

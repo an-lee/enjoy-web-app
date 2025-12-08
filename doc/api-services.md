@@ -99,6 +99,7 @@ These endpoints use the authenticated `apiClient` instance, which automatically 
 - **Dictionary Services**: Basic dictionary, smart dictionary (contextual)
 - **Speech Services**: ASR (Automatic Speech Recognition), TTS (Text-to-Speech)
 - **Assessment**: Pronunciation evaluation
+- **OpenAI-Compatible API**: Chat completions and TTS using Cloudflare Workers AI (see [OpenAI API Guide](../README-openai-api.md))
 
 **Characteristics**:
 
@@ -108,8 +109,9 @@ These endpoints use the authenticated `apiClient` instance, which automatically 
 - Edge computing (low latency, global network)
 - Serverless (no server maintenance)
 - Can use Cloudflare AI or route to external providers
+- OpenAI-compatible endpoints for easy integration
 
-**Usage**: See [API Worker Integration Guide](./api-worker-integration.md) and [AI Service Architecture](./ai-services.md)
+**Usage**: See [API Worker Integration Guide](./api-worker-integration.md), [AI Service Architecture](./ai-services.md), and [OpenAI API Guide](../README-openai-api.md)
 
 ### AI Service Client (`@/services/ai`)
 
@@ -185,6 +187,7 @@ The API base URL is configured via environment variable:
 
 ### Use Hono API Worker (`/api/*`) when
 - ✅ **All AI services** (translation, dictionary, ASR, TTS, assessment)
+- ✅ **OpenAI-compatible API** (chat completions, TTS with Cloudflare Workers AI)
 - ✅ **Cloudflare Workers AI** (direct access to AI models)
 - ✅ **Edge computing** (low latency, global network)
 - ✅ **Cloudflare Bindings** (KV, D1, R2 for caching/storage)

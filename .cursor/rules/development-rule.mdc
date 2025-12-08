@@ -16,6 +16,12 @@ alwaysApply: true
 - **Always Compile After Changes**: After making any code changes, you MUST run `bun run compile` to verify the code compiles successfully.
 - **Fix Compilation Errors**: If compilation fails, fix all errors before proceeding with other tasks.
 
+## Testing
+
+- **Run Tests After Changes**: After modifying code, you MUST run `bun run test:changed` to verify all affected tests pass.
+- **Add Tests for New Code**: When adding new code or features, include necessary test cases to ensure proper functionality and coverage.
+- **Fix Failing Tests**: If tests fail, fix all test errors before proceeding with other tasks.
+
 ## Documentation Maintenance
 
 - **Read First**: Consult `doc/` before starting complex tasks.
