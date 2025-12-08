@@ -95,10 +95,13 @@ export async function saveTranscript(input: TranscriptInput): Promise<string> {
 
   const existing = await db.transcripts.get(id)
   if (existing) {
-    await db.transcripts.update(id, {
+    const updated: Transcript = {
+      ...existing,
       ...input,
+      id,
       updatedAt: now,
-    })
+    }
+    await db.transcripts.put(updated)
     return id
   }
 
@@ -117,10 +120,16 @@ export async function updateTranscript(
   updates: Partial<Omit<Transcript, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
-  await db.transcripts.update(id, {
-    ...updates,
-    updatedAt: now,
-  })
+  const existing = await db.transcripts.get(id)
+  if (existing) {
+    const updated: Transcript = {
+      ...existing,
+      ...updates,
+      id,
+      updatedAt: now,
+    }
+    await db.transcripts.put(updated)
+  }
 }
 
 export async function deleteTranscript(id: string): Promise<void> {

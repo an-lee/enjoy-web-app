@@ -13,7 +13,7 @@
 // ============================================================================
 
 export { db, EnjoyDatabase, initDatabase } from './schema'
-import { cleanupExpiredCache } from './stores/cached-definition'
+import { cleanupExpiredCache } from './stores/cached-definition-store'
 
 /**
  * Initialize database with cleanup (call this on app startup)
@@ -84,7 +84,7 @@ export {
   saveLocalVideo,
   updateVideo,
   deleteVideo,
-} from './stores/video'
+} from './stores/video-store'
 
 // Audio
 export {
@@ -103,7 +103,7 @@ export {
   saveLocalAudio,
   updateAudio,
   deleteAudio,
-} from './stores/audio'
+} from './stores/audio-store'
 
 // Transcript
 export {
@@ -121,7 +121,7 @@ export {
   updateTranscript,
   deleteTranscript,
   getTrackId,
-} from './stores/transcript'
+} from './stores/transcript-store'
 
 // Recording
 export {
@@ -138,7 +138,7 @@ export {
   saveRecording,
   updateRecording,
   deleteRecording,
-} from './stores/recording'
+} from './stores/recording-store'
 
 // Dictation
 export {
@@ -152,7 +152,7 @@ export {
   updateDictation,
   deleteDictation,
   calculateDictationAccuracy,
-} from './stores/dictation'
+} from './stores/dictation-store'
 
 // UserEcho
 export {
@@ -170,7 +170,7 @@ export {
   saveUserEcho,
   updateUserEcho,
   deleteUserEcho,
-} from './stores/user-echo'
+} from './stores/user-echo-store'
 
 // Translation
 export {
@@ -186,7 +186,7 @@ export {
   saveTranslation,
   updateTranslation,
   deleteTranslation,
-} from './stores/translation'
+} from './stores/translation-store'
 
 // CachedDefinition
 export {
@@ -197,7 +197,7 @@ export {
   deleteCachedDefinition,
   clearAllCachedDefinitions,
   cleanupExpiredCache,
-} from './stores/cached-definition'
+} from './stores/cached-definition-store'
 
 // ============================================================================
 // ID Generator Exports

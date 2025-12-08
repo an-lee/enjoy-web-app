@@ -16,7 +16,7 @@ export {
   saveLocalVideo,
   updateVideo,
   deleteVideo,
-} from './video'
+} from './video-store'
 
 // Audio Store
 export {
@@ -38,7 +38,7 @@ export {
   type TTSAudioInput,
   type PlatformAudioInput,
   type AudioInput,
-} from './audio'
+} from './audio-store'
 
 // Transcript Store
 export {
@@ -56,7 +56,7 @@ export {
   updateTranscript,
   deleteTranscript,
   getTrackId,
-} from './transcript'
+} from './transcript-store'
 
 // Recording Store
 export {
@@ -73,7 +73,7 @@ export {
   saveRecording,
   updateRecording,
   deleteRecording,
-} from './recording'
+} from './recording-store'
 
 // Dictation Store
 export {
@@ -87,7 +87,7 @@ export {
   updateDictation,
   deleteDictation,
   calculateDictationAccuracy,
-} from './dictation'
+} from './dictation-store'
 
 // UserEcho Store
 export {
@@ -105,7 +105,7 @@ export {
   saveUserEcho,
   updateUserEcho,
   deleteUserEcho,
-} from './user-echo'
+} from './user-echo-store'
 
 // Translation Store
 export {
@@ -121,7 +121,7 @@ export {
   saveTranslation,
   updateTranslation,
   deleteTranslation,
-} from './translation'
+} from './translation-store'
 
 // CachedDefinition Store
 export {
@@ -132,5 +132,5 @@ export {
   deleteCachedDefinition,
   clearAllCachedDefinitions,
   cleanupExpiredCache,
-} from './cached-definition'
+} from './cached-definition-store'
 
