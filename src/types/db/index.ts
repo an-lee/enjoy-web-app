@@ -10,12 +10,11 @@ export * from './common'
 
 // Entity types
 export * from './transcript'
-export * from './pronunciation'
+export * from './pronunciation-assessment'
 export * from './video'
 export * from './audio'
 export * from './recording'
 export * from './dictation'
-export * from './user-echo'
 export * from './translation'
 export * from './cached-definition'
 export * from './sync'

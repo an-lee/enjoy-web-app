@@ -50,7 +50,6 @@ export type {
   Transcript,
   Recording,
   Dictation,
-  UserEcho,
   Translation,
   CachedDefinition,
   SyncQueueItem,
@@ -62,7 +61,6 @@ export type {
   TranscriptInput,
   RecordingInput,
   DictationInput,
-  UserEchoInput,
   TranslationInput,
 } from '@/types/db'
 
@@ -134,7 +132,6 @@ export {
   getRecordingsByVid,
   getRecordingsByAid,
   getRecordingsByUserId,
-  getRecordingsByEchoId,
   saveRecording,
   updateRecording,
   deleteRecording,
@@ -153,24 +150,6 @@ export {
   deleteDictation,
   calculateDictationAccuracy,
 } from './stores/dictation-store'
-
-// UserEcho
-export {
-  userEchoStore,
-  getUserEchoById,
-  getUserEchoByTarget,
-  getUserEchosByUserId,
-  getUserEchosByStatus,
-  getUserEchosBySyncStatus,
-  getAllUserEchos,
-  getUserEchoByVideo,
-  getUserEchoByAudio,
-  getUserEchosByVid,
-  getUserEchosByAid,
-  saveUserEcho,
-  updateUserEcho,
-  deleteUserEcho,
-} from './stores/user-echo-store'
 
 // Translation
 export {
@@ -218,7 +197,6 @@ export {
   generateTranscriptId,
   generateRecordingId,
   generateDictationId,
-  generateUserEchoId,
   generateTranslationId,
   generateCachedDefinitionId,
 } from './id-generator'

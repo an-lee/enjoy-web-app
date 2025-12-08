@@ -141,23 +141,6 @@ export function generateDictationId(): string {
 }
 
 // ============================================================================
-// UserEcho ID Generation
-// ============================================================================
-
-/**
- * Generate UUID v5 for UserEcho
- * Format: `echo:${targetType}:${targetId}:${userId}`
- * One echo per user per media
- */
-export function generateUserEchoId(
-  targetType: TargetType,
-  targetId: string,
-  userId: number
-): string {
-  return uuidv5(`echo:${targetType}:${targetId}:${userId}`, UUID_NAMESPACE)
-}
-
-// ============================================================================
 // Translation ID Generation
 // ============================================================================
 

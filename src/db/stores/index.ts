@@ -69,7 +69,6 @@ export {
   getRecordingsByVid,
   getRecordingsByAid,
   getRecordingsByUserId,
-  getRecordingsByEchoId,
   saveRecording,
   updateRecording,
   deleteRecording,
@@ -88,24 +87,6 @@ export {
   deleteDictation,
   calculateDictationAccuracy,
 } from './dictation-store'
-
-// UserEcho Store
-export {
-  userEchoStore,
-  getUserEchoById,
-  getUserEchoByTarget,
-  getUserEchosByUserId,
-  getUserEchosByStatus,
-  getUserEchosBySyncStatus,
-  getAllUserEchos,
-  getUserEchoByVideo,
-  getUserEchoByAudio,
-  getUserEchosByVid,
-  getUserEchosByAid,
-  saveUserEcho,
-  updateUserEcho,
-  deleteUserEcho,
-} from './user-echo-store'
 
 // Translation Store
 export {

@@ -190,24 +190,6 @@ interface Dictation extends SyncableEntity {
 ### Local-Only Entities (Not Synced)
 
 ```typescript
-// User Echo - Practice session (local tracking)
-// ID generation: UUID v5 with `echo:${targetType}:${targetId}:${userId}`
-interface UserEcho {
-  id: string
-  userId: number
-  targetType: TargetType
-  targetId: string
-  currentSegmentIndex?: number
-  totalSegments?: number
-  status?: 'in_progress' | 'completed' | 'paused'
-  totalPracticeTime?: number  // milliseconds
-  averageScore?: number
-  lastPracticedAt?: string    // ISO 8601
-  syncStatus?: SyncStatus
-  createdAt: string           // ISO 8601
-  updatedAt: string           // ISO 8601
-}
-
 // Translation - AI-generated translation
 // ID generation: UUID v5 with `translation:${sourceText}:${targetLanguage}:${style}:${customPrompt}`
 interface Translation {
@@ -254,7 +236,6 @@ interface CachedDefinition {
 | Transcript | UUID v5 | `transcript:${targetType}:${targetId}:${language}:${source}` |
 | Recording | UUID v4 | Random |
 | Dictation | UUID v4 | Random |
-| UserEcho | UUID v5 | `echo:${targetType}:${targetId}:${userId}` |
 | Translation | UUID v5 | `translation:${sourceText}:${targetLanguage}:${style}:${customPrompt}` |
 | CachedDefinition | UUID v5 | `cache:${word}:${languagePair}` |
 

@@ -64,14 +64,6 @@ export async function getRecordingsByUserId(_userId: number): Promise<Recording[
   return db.recordings.toArray()
 }
 
-/**
- * @deprecated Not supported in new schema
- */
-export async function getRecordingsByEchoId(_echoId: string): Promise<Recording[]> {
-  console.warn('getRecordingsByEchoId is deprecated')
-  return []
-}
-
 // ============================================================================
 // Mutation Operations
 // ============================================================================
@@ -120,7 +112,6 @@ export const recordingStore = {
   getByVid: getRecordingsByVid,
   getByAid: getRecordingsByAid,
   getByUserId: getRecordingsByUserId,
-  getByEchoId: getRecordingsByEchoId,
   // Mutations
   save: saveRecording,
   update: updateRecording,

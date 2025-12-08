@@ -159,7 +159,6 @@ All entities use **UUID v5 (deterministic UUIDs)** for their primary keys. This 
 ID generation is centralized in `src/db/id-generator.ts` with specific rules for each entity type:
 
 - **Video/Audio**: Based on provider ID + provider type, or file hash for local uploads
-- **UserEcho**: Based on media ID + user ID
 - **Recording**: Based on recording blob hash + user ID + reference offset
 - **Transcript**: Based on media ID + language
 - **Translation**: Based on source text + target language + style + custom prompt

@@ -8,7 +8,6 @@ import type {
   Video,
   Audio,
   Transcript,
-  UserEcho,
   Recording,
   Dictation,
   Translation,
@@ -27,7 +26,6 @@ export class EnjoyDatabase extends Dexie {
   videos!: Table<Video, string>
   audios!: Table<Audio, string>
   transcripts!: Table<Transcript, string>
-  userEchos!: Table<UserEcho, string>
   recordings!: Table<Recording, string>
   dictations!: Table<Dictation, string>
   translations!: Table<Translation, string>
@@ -50,10 +48,6 @@ export class EnjoyDatabase extends Dexie {
       // Transcript: id (UUID v5 primary key)
       transcripts:
         'id, [targetType+targetId], [targetType+targetId+language+source], language, source, syncStatus, createdAt, updatedAt',
-
-      // UserEcho: id (UUID v5 primary key)
-      userEchos:
-        'id, userId, [userId+targetType+targetId], targetType, targetId, status, syncStatus, createdAt, updatedAt',
 
       // Recording: id (UUID v4 primary key)
       recordings:

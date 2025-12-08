@@ -3,7 +3,7 @@
  */
 
 import type { SyncableEntity, TargetType } from './common'
-import type { PronunciationAssessmentResult } from './pronunciation'
+import type { PronunciationAssessmentResult } from './pronunciation-assessment'
 
 // ============================================================================
 // Core Entity
