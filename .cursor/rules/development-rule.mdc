@@ -11,6 +11,11 @@ alwaysApply: true
 - **ALWAYS** use `bun` for all package management and script execution.
 - Do NOT use `npm`, `yarn`, or `pnpm`.
 
+## Code Compilation
+
+- **Always Compile After Changes**: After making any code changes, you MUST run `bun run compile` to verify the code compiles successfully.
+- **Fix Compilation Errors**: If compilation fails, fix all errors before proceeding with other tasks.
+
 ## Documentation Maintenance
 
 - **Read First**: Consult `doc/` before starting complex tasks.
