@@ -60,11 +60,23 @@ export const Route = createFileRoute('/login')({
   component: LoginPage,
 })
 
+/**
+ * Check if current URL has a callback token (SSR-safe)
+ */
+function hasCallbackToken(): boolean {
+  if (typeof window === 'undefined') return false
+  const hash = window.location.hash
+  if (!hash) return false
+  const params = parseFragmentParams(hash)
+  return !!(params.access_token || params.token)
+}
+
 function LoginPage() {
   const navigate = useNavigate()
   const { isAuthenticated, setToken, setUser } = useAuthStore()
   const search = Route.useSearch()
-  const [isProcessingCallback, setIsProcessingCallback] = useState(false)
+  // Initialize with true if we detect a callback token, to show spinner immediately
+  const [isProcessingCallback, setIsProcessingCallback] = useState(hasCallbackToken)
 
   // Handle fragment token on page load (callback from main site)
   useEffect(() => {
@@ -192,33 +204,52 @@ function LoginPage() {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E')] opacity-[0.03]" />
       </div>
 
-      {/* Circular button */}
-      <button
-        onClick={handleLogin}
-        className="group relative flex h-40 w-40 cursor-pointer items-center justify-center"
-      >
-        {/* Outer glow ring */}
-        <span className="absolute inset-0 rounded-full bg-linear-to-br from-violet-500/30 via-fuchsia-500/20 to-cyan-500/30 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-
-        {/* Rotating border gradient */}
-        <span className="absolute inset-0 rounded-full bg-linear-to-r from-violet-500 via-fuchsia-500 to-cyan-500 p-[2px] opacity-60 transition-opacity duration-300 group-hover:opacity-100">
-          <span className="flex h-full w-full rounded-full bg-zinc-950" />
-        </span>
-
-        {/* Inner gradient background */}
-        <span className="absolute inset-[2px] rounded-full bg-linear-to-br from-zinc-900 via-zinc-900 to-zinc-800 transition-all duration-300 group-hover:from-zinc-800 group-hover:via-zinc-900 group-hover:to-zinc-900" />
-
-        {/* Button content */}
-        <span className="relative z-10 flex flex-col items-center gap-2 text-zinc-100 transition-transform duration-300 group-hover:scale-105 group-active:scale-95">
-          <Icon
-            icon="lucide:play"
-            className="h-10 w-10 translate-x-0.5 fill-current"
-          />
-          <span className="text-sm font-medium tracking-wider opacity-80">
-            ENJOY
+      {isProcessingCallback ? (
+        /* Loading spinner during callback processing */
+        <div className="relative flex h-40 w-40 items-center justify-center">
+          {/* Rotating border gradient */}
+          <span className="absolute inset-0 animate-spin rounded-full bg-linear-to-r from-violet-500 via-fuchsia-500 to-cyan-500 p-[2px] [animation-duration:2s]">
+            <span className="flex h-full w-full rounded-full bg-zinc-950" />
           </span>
-        </span>
-      </button>
+
+          {/* Inner background */}
+          <span className="absolute inset-[2px] rounded-full bg-linear-to-br from-zinc-900 via-zinc-900 to-zinc-800" />
+
+          {/* Spinner icon */}
+          <Icon
+            icon="lucide:loader-2"
+            className="relative z-10 h-10 w-10 animate-spin text-zinc-400"
+          />
+        </div>
+      ) : (
+        /* Circular login button */
+        <button
+          onClick={handleLogin}
+          className="group relative flex h-40 w-40 cursor-pointer items-center justify-center"
+        >
+          {/* Outer glow ring */}
+          <span className="absolute inset-0 rounded-full bg-linear-to-br from-violet-500/30 via-fuchsia-500/20 to-cyan-500/30 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+
+          {/* Rotating border gradient */}
+          <span className="absolute inset-0 rounded-full bg-linear-to-r from-violet-500 via-fuchsia-500 to-cyan-500 p-[2px] opacity-60 transition-opacity duration-300 group-hover:opacity-100">
+            <span className="flex h-full w-full rounded-full bg-zinc-950" />
+          </span>
+
+          {/* Inner gradient background */}
+          <span className="absolute inset-[2px] rounded-full bg-linear-to-br from-zinc-900 via-zinc-900 to-zinc-800 transition-all duration-300 group-hover:from-zinc-800 group-hover:via-zinc-900 group-hover:to-zinc-900" />
+
+          {/* Button content */}
+          <span className="relative z-10 flex flex-col items-center gap-2 text-zinc-100 transition-transform duration-300 group-hover:scale-105 group-active:scale-95">
+            <Icon
+              icon="lucide:play"
+              className="h-10 w-10 translate-x-0.5 fill-current"
+            />
+            <span className="text-sm font-medium tracking-wider opacity-80">
+              ENJOY
+            </span>
+          </span>
+        </button>
+      )}
     </div>
   )
 }
