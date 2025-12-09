@@ -61,6 +61,33 @@ export interface ASRResponse {
 }
 
 /**
+ * TTS Transcript Item with timing information
+ * Matches TranscriptLine format from db schema for consistency
+ * Timeline uses milliseconds (integer) for precision
+ *
+ * Structure: Sentence -> Word (nested via timeline)
+ */
+export interface TTSTranscriptItem {
+  text: string
+  start: number // milliseconds
+  duration: number // milliseconds
+  timeline?: TTSTranscriptItem[] // nested: Sentence → Word
+  confidence?: number // 0-1
+}
+
+/**
+ * TTS Transcript with sentence-level timestamps and nested word timeline
+ * Follows db schema TranscriptLine format
+ */
+export interface TTSTranscript {
+  /**
+   * Sentence-level items with optional word-level timeline
+   * Each item has: text, start (ms), duration (ms), timeline (words)
+   */
+  timeline: TTSTranscriptItem[]
+}
+
+/**
  * TTS (Text-to-Speech) Response
  */
 export interface TTSResponse {
@@ -68,6 +95,11 @@ export interface TTSResponse {
   audioBlob?: Blob
   duration?: number
   format?: string
+  /**
+   * Word-level transcript with timestamps
+   * Generated alongside audio for synchronization purposes
+   */
+  transcript?: TTSTranscript
 }
 
 /**

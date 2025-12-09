@@ -1,19 +1,24 @@
 /**
  * Text-to-Speech Service (TTS)
  * Generates audio from text for shadowing practice materials
+ * Supports word-level transcript generation for audio synchronization
  *
  * Provider support:
- * - Enjoy: Azure Speech with token from /api/azure/tokens
- * - Local: Browser-based TTS (transformers.js)
+ * - Enjoy: Azure Speech with token from /api/azure/tokens (with word boundary timestamps)
+ * - Local: Kokoro TTS (transformers.js) with timestamped model support
  * - BYOK OpenAI: OpenAI TTS API
- * - BYOK Azure: Azure Speech with user's subscription key
+ * - BYOK Azure: Azure Speech with user's subscription key (with word boundary timestamps)
  */
 
 import { synthesizeWithBYOKAzure } from '../providers/byok'
 import { localModelService } from '../providers/local'
 import { synthesizeWithBYOK } from '../providers/byok'
 import { synthesizeWithEnjoy } from '../providers/enjoy'
-import type { AIServiceConfig, AIServiceResponse, TTSResponse } from '../types'
+import type {
+  AIServiceConfig,
+  AIServiceResponse,
+  TTSResponse,
+} from '../types'
 import { AIServiceType, AIProvider } from '../types'
 import { ERROR_TTS_AZURE } from '../constants'
 import {
@@ -35,10 +40,15 @@ export interface TTSRequest {
 
 /**
  * Text-to-Speech Service
+ * All providers now support word-level transcript generation where available:
+ * - Local (Kokoro): Timestamps from timestamped model
+ * - Enjoy (Azure): Word boundary events
+ * - BYOK Azure: Word boundary events
  */
 export const ttsService = {
   /**
    * Synthesize speech
+   * Returns audio blob and optional word-level transcript
    */
   async synthesize(
     request: TTSRequest
@@ -58,10 +68,15 @@ export const ttsService = {
               config?.localModel,
               req.signal
             )
+
+            // Local transcript already uses the standard TTSTranscript format (timeline)
             return {
               audioBlob: result.audioBlob,
               format: result.format,
               duration: result.duration,
+              transcript: result.transcript
+                ? { timeline: result.transcript.timeline }
+                : undefined,
             }
           },
           enjoy: async (req) => {

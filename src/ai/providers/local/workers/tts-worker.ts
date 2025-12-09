@@ -1,15 +1,31 @@
 /**
  * TTS Web Worker
  * Handles text-to-speech model loading and synthesis in a separate thread
- * Uses Supertonic TTS ONNX model for high-quality speech synthesis
+ * Uses Kokoro TTS ONNX model for high-quality speech synthesis with timestamps
  */
 
-import { pipeline, env } from '@huggingface/transformers'
+import { KokoroTTS } from 'kokoro-js'
 import { DEFAULT_TTS_MODEL } from '../constants'
 
-// Configure transformers.js
-env.allowLocalModels = false
-env.allowRemoteModels = true
+/**
+ * TTS Transcript Item with timing information
+ * Matches TranscriptLine format from db schema
+ * Timeline uses milliseconds (integer) for precision
+ */
+interface TTSTranscriptItem {
+  text: string
+  start: number // milliseconds
+  duration: number // milliseconds
+  timeline?: TTSTranscriptItem[] // nested: Sentence → Word
+  confidence?: number
+}
+
+/**
+ * TTS Transcript with sentence-level timestamps and nested word timeline
+ */
+interface TTSTranscript {
+  timeline: TTSTranscriptItem[]
+}
 
 interface TTSWorkerMessage {
   type: 'init' | 'synthesize' | 'checkStatus' | 'cancel'
@@ -31,17 +47,16 @@ interface TTSWorkerResponse {
 // Track active tasks for cancellation
 const activeTasks = new Set<string>()
 
-// Singleton pattern for TTS pipeline
-class TTSPipelineSingleton {
-  static instance: any = null
+// Singleton pattern for TTS model
+class KokoroTTSSingleton {
+  static instance: KokoroTTS | null = null
   static modelName: string | null = null
   static loading: boolean = false
-  static progressCallback: ((progress: any) => void) | null = null
 
   static async getInstance(
     modelName: string = DEFAULT_TTS_MODEL,
     progressCallback?: (progress: any) => void
-  ) {
+  ): Promise<KokoroTTS> {
     // If already loaded with the same model, return existing instance
     if (this.instance && this.modelName === modelName) {
       return this.instance
@@ -62,14 +77,21 @@ class TTSPipelineSingleton {
     // Start loading
     this.loading = true
     this.modelName = modelName
-    this.progressCallback = progressCallback || null
 
     try {
-      // Use text-to-speech pipeline for TTS models
-      this.instance = await pipeline('text-to-speech', modelName, {
+      // Send initial progress
+      if (progressCallback) {
+        progressCallback({ status: 'loading', name: modelName, progress: 0 })
+      }
+
+      // Load Kokoro TTS model
+      // Use q8 quantization for good balance of quality and speed
+      this.instance = await KokoroTTS.from_pretrained(modelName, {
+        dtype: 'q8', // Options: "fp32", "fp16", "q8", "q4", "q4f16"
+        device: 'wasm', // Use WASM for browser compatibility
         progress_callback: (progress: any) => {
-          if (this.progressCallback) {
-            this.progressCallback(progress)
+          if (progressCallback) {
+            progressCallback(progress)
           }
           // Send progress to main thread
           self.postMessage({
@@ -103,6 +125,287 @@ class TTSPipelineSingleton {
   static getModelName(): string | null {
     return this.modelName
   }
+
+  static listVoices(): string[] {
+    if (this.instance) {
+      try {
+        const voices = this.instance.list_voices()
+        return Array.isArray(voices) ? voices : []
+      } catch {
+        return []
+      }
+    }
+    return []
+  }
+}
+
+/**
+ * Raw word timing data (internal use)
+ */
+interface RawWordTiming {
+  text: string
+  startTime: number // seconds
+  endTime: number // seconds
+}
+
+/**
+ * Extract word-level timestamps from Kokoro TTS output
+ * Based on: https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX-timestamped/discussions/2
+ *
+ * The timestamped model outputs durations for each token/phoneme.
+ * We need to:
+ * 1. Split the input text into words
+ * 2. Map durations to words
+ * 3. Calculate cumulative timestamps
+ * 4. Convert to TranscriptLine format (sentence -> word hierarchy)
+ */
+function extractTimestamps(
+  text: string,
+  result: any
+): TTSTranscript | undefined {
+  // Check if we have timestamp/duration information
+  // The result may contain timestamps or durations depending on the model version
+  if (!result) {
+    return undefined
+  }
+
+  // Try to get word timestamps from the result
+  // kokoro-js may provide timestamps in different formats
+  let rawTimings: RawWordTiming[] = []
+
+  // If the result has a timestamps array
+  if (result.timestamps && Array.isArray(result.timestamps)) {
+    rawTimings = result.timestamps.map(
+      (ts: { word?: string; text?: string; start: number; end: number }) => ({
+        text: ts.word || ts.text || '',
+        startTime: ts.start,
+        endTime: ts.end,
+      })
+    )
+  }
+  // If the result has word_timestamps
+  else if (result.word_timestamps && Array.isArray(result.word_timestamps)) {
+    rawTimings = result.word_timestamps.map(
+      (ts: { word?: string; text?: string; start: number; end: number }) => ({
+        text: ts.word || ts.text || '',
+        startTime: ts.start,
+        endTime: ts.end,
+      })
+    )
+  }
+  // If the result has durations, we need to calculate timestamps manually
+  else if (result.durations && Array.isArray(result.durations)) {
+    const words = text.split(/\s+/).filter((w) => w.length > 0)
+    const durations = result.durations as number[]
+
+    // Magic divisor based on Kokoro model's internal timing
+    // See: https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX-timestamped/discussions/2
+    const TIME_DIVISOR = 80
+
+    // Skip boundary tokens (first and last are padding)
+    let currentTime = 0
+    if (durations.length >= 3) {
+      // First boundary timing
+      currentTime = (2 * Math.max(0, durations[0] - 3)) / TIME_DIVISOR
+    }
+
+    // Calculate timestamps for each word
+    // This is a simplified approach - for more accurate results,
+    // you would need to map phonemes to words
+    const durationPerWord = durations.length > 2 ? durations.slice(1, -1) : []
+    const avgDurationPerWord =
+      durationPerWord.length > 0
+        ? durationPerWord.reduce((a, b) => a + b, 0) /
+          durationPerWord.length /
+          TIME_DIVISOR
+        : 0.3
+
+    for (const word of words) {
+      const startTime = currentTime
+      // Estimate word duration based on character count
+      const wordDuration = avgDurationPerWord * (1 + word.length * 0.1)
+      const endTime = startTime + wordDuration
+      rawTimings.push({
+        text: word,
+        startTime,
+        endTime,
+      })
+      currentTime = endTime
+    }
+  }
+  // Fallback: estimate timestamps based on audio duration and text
+  else if (result.sampling_rate && result.audio) {
+    const audioDuration =
+      result.audio instanceof Float32Array
+        ? result.audio.length / result.sampling_rate
+        : 0
+    const words = text.split(/\s+/).filter((w) => w.length > 0)
+
+    if (words.length > 0 && audioDuration > 0) {
+      // Simple linear distribution with slight bias towards longer words
+      const totalChars = words.reduce((sum, w) => sum + w.length, 0)
+      let currentTime = 0
+
+      for (const word of words) {
+        const wordWeight = word.length / totalChars
+        const wordDuration = audioDuration * wordWeight
+        rawTimings.push({
+          text: word,
+          startTime: currentTime,
+          endTime: currentTime + wordDuration,
+        })
+        currentTime += wordDuration
+      }
+    }
+  }
+
+  if (rawTimings.length === 0) {
+    return undefined
+  }
+
+  // Convert raw timings to TranscriptLine format (sentence -> word hierarchy)
+  return convertToTranscriptFormat(text, rawTimings)
+}
+
+/**
+ * Convert raw word timings to TranscriptLine format
+ * Groups words into sentences (based on punctuation) with nested word timeline
+ * All times are converted to milliseconds (integer)
+ */
+function convertToTranscriptFormat(
+  text: string,
+  rawTimings: RawWordTiming[]
+): TTSTranscript {
+  // Split text into sentences using common sentence-ending punctuation
+  // Handles: . ! ? and their Unicode variants, including ellipsis
+  const sentenceRegex = /[^.!?。！？…]+[.!?。！？…]*/g
+  const sentences = text.match(sentenceRegex) || [text]
+
+  // Map words to sentences
+  const timeline: TTSTranscriptItem[] = []
+  let wordIndex = 0
+
+  for (const sentence of sentences) {
+    const trimmedSentence = sentence.trim()
+    if (!trimmedSentence) continue
+
+    // Get words in this sentence
+    const sentenceWords = trimmedSentence.split(/\s+/).filter((w) => w.length > 0)
+    const sentenceWordTimings: TTSTranscriptItem[] = []
+
+    // Collect word timings for this sentence
+    for (let i = 0; i < sentenceWords.length && wordIndex < rawTimings.length; i++) {
+      const rawTiming = rawTimings[wordIndex]
+      // Convert seconds to milliseconds (integer)
+      const startMs = Math.round(rawTiming.startTime * 1000)
+      const durationMs = Math.round((rawTiming.endTime - rawTiming.startTime) * 1000)
+
+      sentenceWordTimings.push({
+        text: rawTiming.text,
+        start: startMs,
+        duration: durationMs,
+      })
+      wordIndex++
+    }
+
+    // Create sentence item with word timeline
+    if (sentenceWordTimings.length > 0) {
+      const sentenceStart = sentenceWordTimings[0].start
+      const lastWord = sentenceWordTimings[sentenceWordTimings.length - 1]
+      const sentenceEnd = lastWord.start + lastWord.duration
+      const sentenceDuration = sentenceEnd - sentenceStart
+
+      timeline.push({
+        text: trimmedSentence,
+        start: sentenceStart,
+        duration: sentenceDuration,
+        timeline: sentenceWordTimings,
+      })
+    }
+  }
+
+  // If no sentences were created, create a single sentence with all words
+  if (timeline.length === 0 && rawTimings.length > 0) {
+    const wordTimeline: TTSTranscriptItem[] = rawTimings.map((raw) => ({
+      text: raw.text,
+      start: Math.round(raw.startTime * 1000),
+      duration: Math.round((raw.endTime - raw.startTime) * 1000),
+    }))
+
+    const start = wordTimeline[0].start
+    const lastWord = wordTimeline[wordTimeline.length - 1]
+    const end = lastWord.start + lastWord.duration
+
+    timeline.push({
+      text: text.trim(),
+      start,
+      duration: end - start,
+      timeline: wordTimeline,
+    })
+  }
+
+  return { timeline }
+}
+
+/**
+ * Convert Float32Array audio to WAV format ArrayBuffer
+ */
+function float32ToWav(
+  audioData: Float32Array,
+  sampleRate: number
+): ArrayBuffer {
+  const numChannels = 1 // Mono
+  const bitsPerSample = 16
+  const byteRate = sampleRate * numChannels * (bitsPerSample / 8)
+  const blockAlign = numChannels * (bitsPerSample / 8)
+  const dataSize = audioData.length * (bitsPerSample / 8)
+  const fileSize = 36 + dataSize
+
+  const buffer = new ArrayBuffer(44 + dataSize)
+  const view = new DataView(buffer)
+
+  // WAV header
+  const writeString = (str: string, offset: number) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i))
+    }
+  }
+
+  let offset = 0
+  writeString('RIFF', offset)
+  offset += 4
+  view.setUint32(offset, fileSize, true)
+  offset += 4
+  writeString('WAVE', offset)
+  offset += 4
+  writeString('fmt ', offset)
+  offset += 4
+  view.setUint32(offset, 16, true) // fmt chunk size
+  offset += 4
+  view.setUint16(offset, 1, true) // PCM format
+  offset += 2
+  view.setUint16(offset, numChannels, true)
+  offset += 2
+  view.setUint32(offset, sampleRate, true)
+  offset += 4
+  view.setUint32(offset, byteRate, true)
+  offset += 4
+  view.setUint16(offset, blockAlign, true)
+  offset += 2
+  view.setUint16(offset, bitsPerSample, true)
+  offset += 2
+  writeString('data', offset)
+  offset += 4
+  view.setUint32(offset, dataSize, true)
+  offset += 4
+
+  // Convert audio samples to 16-bit PCM
+  for (let i = 0; i < audioData.length; i++) {
+    const sample = Math.max(-1, Math.min(1, audioData[i]))
+    view.setInt16(offset + i * 2, sample * 0x7fff, true)
+  }
+
+  return buffer
 }
 
 // Listen for messages from main thread
@@ -114,7 +417,7 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
       case 'init': {
         // Initialize model
         const modelName = data?.model || DEFAULT_TTS_MODEL
-        await TTSPipelineSingleton.getInstance(modelName, (progress) => {
+        await KokoroTTSSingleton.getInstance(modelName, (progress) => {
           self.postMessage({
             type: 'progress',
             data: progress,
@@ -128,8 +431,9 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
         self.postMessage({
           type: 'status',
           data: {
-            loaded: TTSPipelineSingleton.isLoaded(),
-            model: TTSPipelineSingleton.getModelName(),
+            loaded: KokoroTTSSingleton.isLoaded(),
+            model: KokoroTTSSingleton.getModelName(),
+            voices: KokoroTTSSingleton.listVoices(),
           },
         } as TTSWorkerResponse)
         break
@@ -171,7 +475,6 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
         }
 
         // Check if text contains only whitespace or special characters
-        // This helps prevent cases where text encoder produces empty sequences
         const hasValidContent = /[\p{L}\p{N}]/u.test(text)
         if (!hasValidContent) {
           activeTasks.delete(taskId)
@@ -181,7 +484,7 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
         }
 
         const modelName = data?.model || DEFAULT_TTS_MODEL
-        const synthesizer = await TTSPipelineSingleton.getInstance(modelName)
+        const tts = await KokoroTTSSingleton.getInstance(modelName)
 
         // Check again after model loading (in case cancelled during loading)
         if (!activeTasks.has(taskId)) {
@@ -193,35 +496,14 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
           break
         }
 
-        // Prepare options
-        const options: any = {}
-        if (data.language) {
-          options.language = data.language
-        }
-        if (data.voice) {
-          options.voice = data.voice
-        }
+        // Use specified voice or default to best quality voice
+        const voice = data.voice || 'af_heart'
 
-        // Supertonic models require speaker_embeddings as a URL to a .bin file
-        // According to the documentation, speaker_embeddings should be a URL string
-        // pointing to a voice file (e.g., 'https://huggingface.co/onnx-community/Supertonic-TTS-ONNX/resolve/main/voices/F1.bin')
-        if (modelName.includes('Supertonic')) {
-          // Use default voice F1 if no voice is specified
-          // Available voices: F1, F2, M1, M2 (Female 1/2, Male 1/2)
-          const voiceName = data.voice || 'F1'
-          options.speaker_embeddings = `https://huggingface.co/onnx-community/Supertonic-TTS-ONNX/resolve/main/voices/${voiceName}.bin`
-
-          // Optional: Set quality and speed parameters
-          // Higher num_inference_steps = better quality (typically 1-50)
-          options.num_inference_steps = 5
-          // Higher speed = faster speech (typically 0.8-1.2)
-          options.speed = 1.0
-        }
-
-        // Run TTS synthesis
-        // Use normalized text instead of original data.text
-        // Note: transformers.js doesn't directly support AbortSignal, but we check task status
-        const result = await synthesizer(text, options)
+        // Generate speech with Kokoro TTS
+        // Cast voice to any to handle dynamic voice options
+        const result = await tts.generate(text, {
+          voice: voice as any,
+        })
 
         // Check if task was cancelled during synthesis
         if (!activeTasks.has(taskId)) {
@@ -233,97 +515,32 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
           break
         }
 
-        // Extract audio data from result
-        let audioData: ArrayBuffer | Float32Array | Uint8Array | Blob
-
-        // Handle different result formats
-        if (result.audio) {
-          audioData = result.audio
-        } else if (result.waveform) {
-          audioData = result.waveform
-        } else if (Array.isArray(result)) {
-          audioData = result[0]?.audio || result[0]?.waveform || new Float32Array()
-        } else if (result instanceof Blob) {
-          audioData = result
-        } else {
-          audioData = result as any
-        }
-
-        // Convert to ArrayBuffer for transfer via postMessage
+        // Extract audio data
+        // Kokoro returns an Audio object with audio property (Float32Array) and sampling_rate
         let audioArrayBuffer: ArrayBuffer
-        let sampleRate = 22050 // Default sample rate
+        let sampleRate = 24000 // Kokoro uses 24kHz
 
-        if (audioData instanceof Blob) {
-          // Convert Blob to ArrayBuffer
-          audioArrayBuffer = await audioData.arrayBuffer()
-        } else if (audioData instanceof ArrayBuffer) {
-          audioArrayBuffer = audioData
-        } else if (audioData instanceof Float32Array || audioData instanceof Uint8Array) {
-          // Convert Float32Array/Uint8Array to WAV format ArrayBuffer
-          // Get sample rate from result if available
-          sampleRate = result.sampling_rate || result.sample_rate || 22050
-
-          const numChannels = 1 // Mono
-          const bitsPerSample = 16
-          const byteRate = sampleRate * numChannels * (bitsPerSample / 8)
-          const blockAlign = numChannels * (bitsPerSample / 8)
-          const dataSize = audioData.length * (bitsPerSample / 8)
-          const fileSize = 36 + dataSize
-
-          const buffer = new ArrayBuffer(44 + dataSize)
-          const view = new DataView(buffer)
-
-          // WAV header
-          const writeString = (str: string, offset: number) => {
-            for (let i = 0; i < str.length; i++) {
-              view.setUint8(offset + i, str.charCodeAt(i))
-            }
-          }
-
-          let offset = 0
-          writeString('RIFF', offset)
-          offset += 4
-          view.setUint32(offset, fileSize, true)
-          offset += 4
-          writeString('WAVE', offset)
-          offset += 4
-          writeString('fmt ', offset)
-          offset += 4
-          view.setUint32(offset, 16, true) // fmt chunk size
-          offset += 4
-          view.setUint16(offset, 1, true) // PCM format
-          offset += 2
-          view.setUint16(offset, numChannels, true)
-          offset += 2
-          view.setUint32(offset, sampleRate, true)
-          offset += 4
-          view.setUint32(offset, byteRate, true)
-          offset += 4
-          view.setUint16(offset, blockAlign, true)
-          offset += 2
-          view.setUint16(offset, bitsPerSample, true)
-          offset += 2
-          writeString('data', offset)
-          offset += 4
-          view.setUint32(offset, dataSize, true)
-          offset += 4
-
-          // Convert audio samples to 16-bit PCM
-          if (audioData instanceof Float32Array) {
-            for (let i = 0; i < audioData.length; i++) {
-              const sample = Math.max(-1, Math.min(1, audioData[i]))
-              view.setInt16(offset + i * 2, sample * 0x7fff, true)
-            }
-          } else {
-            // Uint8Array - copy directly (assuming it's already PCM)
-            const uint8View = new Uint8Array(buffer, offset)
-            uint8View.set(audioData.slice(0, Math.min(audioData.length, dataSize)))
-          }
-
-          audioArrayBuffer = buffer
+        // Get audio data from result
+        const audioData = result.audio
+        if (audioData instanceof Float32Array) {
+          sampleRate = result.sampling_rate || 24000
+          audioArrayBuffer = float32ToWav(audioData, sampleRate)
+        } else if (result.toBlob) {
+          // If result has toBlob method, use it
+          const blob = result.toBlob()
+          audioArrayBuffer = await blob.arrayBuffer()
         } else {
-          throw new Error('Unsupported audio data format')
+          throw new Error('Unsupported audio data format from Kokoro TTS')
         }
+
+        // Extract timestamps if available (timestamped model)
+        const transcript = extractTimestamps(text, result)
+
+        // Calculate duration
+        const duration =
+          audioData instanceof Float32Array
+            ? audioData.length / sampleRate
+            : undefined
 
         // Final check before sending result
         if (!activeTasks.has(taskId)) {
@@ -335,22 +552,19 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
           break
         }
 
-        // Calculate duration if available
-        const duration = result.duration || (audioData instanceof Float32Array ? audioData.length / sampleRate : undefined)
-
         // Remove task from active set
         activeTasks.delete(taskId)
 
         // Send result back to main thread
-        // Note: ArrayBuffer can be transferred efficiently via postMessage
         self.postMessage(
           {
             type: 'result',
             data: {
-              audioArrayBuffer: audioArrayBuffer,
+              audioArrayBuffer,
               format: 'wav',
-              duration: duration,
-              sampleRate: sampleRate,
+              duration,
+              sampleRate,
+              transcript,
             },
             taskId,
           } as TTSWorkerResponse,
@@ -373,4 +587,3 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
     } as TTSWorkerResponse)
   }
 })
-

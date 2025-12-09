@@ -63,6 +63,7 @@
 		"hono": "^4.10.7",
 		"i18next": "^25.7.1",
 		"i18next-browser-languagedetector": "^8.2.0",
+		"kokoro-js": "^1.2.1",
 		"lucide-react": "^0.555.0",
 		"microsoft-cognitiveservices-speech-sdk": "^1.47.0",
 		"next-themes": "^0.4.6",

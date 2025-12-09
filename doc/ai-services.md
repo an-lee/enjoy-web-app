@@ -311,12 +311,99 @@ Whisper-based transcription with timestamped segments. Supports all three provid
 
 ### TTS (Text-to-Speech)
 
-Text-to-speech conversion for shadowing practice.
+Text-to-speech conversion for shadowing practice. Supports word-level transcript generation for audio synchronization.
 
-- **Enjoy**: Azure Speech SDK with token from `/api/azure/tokens`
+- **Enjoy**: Azure Speech SDK with token from `/api/azure/tokens` (with word boundary timestamps)
 - **BYOK OpenAI**: User's OpenAI TTS API via `BYOKClient`
-- **BYOK Azure**: User's Azure Speech subscription via Azure SDK
-- **Local**: transformers.js TTS models in Web Workers
+- **BYOK Azure**: User's Azure Speech subscription via Azure SDK (with word boundary timestamps)
+- **Local**: Kokoro TTS (82M) via kokoro-js in Web Workers (with timestamped model support)
+
+#### Word-Level Transcript Support
+
+TTS services can generate word-level transcripts alongside audio for synchronization purposes:
+
+- **Local (Kokoro)**: Uses `onnx-community/Kokoro-82M-v1.0-ONNX-timestamped` model which outputs duration information that is converted to word-level timestamps
+- **Azure (Enjoy/BYOK)**: Uses Azure Speech SDK's word boundary events to capture exact timing for each word
+
+The transcript format follows the same structure as `TranscriptLine` from the DB schema, organized in a sentence → word hierarchy:
+
+```typescript
+// Matches TranscriptLine format from db schema
+interface TTSTranscriptItem {
+  text: string
+  start: number // milliseconds (integer)
+  duration: number // milliseconds (integer)
+  timeline?: TTSTranscriptItem[] // nested: Sentence → Word
+  confidence?: number // 0-1
+}
+
+interface TTSTranscript {
+  timeline: TTSTranscriptItem[] // Sentence-level items with word timeline
+}
+
+interface TTSResponse {
+  audioBlob?: Blob
+  duration?: number
+  format?: string
+  transcript?: TTSTranscript // Sentence → Word timeline
+}
+```
+
+Example transcript structure:
+
+```json
+{
+  "timeline": [
+    {
+      "text": "Hello world.",
+      "start": 0,
+      "duration": 1200,
+      "timeline": [
+        { "text": "Hello", "start": 0, "duration": 500 },
+        { "text": "world.", "start": 500, "duration": 700 }
+      ]
+    },
+    {
+      "text": "How are you?",
+      "start": 1200,
+      "duration": 1000,
+      "timeline": [
+        { "text": "How", "start": 1200, "duration": 300 },
+        { "text": "are", "start": 1500, "duration": 250 },
+        { "text": "you?", "start": 1750, "duration": 450 }
+      ]
+    }
+  ]
+}
+```
+
+#### Language Support (Local Kokoro TTS)
+
+Kokoro TTS supports the following languages (matching project locales):
+
+| Language | Code | Voices Available |
+|----------|------|------------------|
+| English | `en` | American (af_*, am_*) and British (bf_*, bm_*) accents |
+| Japanese | `ja` | jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro, jm_kumo |
+| Chinese (Mandarin) | `zh` | zf_xiaobei, zf_xiaoni, zf_xiaoxiao, zf_xiaoyi, zm_yunjian, zm_yunxi, zm_yunxia, zm_yunyang |
+| Spanish | `es` | ef_dora, em_alex, em_santa |
+| French | `fr` | ff_siwis |
+| Portuguese | `pt` | pf_dora, pm_alex, pm_santa |
+
+**Not supported by Kokoro**: Korean (`ko`), German (`de`) - use Azure TTS for these languages.
+
+Use `getLocalTTSVoices(model, language)` to get voices filtered by language, and `isKokoroLanguageSupported(language)` to check support.
+
+#### Kokoro TTS Voices
+
+The Local TTS provider uses Kokoro TTS with high-quality voices:
+
+- **American Female**: af_heart (A grade), af_bella (A-), af_nicole, af_nova, af_sky, af_sarah, af_river, af_jessica, af_alloy
+- **American Male**: am_michael (C+), am_fenrir (C+), am_puck (C+), am_adam, am_echo, am_eric, am_liam, am_onyx
+- **British Female**: bf_emma (B-), bf_isabella, bf_alice, bf_lily
+- **British Male**: bm_george (C), bm_fable (C), bm_daniel, bm_lewis
+
+Default voice: `af_heart` (highest quality)
 
 ### Pronunciation Assessment
 
@@ -365,8 +452,9 @@ The provider selection is automatic unless explicitly specified in the request c
 
 - **Vercel AI SDK**: Unified LLM access for BYOK
 - **OpenAI SDK**: Direct API access for OpenAI-compatible services
-- **transformers.js**: Browser-based local models
-- **Azure Speech SDK**: Pronunciation assessment and TTS
+- **transformers.js**: Browser-based local models (ASR, Translation, Dictionary)
+- **kokoro-js**: Browser-based TTS with Kokoro model (word-level timestamps)
+- **Azure Speech SDK**: Pronunciation assessment and TTS (word boundary events)
 - **Hono API Worker**: Server-side API endpoints
 
 ## Code Organization

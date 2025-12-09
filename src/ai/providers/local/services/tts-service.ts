@@ -1,16 +1,18 @@
 /**
  * TTS Service
- * Handles text-to-speech synthesis using local TTS models (e.g., Supertonic TTS ONNX)
+ * Handles text-to-speech synthesis using local TTS models (Kokoro TTS ONNX)
+ * Supports word-level timestamps for transcript generation
  */
 
 import type { LocalModelConfig } from '../../../types'
-import type { LocalTTSResult } from '../types'
+import type { LocalTTSResult, LocalTTSTranscript } from '../types'
 import { useLocalModelsStore } from '@/stores/local-models'
 import { getTTSWorker } from '../workers/worker-manager'
 import { DEFAULT_TTS_MODEL } from '../constants'
 
 /**
  * Synthesize speech from text using local TTS model
+ * Returns audio blob and optional transcript with word-level timestamps
  */
 export async function synthesize(
   text: string,
@@ -124,11 +126,19 @@ export async function synthesize(
         // Convert ArrayBuffer back to Blob
         const audioBlob = new Blob([data.audioArrayBuffer], { type: 'audio/wav' })
 
-        resolve({
+        // Build result with optional transcript
+        const result: LocalTTSResult = {
           audioBlob,
           format: data.format || 'wav',
           duration: data.duration,
-        })
+        }
+
+        // Add transcript if available (from timestamped model)
+        if (data.transcript) {
+          result.transcript = data.transcript as LocalTTSTranscript
+        }
+
+        resolve(result)
       } else if (type === 'error' && responseTaskId === taskId) {
         clearTimeout(timeout)
         if (signal) {
