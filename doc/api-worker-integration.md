@@ -55,25 +55,41 @@ src/
 
 ## AI Service Implementation
 
-Hono API Worker handles all AI services. Below are implementation examples for major AI service endpoints:
+Hono API Worker handles all AI services using OpenAI-compatible endpoints. Below are the actual endpoints:
 
-### Translation Services
+### OpenAI-Compatible Endpoints
 
-- **Fast Translation** (`POST /api/translation/fast`): Uses Cloudflare Workers AI M2M100 model
-- **Smart Translation** (`POST /api/translation/smart`): Uses LLM for style-aware translation
+- **Chat Completions** (`POST /api/chat/completions`): LLM text generation
+  - Used for: Smart Translation, Smart Dictionary
+  - Model: Cloudflare Workers AI (configurable via env)
+  - Supports streaming
 
-### Dictionary Services
+- **Audio Transcriptions** (`POST /api/audio/transcriptions`): Speech-to-Text (Whisper)
+  - Used for: ASR service
+  - Model: Whisper (OpenAI-compatible format)
 
-- **Basic Dictionary** (`POST /api/dictionary/basic`): Simple word lookup with KV caching support
-- **Smart Dictionary** (`POST /api/dictionary/smart`): Context-aware AI dictionary explanations
+- **Audio Speech** (`POST /api/audio/speech`): Text-to-Speech
+  - Used for: TTS service
+  - Model: Cloudflare Workers AI MeloTTS (configurable via env)
 
-### Speech Services
+- **Models List** (`GET /api/models`): List available models
+  - Returns: Available text and audio models
 
-- **ASR** (`POST /api/asr`): Automatic Speech Recognition using Whisper model
-- **TTS** (`POST /api/tts`): Text-to-Speech
-- **Assessment** (`POST /api/assessment`): Pronunciation evaluation
+### Non-Standard Endpoints
 
-Refer to the example code in `src/server/api.ts` for detailed implementation.
+- **Fast Translation** (`POST /api/translations`): Fast translation using Cloudflare Workers AI M2M100
+  - Used for: Basic translation service (free)
+  - Model: `@cf/meta/m2m100-1.2b`
+
+### Azure Speech Services
+
+- **Azure Token** (`POST /api/azure/tokens`): Generate Azure Speech token
+  - Used for: TTS and Assessment services (Enjoy provider)
+  - Token expires after 10 minutes (cached for 9 minutes)
+
+**Note**: The frontend AI Service Client (`src/ai/`) handles provider routing and calls these endpoints. For BYOK users, services use their own API keys directly (no server endpoints needed).
+
+Refer to the route handlers in `src/server/routes/` for detailed implementation.
 
 ## Usage Examples
 

@@ -136,7 +136,18 @@ src/
 │   └── translation.ts    # Translation services
 ├── ai/                  # AI service providers (Enjoy/Local/BYOK)
 │   ├── services/        # Service routers (ASR, TTS, translation, etc.)
-│   ├── providers/       # Provider implementations (Enjoy/Local/BYOK)
+│   ├── providers/       # Provider implementations
+│   │   ├── enjoy/       # Enjoy API provider
+│   │   │   ├── client.ts        # EnjoyAIClient (OpenAI-compatible)
+│   │   │   ├── services/        # OpenAI-compatible services
+│   │   │   └── azure/           # Azure Speech (token-based)
+│   │   ├── byok/        # BYOK provider (user's API keys)
+│   │   │   ├── client.ts        # BYOKClient (multi-provider)
+│   │   │   ├── services/        # OpenAI-compatible services
+│   │   │   └── azure/           # Azure Speech (user key)
+│   │   └── local/       # Local provider (transformers.js)
+│   │       ├── services/        # Service implementations
+│   │       └── workers/         # Web Workers for models
 │   ├── core/            # Core abstractions (config, error handling, routing)
 │   ├── prompts/         # Centralized prompt templates
 │   └── types/           # Type definitions

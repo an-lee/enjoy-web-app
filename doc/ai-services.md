@@ -33,6 +33,13 @@ All prompts are centrally managed in `/src/ai/prompts/`, ensuring consistent out
 
 Services expose a clean, consistent API independent of the underlying provider. Provider routing is handled automatically based on user configuration and service availability.
 
+### 4. Consistent Code Organization
+
+All providers follow the same organizational structure:
+- `client.ts` - Unified client for API access
+- `services/` - Individual service implementations
+- `azure/` - Azure Speech services (when applicable)
+
 ## Service Support Matrix
 
 | Service | Enjoy | Local | BYOK | Cost |
@@ -69,11 +76,70 @@ Unified utilities for configuration, error handling, and provider routing:
 
 ### 3. Provider Implementation Layer (`providers/`)
 
-Provider-specific implementations isolated from each other:
+Provider-specific implementations isolated from each other. All providers follow a consistent structure:
 
-- **Enjoy**: Cloud API provider (OpenAI-compatible + Azure token)
-- **Local**: Browser-based transformers.js models with Web Workers
-- **BYOK**: Vercel AI SDK for LLMs, official SDKs for speech services
+#### Enjoy Provider (`providers/enjoy/`)
+
+```
+enjoy/
+├── client.ts                    # EnjoyAIClient (OpenAI-compatible)
+├── services/                    # OpenAI-compatible services
+│   ├── translation-service.ts  # Basic translation (/api/translations)
+│   ├── smart-translation-service.ts  # LLM translation (/api/chat/completions)
+│   ├── dictionary-service.ts   # LLM dictionary (/api/chat/completions)
+│   └── asr-service.ts          # Whisper ASR (/api/audio/transcriptions)
+└── azure/                      # Azure Speech services (token-based)
+    ├── token-manager.ts        # Token cache from /api/azure/tokens
+    ├── tts-service.ts          # Azure Neural Voices
+    └── assessment-service.ts   # Azure Pronunciation Assessment
+```
+
+**Key Features**:
+- Uses `EnjoyAIClient` for OpenAI-compatible endpoints
+- Azure Speech services use tokens from `/api/azure/tokens`
+- Token caching (9 minutes) for performance
+
+#### BYOK Provider (`providers/byok/`)
+
+```
+byok/
+├── client.ts                    # BYOKClient (multi-provider support)
+├── services/                    # OpenAI-compatible services
+│   ├── smart-translation-service.ts  # LLM translation (user's API)
+│   ├── dictionary-service.ts   # LLM dictionary (user's API)
+│   ├── asr-service.ts          # OpenAI Whisper (user's API)
+│   └── tts-service.ts          # OpenAI TTS (user's API)
+└── azure/                      # Azure Speech services (user key)
+    ├── types.ts                # AzureSpeechConfig type
+    ├── tts-service.ts          # Azure Neural Voices (user subscription)
+    ├── asr-service.ts          # Azure Speech Recognition (user subscription)
+    └── assessment-service.ts   # Azure Pronunciation (user subscription)
+```
+
+**Key Features**:
+- Uses `BYOKClient` for multi-provider LLM access (OpenAI, Claude, Google, etc.)
+- Azure Speech services use user's own subscription key
+- Supports OpenAI, Claude, Google, Azure OpenAI, and custom endpoints
+
+#### Local Provider (`providers/local/`)
+
+```
+local/
+├── index.ts                     # LocalModelService export
+├── services/                    # Service implementations
+│   ├── asr-service.ts          # Whisper (transformers.js)
+│   ├── smart-translation-service.ts  # LLM translation (transformers.js)
+│   ├── dictionary-service.ts   # LLM dictionary (transformers.js)
+│   └── tts-service.ts          # TTS (transformers.js)
+├── workers/                     # Web Workers for model execution
+└── utils/                       # Audio processing utilities
+```
+
+**Key Features**:
+- Browser-based models using transformers.js
+- Web Workers for non-blocking execution
+- Model initialization and caching
+- Offline-capable
 
 ### 4. Shared Resources
 
@@ -88,29 +154,93 @@ User Request (Frontend)
     │
     └─ AI Service Client (src/ai/services/*.ts)
         │
-        └─ HTTP Request to Hono API Worker (/api/*)
+        └─ Provider Router (src/ai/core/provider-router.ts)
             │
-            └─ Hono API Worker (src/server/api.ts)
-                │
-                └─ Provider Router (src/ai/core/provider-router.ts)
-                    │
-                    ├─ Auto-select provider based on:
-                    │   - User configuration
-                    │   - Service availability
-                    │   - User subscription status
-                    │
-                    └─ Route to Provider Implementation
-                        ├─ Cloudflare Workers AI (via env.AI binding)
-                        ├─ Enjoy Provider → Enjoy API (external)
-                        ├─ Local Provider → transformers.js (Web Workers)
-                        └─ BYOK Provider → Vercel AI SDK / Official SDKs
+            ├─ Auto-select provider based on:
+            │   - User configuration
+            │   - Service availability
+            │   - User subscription status
+            │
+            └─ Route to Provider Implementation
+                ├─ Enjoy Provider
+                │   ├─ OpenAI-compatible → EnjoyAIClient → /api/* endpoints
+                │   └─ Azure Speech → Token from /api/azure/tokens → Azure SDK
+                ├─ BYOK Provider
+                │   ├─ LLM → BYOKClient → User's API (OpenAI/Claude/Google)
+                │   ├─ OpenAI Audio → BYOKClient → User's OpenAI API
+                │   └─ Azure Speech → User's subscription key → Azure SDK
+                └─ Local Provider
+                    └─ transformers.js → Web Workers → Browser
 ```
 
 **Key Points**:
-- Frontend AI Service Client makes HTTP requests to Hono API Worker
-- Hono API Worker handles all AI processing
-- Cloudflare Workers AI is directly accessible via `env.AI` binding
-- External providers (Enjoy, BYOK) are called from the Worker
+- Frontend AI Service Client routes requests through provider router
+- Provider router automatically selects appropriate provider
+- Each provider has consistent structure (client, services, azure)
+- Azure services differ: Enjoy uses tokens, BYOK uses user keys
+
+## Provider Details
+
+### Enjoy Provider
+
+**Architecture**:
+- **OpenAI-Compatible Services**: Uses `EnjoyAIClient` which wraps OpenAI SDK and Vercel AI SDK
+- **Endpoints**:
+  - `/api/chat/completions` - Smart Translation, Dictionary
+  - `/api/translations` - Basic Translation (non-standard)
+  - `/api/audio/transcriptions` - ASR (Whisper)
+- **Azure Speech**: Token-based authentication via `/api/azure/tokens`
+  - Tokens are cached for 9 minutes (Azure tokens expire after 10 minutes)
+  - Services: TTS, Assessment
+
+**Client Usage**:
+```typescript
+import { getEnjoyClient } from '@/ai/providers/enjoy'
+
+const client = getEnjoyClient()
+// LLM generation
+const text = await client.generateText({ prompt: '...' })
+// ASR
+const result = await client.transcribeSpeech(audioBlob)
+// Translation (non-standard endpoint)
+const translation = await client.translate({ text: '...', targetLang: 'zh' })
+```
+
+### BYOK Provider
+
+**Architecture**:
+- **LLM Services**: Uses `BYOKClient` with Vercel AI SDK
+  - Supports: OpenAI, Claude, Google, Azure OpenAI, Custom endpoints
+- **OpenAI Audio Services**: Uses OpenAI SDK directly
+  - ASR: Whisper API
+  - TTS: OpenAI TTS API
+- **Azure Speech**: Direct SDK access with user's subscription key
+  - No token management needed
+  - Services: TTS, ASR, Assessment
+
+**Client Usage**:
+```typescript
+import { createBYOKClient } from '@/ai/providers/byok'
+
+const client = createBYOKClient({
+  provider: 'openai',
+  apiKey: 'sk-xxx',
+  model: 'gpt-4',
+})
+
+// LLM generation
+const text = await client.generateText({ prompt: '...' })
+// OpenAI TTS
+const audioBlob = await client.synthesizeSpeech('Hello world')
+```
+
+### Local Provider
+
+**Architecture**:
+- **Models**: transformers.js running in Web Workers
+- **Services**: All services use browser-based models
+- **Model Management**: Initialization, caching, and loading state tracking
+- **No Network**: Fully offline-capable
 
 ## Core Abstractions
 
@@ -147,12 +277,17 @@ The `routeToProvider` function handles:
 Basic translation using Enjoy AI. This is a **free service** that uses fast translation models (M2M100, NLLB) optimized for speed and low cost. No style support - use Smart Translation for style-aware translations.
 
 - **Provider**: Enjoy API only (no Local or BYOK support)
+- **Endpoint**: `/api/translations` (non-standard endpoint)
 - **Cost**: Always FREE
 - **Use case**: Quick translations, subtitle translation, basic text translation
 
 ### Smart Translation
 
 Style-aware translation using LLMs. Supports multiple styles (literal, natural, casual, formal, simplified, detailed, custom) and works with all providers that support text generation.
+
+- **Enjoy**: `/api/chat/completions` via `EnjoyAIClient`
+- **BYOK**: User's LLM API via `BYOKClient`
+- **Local**: transformers.js models in Web Workers
 
 ### Smart Dictionary Lookup
 
@@ -161,17 +296,35 @@ Two-tier dictionary service:
 - **Basic Dictionary**: Simple definitions via Enjoy API (FREE) - see `@/api/dictionary`
 - **Smart Dictionary**: AI-powered contextual detailed analysis with context awareness (all providers) - see `@/ai/services/smart-dictionary`
 
+- **Enjoy**: `/api/chat/completions` via `EnjoyAIClient`
+- **BYOK**: User's LLM API via `BYOKClient`
+- **Local**: transformers.js models in Web Workers
+
 ### ASR (Speech-to-Text)
 
 Whisper-based transcription with timestamped segments. Supports all three provider tiers.
 
+- **Enjoy**: `/api/audio/transcriptions` via `EnjoyAIClient` (OpenAI-compatible)
+- **BYOK OpenAI**: User's OpenAI Whisper API via `BYOKClient`
+- **BYOK Azure**: User's Azure Speech subscription via Azure SDK
+- **Local**: transformers.js Whisper in Web Workers
+
 ### TTS (Text-to-Speech)
 
-Text-to-speech conversion for shadowing practice. Uses Enjoy API, Local (Web Speech API), or BYOK providers.
+Text-to-speech conversion for shadowing practice.
+
+- **Enjoy**: Azure Speech SDK with token from `/api/azure/tokens`
+- **BYOK OpenAI**: User's OpenAI TTS API via `BYOKClient`
+- **BYOK Azure**: User's Azure Speech subscription via Azure SDK
+- **Local**: transformers.js TTS models in Web Workers
 
 ### Pronunciation Assessment
 
 Azure Speech Services only (requires phoneme-level assessment). Supports Enjoy mode (token-based) and BYOK mode (user's Azure subscription).
+
+- **Enjoy**: Azure Speech SDK with token from `/api/azure/tokens`
+- **BYOK**: Azure Speech SDK with user's subscription key
+- **Local**: Not supported (requires Azure Speech)
 
 ## BYOK (Bring Your Own Key)
 
@@ -183,7 +336,10 @@ BYOK allows users to use their own API keys for supported providers:
 - **Azure**: Azure OpenAI Service, Azure Speech
 - **Custom**: Any OpenAI-compatible endpoint
 
-BYOK uses Vercel AI SDK for unified LLM access and official SDKs for speech services.
+BYOK uses:
+- **Vercel AI SDK** for unified LLM access
+- **OpenAI SDK** for audio services (when using OpenAI)
+- **Azure Speech SDK** for Azure Speech services
 
 ## Usage Pattern
 
@@ -203,13 +359,40 @@ The provider selection is automatic unless explicitly specified in the request c
 3. **Import from public API** (`@/ai`) for all service usage
 4. **Let the router handle provider selection** - only override when necessary
 5. **Handle errors consistently** using the standardized response format
+6. **Follow provider structure** - each provider has `client.ts`, `services/`, and `azure/` (when applicable)
 
 ## Technology Stack
 
 - **Vercel AI SDK**: Unified LLM access for BYOK
+- **OpenAI SDK**: Direct API access for OpenAI-compatible services
 - **transformers.js**: Browser-based local models
-- **OpenAI SDK**: Direct API access for speech services
-- **Azure Speech SDK**: Pronunciation assessment
+- **Azure Speech SDK**: Pronunciation assessment and TTS
+- **Hono API Worker**: Server-side API endpoints
+
+## Code Organization
+
+All providers follow a consistent structure for maintainability:
+
+```
+providers/
+├── enjoy/
+│   ├── client.ts              # EnjoyAIClient
+│   ├── services/              # OpenAI-compatible services
+│   └── azure/                 # Azure Speech (token-based)
+├── byok/
+│   ├── client.ts              # BYOKClient
+│   ├── services/              # OpenAI-compatible services
+│   └── azure/                 # Azure Speech (user key)
+└── local/
+    ├── index.ts               # LocalModelService
+    ├── services/              # Service implementations
+    └── workers/               # Web Workers
+```
+
+This structure ensures:
+- **Consistency**: Same organization across all providers
+- **Maintainability**: Easy to find and update services
+- **Clarity**: Clear separation between OpenAI-compatible and Azure services
 
 ## Conclusion
 
@@ -220,3 +403,4 @@ The AI Service architecture provides:
 - **Consistent Quality**: Shared prompts ensure consistent output across providers
 - **Extensibility**: Easy to add new providers or services
 - **User Choice**: Multiple tiers from free local models to premium cloud services
+- **Consistent Structure**: All providers follow the same organizational pattern
