@@ -1,10 +1,10 @@
 /**
- * Database Stores - Unified export for all store modules
+ * Database Repositories - Unified export for all repository modules
  */
 
-// Video Store
+// Video Repository
 export {
-  videoStore,
+  videoRepository,
   getVideoById,
   getVideoByProviderAndVid,
   getVideosBySyncStatus,
@@ -16,11 +16,11 @@ export {
   saveLocalVideo,
   updateVideo,
   deleteVideo,
-} from './video-store'
+} from './video-repository'
 
-// Audio Store
+// Audio Repository
 export {
-  audioStore,
+  audioRepository,
   getAudioById,
   getAudioByProviderAndAid,
   getAudiosBySyncStatus,
@@ -38,11 +38,11 @@ export {
   type TTSAudioInput,
   type PlatformAudioInput,
   type AudioInput,
-} from './audio-store'
+} from './audio-repository'
 
-// Transcript Store
+// Transcript Repository
 export {
-  transcriptStore,
+  transcriptRepository,
   getTranscriptById,
   getTranscriptsByTarget,
   getTranscriptByTargetLanguageSource,
@@ -56,11 +56,11 @@ export {
   updateTranscript,
   deleteTranscript,
   getTrackId,
-} from './transcript-store'
+} from './transcript-repository'
 
-// Recording Store
+// Recording Repository
 export {
-  recordingStore,
+  recordingRepository,
   getRecordingById,
   getRecordingsByTarget,
   getRecordingsBySyncStatus,
@@ -72,11 +72,11 @@ export {
   saveRecording,
   updateRecording,
   deleteRecording,
-} from './recording-store'
+} from './recording-repository'
 
-// Dictation Store
+// Dictation Repository
 export {
-  dictationStore,
+  dictationRepository,
   getDictationById,
   getDictationsByTarget,
   getDictationsBySyncStatus,
@@ -86,11 +86,11 @@ export {
   updateDictation,
   deleteDictation,
   calculateDictationAccuracy,
-} from './dictation-store'
+} from './dictation-repository'
 
-// Translation Store
+// Translation Repository
 export {
-  translationStore,
+  translationRepository,
   getTranslationById,
   getTranslationByTextAndStyle,
   getTranslationsBySourceText,
@@ -102,16 +102,16 @@ export {
   saveTranslation,
   updateTranslation,
   deleteTranslation,
-} from './translation-store'
+} from './translation-repository'
 
-// CachedDefinition Store
+// CachedDefinition Repository
 export {
-  cachedDefinitionStore,
+  cachedDefinitionRepository,
   getCachedDefinition,
   getAllCachedDefinitions,
   setCachedDefinition,
   deleteCachedDefinition,
   clearAllCachedDefinitions,
   cleanupExpiredCache,
-} from './cached-definition-store'
+} from './cached-definition-repository'
 

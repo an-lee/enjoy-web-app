@@ -293,6 +293,6 @@ See [SCHEMA_DESIGN.md](./SCHEMA_DESIGN.md) for the complete Sync API specificati
 | `src/types/db.ts` | TypeScript type definitions |
 | `src/db/schema.ts` | Dexie.js database configuration |
 | `src/db/id-generator.ts` | UUID generation utilities |
-| `src/db/stores/*.ts` | Entity-specific store operations |
+| `src/db/repositories/*.ts` | Entity-specific repository operations |
 | `src/db/index.ts` | Unified module entry point |
 | `doc/SCHEMA_DESIGN.md` | Browser extension schema specification |

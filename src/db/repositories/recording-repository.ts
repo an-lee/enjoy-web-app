@@ -1,5 +1,5 @@
 /**
- * Recording Store - Database operations for Recording entity
+ * Recording Repository - Database operations for Recording entity
  */
 
 import { db } from '../schema'
@@ -98,10 +98,10 @@ export async function deleteRecording(id: string): Promise<void> {
 }
 
 // ============================================================================
-// Store Object (Alternative API)
+// Repository Object (Alternative API)
 // ============================================================================
 
-export const recordingStore = {
+export const recordingRepository = {
   // Queries
   getById: getRecordingById,
   getByTarget: getRecordingsByTarget,

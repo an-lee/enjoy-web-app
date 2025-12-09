@@ -1,5 +1,5 @@
 /**
- * Tests for Translation Store (Dexie database operations)
+ * Tests for Translation Repository (Dexie database operations)
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
@@ -8,7 +8,7 @@ import type { Translation, TranslationStyle, TranslationInput } from '@/types/db
 // Create in-memory data store
 const translationData = new Map<string, Translation>()
 
-// Mock the database module BEFORE importing the store
+// Mock the database module BEFORE importing the repository
 vi.mock('../schema', () => ({
   db: {
     translations: {
@@ -91,12 +91,12 @@ import {
   saveTranslation,
   updateTranslation,
   deleteTranslation,
-  translationStore,
-} from './translation-store'
+  translationRepository,
+} from './translation-repository'
 import { generateTranslationId } from '../id-generator'
 import { db } from '../schema'
 
-describe('Translation Store', () => {
+describe('Translation Repository', () => {
   beforeEach(() => {
     // Clear mock data
     translationData.clear()
@@ -310,19 +310,20 @@ describe('Translation Store', () => {
     })
   })
 
-  describe('Store Object (Alternative API)', () => {
-    it('should export all methods through store object', () => {
-      expect(translationStore.getById).toBe(getTranslationById)
-      expect(translationStore.getByTextAndStyle).toBe(getTranslationByTextAndStyle)
-      expect(translationStore.getBySourceText).toBe(getTranslationsBySourceText)
-      expect(translationStore.getBySourceLanguage).toBe(getTranslationsBySourceLanguage)
-      expect(translationStore.getByTargetLanguage).toBe(getTranslationsByTargetLanguage)
-      expect(translationStore.getByStyle).toBe(getTranslationsByStyle)
-      expect(translationStore.getBySyncStatus).toBe(getTranslationsBySyncStatus)
-      expect(translationStore.getAll).toBe(getAllTranslations)
-      expect(translationStore.save).toBe(saveTranslation)
-      expect(translationStore.update).toBe(updateTranslation)
-      expect(translationStore.delete).toBe(deleteTranslation)
+  describe('Repository Object (Alternative API)', () => {
+    it('should export all methods through repository object', () => {
+      expect(translationRepository.getById).toBe(getTranslationById)
+      expect(translationRepository.getByTextAndStyle).toBe(getTranslationByTextAndStyle)
+      expect(translationRepository.getBySourceText).toBe(getTranslationsBySourceText)
+      expect(translationRepository.getBySourceLanguage).toBe(getTranslationsBySourceLanguage)
+      expect(translationRepository.getByTargetLanguage).toBe(getTranslationsByTargetLanguage)
+      expect(translationRepository.getByStyle).toBe(getTranslationsByStyle)
+      expect(translationRepository.getBySyncStatus).toBe(getTranslationsBySyncStatus)
+      expect(translationRepository.getAll).toBe(getAllTranslations)
+      expect(translationRepository.save).toBe(saveTranslation)
+      expect(translationRepository.update).toBe(updateTranslation)
+      expect(translationRepository.delete).toBe(deleteTranslation)
     })
   })
 })
+

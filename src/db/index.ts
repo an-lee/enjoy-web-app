@@ -4,7 +4,7 @@
  * Structure:
  * - /types/db.ts     - Type definitions
  * - /db/schema.ts    - Dexie database configuration
- * - /db/stores/*     - Data operation layer
+ * - /db/repositories/*  - Data operation layer
  * - /db/id-generator.ts - UUID generation utilities
  */
 
@@ -13,7 +13,7 @@
 // ============================================================================
 
 export { db, EnjoyDatabase, initDatabase } from './schema'
-import { cleanupExpiredCache } from './stores/cached-definition-store'
+import { cleanupExpiredCache } from './repositories/cached-definition-repository'
 
 /**
  * Initialize database with cleanup (call this on app startup)
@@ -65,12 +65,12 @@ export type {
 } from '@/types/db'
 
 // ============================================================================
-// Store Exports
+// Repository Exports
 // ============================================================================
 
 // Video
 export {
-  videoStore,
+  videoRepository,
   getVideoById,
   getVideoByProviderAndVid,
   getVideosBySyncStatus,
@@ -82,11 +82,11 @@ export {
   saveLocalVideo,
   updateVideo,
   deleteVideo,
-} from './stores/video-store'
+} from './repositories/video-repository'
 
 // Audio
 export {
-  audioStore,
+  audioRepository,
   getAudioById,
   getAudioByProviderAndAid,
   getAudiosBySyncStatus,
@@ -101,11 +101,11 @@ export {
   saveLocalAudio,
   updateAudio,
   deleteAudio,
-} from './stores/audio-store'
+} from './repositories/audio-repository'
 
 // Transcript
 export {
-  transcriptStore,
+  transcriptRepository,
   getTranscriptById,
   getTranscriptsByTarget,
   getTranscriptByTargetLanguageSource,
@@ -119,11 +119,11 @@ export {
   updateTranscript,
   deleteTranscript,
   getTrackId,
-} from './stores/transcript-store'
+} from './repositories/transcript-repository'
 
 // Recording
 export {
-  recordingStore,
+  recordingRepository,
   getRecordingById,
   getRecordingsByTarget,
   getRecordingsBySyncStatus,
@@ -135,11 +135,11 @@ export {
   saveRecording,
   updateRecording,
   deleteRecording,
-} from './stores/recording-store'
+} from './repositories/recording-repository'
 
 // Dictation
 export {
-  dictationStore,
+  dictationRepository,
   getDictationById,
   getDictationsByTarget,
   getDictationsBySyncStatus,
@@ -149,11 +149,11 @@ export {
   updateDictation,
   deleteDictation,
   calculateDictationAccuracy,
-} from './stores/dictation-store'
+} from './repositories/dictation-repository'
 
 // Translation
 export {
-  translationStore,
+  translationRepository,
   getTranslationById,
   getTranslationByTextAndStyle,
   getTranslationsBySourceText,
@@ -165,18 +165,18 @@ export {
   saveTranslation,
   updateTranslation,
   deleteTranslation,
-} from './stores/translation-store'
+} from './repositories/translation-repository'
 
 // CachedDefinition
 export {
-  cachedDefinitionStore,
+  cachedDefinitionRepository,
   getCachedDefinition,
   getAllCachedDefinitions,
   setCachedDefinition,
   deleteCachedDefinition,
   clearAllCachedDefinitions,
   cleanupExpiredCache,
-} from './stores/cached-definition-store'
+} from './repositories/cached-definition-repository'
 
 // ============================================================================
 // ID Generator Exports

@@ -1,5 +1,5 @@
 /**
- * Dictation Store - Database operations for Dictation entity
+ * Dictation Repository - Database operations for Dictation entity
  */
 
 import { db } from '../schema'
@@ -117,10 +117,10 @@ export function calculateDictationAccuracy(
 }
 
 // ============================================================================
-// Store Object (Alternative API)
+// Repository Object (Alternative API)
 // ============================================================================
 
-export const dictationStore = {
+export const dictationRepository = {
   // Queries
   getById: getDictationById,
   getByTarget: getDictationsByTarget,

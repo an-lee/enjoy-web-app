@@ -1,5 +1,5 @@
 /**
- * Transcript Store - Database operations for Transcript entity
+ * Transcript Repository - Database operations for Transcript entity
  */
 
 import { db } from '../schema'
@@ -149,10 +149,10 @@ export function getTrackId(transcript: Transcript): string {
 }
 
 // ============================================================================
-// Store Object (Alternative API)
+// Repository Object (Alternative API)
 // ============================================================================
 
-export const transcriptStore = {
+export const transcriptRepository = {
   // Queries
   getById: getTranscriptById,
   getByTarget: getTranscriptsByTarget,

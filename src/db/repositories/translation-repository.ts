@@ -1,5 +1,5 @@
 /**
- * Translation Store - Database operations for Translation entity
+ * Translation Repository - Database operations for Translation entity
  */
 
 import { db } from '../schema'
@@ -107,10 +107,10 @@ export async function deleteTranslation(id: string): Promise<void> {
 }
 
 // ============================================================================
-// Store Object (Alternative API)
+// Repository Object (Alternative API)
 // ============================================================================
 
-export const translationStore = {
+export const translationRepository = {
   // Queries
   getById: getTranslationById,
   getByTextAndStyle: getTranslationByTextAndStyle,

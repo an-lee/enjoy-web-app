@@ -1,5 +1,5 @@
 /**
- * Audio Store - Database operations for Audio entity
+ * Audio Repository - Database operations for Audio entity
  */
 
 import { db } from '../schema'
@@ -157,10 +157,10 @@ export async function deleteAudio(id: string): Promise<void> {
 }
 
 // ============================================================================
-// Store Object (Alternative API)
+// Repository Object (Alternative API)
 // ============================================================================
 
-export const audioStore = {
+export const audioRepository = {
   // Queries
   getById: getAudioById,
   getByProviderAndAid: getAudioByProviderAndAid,

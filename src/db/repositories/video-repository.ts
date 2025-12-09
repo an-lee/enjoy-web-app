@@ -1,5 +1,5 @@
 /**
- * Video Store - Database operations for Video entity
+ * Video Repository - Database operations for Video entity
  */
 
 import { db } from '../schema'
@@ -114,10 +114,10 @@ export async function deleteVideo(id: string): Promise<void> {
 }
 
 // ============================================================================
-// Store Object (Alternative API)
+// Repository Object (Alternative API)
 // ============================================================================
 
-export const videoStore = {
+export const videoRepository = {
   // Queries
   getById: getVideoById,
   getByProviderAndVid: getVideoByProviderAndVid,

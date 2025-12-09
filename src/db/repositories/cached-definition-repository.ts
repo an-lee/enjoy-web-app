@@ -1,5 +1,5 @@
 /**
- * CachedDefinition Store - Database operations for dictionary cache
+ * CachedDefinition Repository - Database operations for dictionary cache
  */
 
 import { db } from '../schema'
@@ -92,10 +92,10 @@ export async function cleanupExpiredCache(): Promise<number> {
 }
 
 // ============================================================================
-// Store Object (Alternative API)
+// Repository Object (Alternative API)
 // ============================================================================
 
-export const cachedDefinitionStore = {
+export const cachedDefinitionRepository = {
   // Queries
   get: getCachedDefinition,
   getAll: getAllCachedDefinitions,
