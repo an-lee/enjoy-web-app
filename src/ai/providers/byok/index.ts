@@ -50,3 +50,14 @@ export {
   assessWithAzure as assessWithBYOKAzure,
 } from './azure'
 export type { AzureSpeechConfig } from './azure'
+
+// ============================================
+// Voice Options
+// ============================================
+export {
+  OPENAI_TTS_VOICES,
+  AZURE_TTS_VOICES,
+  getBYOKTTSVoices,
+  getDefaultBYOKTTSVoice,
+} from './voices'
+// Note: VoiceOption type is exported from '@/ai/constants/tts-voices'

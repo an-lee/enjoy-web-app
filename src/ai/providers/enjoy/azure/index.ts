@@ -25,3 +25,11 @@ export { synthesize as synthesizeWithAzure } from './tts-service'
 // Assessment service
 export { assess as assessWithAzure } from './assessment-service'
 
+// Voice options
+export {
+  AZURE_TTS_VOICES,
+  getAzureTTSVoices,
+  getDefaultAzureTTSVoice,
+} from './voices'
+// Note: VoiceOption type is exported from '@/ai/constants/tts-voices'
+

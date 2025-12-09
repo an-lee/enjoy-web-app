@@ -126,6 +126,78 @@ export const TTS_MODEL_OPTIONS: ModelOption[] = [
   },
 ]
 
+// ============================================================================
+// TTS Voice Options (per model)
+// ============================================================================
+
+export interface LocalVoiceOption {
+  value: string
+  label: string
+  gender?: 'male' | 'female' | 'neutral'
+  description?: string
+  /**
+   * Supported languages for this voice
+   * If undefined or empty array, the voice supports all languages
+   */
+  languages?: string[]
+}
+
+/**
+ * TTS voice options for Supertonic model
+ * Available voices: F1, F2 (Female), M1, M2 (Male)
+ * Supertonic supports multiple languages, so we don't restrict by language
+ */
+export const SUPERTONIC_TTS_VOICES: LocalVoiceOption[] = [
+  {
+    value: 'F1',
+    label: 'Female 1',
+    gender: 'female',
+    description: 'Female voice option 1',
+  },
+  {
+    value: 'F2',
+    label: 'Female 2',
+    gender: 'female',
+    description: 'Female voice option 2',
+  },
+  {
+    value: 'M1',
+    label: 'Male 1',
+    gender: 'male',
+    description: 'Male voice option 1',
+  },
+  {
+    value: 'M2',
+    label: 'Male 2',
+    gender: 'male',
+    description: 'Male voice option 2',
+  },
+]
+
+/**
+ * Get available TTS voices for a given model
+ * @param model - The TTS model identifier
+ * @returns Array of voice options for the model
+ */
+export function getLocalTTSVoices(model?: string): LocalVoiceOption[] {
+  // Currently only Supertonic is supported
+  // When more models are added, this function will select voices based on model
+  if (model === 'onnx-community/Supertonic-TTS-ONNX' || !model) {
+    return SUPERTONIC_TTS_VOICES
+  }
+  return SUPERTONIC_TTS_VOICES // fallback
+}
+
+/**
+ * Get default TTS voice for a given model
+ * @param model - The TTS model identifier
+ * @returns Default voice value
+ */
+export function getDefaultLocalTTSVoice(model?: string): string {
+  const voices = getLocalTTSVoices(model)
+  return voices[0]?.value || 'F1'
+}
+
 /**
  * Legacy: Keep for backward compatibility
  */
