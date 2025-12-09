@@ -208,7 +208,7 @@ function LoginPage() {
         /* Loading spinner during callback processing */
         <div className="relative flex h-40 w-40 items-center justify-center">
           {/* Rotating border gradient */}
-          <span className="absolute inset-0 animate-spin rounded-full bg-linear-to-r from-violet-500 via-fuchsia-500 to-cyan-500 p-[2px] [animation-duration:2s]">
+          <span className="absolute inset-0 animate-spin rounded-full bg-linear-to-r from-violet-500 via-fuchsia-500 to-cyan-500 p-[2px] animation-duration-[2s]">
             <span className="flex h-full w-full rounded-full bg-zinc-950" />
           </span>
 
