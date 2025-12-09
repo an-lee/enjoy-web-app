@@ -5,4 +5,6 @@
 
 export * from './llm-service'
 export * from './speech-service'
+export { byokAzureSpeechService } from './azure-speech'
+export type { AzureSpeechConfig } from './azure-speech'
 

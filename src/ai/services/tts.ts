@@ -1,14 +1,20 @@
 /**
  * Text-to-Speech Service (TTS)
  * Generates audio from text for shadowing practice materials
+ *
+ * Provider support:
+ * - Enjoy: Azure Speech with token from /api/azure/tokens
+ * - Local: Browser-based TTS (transformers.js)
+ * - BYOK OpenAI: OpenAI TTS API
+ * - BYOK Azure: Azure Speech with user's subscription key
  */
 
-import { azureSpeechService } from '../providers/enjoy/azure-speech'
+import { byokAzureSpeechService } from '../providers/byok'
 import { localModelService } from '../providers/local'
 import { synthesizeWithBYOK } from '../providers/byok'
 import { synthesizeWithEnjoy } from '../providers/enjoy'
 import type { AIServiceConfig, AIServiceResponse, TTSResponse } from '../types'
-import { AIServiceType, AIProvider, BYOKProvider } from '../types'
+import { AIServiceType, AIProvider } from '../types'
 import { ERROR_TTS_AZURE } from '../constants'
 import {
   createSuccessResponse,
@@ -38,22 +44,6 @@ export const ttsService = {
     request: TTSRequest
   ): Promise<AIServiceResponse<TTSResponse>> {
     try {
-      // Special case: Azure Speech via Enjoy API (legacy provider parameter)
-      if (request.provider === BYOKProvider.AZURE && !request.config?.provider) {
-        const token = await azureSpeechService.getToken()
-        const audioBlob = await azureSpeechService.synthesizeWithToken(
-          request.text,
-          request.language,
-          request.voice,
-          token
-        )
-        return createSuccessResponse(
-          { audioBlob, format: 'audio/mpeg' },
-          AIServiceType.TTS,
-          AIProvider.ENJOY
-        )
-      }
-
       // Use unified provider router
       const { response, provider } = await routeToProvider<TTSRequest, TTSResponse>({
         serviceType: AIServiceType.TTS,
@@ -100,14 +90,14 @@ export const ttsService = {
             return result.data
           },
           byokAzure: async (req, azureConfig) => {
-            const audioBlob = await azureSpeechService.synthesizeWithKey(
+            const result = await byokAzureSpeechService.synthesize(
               req.text,
               req.language,
               req.voice,
               azureConfig,
               req.signal
             )
-            return { audioBlob, format: 'audio/mpeg' }
+            return result
           },
         },
       })

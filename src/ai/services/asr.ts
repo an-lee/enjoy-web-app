@@ -1,14 +1,20 @@
 /**
  * Automatic Speech Recognition Service (ASR/STT)
  * Uses Whisper model for speech-to-text with timestamps
+ *
+ * Provider support:
+ * - Enjoy: OpenAI-compatible Whisper endpoint (/api/audio/transcriptions)
+ * - Local: Browser-based Whisper (transformers.js)
+ * - BYOK OpenAI: OpenAI Whisper API
+ * - BYOK Azure: Azure Speech with user's subscription key
  */
 
-import { azureSpeechService } from '../providers/enjoy/azure-speech'
+import { byokAzureSpeechService } from '../providers/byok'
 import { localModelService } from '../providers/local'
 import { transcribeWithBYOK } from '../providers/byok'
 import { transcribeWithEnjoy } from '../providers/enjoy'
 import type { AIServiceConfig, AIServiceResponse, ASRResponse } from '../types'
-import { AIServiceType, AIProvider, BYOKProvider } from '../types'
+import { AIServiceType, AIProvider } from '../types'
 import { ERROR_ASR_AZURE } from '../constants'
 import {
   createSuccessResponse,
@@ -37,17 +43,6 @@ export const asrService = {
     request: ASRRequest
   ): Promise<AIServiceResponse<ASRResponse>> {
     try {
-      // Special case: Azure Speech via Enjoy API (legacy provider parameter)
-      if (request.provider === BYOKProvider.AZURE && !request.config?.provider) {
-        const token = await azureSpeechService.getToken()
-        const result = await azureSpeechService.transcribeWithToken(
-          request.audioBlob,
-          request.language,
-          token
-        )
-        return createSuccessResponse(result, AIServiceType.ASR, AIProvider.ENJOY)
-      }
-
       // Use unified provider router
       const { response, provider } = await routeToProvider<ASRRequest, ASRResponse>({
         serviceType: AIServiceType.ASR,
@@ -90,11 +85,12 @@ export const asrService = {
             return result.data
           },
           byokAzure: async (req, azureConfig) => {
-            return await azureSpeechService.transcribeWithKey(
+            const result = await byokAzureSpeechService.transcribe(
               req.audioBlob,
               req.language,
               azureConfig
             )
+            return result
           },
         },
       })

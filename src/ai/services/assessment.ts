@@ -1,10 +1,16 @@
 /**
  * Pronunciation Assessment Service
  * Uses Azure Speech Services for phoneme-level pronunciation scoring
+ *
+ * Provider support:
+ * - Enjoy: Azure Speech with token from /api/azure/tokens
+ * - BYOK Azure: Azure Speech with user's subscription key
+ *
+ * Note: Local mode is not supported for assessment (requires Azure Speech)
  */
 
-import { apiClient } from '@/api/client'
-import { azureSpeechService } from '../providers/enjoy/azure-speech'
+import { byokAzureSpeechService } from '../providers/byok'
+import { assessWithEnjoy } from '../providers/enjoy'
 import type {
   AIServiceConfig,
   AIServiceResponse,
@@ -44,7 +50,7 @@ export const assessmentService = {
       // BYOK mode with Azure
       if (useBYOK && request.config?.byok) {
         if (request.config.byok.provider === BYOKProvider.AZURE) {
-          const result = await azureSpeechService.assessPronunciationWithKey(
+          const result = await byokAzureSpeechService.assessPronunciation(
             request.audioBlob,
             request.referenceText,
             request.language,
@@ -67,21 +73,18 @@ export const assessmentService = {
         )
       }
 
-      // Enjoy API mode (default)
-      const formData = new FormData()
-      formData.append('audio', request.audioBlob, 'recording.wav')
-      formData.append('referenceText', request.referenceText)
-      formData.append('language', request.language)
+      // Enjoy API mode (default) - uses Azure Speech with token
+      const result = await assessWithEnjoy(
+        request.audioBlob,
+        request.referenceText,
+        request.language
+      )
 
-      const response = await apiClient.post<
-        AIServiceResponse<AssessmentResponse>
-      >('/api/v1/services/assessment', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+      if (!result.success || !result.data) {
+        throw new Error(result.error?.message || 'Enjoy API assessment failed')
+      }
 
-      return response.data
+      return result
     } catch (error) {
       return handleProviderError(
         error,
