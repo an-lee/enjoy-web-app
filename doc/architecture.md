@@ -129,9 +129,17 @@ src/
 │   ├── database.ts      # Dexie database configuration
 │   ├── id-generator.ts   # UUID v5 generators for deterministic IDs
 │   └── *.ts             # Entity-specific helper functions
-├── services/            # API clients and AI service wrappers
-│   ├── api/             # Rails API client (external backend)
-│   └── ai/              # AI service providers (Enjoy/Local/BYOK)
+├── api/                 # Rails API client (external backend)
+│   ├── auth.ts          # Authentication endpoints
+│   ├── client.ts         # API client configuration
+│   ├── dictionary.ts     # Dictionary lookup
+│   └── translation.ts    # Translation services
+├── ai/                  # AI service providers (Enjoy/Local/BYOK)
+│   ├── services/        # Service routers (ASR, TTS, translation, etc.)
+│   ├── providers/       # Provider implementations (Enjoy/Local/BYOK)
+│   ├── core/            # Core abstractions (config, error handling, routing)
+│   ├── prompts/         # Centralized prompt templates
+│   └── types/           # Type definitions
 ├── stores/              # Zustand global stores (settings, auth)
 ├── locales/             # i18next translation files
 │   ├── en/              # English translations

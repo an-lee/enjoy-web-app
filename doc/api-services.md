@@ -4,7 +4,7 @@
 
 The project uses **two API systems** with clear responsibility separation:
 
-1. **Rails API Backend** (`src/services/api/`): **User information management** - authentication, user profiles, and data synchronization
+1. **Rails API Backend** (`src/api/`): **User information management** - authentication, user profiles, and data synchronization
 2. **Hono API Worker** (`src/server/api.ts`): **All AI services** - translation, dictionary, ASR, TTS, assessment, and other AI-powered features
 
 This document focuses on the **Rails API Backend** client. For AI services via Hono API Worker, see [API Worker Integration Guide](./api-worker-integration.md) and [AI Service Architecture](./ai-services.md).
@@ -17,7 +17,7 @@ This document focuses on the **Rails API Backend** client. For AI services via H
 | **Route Prefix** | `/api/v1/*` | `/api/*` |
 | **Primary Responsibility** | **User information management** | **All AI services** |
 | **Services** | Auth, user profiles, data sync | Translation, dictionary, ASR, TTS, assessment |
-| **Client Module** | `src/services/api/` | Direct fetch calls or service wrappers |
+| **Client Module** | `src/api/` | Direct fetch calls or service wrappers |
 | **Authentication** | Bearer token (JWT) | Can use same JWT or Cloudflare-specific auth |
 | **Bindings** | N/A | KV, D1, AI, R2, etc. |
 | **AI Integration** | ❌ No AI services | ✅ Direct Cloudflare Workers AI access |
@@ -113,9 +113,9 @@ These endpoints use the authenticated `apiClient` instance, which automatically 
 
 **Usage**: See [API Worker Integration Guide](./api-worker-integration.md), [AI Service Architecture](./ai-services.md), and [OpenAI API Guide](../README-openai-api.md)
 
-### AI Service Client (`@/services/ai`)
+### AI Service Client (`@/ai`)
 
-The frontend AI service client (`src/services/ai/`) provides:
+The frontend AI service client (`src/ai/`) provides:
 
 - **Unified Interface**: Provider-agnostic service layer
 - **Multiple Providers**: Support for Enjoy, Local, BYOK
@@ -149,7 +149,7 @@ The API client handles errors at two levels:
 ## Usage Pattern
 
 ```typescript
-import { authApi, userApi } from '@/services/api'
+import { authApi, userApi } from '@/api'
 
 // Authentication
 const loginResult = await authApi.login({
@@ -167,7 +167,7 @@ await userApi.updateProfile({
 })
 ```
 
-> **Note**: For AI services (translation, dictionary, ASR, TTS), use the AI Service Client (`@/services/ai`) which calls Hono API Worker endpoints.
+> **Note**: For AI services (translation, dictionary, ASR, TTS), use the AI Service Client (`@/ai`) which calls Hono API Worker endpoints.
 
 ## Environment Configuration
 
@@ -179,7 +179,7 @@ The API base URL is configured via environment variable:
 
 ## When to Use Which API
 
-### Use Rails API Backend (`src/services/api/`) when
+### Use Rails API Backend (`src/api/`) when
 - ✅ **User authentication** (login, logout, token refresh)
 - ✅ **User profile management** (get/update profile)
 - ✅ **Data synchronization** (sync local data with server)
@@ -193,7 +193,7 @@ The API base URL is configured via environment variable:
 - ✅ **Cloudflare Bindings** (KV, D1, R2 for caching/storage)
 - ✅ **Same-domain API** (no CORS issues)
 
-### Use AI Service Client (`@/services/ai`) when
+### Use AI Service Client (`@/ai`) when
 - ✅ **Frontend integration** (unified interface for AI services)
 - ✅ **Provider abstraction** (Enjoy, Local, BYOK support)
 - ✅ **Type-safe API calls** (TypeScript interfaces)
@@ -209,4 +209,4 @@ The API base URL is configured via environment variable:
 5. **Clear responsibility separation**:
    - **Rails API**: User information management only
    - **Hono API**: All AI services
-6. **Use AI Service Client** (`@/services/ai`) for AI features - it calls Hono API Worker internally
+6. **Use AI Service Client** (`@/ai`) for AI features - it calls Hono API Worker internally

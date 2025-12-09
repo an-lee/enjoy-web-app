@@ -4,7 +4,7 @@
 
 The AI Service module provides a unified, provider-agnostic interface for all AI-powered features in the Enjoy Echo web application. It supports multiple providers (Enjoy API, Local models, and BYOK) through a clean abstraction layer, ensuring consistent behavior regardless of the underlying provider.
 
-**Important**: All AI services are now handled by **Hono API Worker** (`/api/*`). The frontend AI Service Client (`src/services/ai/`) calls Hono API Worker endpoints, which then process the requests using Cloudflare Workers AI or route to external providers.
+**Important**: All AI services are now handled by **Hono API Worker** (`/api/*`). The frontend AI Service Client (`src/ai/`) calls Hono API Worker endpoints, which then process the requests using Cloudflare Workers AI or route to external providers.
 
 **Architecture Flow**:
 ```
@@ -27,7 +27,7 @@ The architecture supports three provider tiers:
 
 ### 2. Unified Prompt Management
 
-All prompts are centrally managed in `/src/services/ai/prompts/`, ensuring consistent output quality across all providers. The same prompt templates are used by Enjoy API, Local models, and BYOK providers.
+All prompts are centrally managed in `/src/ai/prompts/`, ensuring consistent output quality across all providers. The same prompt templates are used by Enjoy API, Local models, and BYOK providers.
 
 ### 3. Provider-Agnostic Service Layer
 
@@ -86,13 +86,13 @@ Provider-specific implementations isolated from each other:
 ```text
 User Request (Frontend)
     │
-    └─ AI Service Client (services/ai/services/*.ts)
+    └─ AI Service Client (src/ai/services/*.ts)
         │
         └─ HTTP Request to Hono API Worker (/api/*)
             │
             └─ Hono API Worker (src/server/api.ts)
                 │
-                └─ Provider Router (core/provider-router.ts)
+                └─ Provider Router (src/ai/core/provider-router.ts)
                     │
                     ├─ Auto-select provider based on:
                     │   - User configuration
@@ -158,8 +158,8 @@ Style-aware translation using LLMs. Supports multiple styles (literal, natural, 
 
 Two-tier dictionary service:
 
-- **Basic Dictionary**: Simple definitions via Enjoy API (FREE) - see `@/services/api/dictionary`
-- **Smart Dictionary**: AI-powered contextual detailed analysis with context awareness (all providers) - see `@/services/ai/services/smart-dictionary`
+- **Basic Dictionary**: Simple definitions via Enjoy API (FREE) - see `@/api/dictionary`
+- **Smart Dictionary**: AI-powered contextual detailed analysis with context awareness (all providers) - see `@/ai/services/smart-dictionary`
 
 ### ASR (Speech-to-Text)
 
@@ -200,7 +200,7 @@ The provider selection is automatic unless explicitly specified in the request c
 
 1. **Always use service routers** from `services/` - don't call providers directly
 2. **Use core abstractions** for configuration and error handling
-3. **Import from public API** (`@/services/ai`) for all service usage
+3. **Import from public API** (`@/ai`) for all service usage
 4. **Let the router handle provider selection** - only override when necessary
 5. **Handle errors consistently** using the standardized response format
 
