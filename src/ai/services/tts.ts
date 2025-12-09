@@ -9,7 +9,7 @@
  * - BYOK Azure: Azure Speech with user's subscription key
  */
 
-import { byokAzureSpeechService } from '../providers/byok'
+import { synthesizeWithBYOKAzure } from '../providers/byok'
 import { localModelService } from '../providers/local'
 import { synthesizeWithBYOK } from '../providers/byok'
 import { synthesizeWithEnjoy } from '../providers/enjoy'
@@ -90,14 +90,17 @@ export const ttsService = {
             return result.data
           },
           byokAzure: async (req, azureConfig) => {
-            const result = await byokAzureSpeechService.synthesize(
+            const result = await synthesizeWithBYOKAzure(
               req.text,
               req.language,
               req.voice,
               azureConfig,
               req.signal
             )
-            return result
+            if (!result.success || !result.data) {
+              throw new Error(result.error?.message || 'BYOK Azure TTS failed')
+            }
+            return result.data
           },
         },
       })

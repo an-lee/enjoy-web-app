@@ -9,7 +9,7 @@
  * - BYOK Azure: Azure Speech with user's subscription key
  */
 
-import { byokAzureSpeechService } from '../providers/byok'
+import { transcribeWithBYOKAzure } from '../providers/byok'
 import { localModelService } from '../providers/local'
 import { transcribeWithBYOK } from '../providers/byok'
 import { transcribeWithEnjoy } from '../providers/enjoy'
@@ -85,12 +85,15 @@ export const asrService = {
             return result.data
           },
           byokAzure: async (req, azureConfig) => {
-            const result = await byokAzureSpeechService.transcribe(
+            const result = await transcribeWithBYOKAzure(
               req.audioBlob,
               req.language,
               azureConfig
             )
-            return result
+            if (!result.success || !result.data) {
+              throw new Error(result.error?.message || 'BYOK Azure ASR failed')
+            }
+            return result.data
           },
         },
       })

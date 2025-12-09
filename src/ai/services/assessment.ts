@@ -9,7 +9,7 @@
  * Note: Local mode is not supported for assessment (requires Azure Speech)
  */
 
-import { byokAzureSpeechService } from '../providers/byok'
+import { assessWithBYOKAzure } from '../providers/byok'
 import { assessWithEnjoy } from '../providers/enjoy'
 import type {
   AIServiceConfig,
@@ -50,7 +50,7 @@ export const assessmentService = {
       // BYOK mode with Azure
       if (useBYOK && request.config?.byok) {
         if (request.config.byok.provider === BYOKProvider.AZURE) {
-          const result = await byokAzureSpeechService.assessPronunciation(
+          const result = await assessWithBYOKAzure(
             request.audioBlob,
             request.referenceText,
             request.language,
@@ -59,7 +59,12 @@ export const assessmentService = {
               region: request.config.byok.region || DEFAULT_AZURE_REGION,
             }
           )
-          return createSuccessResponse(result, AIServiceType.ASSESSMENT, AIProvider.BYOK)
+
+          if (!result.success || !result.data) {
+            throw new Error(result.error?.message || 'BYOK Azure assessment failed')
+          }
+
+          return createSuccessResponse(result.data, AIServiceType.ASSESSMENT, AIProvider.BYOK)
         }
 
         // Only Azure supports pronunciation assessment
