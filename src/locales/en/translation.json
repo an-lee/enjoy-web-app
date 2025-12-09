@@ -166,16 +166,6 @@
     "example": "Example"
   },
   "auth": {
-    "login": {
-      "title": "Login",
-      "button": "Login",
-      "processing": "Processing authentication...",
-      "help": "A popup window will open for you to complete the login. Please allow popups for this site if prompted.",
-      "popupBlocked": "Failed to open login popup. Please allow popups for this site and try again.",
-      "popupClosed": "Login popup was closed. Please try again.",
-      "authFailed": "Authentication failed. Please try again.",
-      "authError": "An error occurred during authentication."
-    },
     "logout": "Logout",
     "menu": {
       "account": "Account",

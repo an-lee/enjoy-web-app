@@ -137,16 +137,6 @@
     "example": "Exemple"
   },
   "auth": {
-    "login": {
-      "title": "Connexion",
-      "button": "Se connecter",
-      "processing": "Traitement de l'authentification...",
-      "help": "Une fenêtre contextuelle s'ouvrira pour que vous puissiez compléter la connexion. Veuillez autoriser les fenêtres contextuelles pour ce site si vous y êtes invité.",
-      "popupBlocked": "Impossible d'ouvrir la fenêtre contextuelle de connexion. Veuillez autoriser les fenêtres contextuelles pour ce site et réessayer.",
-      "popupClosed": "La fenêtre contextuelle de connexion a été fermée. Veuillez réessayer.",
-      "authFailed": "L'authentification a échoué. Veuillez réessayer.",
-      "authError": "Une erreur s'est produite lors de l'authentification."
-    },
     "logout": "Déconnexion",
     "menu": {
       "account": "Compte",

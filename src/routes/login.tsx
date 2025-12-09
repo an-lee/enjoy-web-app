@@ -1,12 +1,55 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useAuthStore, type User } from '@/stores'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { api } from '@/services/api'
+
+// Storage key for CSRF state
+const AUTH_STATE_KEY = 'enjoy_auth_state'
+
+/**
+ * Generate a random state string for CSRF protection
+ */
+function generateState(): string {
+  const array = new Uint8Array(32)
+  crypto.getRandomValues(array)
+  return `ENJOYWEBAPP${Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * Parse fragment parameters from URL hash
+ * Example: #access_token=xxx&state=yyy -> { access_token: 'xxx', state: 'yyy' }
+ */
+function parseFragmentParams(hash: string): Record<string, string> {
+  if (!hash || hash.length <= 1) return {}
+
+  const fragment = hash.startsWith('#') ? hash.substring(1) : hash
+  const params = new URLSearchParams(fragment)
+  const result: Record<string, string> = {}
+
+  params.forEach((value, key) => {
+    result[key] = value
+  })
+
+  return result
+}
+
+/**
+ * Get redirect URL from search params (SSR-safe)
+ */
+function getRedirectUrl(routeRedirect: string | undefined): string {
+  // Check route search param first
+  if (routeRedirect) return routeRedirect
+
+  // Check URL search params (only on client)
+  if (typeof window !== 'undefined') {
+    const searchParams = new URLSearchParams(window.location.search)
+    const redirectUrl = searchParams.get('redirect_url')
+    if (redirectUrl) return redirectUrl
+  }
+
+  return '/'
+}
 
 export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -18,204 +61,164 @@ export const Route = createFileRoute('/login')({
 })
 
 function LoginPage() {
-  const { t } = useTranslation()
   const navigate = useNavigate()
   const { isAuthenticated, setToken, setUser } = useAuthStore()
   const search = Route.useSearch()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [isProcessingCallback, setIsProcessingCallback] = useState(false)
 
-  // Check if this is a popup window (opened by this page)
-  const [popupWindow, setPopupWindow] = useState<Window | null>(null)
-
-  // Redirect if already authenticated
+  // Handle fragment token on page load (callback from main site)
   useEffect(() => {
-    if (isAuthenticated) {
-      const redirectTo = search.redirect || '/'
-      navigate({ to: redirectTo as any })
-    }
-  }, [isAuthenticated, navigate, search.redirect])
+    const hash = window.location.hash
+    console.log('[Login] Checking hash:', hash)
 
-  // Listen for postMessage from main site (after OAuth login completes)
+    if (!hash) {
+      console.log('[Login] No hash found')
+      return
+    }
+
+    const params = parseFragmentParams(hash)
+    console.log('[Login] Parsed params:', params)
+
+    const token = params.access_token || params.token
+    const returnedState = params.state
+
+    // Clear the hash from URL immediately for security
+    window.history.replaceState(
+      null,
+      '',
+      window.location.pathname + window.location.search
+    )
+
+    if (!token) {
+      console.log('[Login] No token in hash')
+      return
+    }
+
+    // Mark that we're processing a callback
+    setIsProcessingCallback(true)
+
+    // Verify state for CSRF protection (skip in development if no stored state)
+    const storedState = sessionStorage.getItem(AUTH_STATE_KEY)
+    console.log('[Login] State check - returned:', returnedState, 'stored:', storedState)
+    sessionStorage.removeItem(AUTH_STATE_KEY)
+
+    // Only enforce state check if we have both states
+    if (returnedState && storedState && returnedState !== storedState) {
+      console.error('[Login] State mismatch - possible CSRF attack')
+      setIsProcessingCallback(false)
+      return
+    }
+
+    // Process the token
+    const processToken = async () => {
+      console.log('[Login] Processing token...')
+      setToken(token)
+
+      // Fetch user profile
+      try {
+        const profileResponse = await api.auth.profile()
+        console.log('[Login] Profile fetched:', profileResponse.data)
+        setUser(profileResponse.data as User)
+      } catch (err) {
+        console.error('[Login] Failed to fetch user profile:', err)
+        // Continue even if profile fetch fails
+      }
+
+      // Navigate to the redirect destination
+      const redirectTo = getRedirectUrl(search.redirect)
+      console.log('[Login] Navigating to:', redirectTo)
+
+      // Use replace to prevent back button issues
+      navigate({
+        to: redirectTo as Parameters<typeof navigate>[0]['to'],
+        replace: true,
+      })
+    }
+
+    processToken()
+  }, []) // Empty deps - only run once on mount
+
+  // Redirect if already authenticated (but not if processing callback)
   useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      // Security: Only accept messages from main site origin
-      const MAIN_SITE_URL = import.meta.env.VITE_MAIN_SITE_URL || 'https://enjoy.bot'
-      const mainSiteOrigin = new URL(MAIN_SITE_URL).origin
+    if (isAuthenticated && !isProcessingCallback) {
+      console.log('[Login] Already authenticated, redirecting...')
+      const redirectTo = getRedirectUrl(search.redirect)
+      navigate({
+        to: redirectTo as Parameters<typeof navigate>[0]['to'],
+        replace: true,
+      })
+    }
+  }, [isAuthenticated, isProcessingCallback, navigate, search.redirect])
 
-      if (event.origin !== mainSiteOrigin && event.origin !== window.location.origin) {
-        return
-      }
+  // Handle login button click - redirect to main site
+  const handleLogin = () => {
+    const MAIN_SITE_URL =
+      import.meta.env.VITE_MAIN_SITE_URL || 'https://enjoy.bot'
 
-      // Handle auth success message from main site
-      if (event.data?.type === 'ENJOY_ECHO_AUTH_SUCCESS' || event.data?.type === 'ENJOY_AUTH_TOKEN') {
-        const { accessToken, token, user: userData } = event.data
-        const accessTokenValue = accessToken || token
+    // Generate and store state for CSRF protection
+    const state = generateState()
+    sessionStorage.setItem(AUTH_STATE_KEY, state)
+    console.log('[Login] Generated state:', state)
 
-        if (!accessTokenValue) {
-          console.error('No token received in auth message')
-          return
-        }
-
-        setIsLoading(true)
-        setError(null)
-
-        try {
-          // Set token
-          setToken(accessTokenValue)
-
-          // Get user data
-          let finalUser: User | null = null
-          if (userData) {
-            finalUser = userData as User
-            setUser(finalUser)
-          } else {
-            // Fetch user profile if not provided
-            try {
-              const profileResponse = await api.auth.profile()
-              finalUser = profileResponse.data as User
-              setUser(finalUser)
-            } catch (err) {
-              console.error('Failed to fetch user profile:', err)
-              // Continue even if profile fetch fails
-            }
-          }
-
-          // Close popup if it was opened by this page
-          if (popupWindow && !popupWindow.closed) {
-            popupWindow.close()
-            setPopupWindow(null)
-          }
-
-          // Redirect to home or specified redirect
-          const redirectTo = search.redirect || '/'
-          navigate({ to: redirectTo as any })
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : t('auth.login.authError')
-          setError(errorMessage)
-        } finally {
-          setIsLoading(false)
-        }
-      }
-
-      // Handle auth error message from main site
-      if (event.data?.type === 'ENJOY_ECHO_AUTH_ERROR') {
-        const errorMessage = event.data.error || t('auth.login.authFailed')
-        setError(errorMessage)
-
-        // Close popup if it was opened
-        if (popupWindow && !popupWindow.closed) {
-          popupWindow.close()
-          setPopupWindow(null)
-        }
-      }
+    // Build the callback URL
+    const callbackUrl = new URL(window.location.origin + '/login')
+    const finalRedirect = getRedirectUrl(search.redirect)
+    if (finalRedirect && finalRedirect !== '/') {
+      callbackUrl.searchParams.set('redirect_url', finalRedirect)
     }
 
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [navigate, search.redirect, setToken, setUser, popupWindow])
+    // Build the main site login URL with parameters
+    const loginUrl = new URL(`${MAIN_SITE_URL}/login`)
+    loginUrl.searchParams.set('return_to', callbackUrl.toString())
+    loginUrl.searchParams.set('state', state)
 
-  // Open main site login in popup
-  const handleOAuthLogin = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    console.log('[Login] Redirecting to:', loginUrl.toString())
 
-    try {
-      // Main site URL - should be configured via environment variable
-      const MAIN_SITE_URL = import.meta.env.VITE_MAIN_SITE_URL || 'https://enjoy.bot'
-
-      // Open main site login in popup
-      // Must be called directly in user interaction event handler
-      const oauthUrl = `${MAIN_SITE_URL}/login`
-      const popup = window.open(
-        oauthUrl,
-        'enjoy_echo_auth',
-        'width=500,height=600,scrollbars=yes,resizable=yes,left=100,top=100'
-      )
-
-      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        // Popup was blocked by browser
-        setError(t('auth.login.popupBlocked'))
-        setIsLoading(false)
-        return
-      }
-
-      // Focus the popup
-      popup.focus()
-      setPopupWindow(popup)
-
-      // Check if popup was closed manually
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed)
-          setIsLoading(false)
-          setPopupWindow(null)
-          // Show message if popup was closed before authentication
-          if (!isAuthenticated) {
-            setError(t('auth.login.popupClosed'))
-          }
-        }
-      }, 1000)
-
-      // Store interval ID for cleanup
-      const intervalId = checkClosed
-
-      // Cleanup function
-      return () => {
-        if (intervalId) {
-          clearInterval(intervalId)
-        }
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('auth.login.popupBlocked')
-      setError(errorMessage)
-      setIsLoading(false)
-    }
+    // Redirect to main site
+    window.location.href = loginUrl.toString()
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <Card>
-          <CardHeader className="text-center space-y-1">
-            <CardTitle className="text-2xl" suppressHydrationWarning>
-              {t('auth.login.title')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {error && (
-              <Alert variant="destructive" className="mb-2">
-                <Icon icon="lucide:alert-circle" className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-8">
-                <Icon icon="lucide:loader-2" className="h-8 w-8 animate-spin text-muted-foreground" />
-                <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-                  {t('auth.login.processing')}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <Button
-                  onClick={handleOAuthLogin}
-                  disabled={isLoading}
-                  size="lg"
-                  className="w-full"
-                >
-                  <span suppressHydrationWarning>{t('auth.login.button')}</span>
-                </Button>
-                <p className="text-center text-xs text-muted-foreground" suppressHydrationWarning>
-                  {t('auth.login.help')}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <div className="relative flex min-h-svh w-full items-center justify-center overflow-hidden bg-zinc-950">
+      {/* Mesh gradient background */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* Primary gradient orb */}
+        <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-600/20 blur-[120px]" />
+        {/* Secondary gradient orb */}
+        <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] translate-x-1/2 translate-y-1/2 rounded-full bg-cyan-500/15 blur-[100px]" />
+        {/* Accent gradient orb */}
+        <div className="absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-500/10 blur-[80px]" />
+        {/* Subtle noise overlay */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E')] opacity-[0.03]" />
       </div>
+
+      {/* Circular button */}
+      <button
+        onClick={handleLogin}
+        className="group relative flex h-40 w-40 cursor-pointer items-center justify-center"
+      >
+        {/* Outer glow ring */}
+        <span className="absolute inset-0 rounded-full bg-linear-to-br from-violet-500/30 via-fuchsia-500/20 to-cyan-500/30 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+
+        {/* Rotating border gradient */}
+        <span className="absolute inset-0 rounded-full bg-linear-to-r from-violet-500 via-fuchsia-500 to-cyan-500 p-[2px] opacity-60 transition-opacity duration-300 group-hover:opacity-100">
+          <span className="flex h-full w-full rounded-full bg-zinc-950" />
+        </span>
+
+        {/* Inner gradient background */}
+        <span className="absolute inset-[2px] rounded-full bg-linear-to-br from-zinc-900 via-zinc-900 to-zinc-800 transition-all duration-300 group-hover:from-zinc-800 group-hover:via-zinc-900 group-hover:to-zinc-900" />
+
+        {/* Button content */}
+        <span className="relative z-10 flex flex-col items-center gap-2 text-zinc-100 transition-transform duration-300 group-hover:scale-105 group-active:scale-95">
+          <Icon
+            icon="lucide:play"
+            className="h-10 w-10 translate-x-0.5 fill-current"
+          />
+          <span className="text-sm font-medium tracking-wider opacity-80">
+            ENJOY
+          </span>
+        </span>
+      </button>
     </div>
   )
 }

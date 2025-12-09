@@ -16,7 +16,6 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EchoIdRouteImport } from './routes/echo.$id'
 
 const VoiceSynthesisRoute = VoiceSynthesisRouteImport.update({
   id: '/voice-synthesis',
@@ -53,11 +52,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EchoIdRoute = EchoIdRouteImport.update({
-  id: '/echo/$id',
-  path: '/echo/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,7 +61,6 @@ export interface FileRoutesByFullPath {
   '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
-  '/echo/$id': typeof EchoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,7 +70,6 @@ export interface FileRoutesByTo {
   '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
-  '/echo/$id': typeof EchoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,7 +80,6 @@ export interface FileRoutesById {
   '/smart-translation': typeof SmartTranslationRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
-  '/echo/$id': typeof EchoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,7 +91,6 @@ export interface FileRouteTypes {
     | '/smart-translation'
     | '/vocabulary'
     | '/voice-synthesis'
-    | '/echo/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -110,7 +100,6 @@ export interface FileRouteTypes {
     | '/smart-translation'
     | '/vocabulary'
     | '/voice-synthesis'
-    | '/echo/$id'
   id:
     | '__root__'
     | '/'
@@ -120,7 +109,6 @@ export interface FileRouteTypes {
     | '/smart-translation'
     | '/vocabulary'
     | '/voice-synthesis'
-    | '/echo/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -131,7 +119,6 @@ export interface RootRouteChildren {
   SmartTranslationRoute: typeof SmartTranslationRoute
   VocabularyRoute: typeof VocabularyRoute
   VoiceSynthesisRoute: typeof VoiceSynthesisRoute
-  EchoIdRoute: typeof EchoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,13 +172,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/echo/$id': {
-      id: '/echo/$id'
-      path: '/echo/$id'
-      fullPath: '/echo/$id'
-      preLoaderRoute: typeof EchoIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -203,7 +183,6 @@ const rootRouteChildren: RootRouteChildren = {
   SmartTranslationRoute: SmartTranslationRoute,
   VocabularyRoute: VocabularyRoute,
   VoiceSynthesisRoute: VoiceSynthesisRoute,
-  EchoIdRoute: EchoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
