@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { ttsService } from '@/services/ai/services'
-import { getAIServiceConfig } from '@/services/ai/core/config'
+import { ttsService } from '@/ai/services'
+import { getAIServiceConfig } from '@/ai/core/config'
 import { saveAudio, type Audio, type TTSAudioInput } from '@/db'
 
 export interface UseTTSOptions {

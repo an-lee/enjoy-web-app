@@ -8,9 +8,10 @@
 // import { generateText } from 'ai'
 // import { createOpenAI } from '@ai-sdk/openai'
 
-import { apiClient } from '@/services/api/client'
+import { apiClient } from '@/api/client'
 import type {
   AIServiceResponse,
+  TranslationResponse,
   SmartTranslationResponse,
   DictionaryResponse,
 } from '../../types'
@@ -39,6 +40,45 @@ async function getEnjoyProvider() {
   })
 }
 */
+
+/**
+ * Basic Translation with Enjoy API
+ * Free service - uses fast translation models (M2M100, NLLB)
+ */
+export async function translateWithEnjoy(
+  text: string,
+  sourceLanguage: string,
+  targetLanguage: string,
+  signal?: AbortSignal
+): Promise<AIServiceResponse<TranslationResponse>> {
+  try {
+    const response = await apiClient.post<AIServiceResponse<TranslationResponse>>(
+      '/api/v1/services/fast-translation',
+      {
+        sourceText: text,
+        sourceLanguage,
+        targetLanguage,
+      },
+      {
+        signal,
+      }
+    )
+
+    return response.data
+  } catch (error: any) {
+    return {
+      success: false,
+      error: {
+        code: 'ENJOY_TRANSLATION_ERROR',
+        message: error.message || 'Enjoy API translation failed',
+      },
+      metadata: {
+        serviceType: AIServiceType.TRANSLATION,
+        provider: AIProvider.ENJOY,
+      },
+    }
+  }
+}
 
 /**
  * Smart Translation with Enjoy API

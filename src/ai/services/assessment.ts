@@ -3,7 +3,7 @@
  * Uses Azure Speech Services for phoneme-level pronunciation scoring
  */
 
-import { apiClient } from '@/services/api/client'
+import { apiClient } from '@/api/client'
 import { azureSpeechService } from '../providers/enjoy/azure-speech'
 import type {
   AIServiceConfig,

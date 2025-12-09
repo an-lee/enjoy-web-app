@@ -5,7 +5,7 @@
 import type { Context, Next } from 'hono'
 import { checkRateLimit, type ServiceType, type RateLimitResult } from '../utils/rate-limit'
 import { RateLimitError } from '../utils/errors'
-import type { UserProfile } from '@/services/api/auth'
+import type { UserProfile } from '@/api/auth'
 import { isValidSubscriptionTier } from './auth'
 
 /**

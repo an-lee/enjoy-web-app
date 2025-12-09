@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import i18n from "../lib/i18n"
-import { AIProvider } from "@/services/ai/types"
+import { AIProvider } from "@/ai/types"
 
 interface AIServiceSettings {
   // Smart translation - style-based translation, used for user-generated content

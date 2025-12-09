@@ -8,6 +8,7 @@
  * Use these instead of hardcoded strings
  */
 export enum AIServiceType {
+  TRANSLATION = 'translation', // Basic translation (Enjoy AI free)
   SMART_TRANSLATION = 'smartTranslation',
   SMART_DICTIONARY = 'smartDictionary',
   ASR = 'asr',

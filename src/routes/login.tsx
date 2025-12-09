@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useAuthStore, type User } from '@/stores'
-import { api } from '@/services/api'
+import { api } from '@/api'
 
 // Storage key for CSRF state
 const AUTH_STATE_KEY = 'enjoy_auth_state'

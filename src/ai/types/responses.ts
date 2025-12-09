@@ -4,6 +4,15 @@
  */
 
 /**
+ * Translation Response (Basic translation - Enjoy AI free)
+ */
+export interface TranslationResponse {
+  translatedText: string
+  sourceLanguage: string
+  targetLanguage: string
+}
+
+/**
  * Smart Translation Response
  */
 export interface SmartTranslationResponse {

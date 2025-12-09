@@ -2,9 +2,14 @@
  * AI Service Error Codes
  * Centralized error codes for all AI services
  *
- * Note: Fast Translation and Basic Dictionary are regular API services (not AI services).
- * Their error codes are not included here.
+ * Note: Basic Dictionary is a regular API service (not AI service).
+ * Its error codes are not included here.
  */
+
+// ============================================================================
+// Translation Errors (Basic translation - Enjoy AI free)
+// ============================================================================
+export const ERROR_TRANSLATION_ENJOY = 'ENJOY_TRANSLATION_ERROR'
 
 // ============================================================================
 // Smart Translation Errors
@@ -55,6 +60,7 @@ export const ERROR_ASSESSMENT_BYOK_PROVIDER_NOT_SUPPORTED = 'BYOK_ASSESSMENT_PRO
 // Error Code Categories (for filtering/grouping)
 // ============================================================================
 export const ERROR_CATEGORIES = {
+  TRANSLATION: [ERROR_TRANSLATION_ENJOY],
   SMART_TRANSLATION: [
     ERROR_SMART_TRANSLATION_LOCAL,
     ERROR_SMART_TRANSLATION_ENJOY,

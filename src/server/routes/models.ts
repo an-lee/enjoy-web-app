@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
-import type { UserProfile } from '@/services/api/auth'
+import type { UserProfile } from '@/api/auth'
 import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
 import { handleError } from '@/server/utils/errors'
 

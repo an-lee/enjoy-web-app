@@ -3,7 +3,7 @@
  * Supports getting tokens from Enjoy API, also supports direct use of user keys (BYOK)
  */
 
-import { apiClient } from '@/services/api/client'
+import { apiClient } from '@/api/client'
 
 export interface AzureSpeechConfig {
   subscriptionKey: string

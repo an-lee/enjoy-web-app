@@ -7,7 +7,7 @@
 // TODO: When we have direct token access, we can use OpenAI SDK:
 // import OpenAI from 'openai'
 
-import { apiClient } from '@/services/api/client'
+import { apiClient } from '@/api/client'
 import type { AIServiceResponse, ASRResponse, TTSResponse } from '../../types'
 import { AIServiceType, AIProvider } from '../../types'
 

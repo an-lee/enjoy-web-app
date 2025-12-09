@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@iconify/react'
-import { ttsService } from '@/services/ai/services'
-import { getAIServiceConfig } from '@/services/ai/core/config'
+import { ttsService } from '@/ai/services'
+import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
 import {
   TextInput,
@@ -16,8 +16,8 @@ import {
   TTSHistory,
 } from '@/components/voice-synthesis'
 import { useAudioHistory } from '@/hooks/use-audios'
-import { getDefaultTTSVoice, getTTSVoices } from '@/services/ai/constants/tts-voices'
-import { AIProvider } from '@/services/ai/types'
+import { getDefaultTTSVoice, getTTSVoices } from '@/ai/constants/tts-voices'
+import { AIProvider } from '@/ai/types'
 import { saveAudio, getAudioByTranslationKey, type TTSAudioInput } from '@/db'
 import { cn } from '@/lib/utils'
 

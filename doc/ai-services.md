@@ -37,13 +37,14 @@ Services expose a clean, consistent API independent of the underlying provider. 
 
 | Service | Enjoy | Local | BYOK | Cost |
 |---------|-------|-------|------|------|
+| **Translation** | ✅ | ❌ | ❌ | FREE |
 | **Smart Translation** | ✅ | ✅ | ✅ | Quota/BYOK |
 | **Smart Dictionary (contextual)** | ✅ | ✅ | ✅ | Quota/BYOK |
 | **ASR (Whisper)** | ✅ | ✅ | ✅ | Quota/BYOK |
 | **TTS** | ✅ | ✅ | ✅ | Quota/BYOK |
 | **Assessment (Azure)** | ✅ | ❌ | ✅ (Azure only) | Quota/BYOK |
 
-**Note**: All AI services (including Fast Translation and Basic Dictionary) are now handled by Hono API Worker. The frontend AI Service Client provides a unified interface that calls Hono API endpoints.
+**Note**: Translation service is always free and only uses Enjoy API (fast translation models like M2M100, NLLB). All other AI services are handled by Hono API Worker with provider selection.
 
 ## Architecture Layers
 
@@ -51,6 +52,7 @@ Services expose a clean, consistent API independent of the underlying provider. 
 
 High-level service routers that provide clean, consistent interfaces:
 
+- `translationService` - Basic translation (Enjoy AI free)
 - `asrService` - Automatic Speech Recognition
 - `ttsService` - Text-to-Speech
 - `smartTranslationService` - Style-aware translation
@@ -139,6 +141,14 @@ The `routeToProvider` function handles:
 - Special cases (e.g., Azure BYOK mode)
 
 ## Services
+
+### Translation (Basic)
+
+Basic translation using Enjoy AI. This is a **free service** that uses fast translation models (M2M100, NLLB) optimized for speed and low cost. No style support - use Smart Translation for style-aware translations.
+
+- **Provider**: Enjoy API only (no Local or BYOK support)
+- **Cost**: Always FREE
+- **Use case**: Quick translations, subtitle translation, basic text translation
 
 ### Smart Translation
 

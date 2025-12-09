@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
-import { AIProvider, AIServiceType } from '@/services/ai/types'
+import { AIProvider, AIServiceType } from '@/ai/types'
 
 interface ProviderSelectorProps {
   service: AIServiceType

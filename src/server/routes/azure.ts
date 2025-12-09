@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
-import type { UserProfile } from '@/services/api/auth'
+import type { UserProfile } from '@/api/auth'
 import { createRateLimitMiddleware } from '../middleware/rate-limit'
 import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
 import { getAzureConfig, generateAzureToken } from '@/server/services/azure'

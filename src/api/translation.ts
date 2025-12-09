@@ -7,7 +7,7 @@
  * It's always free and doesn't require AI configuration.
  */
 
-import { apiClient } from '@/services/api/client'
+import { apiClient } from '@/api/client'
 
 export interface FastTranslationRequest {
   sourceText: string

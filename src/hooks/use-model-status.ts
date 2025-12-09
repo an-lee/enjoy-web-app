@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocalModelsStore } from '@/stores'
-import { localModelService } from '@/services/ai/providers/local'
+import { localModelService } from '@/ai/providers/local'
 import type { ModelType } from '@/stores/local-models'
 
 interface UseModelStatusOptions {

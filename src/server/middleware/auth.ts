@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono'
-import type { UserProfile, SubscriptionTier } from '@/services/api/auth'
-import { convertSnakeToCamel } from '@/services/api/utils'
+import type { UserProfile, SubscriptionTier } from '@/api/auth'
+import { convertSnakeToCamel } from '@/api/utils'
 
 // Re-export for convenience
 export type { UserProfile, SubscriptionTier }

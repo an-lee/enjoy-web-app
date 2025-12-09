@@ -5,8 +5,8 @@ import { useDebounce } from '@uidotdev/usehooks'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@iconify/react'
 import { type Translation, type TranslationStyle, generateTranslationId } from '@/db'
-import { smartTranslationService } from '@/services/ai/services'
-import { getAIServiceConfig } from '@/services/ai/core/config'
+import { smartTranslationService } from '@/ai/services'
+import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
 import {
   useTranslationHistory,

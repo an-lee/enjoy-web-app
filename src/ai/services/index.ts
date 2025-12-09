@@ -3,6 +3,7 @@
  * Public API for all AI services
  */
 
+export * from './translation'
 export * from './asr'
 export * from './tts'
 export * from './smart-translation'
@@ -10,6 +11,7 @@ export * from './smart-dictionary'
 export * from './assessment'
 
 // Re-export service instances for convenience
+import { translationService } from './translation'
 import { asrService } from './asr'
 import { ttsService } from './tts'
 import { smartTranslationService } from './smart-translation'
@@ -17,6 +19,7 @@ import { smartDictionaryService } from './smart-dictionary'
 import { assessmentService } from './assessment'
 
 export const aiServices = {
+  translation: translationService,
   asr: asrService,
   tts: ttsService,
   smartTranslation: smartTranslationService,
