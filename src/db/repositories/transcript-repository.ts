@@ -63,24 +63,6 @@ export async function getAllTranscripts(): Promise<Transcript[]> {
 }
 
 // ============================================================================
-// Deprecated Query Operations (for backward compatibility)
-// ============================================================================
-
-/**
- * @deprecated Use getTranscriptsByTarget('Video', videoId) instead
- */
-export async function getTranscriptsByVid(vid: string): Promise<Transcript[]> {
-  return getTranscriptsByTarget('Video', vid)
-}
-
-/**
- * @deprecated Use getTranscriptsByTarget('Audio', audioId) instead
- */
-export async function getTranscriptsByAid(aid: string): Promise<Transcript[]> {
-  return getTranscriptsByTarget('Audio', aid)
-}
-
-// ============================================================================
 // Mutation Operations
 // ============================================================================
 
@@ -161,9 +143,6 @@ export const transcriptRepository = {
   getByLanguage: getTranscriptsByLanguage,
   getBySource: getTranscriptsBySource,
   getAll: getAllTranscripts,
-  // Deprecated
-  getByVid: getTranscriptsByVid,
-  getByAid: getTranscriptsByAid,
   // Mutations
   save: saveTranscript,
   update: updateTranscript,

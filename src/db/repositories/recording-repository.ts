@@ -39,32 +39,6 @@ export async function getAllRecordings(): Promise<Recording[]> {
 }
 
 // ============================================================================
-// Deprecated Query Operations (for backward compatibility)
-// ============================================================================
-
-/**
- * @deprecated Use getRecordingsByTarget('Video', videoId) instead
- */
-export async function getRecordingsByVid(vid: string): Promise<Recording[]> {
-  return getRecordingsByTarget('Video', vid)
-}
-
-/**
- * @deprecated Use getRecordingsByTarget('Audio', audioId) instead
- */
-export async function getRecordingsByAid(aid: string): Promise<Recording[]> {
-  return getRecordingsByTarget('Audio', aid)
-}
-
-/**
- * @deprecated Not supported in new schema
- */
-export async function getRecordingsByUserId(_userId: number): Promise<Recording[]> {
-  console.warn('getRecordingsByUserId is deprecated')
-  return db.recordings.toArray()
-}
-
-// ============================================================================
 // Mutation Operations
 // ============================================================================
 
@@ -108,10 +82,6 @@ export const recordingRepository = {
   getBySyncStatus: getRecordingsBySyncStatus,
   getByLanguage: getRecordingsByLanguage,
   getAll: getAllRecordings,
-  // Deprecated
-  getByVid: getRecordingsByVid,
-  getByAid: getRecordingsByAid,
-  getByUserId: getRecordingsByUserId,
   // Mutations
   save: saveRecording,
   update: updateRecording,
