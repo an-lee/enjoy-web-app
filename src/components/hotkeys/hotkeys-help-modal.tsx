@@ -66,6 +66,7 @@ function formatKeyName(key: string): string {
     backspace: '⌫',
     delete: 'Del',
     tab: 'Tab',
+    comma: ',',
   }
   return keyMap[key.toLowerCase()] ?? key.toUpperCase()
 }

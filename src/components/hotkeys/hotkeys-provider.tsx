@@ -8,6 +8,9 @@
 import { HotkeysProvider as RHHProvider, useHotkeysContext } from 'react-hotkeys-hook'
 import { useEffect, type ReactNode } from 'react'
 import { usePlayerStore } from '@/stores/player'
+import { createLogger } from '@/lib/utils'
+
+const log = createLogger({ name: 'HotkeysScope' })
 
 // ============================================================================
 // Types
@@ -25,14 +28,21 @@ interface AppHotkeysProviderProps {
  * Manages hotkey scopes based on application state
  */
 function ScopeManager() {
-  const { enableScope, disableScope } = useHotkeysContext()
+  const { enableScope, disableScope, activeScopes } = useHotkeysContext()
   const playerMode = usePlayerStore((state) => state.mode)
 
+  // Log active scopes on mount
   useEffect(() => {
-    // Player scope management
-    if (playerMode === 'expanded') {
+    log.debug('Active scopes:', activeScopes)
+  }, [activeScopes])
+
+  useEffect(() => {
+    // Player scope: active when player is visible (mini or expanded)
+    if (playerMode === 'expanded' || playerMode === 'mini') {
+      log.debug('Enabling player scope')
       enableScope('player')
     } else {
+      log.debug('Disabling player scope')
       disableScope('player')
     }
   }, [playerMode, enableScope, disableScope])

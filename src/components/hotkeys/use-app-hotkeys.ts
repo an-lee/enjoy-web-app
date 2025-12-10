@@ -7,7 +7,10 @@
 
 import { useHotkeys, type Options } from 'react-hotkeys-hook'
 import { useHotkeysStore, HOTKEY_MAP, type HotkeyScope } from '@/stores/hotkeys'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useEffect } from 'react'
+import { createLogger } from '@/lib/utils'
+
+const log = createLogger({ name: 'Hotkeys' })
 
 // ============================================================================
 // Types
@@ -46,9 +49,19 @@ export function useAppHotkey(
 
   const keys = useMemo(() => getKeys(actionId), [getKeys, actionId])
   const scope = definition?.scope as HotkeyScope | undefined
+  const useKey = definition?.useKey ?? false
+
+  // For global scope, also include wildcard '*' to ensure it's always active
+  const scopes = scope === 'global' ? ['global', '*'] : scope ? [scope] : undefined
+
+  // Debug log on mount
+  useEffect(() => {
+    log.debug(`Registered hotkey: ${actionId}`, { keys, scope, scopes, useKey })
+  }, [actionId, keys, scope, scopes, useKey])
 
   const memoizedCallback = useCallback(
     (event: KeyboardEvent) => {
+      log.debug(`Hotkey triggered: ${actionId}`)
       callback(event)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -60,7 +73,8 @@ export function useAppHotkey(
     memoizedCallback,
     {
       ...options,
-      scopes: scope ? [scope] : undefined,
+      scopes,
+      useKey,
       enabled: keys.length > 0 && (options?.enabled ?? true),
     },
     options?.deps

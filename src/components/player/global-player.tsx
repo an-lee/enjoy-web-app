@@ -16,6 +16,7 @@ import { db } from '@/db'
 import { createLogger } from '@/lib/utils'
 import { MiniPlayerBar } from './mini-player-bar'
 import { FullPlayer } from './full-player'
+import { PlayerHotkeys } from './player-hotkeys'
 
 // ============================================================================
 // Logger
@@ -302,6 +303,11 @@ export function GlobalPlayer() {
 
   return (
     <>
+      {/* Player hotkeys - active when player is visible (mini or expanded) */}
+      {(mode === 'mini' || mode === 'expanded') && currentSession && (
+        <PlayerHotkeys onTogglePlay={handleTogglePlay} onSeek={handleSeek} />
+      )}
+
       {/* Mini player bar - shown in mini mode */}
       {mode === 'mini' && currentSession && (
         <MiniPlayerBar

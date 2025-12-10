@@ -26,7 +26,13 @@ import { useAuthStore, usePlayerStore } from '@/stores'
 // Global Hotkeys Handler
 // ============================================================================
 
-function GlobalHotkeysHandler({ onOpenHelp }: { onOpenHelp: () => void }) {
+interface GlobalHotkeysHandlerProps {
+  onOpenHelp: () => void
+}
+
+function GlobalHotkeysHandler({ onOpenHelp }: GlobalHotkeysHandlerProps) {
+  const navigate = useNavigate()
+
   // Help shortcut (?)
   useAppHotkey('global.help', () => {
     onOpenHelp()
@@ -42,9 +48,8 @@ function GlobalHotkeysHandler({ onOpenHelp }: { onOpenHelp: () => void }) {
   // Settings shortcut (Ctrl+,)
   useAppHotkey('global.settings', (e) => {
     e.preventDefault()
-    // TODO: Navigate to settings
-    console.log('Open settings')
-  })
+    navigate({ to: '/settings', search: { tab: undefined } })
+  }, { deps: [navigate] })
 
   return null
 }

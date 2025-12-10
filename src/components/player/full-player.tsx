@@ -26,7 +26,6 @@ import {
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
 import { useDisplayTime } from './global-player'
-import { useAppHotkey } from '@/components/hotkeys'
 
 // ============================================================================
 // Types
@@ -232,46 +231,7 @@ export function FullPlayer({
     console.log('Echo mode')
   }
 
-  // Keyboard shortcuts using react-hotkeys-hook
-  useAppHotkey('player.togglePlay', (e) => {
-    e.preventDefault()
-    onTogglePlay?.()
-  }, { deps: [onTogglePlay], preventDefault: true })
-
-  useAppHotkey('player.seekBackward', (e) => {
-    e.preventDefault()
-    handlePrevSegment()
-  }, { deps: [handlePrevSegment], preventDefault: true })
-
-  useAppHotkey('player.seekForward', (e) => {
-    e.preventDefault()
-    handleNextSegment()
-  }, { deps: [handleNextSegment], preventDefault: true })
-
-  useAppHotkey('player.volumeUp', (e) => {
-    e.preventDefault()
-    setVolume(Math.min(1, volume + 0.1))
-  }, { deps: [volume, setVolume], preventDefault: true })
-
-  useAppHotkey('player.volumeDown', (e) => {
-    e.preventDefault()
-    setVolume(Math.max(0, volume - 0.1))
-  }, { deps: [volume, setVolume], preventDefault: true })
-
-  useAppHotkey('player.toggleMute', (e) => {
-    e.preventDefault()
-    setVolume(volume > 0 ? 0 : 1)
-  }, { deps: [volume, setVolume], preventDefault: true })
-
-  useAppHotkey('player.collapse', (e) => {
-    e.preventDefault()
-    collapse()
-  }, { deps: [collapse], preventDefault: true })
-
-  useAppHotkey('player.replaySegment', (e) => {
-    e.preventDefault()
-    handleReplaySegment()
-  }, { deps: [handleReplaySegment], preventDefault: true })
+  // Note: Keyboard shortcuts are handled by PlayerHotkeys component in GlobalPlayer
 
   if (!currentSession) return null
 

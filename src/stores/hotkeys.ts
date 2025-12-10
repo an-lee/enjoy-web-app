@@ -30,6 +30,8 @@ export interface HotkeyDefinition {
   scope: HotkeyScope
   /** Whether this hotkey can be customized by user */
   customizable: boolean
+  /** Whether to use actual key value instead of key code (for special characters like ?, !) */
+  useKey?: boolean
 }
 
 interface HotkeysState {
@@ -62,6 +64,7 @@ export const HOTKEY_DEFINITIONS: HotkeyDefinition[] = [
     descriptionKey: 'hotkeys.help',
     scope: 'global',
     customizable: true,
+    useKey: true, // Use actual key value for special character
   },
   {
     id: 'global.search',
@@ -73,7 +76,7 @@ export const HOTKEY_DEFINITIONS: HotkeyDefinition[] = [
   },
   {
     id: 'global.settings',
-    defaultKeys: 'ctrl+,',
+    defaultKeys: 'ctrl+comma',
     description: 'Open settings',
     descriptionKey: 'hotkeys.settings',
     scope: 'global',
