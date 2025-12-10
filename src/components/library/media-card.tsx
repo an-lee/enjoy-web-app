@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { GenerativeCover } from './generative-cover'
 import type { LibraryMedia } from '@/hooks/queries'
 
 // ============================================================================
@@ -94,7 +95,8 @@ export function MediaCard({
       className={cn(
         'group overflow-hidden transition-all duration-200',
         'hover:shadow-lg hover:border-primary/30',
-        'cursor-pointer'
+        'cursor-pointer',
+        'py-0'
       )}
       onClick={handlePlay}
     >
@@ -108,12 +110,11 @@ export function MediaCard({
             onError={handleImageError}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-            <Icon
-              icon={isAudio ? 'lucide:music' : 'lucide:video'}
-              className="w-12 h-12 text-muted-foreground/50"
-            />
-          </div>
+          <GenerativeCover
+            seed={item.audio?.aid || item.video?.vid || item.id}
+            type={isAudio ? 'audio' : 'video'}
+            className="transition-transform duration-300 group-hover:scale-105"
+          />
         )}
 
         {/* Overlay on hover */}
