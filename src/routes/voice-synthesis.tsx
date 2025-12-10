@@ -18,7 +18,8 @@ import {
 import { useAudioHistory } from '@/hooks/use-audios'
 import { getDefaultTTSVoice, getTTSVoices } from '@/ai/constants/tts-voices'
 import { AIProvider } from '@/ai/types'
-import { saveAudio, getAudioByTranslationKey, type TTSAudioInput } from '@/db'
+import { saveAudio, saveTranscript, getAudioByTranslationKey, type TTSAudioInput } from '@/db'
+import type { TranscriptInput } from '@/types/db'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/voice-synthesis')({
@@ -208,7 +209,21 @@ function VoiceSynthesis() {
         ...(translationKey ? { translationKey } : {}),
       }
 
-      await saveAudio(ttsInput)
+      const audioId = await saveAudio(ttsInput)
+
+      // Save transcript if available (from TTS timestamped model)
+      if (result.data.transcript?.timeline && result.data.transcript.timeline.length > 0) {
+        const transcriptInput: TranscriptInput = {
+          targetType: 'Audio',
+          targetId: audioId,
+          language: targetLanguage,
+          source: 'ai',
+          timeline: result.data.transcript.timeline,
+          syncStatus: 'local',
+        }
+        await saveTranscript(transcriptInput)
+      }
+
       if (showHistory) {
         void refetchHistory()
       }
@@ -306,7 +321,21 @@ function VoiceSynthesis() {
         ...(translationKey ? { translationKey } : {}),
       }
 
-      await saveAudio(ttsInput)
+      const audioId = await saveAudio(ttsInput)
+
+      // Save transcript if available (from TTS timestamped model)
+      if (result.data.transcript?.timeline && result.data.transcript.timeline.length > 0) {
+        const transcriptInput: TranscriptInput = {
+          targetType: 'Audio',
+          targetId: audioId,
+          language: targetLanguage,
+          source: 'ai',
+          timeline: result.data.transcript.timeline,
+          syncStatus: 'local',
+        }
+        await saveTranscript(transcriptInput)
+      }
+
       if (showHistory) {
         void refetchHistory()
       }
