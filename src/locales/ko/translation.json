@@ -286,5 +286,31 @@
     "synthesized": "오디오 합성 성공",
     "currentProvider": "프로바이더",
     "changeProvider": "변경"
+  },
+  "hotkeys": {
+    "title": "키보드 단축키",
+    "customized": "사용자 지정",
+    "hint": "? 키를 눌러 언제든 이 도움말을 표시",
+    "scope": {
+      "global": "전역",
+      "player": "플레이어",
+      "library": "라이브러리",
+      "modal": "모달"
+    },
+    "help": "키보드 단축키 표시",
+    "search": "검색 열기",
+    "settings": "설정 열기",
+    "togglePlay": "재생 / 일시정지",
+    "seekBackward": "5초 뒤로",
+    "seekForward": "5초 앞으로",
+    "volumeUp": "볼륨 높이기",
+    "volumeDown": "볼륨 낮추기",
+    "toggleMute": "음소거 / 음소거 해제",
+    "collapse": "플레이어 접기",
+    "replaySegment": "구간 다시 재생",
+    "prevSegment": "이전 구간",
+    "nextSegment": "다음 구간",
+    "librarySearch": "검색에 포커스",
+    "closeModal": "모달 닫기"
   }
 }

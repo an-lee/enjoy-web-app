@@ -286,5 +286,31 @@
     "synthesized": "Audio synthesized successfully",
     "currentProvider": "Provider",
     "changeProvider": "Change"
+  },
+  "hotkeys": {
+    "title": "Keyboard Shortcuts",
+    "customized": "Custom",
+    "hint": "Press ? anywhere to show this help",
+    "scope": {
+      "global": "Global",
+      "player": "Player",
+      "library": "Library",
+      "modal": "Modal"
+    },
+    "help": "Show keyboard shortcuts",
+    "search": "Open search",
+    "settings": "Open settings",
+    "togglePlay": "Play / Pause",
+    "seekBackward": "Seek backward 5s",
+    "seekForward": "Seek forward 5s",
+    "volumeUp": "Volume up",
+    "volumeDown": "Volume down",
+    "toggleMute": "Mute / Unmute",
+    "collapse": "Collapse player",
+    "replaySegment": "Replay segment",
+    "prevSegment": "Previous segment",
+    "nextSegment": "Next segment",
+    "librarySearch": "Focus search",
+    "closeModal": "Close modal"
   }
 }

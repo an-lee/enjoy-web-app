@@ -286,5 +286,31 @@
     "synthesized": "Audio erfolgreich synthetisiert",
     "currentProvider": "Anbieter",
     "changeProvider": "Ändern"
+  },
+  "hotkeys": {
+    "title": "Tastaturkürzel",
+    "customized": "Angepasst",
+    "hint": "Drücke ? um diese Hilfe anzuzeigen",
+    "scope": {
+      "global": "Global",
+      "player": "Player",
+      "library": "Bibliothek",
+      "modal": "Modal"
+    },
+    "help": "Tastaturkürzel anzeigen",
+    "search": "Suche öffnen",
+    "settings": "Einstellungen öffnen",
+    "togglePlay": "Wiedergabe / Pause",
+    "seekBackward": "5s zurückspulen",
+    "seekForward": "5s vorspulen",
+    "volumeUp": "Lautstärke erhöhen",
+    "volumeDown": "Lautstärke verringern",
+    "toggleMute": "Stummschalten / Ton an",
+    "collapse": "Player minimieren",
+    "replaySegment": "Segment wiederholen",
+    "prevSegment": "Vorheriges Segment",
+    "nextSegment": "Nächstes Segment",
+    "librarySearch": "Suche fokussieren",
+    "closeModal": "Modal schließen"
   }
 }

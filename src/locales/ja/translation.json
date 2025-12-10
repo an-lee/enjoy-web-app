@@ -286,5 +286,31 @@
     "synthesized": "音声の合成に成功しました",
     "currentProvider": "プロバイダー",
     "changeProvider": "変更"
+  },
+  "hotkeys": {
+    "title": "キーボードショートカット",
+    "customized": "カスタム",
+    "hint": "? を押していつでもこのヘルプを表示",
+    "scope": {
+      "global": "グローバル",
+      "player": "プレーヤー",
+      "library": "ライブラリ",
+      "modal": "モーダル"
+    },
+    "help": "キーボードショートカットを表示",
+    "search": "検索を開く",
+    "settings": "設定を開く",
+    "togglePlay": "再生 / 一時停止",
+    "seekBackward": "5秒戻る",
+    "seekForward": "5秒進む",
+    "volumeUp": "音量を上げる",
+    "volumeDown": "音量を下げる",
+    "toggleMute": "ミュート / ミュート解除",
+    "collapse": "プレーヤーを縮小",
+    "replaySegment": "セグメントを再生",
+    "prevSegment": "前のセグメント",
+    "nextSegment": "次のセグメント",
+    "librarySearch": "検索にフォーカス",
+    "closeModal": "モーダルを閉じる"
   }
 }

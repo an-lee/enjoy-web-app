@@ -286,5 +286,31 @@
     "synthesized": "Audio synthétisé avec succès",
     "currentProvider": "Fournisseur",
     "changeProvider": "Modifier"
+  },
+  "hotkeys": {
+    "title": "Raccourcis Clavier",
+    "customized": "Personnalisé",
+    "hint": "Appuyez sur ? n'importe où pour afficher cette aide",
+    "scope": {
+      "global": "Global",
+      "player": "Lecteur",
+      "library": "Bibliothèque",
+      "modal": "Modal"
+    },
+    "help": "Afficher les raccourcis clavier",
+    "search": "Ouvrir la recherche",
+    "settings": "Ouvrir les paramètres",
+    "togglePlay": "Lecture / Pause",
+    "seekBackward": "Reculer de 5s",
+    "seekForward": "Avancer de 5s",
+    "volumeUp": "Augmenter le volume",
+    "volumeDown": "Diminuer le volume",
+    "toggleMute": "Muet / Activer le son",
+    "collapse": "Réduire le lecteur",
+    "replaySegment": "Rejouer le segment",
+    "prevSegment": "Segment précédent",
+    "nextSegment": "Segment suivant",
+    "librarySearch": "Focuser la recherche",
+    "closeModal": "Fermer le modal"
   }
 }

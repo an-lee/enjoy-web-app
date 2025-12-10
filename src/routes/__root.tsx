@@ -19,7 +19,35 @@ import {
 } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { GlobalPlayer } from '@/components/player'
+import { AppHotkeysProvider, HotkeysHelpModal, useAppHotkey } from '@/components/hotkeys'
 import { useAuthStore, usePlayerStore } from '@/stores'
+
+// ============================================================================
+// Global Hotkeys Handler
+// ============================================================================
+
+function GlobalHotkeysHandler({ onOpenHelp }: { onOpenHelp: () => void }) {
+  // Help shortcut (?)
+  useAppHotkey('global.help', () => {
+    onOpenHelp()
+  })
+
+  // Search shortcut (Ctrl+K)
+  useAppHotkey('global.search', (e) => {
+    e.preventDefault()
+    // TODO: Open command palette / search
+    console.log('Open search')
+  })
+
+  // Settings shortcut (Ctrl+,)
+  useAppHotkey('global.settings', (e) => {
+    e.preventDefault()
+    // TODO: Navigate to settings
+    console.log('Open settings')
+  })
+
+  return null
+}
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -128,6 +156,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext()
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [isHotkeysHelpOpen, setIsHotkeysHelpOpen] = useState(false)
   const playerMode = usePlayerStore((state) => state.mode)
 
   // Mark as hydrated after mount
@@ -187,10 +216,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="enjoy-ui-theme">
-        {isLoginPage ? (
-          // Login page - no sidebar or header
-          <Outlet />
-        ) : !isHydrated ? (
+        <AppHotkeysProvider>
+          {isLoginPage ? (
+            // Login page - no sidebar or header
+            <Outlet />
+          ) : !isHydrated ? (
           // Show skeleton during SSR and hydration to avoid i18n mismatch
           <SidebarProvider
             style={
@@ -244,8 +274,20 @@ function RootComponent() {
             </SidebarInset>
           </SidebarProvider>
         )}
-        {/* Global Player - renders in mini or expanded mode */}
-        {isHydrated && !isLoginPage && <GlobalPlayer />}
+          {/* Global Player - renders in mini or expanded mode */}
+          {isHydrated && !isLoginPage && <GlobalPlayer />}
+
+          {/* Hotkeys Help Modal */}
+          <HotkeysHelpModal
+            open={isHotkeysHelpOpen}
+            onOpenChange={setIsHotkeysHelpOpen}
+          />
+
+          {/* Global Hotkeys Handler */}
+          {isHydrated && !isLoginPage && (
+            <GlobalHotkeysHandler onOpenHelp={() => setIsHotkeysHelpOpen(true)} />
+          )}
+        </AppHotkeysProvider>
       </ThemeProvider>
       <Toaster />
       <ReactQueryDevtools buttonPosition="bottom-left" />

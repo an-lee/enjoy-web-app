@@ -286,5 +286,31 @@
     "synthesized": "Audio sintetizado exitosamente",
     "currentProvider": "Proveedor",
     "changeProvider": "Cambiar"
+  },
+  "hotkeys": {
+    "title": "Atajos de Teclado",
+    "customized": "Personalizado",
+    "hint": "Presiona ? en cualquier momento para mostrar esta ayuda",
+    "scope": {
+      "global": "Global",
+      "player": "Reproductor",
+      "library": "Biblioteca",
+      "modal": "Modal"
+    },
+    "help": "Mostrar atajos de teclado",
+    "search": "Abrir búsqueda",
+    "settings": "Abrir configuración",
+    "togglePlay": "Reproducir / Pausar",
+    "seekBackward": "Retroceder 5s",
+    "seekForward": "Avanzar 5s",
+    "volumeUp": "Subir volumen",
+    "volumeDown": "Bajar volumen",
+    "toggleMute": "Silenciar / Activar sonido",
+    "collapse": "Minimizar reproductor",
+    "replaySegment": "Repetir segmento",
+    "prevSegment": "Segmento anterior",
+    "nextSegment": "Segmento siguiente",
+    "librarySearch": "Enfocar búsqueda",
+    "closeModal": "Cerrar modal"
   }
 }

@@ -6,7 +6,7 @@
  * - Row 2: Main controls (prev/play/next/replay) + Secondary controls (volume/speed/dictation/echo)
  */
 
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn, formatTime } from '@/lib/utils'
@@ -26,6 +26,7 @@ import {
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
 import { useDisplayTime } from './global-player'
+import { useAppHotkey } from '@/components/hotkeys'
 
 // ============================================================================
 // Types
@@ -231,57 +232,46 @@ export function FullPlayer({
     console.log('Echo mode')
   }
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return
-      }
+  // Keyboard shortcuts using react-hotkeys-hook
+  useAppHotkey('player.togglePlay', (e) => {
+    e.preventDefault()
+    onTogglePlay?.()
+  }, { deps: [onTogglePlay], preventDefault: true })
 
-      switch (e.key) {
-        case ' ':
-          // Space: Play/Pause
-          e.preventDefault()
-          onTogglePlay?.()
-          break
-        case 'ArrowLeft':
-          // Left arrow: Seek backward 5s
-          e.preventDefault()
-          handlePrevSegment()
-          break
-        case 'ArrowRight':
-          // Right arrow: Seek forward 5s
-          e.preventDefault()
-          handleNextSegment()
-          break
-        case 'ArrowUp':
-          // Up arrow: Volume up
-          e.preventDefault()
-          setVolume(Math.min(1, volume + 0.1))
-          break
-        case 'ArrowDown':
-          // Down arrow: Volume down
-          e.preventDefault()
-          setVolume(Math.max(0, volume - 0.1))
-          break
-        case 'm':
-        case 'M':
-          // M: Mute/Unmute
-          e.preventDefault()
-          setVolume(volume > 0 ? 0 : 1)
-          break
-        case 'Escape':
-          // Escape: Collapse player
-          e.preventDefault()
-          collapse()
-          break
-      }
-    }
+  useAppHotkey('player.seekBackward', (e) => {
+    e.preventDefault()
+    handlePrevSegment()
+  }, { deps: [handlePrevSegment], preventDefault: true })
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onTogglePlay, handlePrevSegment, handleNextSegment, volume, setVolume, collapse])
+  useAppHotkey('player.seekForward', (e) => {
+    e.preventDefault()
+    handleNextSegment()
+  }, { deps: [handleNextSegment], preventDefault: true })
+
+  useAppHotkey('player.volumeUp', (e) => {
+    e.preventDefault()
+    setVolume(Math.min(1, volume + 0.1))
+  }, { deps: [volume, setVolume], preventDefault: true })
+
+  useAppHotkey('player.volumeDown', (e) => {
+    e.preventDefault()
+    setVolume(Math.max(0, volume - 0.1))
+  }, { deps: [volume, setVolume], preventDefault: true })
+
+  useAppHotkey('player.toggleMute', (e) => {
+    e.preventDefault()
+    setVolume(volume > 0 ? 0 : 1)
+  }, { deps: [volume, setVolume], preventDefault: true })
+
+  useAppHotkey('player.collapse', (e) => {
+    e.preventDefault()
+    collapse()
+  }, { deps: [collapse], preventDefault: true })
+
+  useAppHotkey('player.replaySegment', (e) => {
+    e.preventDefault()
+    handleReplaySegment()
+  }, { deps: [handleReplaySegment], preventDefault: true })
 
   if (!currentSession) return null
 
