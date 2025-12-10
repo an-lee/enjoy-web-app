@@ -200,7 +200,15 @@
     "nextSegment": "Phrase suivante",
     "replaySegment": "Rejouer la phrase",
     "dictationMode": "Mode dictée",
-    "echoMode": "Mode écho"
+    "echoMode": "Mode écho",
+    "transcript": {
+      "title": "Transcription",
+      "primary": "Principal",
+      "secondary": "Traduction",
+      "selectLanguage": "Sélectionner",
+      "noTranscript": "Aucune transcription disponible",
+      "noTranscriptHint": "Les transcriptions seront générées automatiquement ou peuvent être importées"
+    }
   },
   "vocabulary": {
     "title": "Vocabulaire",

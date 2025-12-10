@@ -200,7 +200,15 @@
     "nextSegment": "Nächster Satz",
     "replaySegment": "Satz wiederholen",
     "dictationMode": "Diktat-Modus",
-    "echoMode": "Nachsprech-Modus"
+    "echoMode": "Nachsprech-Modus",
+    "transcript": {
+      "title": "Transkript",
+      "primary": "Primär",
+      "secondary": "Übersetzung",
+      "selectLanguage": "Auswählen",
+      "noTranscript": "Kein Transkript verfügbar",
+      "noTranscriptHint": "Transkripte werden automatisch generiert oder können importiert werden"
+    }
   },
   "vocabulary": {
     "title": "Wortschatz",

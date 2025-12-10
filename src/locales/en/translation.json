@@ -200,7 +200,15 @@
     "nextSegment": "Next segment",
     "replaySegment": "Replay segment",
     "dictationMode": "Dictation mode",
-    "echoMode": "Echo practice"
+    "echoMode": "Echo practice",
+    "transcript": {
+      "title": "Transcript",
+      "primary": "Primary",
+      "secondary": "Translation",
+      "selectLanguage": "Select",
+      "noTranscript": "No transcript available",
+      "noTranscriptHint": "Transcripts will be generated automatically or can be imported"
+    }
   },
   "vocabulary": {
     "title": "Vocabulary",

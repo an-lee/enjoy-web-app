@@ -200,7 +200,15 @@
     "nextSegment": "次の文",
     "replaySegment": "文をリプレイ",
     "dictationMode": "ディクテーション",
-    "echoMode": "シャドーイング"
+    "echoMode": "シャドーイング",
+    "transcript": {
+      "title": "字幕",
+      "primary": "メイン",
+      "secondary": "翻訳",
+      "selectLanguage": "選択",
+      "noTranscript": "字幕がありません",
+      "noTranscriptHint": "字幕は自動生成またはインポート可能です"
+    }
   },
   "vocabulary": {
     "title": "語彙",

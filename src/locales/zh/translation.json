@@ -200,7 +200,15 @@
     "nextSegment": "下一句",
     "replaySegment": "重播当前句",
     "dictationMode": "听写模式",
-    "echoMode": "跟读模式"
+    "echoMode": "跟读模式",
+    "transcript": {
+      "title": "字幕",
+      "primary": "主字幕",
+      "secondary": "翻译",
+      "selectLanguage": "选择",
+      "noTranscript": "暂无字幕",
+      "noTranscriptHint": "字幕将自动生成或可手动导入"
+    }
   },
   "vocabulary": {
     "title": "词汇表",

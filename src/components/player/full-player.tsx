@@ -24,8 +24,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { usePlayerStore } from '@/stores/player'
-import { GenerativeCover } from '@/components/library/generative-cover'
 import { useDisplayTime } from './global-player'
+import { TranscriptDisplay } from './transcript'
 
 // ============================================================================
 // Logger
@@ -297,47 +297,48 @@ export function FullPlayer({
           </Tooltip>
         </header>
 
-        {/* Main content area - Media display */}
-        <main className="flex-1 flex items-center justify-center bg-muted/30 min-h-0 overflow-hidden">
+        {/* Main content area - Media display with transcript */}
+        <main className="flex-1 flex min-h-0 overflow-hidden bg-muted/30">
           {isLoading ? (
-            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-muted-foreground">
               <Icon icon="lucide:loader-2" className="w-10 h-10 animate-spin" />
               <p className="text-sm">{t('common.loading')}</p>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center gap-3 text-destructive">
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-destructive">
               <Icon icon="lucide:alert-circle" className="w-10 h-10" />
               <p className="text-sm">{error}</p>
             </div>
           ) : isVideo ? (
-            <div className="flex items-center justify-center w-full h-full p-4">
-              <div className="w-full max-w-4xl aspect-video bg-black/10 dark:bg-black/40 rounded-xl flex items-center justify-center">
-                <Icon icon="lucide:video" className="w-16 h-16 text-muted-foreground/50" />
+            /* Video mode: Video placeholder on top, transcript below */
+            <div className="flex-1 flex flex-col">
+              <div className="shrink-0 flex items-center justify-center p-4">
+                <div className="w-full max-w-3xl aspect-video bg-black/10 dark:bg-black/40 rounded-xl flex items-center justify-center">
+                  <Icon icon="lucide:video" className="w-16 h-16 text-muted-foreground/50" />
+                </div>
+              </div>
+              {/* Transcript below video - centered with max width */}
+              <div className="flex-1 min-h-0 border-t flex justify-center">
+                <div className="w-full max-w-3xl">
+                  <TranscriptDisplay
+                    currentTime={displayTime}
+                    isPlaying={isPlaying}
+                    onLineClick={onSeek}
+                    className="h-full"
+                  />
+                </div>
               </div>
             </div>
           ) : (
-            /* Audio visualization / cover */
-            <div className="flex flex-col items-center gap-6 p-8">
-              <div className="w-56 h-56 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
-                {currentSession.thumbnailUrl ? (
-                  <img
-                    src={currentSession.thumbnailUrl}
-                    alt={currentSession.mediaTitle}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <GenerativeCover
-                    seed={currentSession.mediaId}
-                    type="audio"
-                    className="w-full h-full"
-                  />
-                )}
-              </div>
-              <div className="text-center max-w-md">
-                <h3 className="text-lg font-semibold truncate">{currentSession.mediaTitle}</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {currentSession.language.toUpperCase()}
-                </p>
+            /* Audio mode: Centered transcript for optimal reading */
+            <div className="flex-1 flex justify-center">
+              <div className="w-full max-w-3xl">
+                <TranscriptDisplay
+                  currentTime={displayTime}
+                  isPlaying={isPlaying}
+                  onLineClick={onSeek}
+                  className="h-full"
+                />
               </div>
             </div>
           )}
@@ -368,6 +369,19 @@ export function FullPlayer({
             <div className="flex items-center justify-between">
               {/* Main controls - Left side */}
               <div className="flex items-center gap-1">
+                {/* Play/Pause */}
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="h-12 w-11 rounded-full shadow-md"
+                  onClick={onTogglePlay}
+                >
+                  <Icon
+                    icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
+                    className={cn('w-6 h-5', !isPlaying && 'ml-0.5')}
+                  />
+                </Button>
+
                 {/* Previous segment */}
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -382,19 +396,6 @@ export function FullPlayer({
                   </TooltipTrigger>
                   <TooltipContent side="top">{t('player.prevSegment')}</TooltipContent>
                 </Tooltip>
-
-                {/* Play/Pause */}
-                <Button
-                  variant="default"
-                  size="icon"
-                  className="h-11 w-11 rounded-full shadow-md"
-                  onClick={onTogglePlay}
-                >
-                  <Icon
-                    icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
-                    className={cn('w-5 h-5', !isPlaying && 'ml-0.5')}
-                  />
-                </Button>
 
                 {/* Next segment */}
                 <Tooltip>
@@ -429,15 +430,6 @@ export function FullPlayer({
 
               {/* Secondary controls - Right side */}
               <div className="flex items-center gap-1">
-                {/* Volume */}
-                <VolumePopover volume={volume} onVolumeChange={setVolume} />
-
-                {/* Playback speed */}
-                <SpeedPopover playbackRate={playbackRate} onPlaybackRateChange={setPlaybackRate} />
-
-                {/* Divider */}
-                <div className="w-px h-5 bg-border mx-1" />
-
                 {/* Dictation mode */}
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -467,6 +459,15 @@ export function FullPlayer({
                   </TooltipTrigger>
                   <TooltipContent side="top">{t('player.echoMode')}</TooltipContent>
                 </Tooltip>
+
+                {/* Divider */}
+                <div className="w-px h-5 bg-border mx-1" />
+
+                {/* Playback speed */}
+                <SpeedPopover playbackRate={playbackRate} onPlaybackRateChange={setPlaybackRate} />
+
+                {/* Volume */}
+                <VolumePopover volume={volume} onVolumeChange={setVolume} />
               </div>
             </div>
           </div>
