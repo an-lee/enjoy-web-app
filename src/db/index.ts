@@ -183,11 +183,11 @@ export {
   generateMd5,
   // Video ID
   generateVideoId,
-  generateLocalVideoId,
+  generateLocalVideoVid,
   // Audio ID
   generateAudioId,
-  generateTTSAudioId,
-  generateLocalAudioId,
+  generateTTSAudioAid,
+  generateLocalAudioAid,
   // Other IDs
   generateTranscriptId,
   generateRecordingId,

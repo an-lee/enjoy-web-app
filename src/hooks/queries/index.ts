@@ -33,6 +33,43 @@ export {
   type UseAudiosByTranslationKeyReturn,
 } from './use-audio-queries'
 
+// Video Queries
+export {
+  // Query keys
+  videoQueryKeys,
+  // Query hooks (Read)
+  useVideo,
+  useVideos,
+  useVideosByProvider,
+  // Mutation hooks (Create/Update/Delete)
+  useCreateVideo,
+  useSaveLocalVideo,
+  useUpdateVideo,
+  useDeleteVideo,
+  // Types
+  type VideoWithUrl,
+  type UseVideoOptions,
+  type UseVideoReturn,
+  type UseVideosOptions,
+} from './use-video-queries'
+
+// Library Queries (Combined Audio/Video)
+export {
+  // Query keys
+  libraryQueryKeys,
+  // Query hooks (Read)
+  useLibrary,
+  useLibraryStats,
+  // Mutation hooks
+  useToggleStarred,
+  useDeleteLibraryItem,
+  // Types
+  type MediaType,
+  type LibraryMedia,
+  type LibraryQueryResult,
+  type UseLibraryOptions,
+} from './use-library-queries'
+
 // Translation Queries
 export {
   // Query keys

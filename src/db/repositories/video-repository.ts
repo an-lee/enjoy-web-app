@@ -3,7 +3,7 @@
  */
 
 import { db } from '../schema'
-import { generateVideoId, generateLocalVideoId } from '../id-generator'
+import { generateVideoId, generateLocalVideoVid } from '../id-generator'
 import type { Video, VideoProvider, SyncStatus, VideoInput } from '@/types/db'
 
 // ============================================================================
@@ -68,12 +68,17 @@ export async function saveVideo(input: VideoInput): Promise<string> {
   return id
 }
 
+/**
+ * Save local video file to database
+ * vid is the hash of the blob, provider is 'user'
+ */
 export async function saveLocalVideo(
   blob: Blob,
   input: Omit<VideoInput, 'vid' | 'provider'>
 ): Promise<string> {
   const now = new Date().toISOString()
-  const id = await generateLocalVideoId(blob)
+  const vid = await generateLocalVideoVid(blob)
+  const id = generateVideoId('user', vid)
 
   const existing = await db.videos.get(id)
   if (existing) {
@@ -88,12 +93,12 @@ export async function saveLocalVideo(
   const video: Video = {
     ...input,
     id,
-    vid: id,
-    provider: 'youtube', // Default, local videos use hash as vid
+    vid,
+    provider: 'user',
     blob,
     createdAt: now,
     updatedAt: now,
-  } as Video
+  }
   await db.videos.put(video)
   return id
 }

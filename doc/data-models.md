@@ -65,8 +65,8 @@ The local database implements an offline-first architecture aligned with the Enj
 ```typescript
 // src/db/schema.ts
 
-type VideoProvider = 'youtube' | 'netflix'
-type AudioProvider = 'youtube' | 'spotify' | 'podcast' | 'tts' | 'local_upload'
+type VideoProvider = 'youtube' | 'netflix' | 'user'
+type AudioProvider = 'youtube' | 'spotify' | 'podcast' | 'user'
 type TranscriptSource = 'official' | 'auto' | 'ai' | 'user'
 type TargetType = 'Video' | 'Audio'
 type SyncStatus = 'local' | 'synced' | 'pending'
@@ -79,9 +79,10 @@ interface SyncableEntity {
 
 // Video content
 // ID generation: UUID v5 with `video:${provider}:${vid}`
+// For user-uploaded video: provider='user', vid=MD5 hash of the video blob
 interface Video extends SyncableEntity {
   id: string           // UUID v5
-  vid: string          // Platform video ID (e.g., YouTube: "dQw4w9WgXcQ")
+  vid: string          // Platform video ID or MD5 hash for user content
   provider: VideoProvider
   title: string
   description?: string
@@ -101,9 +102,10 @@ interface Video extends SyncableEntity {
 
 // Audio content (follows same design as Video)
 // ID generation: UUID v5 with `audio:${provider}:${aid}`
+// For user-uploaded or TTS audio: provider='user', aid=MD5 hash of the audio blob
 interface Audio extends SyncableEntity {
   id: string           // UUID v5
-  aid: string          // Platform audio ID or unique identifier
+  aid: string          // Platform audio ID or MD5 hash for user content
   provider: AudioProvider
   title: string
   description?: string
@@ -116,7 +118,7 @@ interface Audio extends SyncableEntity {
   level?: Level
   starred?: boolean
   summary?: string
-  // TTS-specific fields (for provider: 'tts')
+  // TTS-specific fields (for TTS-generated audio with provider: 'user')
   translationKey?: string  // Reference to Translation.id
   sourceText?: string      // Original text synthesized
   voice?: string           // Voice identifier used
@@ -232,12 +234,22 @@ interface CachedDefinition {
 | Entity | ID Type | Generation Rule |
 |--------|---------|-----------------|
 | Video | UUID v5 | `video:${provider}:${vid}` |
-| Audio | UUID v5 | `audio:${provider}:${aid}` (or `audio:tts:${sourceText}:${voice}` for TTS) |
+| Audio | UUID v5 | `audio:${provider}:${aid}` |
 | Transcript | UUID v5 | `transcript:${targetType}:${targetId}:${language}:${source}` |
 | Recording | UUID v4 | Random |
 | Dictation | UUID v4 | Random |
 | Translation | UUID v5 | `translation:${sourceText}:${targetLanguage}:${style}:${customPrompt}` |
 | CachedDefinition | UUID v5 | `cache:${word}:${languagePair}` |
+
+#### User Content ID Rules
+
+For user-uploaded and TTS-generated content:
+
+| Content Type | Provider | aid/vid | ID |
+|--------------|----------|---------|-----|
+| Local Audio | `user` | MD5 hash of audio blob | `audio:user:${md5}` |
+| TTS Audio | `user` | MD5 hash of audio blob | `audio:user:${md5}` |
+| Local Video | `user` | MD5 hash of video blob | `video:user:${md5}` |
 
 ### Benefits
 

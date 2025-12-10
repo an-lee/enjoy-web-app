@@ -7,8 +7,9 @@
 // Enums and Constants
 // ============================================================================
 
-export type VideoProvider = 'youtube' | 'netflix'
-export type AudioProvider = 'youtube' | 'spotify' | 'podcast' | 'tts' | 'local_upload'
+export type VideoProvider = 'youtube' | 'netflix' | 'user'
+// Note: 'tts' is for TTS-generated audio, 'user' is for user-imported files from library
+export type AudioProvider = 'youtube' | 'spotify' | 'podcast' | 'user'
 export type TranscriptSource = 'official' | 'auto' | 'ai' | 'user'
 export type TargetType = 'Video' | 'Audio'
 export type SyncStatus = 'local' | 'synced' | 'pending'

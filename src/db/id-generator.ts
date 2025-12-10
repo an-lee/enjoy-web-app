@@ -56,12 +56,11 @@ export function generateVideoId(provider: VideoProvider, vid: string): string {
 }
 
 /**
- * Generate UUID v5 for local upload Video
- * Format: `video:local:${hash}`
+ * Generate vid (hash) for local upload Video
+ * Returns the SHA-256 hash of the video blob, used as vid with provider 'user'
  */
-export async function generateLocalVideoId(blob: Blob): Promise<string> {
-  const hash = await hashBlob(blob)
-  return uuidv5(`video:local:${hash}`, UUID_NAMESPACE)
+export async function generateLocalVideoVid(blob: Blob): Promise<string> {
+  return hashBlob(blob)
 }
 
 // ============================================================================
@@ -78,21 +77,19 @@ export function generateAudioId(provider: AudioProvider, aid: string): string {
 }
 
 /**
- * Generate UUID v5 for TTS-generated Audio
- * Format: `audio:tts:${sourceText}:${voice}`
- * Same text + voice always generates same UUID
+ * Generate aid (hash) for TTS-generated Audio from blob
+ * Returns the SHA-256 hash of the audio blob
  */
-export function generateTTSAudioId(sourceText: string, voice: string): string {
-  return uuidv5(`audio:tts:${sourceText}:${voice}`, UUID_NAMESPACE)
+export async function generateTTSAudioAid(blob: Blob): Promise<string> {
+  return hashBlob(blob)
 }
 
 /**
- * Generate UUID v5 for local upload Audio
- * Format: `audio:local:${hash}`
+ * Generate aid (hash) for local upload Audio
+ * Returns the SHA-256 hash of the audio blob, used as aid with provider 'user'
  */
-export async function generateLocalAudioId(blob: Blob): Promise<string> {
-  const hash = await hashBlob(blob)
-  return uuidv5(`audio:local:${hash}`, UUID_NAMESPACE)
+export async function generateLocalAudioAid(blob: Blob): Promise<string> {
+  return hashBlob(blob)
 }
 
 // ============================================================================

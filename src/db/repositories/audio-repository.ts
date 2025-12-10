@@ -3,7 +3,7 @@
  */
 
 import { db } from '../schema'
-import { generateAudioId, generateTTSAudioId, generateLocalAudioId } from '../id-generator'
+import { generateAudioId, generateLocalAudioAid, generateTTSAudioAid } from '../id-generator'
 import type {
   Audio,
   AudioProvider,
@@ -69,13 +69,18 @@ export async function getAllAudios(): Promise<Audio[]> {
 // ============================================================================
 
 function isTTSAudioInput(input: AudioInput): input is TTSAudioInput {
-  return input.provider === 'tts' && 'sourceText' in input && 'voice' in input
+  return input.provider === 'user' && 'sourceText' in input && 'voice' in input
 }
 
 // ============================================================================
 // Mutation Operations
 // ============================================================================
 
+/**
+ * Save audio to database
+ * For TTS audio (with sourceText, voice, and blob), aid is generated from blob hash
+ * For platform audio, aid is provided in input
+ */
 export async function saveAudio(input: AudioInput): Promise<string> {
   const now = new Date().toISOString()
 
@@ -83,8 +88,12 @@ export async function saveAudio(input: AudioInput): Promise<string> {
   let aid: string
 
   if (isTTSAudioInput(input)) {
-    id = generateTTSAudioId(input.sourceText, input.voice)
-    aid = id
+    // TTS audio: aid is the hash of the blob
+    if (!input.blob) {
+      throw new Error('TTS audio must have a blob')
+    }
+    aid = await generateTTSAudioAid(input.blob)
+    id = generateAudioId('user', aid)
   } else {
     id = generateAudioId(input.provider, input.aid)
     aid = input.aid
@@ -111,12 +120,17 @@ export async function saveAudio(input: AudioInput): Promise<string> {
   return id
 }
 
+/**
+ * Save local audio file to database
+ * aid is the hash of the blob, provider is 'user'
+ */
 export async function saveLocalAudio(
   blob: Blob,
   input: Omit<PlatformAudioInput, 'aid' | 'provider'>
 ): Promise<string> {
   const now = new Date().toISOString()
-  const id = await generateLocalAudioId(blob)
+  const aid = await generateLocalAudioAid(blob)
+  const id = generateAudioId('user', aid)
 
   const existing = await db.audios.get(id)
   if (existing) {
@@ -131,12 +145,12 @@ export async function saveLocalAudio(
   const audio: Audio = {
     ...input,
     id,
-    aid: id,
-    provider: 'local_upload',
+    aid,
+    provider: 'user',
     blob,
     createdAt: now,
     updatedAt: now,
-  } as Audio
+  }
   await db.audios.put(audio)
   return id
 }

@@ -280,7 +280,7 @@ export function createMockAudio(overrides: Partial<Audio> = {}): Audio {
   return {
     id: crypto.randomUUID(),
     aid: `audio-${Math.random().toString(36).slice(2, 10)}`,
-    provider: 'local_upload',
+    provider: 'user',
     title: 'Test Audio',
     description: '',
     thumbnailUrl: '',

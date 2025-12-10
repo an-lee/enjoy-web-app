@@ -43,11 +43,13 @@ export interface Audio extends SyncableEntity {
 
 /**
  * Input type for creating TTS audio
+ * Note: blob is required for TTS audio to generate aid (hash of the audio)
  */
-export type TTSAudioInput = Omit<Audio, 'id' | 'aid' | 'createdAt' | 'updatedAt'> & {
-  provider: 'tts'
+export type TTSAudioInput = Omit<Audio, 'id' | 'aid' | 'createdAt' | 'updatedAt' | 'blob'> & {
+  provider: 'user'
   sourceText: string
   voice: string
+  blob: Blob // Required for TTS to generate aid from hash
 }
 
 /**

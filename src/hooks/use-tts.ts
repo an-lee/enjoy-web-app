@@ -72,7 +72,7 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
 
         // Save to database using React Query mutation
         const ttsInput: TTSAudioInput = {
-          provider: 'tts',
+          provider: 'user',
           title: text.substring(0, 100),
           duration, // seconds
           language,

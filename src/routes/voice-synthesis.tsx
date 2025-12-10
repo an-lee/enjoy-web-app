@@ -217,7 +217,7 @@ function VoiceSynthesis() {
 
       // Save to database using React Query mutation
       const ttsInput: TTSAudioInput = {
-        provider: 'tts',
+        provider: 'user',
         title: text.substring(0, 100),
         duration,
         language: targetLanguage,
@@ -329,7 +329,7 @@ function VoiceSynthesis() {
 
       // Save to database using React Query mutation
       const ttsInput: TTSAudioInput = {
-        provider: 'tts',
+        provider: 'user',
         title: text.substring(0, 100),
         duration,
         language: targetLanguage,

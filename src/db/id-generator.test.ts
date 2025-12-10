@@ -7,7 +7,6 @@ import { describe, it, expect } from 'vitest'
 import {
   generateVideoId,
   generateAudioId,
-  generateTTSAudioId,
   generateTranscriptId,
   generateRecordingId,
   generateDictationId,
@@ -44,43 +43,27 @@ describe('ID Generator', () => {
 
   describe('generateAudioId', () => {
     it('should generate consistent UUID v5 for same provider and aid', () => {
-      const id1 = generateAudioId('local_upload', 'audio123')
-      const id2 = generateAudioId('local_upload', 'audio123')
+      const id1 = generateAudioId('user', 'audio123')
+      const id2 = generateAudioId('user', 'audio123')
       expect(id1).toBe(id2)
     })
 
     it('should generate different UUIDs for different aids', () => {
-      const id1 = generateAudioId('local_upload', 'audio1')
-      const id2 = generateAudioId('local_upload', 'audio2')
+      const id1 = generateAudioId('user', 'audio1')
+      const id2 = generateAudioId('user', 'audio2')
       expect(id1).not.toBe(id2)
     })
 
     it('should generate different UUIDs for different providers', () => {
-      const id1 = generateAudioId('local_upload', 'audio1')
-      const id2 = generateAudioId('tts', 'audio1')
+      const id1 = generateAudioId('user', 'audio1')
+      const id2 = generateAudioId('podcast', 'audio1')
       expect(id1).not.toBe(id2)
     })
   })
 
-  describe('generateTTSAudioId', () => {
-    it('should generate consistent UUID for same text and voice', () => {
-      const id1 = generateTTSAudioId('Hello world', 'en-US-Jenny')
-      const id2 = generateTTSAudioId('Hello world', 'en-US-Jenny')
-      expect(id1).toBe(id2)
-    })
-
-    it('should generate different UUIDs for different texts', () => {
-      const id1 = generateTTSAudioId('Hello', 'en-US-Jenny')
-      const id2 = generateTTSAudioId('World', 'en-US-Jenny')
-      expect(id1).not.toBe(id2)
-    })
-
-    it('should generate different UUIDs for different voices', () => {
-      const id1 = generateTTSAudioId('Hello', 'en-US-Jenny')
-      const id2 = generateTTSAudioId('Hello', 'en-GB-Ryan')
-      expect(id1).not.toBe(id2)
-    })
-  })
+  // Note: generateTTSAudioAid and generateLocalAudioAid tests are skipped in unit tests
+  // due to jsdom limitations with Blob.arrayBuffer(). These async hash-based functions
+  // should be tested with integration tests in a real browser environment.
 
   describe('generateTranscriptId', () => {
     it('should generate consistent UUID for same parameters', () => {
@@ -194,7 +177,7 @@ describe('ID Generator', () => {
     })
   })
 
-  // Note: Blob-based tests (hashBlob, generateLocalVideoId, generateLocalAudioId) are
-  // skipped in unit tests due to jsdom limitations with Blob.arrayBuffer().
+  // Note: Blob-based tests (hashBlob, generateLocalVideoVid, generateLocalAudioAid, generateTTSAudioAid)
+  // are skipped in unit tests due to jsdom limitations with Blob.arrayBuffer().
   // These functions should be tested with integration tests in a real browser environment.
 })
