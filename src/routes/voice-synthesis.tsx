@@ -15,7 +15,12 @@ import {
   TTSHistoryToggle,
   TTSHistory,
 } from '@/components/voice-synthesis'
-import { useAudioHistory, useSaveAudio, useAudio, useSaveTranscript } from '@/hooks/queries'
+import {
+  useAudioHistory,
+  useCreateAudio,
+  useAudio,
+  useCreateTranscript,
+} from '@/hooks/queries'
 import { getDefaultTTSVoice, getTTSVoices } from '@/ai/constants/tts-voices'
 import { AIProvider } from '@/ai/types'
 import type { TTSAudioInput, TranscriptInput } from '@/types/db'
@@ -66,8 +71,8 @@ function VoiceSynthesis() {
     refetch: refetchHistory,
   } = useAudioHistory(showHistory, searchQuery)
 
-  const saveAudioMutation = useSaveAudio()
-  const saveTranscriptMutation = useSaveTranscript()
+  const createAudioMutation = useCreateAudio()
+  const createTranscriptMutation = useCreateTranscript()
 
   // Use audio hook to check for existing audio by translationKey
   const { audio: existingAudio } = useAudio({
@@ -215,7 +220,7 @@ function VoiceSynthesis() {
         ...(translationKey ? { translationKey } : {}),
       }
 
-      const { id: audioId } = await saveAudioMutation.mutateAsync(ttsInput)
+      const { id: audioId } = await createAudioMutation.mutateAsync(ttsInput)
 
       // Save transcript if available (from TTS timestamped model)
       if (result.data.transcript?.timeline && result.data.transcript.timeline.length > 0) {
@@ -227,7 +232,7 @@ function VoiceSynthesis() {
           timeline: result.data.transcript.timeline,
           syncStatus: 'local',
         }
-        await saveTranscriptMutation.mutateAsync(transcriptInput)
+        await createTranscriptMutation.mutateAsync(transcriptInput)
       }
 
       if (showHistory) {
@@ -327,7 +332,7 @@ function VoiceSynthesis() {
         ...(translationKey ? { translationKey } : {}),
       }
 
-      const { id: audioId } = await saveAudioMutation.mutateAsync(ttsInput)
+      const { id: audioId } = await createAudioMutation.mutateAsync(ttsInput)
 
       // Save transcript if available (from TTS timestamped model)
       if (result.data.transcript?.timeline && result.data.transcript.timeline.length > 0) {
@@ -339,7 +344,7 @@ function VoiceSynthesis() {
           timeline: result.data.transcript.timeline,
           syncStatus: 'local',
         }
-        await saveTranscriptMutation.mutateAsync(transcriptInput)
+        await createTranscriptMutation.mutateAsync(transcriptInput)
       }
 
       if (showHistory) {

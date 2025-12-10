@@ -1,10 +1,11 @@
 /**
  * Transcript Query Hooks - React Query hooks for Transcript entity
  *
- * Provides hooks for:
- * - Single transcript fetch (by ID)
- * - Transcripts by target (Video/Audio)
- * - Transcript mutations (save, update, delete)
+ * CRUD Operations:
+ * - Read: useTranscript, useTranscripts, useTranscriptsByTarget
+ * - Create: useCreateTranscript
+ * - Update: useUpdateTranscript
+ * - Delete: useDeleteTranscript
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -24,16 +25,17 @@ import type { Transcript, TranscriptInput, TargetType } from '@/types/db'
 export const transcriptQueryKeys = {
   all: ['transcripts'] as const,
   detail: (id: string) => [...transcriptQueryKeys.all, 'detail', id] as const,
+  list: () => [...transcriptQueryKeys.all, 'list'] as const,
   byTarget: (targetType: TargetType, targetId: string) =>
-    [...transcriptQueryKeys.all, 'byTarget', targetType, targetId] as const,
+    [...transcriptQueryKeys.list(), 'byTarget', targetType, targetId] as const,
 }
 
 // ============================================================================
-// Query Hooks
+// Query Hooks (Read Operations)
 // ============================================================================
 
 /**
- * Hook to fetch a transcript by ID
+ * Hook to fetch a single transcript by ID
  */
 export function useTranscript(id: string | null, enabled: boolean = true) {
   return useQuery({
@@ -70,13 +72,13 @@ export function useTranscriptsByTarget(
 }
 
 // ============================================================================
-// Mutation Hooks
+// Mutation Hooks (Create/Update/Delete Operations)
 // ============================================================================
 
 /**
- * Hook to save a new transcript to the database
+ * Hook to create a new transcript
  */
-export function useSaveTranscript() {
+export function useCreateTranscript() {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -156,4 +158,3 @@ export function useDeleteTranscript() {
     },
   })
 }
-

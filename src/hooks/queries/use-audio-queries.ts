@@ -1,10 +1,11 @@
 /**
  * Audio Query Hooks - React Query hooks for Audio entity
  *
- * Provides hooks for:
- * - Single audio fetch (by ID or translation key)
- * - Multiple audios fetch (by translation key, history)
- * - Audio mutations (save, delete)
+ * CRUD Operations:
+ * - Read: useAudio, useAudios, useAudiosByTranslationKey, useAudioHistory
+ * - Create: useCreateAudio
+ * - Update: (via repository if needed)
+ * - Delete: useDeleteAudio
  */
 
 import { useEffect, useMemo, useCallback } from 'react'
@@ -65,12 +66,12 @@ export interface AudioWithUrl {
   audioUrl: string
 }
 
-export interface UseAudiosOptions {
+export interface UseAudiosByTranslationKeyOptions {
   translationKey?: string | null
   enabled?: boolean
 }
 
-export interface UseAudiosReturn {
+export interface UseAudiosByTranslationKeyReturn {
   audios: AudioWithUrl[]
   isLoading: boolean
   isError: boolean
@@ -154,12 +155,11 @@ async function fetchAudiosByTranslationKey(
 }
 
 // ============================================================================
-// Query Hooks
+// Query Hooks (Read Operations)
 // ============================================================================
 
 /**
- * Hook for fetching a single audio
- * Supports loading by audio ID or translation key
+ * Hook for fetching a single audio by ID or translation key
  * Automatically handles blob URL creation and cleanup
  */
 export function useAudio(options: UseAudioOptions = {}): UseAudioReturn {
@@ -235,7 +235,9 @@ export function useAudioHistory(
  * Hook for fetching multiple audios by translation key
  * Automatically handles blob URL creation and cleanup
  */
-export function useAudios(options: UseAudiosOptions = {}): UseAudiosReturn {
+export function useAudiosByTranslationKey(
+  options: UseAudiosByTranslationKeyOptions = {}
+): UseAudiosByTranslationKeyReturn {
   const { translationKey, enabled = true } = options
   const queryClient = useQueryClient()
 
@@ -310,13 +312,13 @@ export function useAudios(options: UseAudiosOptions = {}): UseAudiosReturn {
 }
 
 // ============================================================================
-// Mutation Hooks
+// Mutation Hooks (Create/Update/Delete Operations)
 // ============================================================================
 
 /**
- * Hook to save a new audio to the database
+ * Hook to create a new audio
  */
-export function useSaveAudio() {
+export function useCreateAudio() {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -344,7 +346,7 @@ export function useSaveAudio() {
 }
 
 /**
- * Hook to delete an audio from the database
+ * Hook to delete an audio
  */
 export function useDeleteAudio() {
   const queryClient = useQueryClient()
@@ -369,4 +371,3 @@ export function useDeleteAudio() {
     },
   })
 }
-

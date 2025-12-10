@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
-import { useSaveAudio, useSaveTranscript } from './queries'
+import { useCreateAudio, useCreateTranscript } from './queries'
 import type { Audio, TTSAudioInput, TranscriptInput } from '@/types/db'
 
 export interface UseTTSOptions {
@@ -31,8 +31,8 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
   const [isSynthesizing, setIsSynthesizing] = useState(false)
 
   // React Query mutations
-  const saveAudioMutation = useSaveAudio()
-  const saveTranscriptMutation = useSaveTranscript()
+  const createAudioMutation = useCreateAudio()
+  const createTranscriptMutation = useCreateTranscript()
 
   const synthesize = useCallback(
     async (text: string) => {
@@ -82,7 +82,7 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
           translationKey,
           syncStatus: 'local',
         }
-        const { audio } = await saveAudioMutation.mutateAsync(ttsInput)
+        const { audio } = await createAudioMutation.mutateAsync(ttsInput)
 
         // Save transcript if available (from TTS timestamped model)
         if (
@@ -97,7 +97,7 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
             timeline: result.data.transcript.timeline,
             syncStatus: 'local',
           }
-          await saveTranscriptMutation.mutateAsync(transcriptInput)
+          await createTranscriptMutation.mutateAsync(transcriptInput)
         }
 
         toast.success(
@@ -121,8 +121,8 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
       t,
       onSuccess,
       onError,
-      saveAudioMutation,
-      saveTranscriptMutation,
+      createAudioMutation,
+      createTranscriptMutation,
     ]
   )
 

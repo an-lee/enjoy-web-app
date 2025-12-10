@@ -5,37 +5,44 @@
  * UI components should import from here for data fetching and mutations.
  *
  * Pattern: UI Layer -> Query Hooks -> Database (Dexie)
+ *
+ * Naming Convention (CRUD):
+ * - Read: use{Entity}, use{Entity}s, use{Entity}sBy{Filter}
+ * - Create: useCreate{Entity}
+ * - Update: useUpdate{Entity}
+ * - Delete: useDelete{Entity}
  */
 
 // Audio Queries
 export {
   // Query keys
   audioQueryKeys,
-  // Query hooks
+  // Query hooks (Read)
   useAudio,
-  useAudios,
   useAudioHistory,
-  // Mutation hooks
-  useSaveAudio,
+  useAudiosByTranslationKey,
+  // Mutation hooks (Create/Delete)
+  useCreateAudio,
   useDeleteAudio,
   // Types
   type AudioLoader,
   type UseAudioOptions,
   type UseAudioReturn,
   type AudioWithUrl,
-  type UseAudiosOptions,
-  type UseAudiosReturn,
+  type UseAudiosByTranslationKeyOptions,
+  type UseAudiosByTranslationKeyReturn,
 } from './use-audio-queries'
 
 // Translation Queries
 export {
   // Query keys
   translationQueryKeys,
-  // Query hooks
-  useTranslationHistory,
-  useFindExistingTranslation,
-  // Mutation hooks
-  useSaveTranslation,
+  // Query hooks (Read)
+  useTranslation,
+  useTranslations,
+  useTranslationByParams,
+  // Mutation hooks (Create/Update)
+  useCreateTranslation,
   useUpdateTranslation,
   // Utility functions
   findExistingTranslation,
@@ -45,12 +52,11 @@ export {
 export {
   // Query keys
   transcriptQueryKeys,
-  // Query hooks
+  // Query hooks (Read)
   useTranscript,
   useTranscriptsByTarget,
-  // Mutation hooks
-  useSaveTranscript,
+  // Mutation hooks (Create/Update/Delete)
+  useCreateTranscript,
   useUpdateTranscript,
   useDeleteTranscript,
 } from './use-transcript-queries'
-

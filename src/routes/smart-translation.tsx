@@ -9,8 +9,8 @@ import { smartTranslationService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
 import {
-  useTranslationHistory,
-  useSaveTranslation,
+  useTranslations,
+  useCreateTranslation,
   useUpdateTranslation,
   findExistingTranslation,
 } from '@/hooks/queries'
@@ -60,9 +60,9 @@ function SmartTranslation() {
   const {
     data: historyData,
     isLoading: isLoadingHistory,
-  } = useTranslationHistory(currentPage, showHistory, debouncedSearchQuery)
+  } = useTranslations(currentPage, showHistory, debouncedSearchQuery)
 
-  const saveTranslationMutation = useSaveTranslation()
+  const createTranslationMutation = useCreateTranslation()
   const updateTranslationMutation = useUpdateTranslation()
 
   const history = historyData?.translations ?? []
@@ -171,7 +171,7 @@ function SmartTranslation() {
       }
 
       // Save to database using React Query mutation (ID is generated internally)
-      const savedTranslation = await saveTranslationMutation.mutateAsync({
+      const savedTranslation = await createTranslationMutation.mutateAsync({
         sourceText: inputText.trim(),
         sourceLanguage,
         targetLanguage,

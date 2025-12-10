@@ -1,15 +1,17 @@
 /**
  * Translation Query Hooks - React Query hooks for Translation entity
  *
- * Provides hooks for:
- * - Translation history with pagination
- * - Find existing translation by parameters
- * - Translation mutations (save, update)
+ * CRUD Operations:
+ * - Read: useTranslation, useTranslations, useTranslationByParams
+ * - Create: useCreateTranslation
+ * - Update: useUpdateTranslation
+ * - Delete: (not implemented - translations are immutable)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   db,
+  getTranslationById,
   saveTranslation as dbSaveTranslation,
   updateTranslation as dbUpdateTranslation,
   generateTranslationId,
@@ -40,7 +42,7 @@ export const translationQueryKeys = {
 // Fetch Functions
 // ============================================================================
 
-async function fetchTranslationHistory(
+async function fetchTranslations(
   page: number,
   searchQuery?: string
 ): Promise<{
@@ -78,7 +80,7 @@ async function fetchTranslationHistory(
   return { translations, total, totalPages }
 }
 
-async function fetchExistingTranslation(params: {
+async function fetchTranslationByParams(params: {
   sourceText: string
   targetLanguage: string
   style: TranslationStyle
@@ -106,7 +108,7 @@ async function fetchExistingTranslation(params: {
 
 /**
  * Find existing translation by parameters (utility function for direct calls)
- * This is kept for backward compatibility but routes through the same logic
+ * This is kept for backward compatibility
  */
 export async function findExistingTranslation(params: {
   sourceText: string
@@ -114,24 +116,39 @@ export async function findExistingTranslation(params: {
   style: TranslationStyle
   customPrompt?: string
 }): Promise<Translation | undefined> {
-  return fetchExistingTranslation(params)
+  return fetchTranslationByParams(params)
 }
 
 // ============================================================================
-// Query Hooks
+// Query Hooks (Read Operations)
 // ============================================================================
 
 /**
- * Hook to fetch translation history with pagination and optional search
+ * Hook to fetch a single translation by ID
  */
-export function useTranslationHistory(
+export function useTranslation(id: string | null, enabled: boolean = true) {
+  return useQuery({
+    queryKey: translationQueryKeys.detail(id || ''),
+    queryFn: () => {
+      if (!id) return Promise.resolve(undefined)
+      return getTranslationById(id)
+    },
+    enabled: enabled && !!id,
+    staleTime: 1000 * 60,
+  })
+}
+
+/**
+ * Hook to fetch translations with pagination and optional search
+ */
+export function useTranslations(
   page: number,
   enabled: boolean = true,
   searchQuery?: string
 ) {
   return useQuery({
     queryKey: translationQueryKeys.list(page, searchQuery),
-    queryFn: () => fetchTranslationHistory(page, searchQuery),
+    queryFn: () => fetchTranslations(page, searchQuery),
     enabled,
     staleTime: 1000 * 60,
   })
@@ -140,7 +157,7 @@ export function useTranslationHistory(
 /**
  * Hook to find existing translation by parameters
  */
-export function useFindExistingTranslation(
+export function useTranslationByParams(
   params: {
     sourceText: string
     targetLanguage: string
@@ -151,21 +168,21 @@ export function useFindExistingTranslation(
 ) {
   return useQuery({
     queryKey: translationQueryKeys.byParams(params!),
-    queryFn: () => fetchExistingTranslation(params!),
+    queryFn: () => fetchTranslationByParams(params!),
     enabled: enabled && params !== null && params.sourceText.trim() !== '',
     staleTime: 1000 * 60 * 5,
   })
 }
 
 // ============================================================================
-// Mutation Hooks
+// Mutation Hooks (Create/Update Operations)
 // ============================================================================
 
 /**
- * Hook to save a new translation
+ * Hook to create a new translation
  * ID generation is handled internally by the mutation
  */
-export function useSaveTranslation() {
+export function useCreateTranslation() {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -236,4 +253,3 @@ export function useUpdateTranslation() {
     },
   })
 }
-
