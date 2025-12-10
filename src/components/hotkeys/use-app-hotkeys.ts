@@ -51,13 +51,17 @@ export function useAppHotkey(
   const scope = definition?.scope as HotkeyScope | undefined
   const useKey = definition?.useKey ?? false
 
+  // Memoize scopes to prevent unnecessary re-renders
   // For global scope, also include wildcard '*' to ensure it's always active
-  const scopes = scope === 'global' ? ['global', '*'] : scope ? [scope] : undefined
+  const scopes = useMemo(
+    () => (scope === 'global' ? ['global', '*'] : scope ? [scope] : undefined),
+    [scope]
+  )
 
-  // Debug log on mount
+  // Debug log on mount (only depends on stable values)
   useEffect(() => {
     log.debug(`Registered hotkey: ${actionId}`, { keys, scope, scopes, useKey })
-  }, [actionId, keys, scope, scopes, useKey])
+  }, [actionId, keys, scope, useKey])
 
   const memoizedCallback = useCallback(
     (event: KeyboardEvent) => {
