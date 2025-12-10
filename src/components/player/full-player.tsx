@@ -1,27 +1,29 @@
 /**
- * FullPlayer - Expanded player view for practice mode
+ * FullPlayer - Expanded player view for language learning practice
  *
- * Displays:
- * - Video/Audio player
- * - Playback controls
- * - Progress bar
- * - (Future: Transcript panel, recording controls)
+ * Modern, minimal design with learning-focused controls:
+ * - Row 1: Progress bar with time labels
+ * - Row 2: Main controls (prev/play/next/replay) + Secondary controls (volume/speed/dictation/echo)
  */
 
-import { useCallback, forwardRef, type RefObject } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { usePlayerStore } from '@/stores/player'
-import { ProgressBar } from './shared/progress-bar'
 import { GenerativeCover } from '@/components/library/generative-cover'
 
 // ============================================================================
@@ -30,18 +32,16 @@ import { GenerativeCover } from '@/components/library/generative-cover'
 
 interface FullPlayerProps {
   className?: string
-  /** Media URL for playback */
-  mediaUrl: string | null
   /** Whether media is loading */
   isLoading?: boolean
   /** Error message if loading failed */
   error?: string | null
+  /** Whether it's a video */
+  isVideo?: boolean
   /** Callback to seek to a position */
   onSeek?: (time: number) => void
-  /** Reference to the video element */
-  videoRef?: RefObject<HTMLVideoElement | null>
-  /** Reference to the audio element */
-  audioRef?: RefObject<HTMLAudioElement | null>
+  /** Callback to toggle play/pause */
+  onTogglePlay?: () => void
 }
 
 // ============================================================================
@@ -59,97 +59,212 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+// ============================================================================
+// Sub-components
+// ============================================================================
+
+interface VolumePopoverProps {
+  volume: number
+  onVolumeChange: (volume: number) => void
+}
+
+function VolumePopover({ volume, onVolumeChange }: VolumePopoverProps) {
+  const { t } = useTranslation()
+
+  return (
+    <Popover>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Icon
+                icon={
+                  volume === 0
+                    ? 'lucide:volume-x'
+                    : volume < 0.5
+                      ? 'lucide:volume-1'
+                      : 'lucide:volume-2'
+                }
+                className="w-4 h-4"
+              />
+            </Button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="top">{t('player.volume')}</TooltipContent>
+      </Tooltip>
+      <PopoverContent className="w-auto p-3" side="top" align="center">
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-xs text-muted-foreground">{Math.round(volume * 100)}%</span>
+          <Slider
+            value={[volume]}
+            min={0}
+            max={1}
+            step={0.01}
+            orientation="vertical"
+            onValueChange={(values) => onVolumeChange(values[0])}
+            className="h-24"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => onVolumeChange(volume > 0 ? 0 : 1)}
+          >
+            {volume > 0 ? t('player.mute') : t('player.unmute')}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+interface SpeedPopoverProps {
+  playbackRate: number
+  onPlaybackRateChange: (rate: number) => void
+}
+
+function SpeedPopover({ playbackRate, onPlaybackRateChange }: SpeedPopoverProps) {
+  const { t } = useTranslation()
+  const presets = [0.5, 0.75, 1, 1.25]
+
+  return (
+    <Popover>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-9 px-2 font-mono text-xs">
+              {playbackRate}x
+            </Button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="top">{t('player.speed')}</TooltipContent>
+      </Tooltip>
+      <PopoverContent className="w-56 p-3" side="top" align="center">
+        <div className="flex flex-col gap-3">
+          {/* Current value display */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{t('player.speed')}</span>
+            <span className="text-sm font-mono font-medium">{playbackRate}x</span>
+          </div>
+
+          {/* Horizontal slider */}
+          <Slider
+            value={[playbackRate]}
+            min={0.5}
+            max={2}
+            step={0.05}
+            onValueChange={(values) => onPlaybackRateChange(values[0])}
+          />
+
+          {/* Preset buttons */}
+          <div className="flex justify-between gap-1">
+            {presets.map((rate) => (
+              <Button
+                key={rate}
+                variant={playbackRate === rate ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-7 px-2 text-xs font-mono flex-1"
+                onClick={() => onPlaybackRateChange(rate)}
+              >
+                {rate}x
+              </Button>
+            ))}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 // ============================================================================
 // Component
 // ============================================================================
 
-export const FullPlayer = forwardRef<HTMLDivElement, FullPlayerProps>(
-  function FullPlayer(
-    { className, mediaUrl, isLoading, error, onSeek, videoRef, audioRef },
-    ref
-  ) {
-    const { t } = useTranslation()
+export function FullPlayer({
+  className,
+  isLoading,
+  error,
+  isVideo,
+  onSeek,
+  onTogglePlay,
+}: FullPlayerProps) {
+  const { t } = useTranslation()
 
-    // Player state
-    const {
-      currentSession,
-      isPlaying,
-      volume,
-      playbackRate,
-      togglePlay,
-      collapse,
-      hide,
-      setVolume,
-      setPlaybackRate,
-    } = usePlayerStore()
+  // Player state
+  const {
+    currentSession,
+    isPlaying,
+    volume,
+    playbackRate,
+    collapse,
+    hide,
+    setVolume,
+    setPlaybackRate,
+  } = usePlayerStore()
 
-    // Handle seek
-    const handleSeek = useCallback(
-      (progressPercent: number) => {
-        if (!currentSession) return
-        const newTime = (progressPercent / 100) * currentSession.duration
-        onSeek?.(newTime)
-      },
-      [currentSession, onSeek]
-    )
-
-    // Handle skip backward (5 seconds)
-    const handleSkipBackward = useCallback(() => {
+  // Handle seek via slider
+  const handleSeek = useCallback(
+    (values: number[]) => {
       if (!currentSession) return
-      const newTime = Math.max(0, currentSession.currentTime - 5)
+      const newTime = (values[0] / 100) * currentSession.duration
       onSeek?.(newTime)
-    }, [currentSession, onSeek])
+    },
+    [currentSession, onSeek]
+  )
 
-    // Handle skip forward (5 seconds)
-    const handleSkipForward = useCallback(() => {
-      if (!currentSession) return
-      const newTime = Math.min(
-        currentSession.duration,
-        currentSession.currentTime + 5
-      )
-      onSeek?.(newTime)
-    }, [currentSession, onSeek])
+  // Handle previous segment (5 seconds back for now, will be sentence-based later)
+  const handlePrevSegment = useCallback(() => {
+    if (!currentSession) return
+    const newTime = Math.max(0, currentSession.currentTime - 5)
+    onSeek?.(newTime)
+  }, [currentSession, onSeek])
 
-    // Handle collapse
-    const handleCollapse = useCallback(() => {
-      collapse()
-    }, [collapse])
+  // Handle next segment (5 seconds forward for now, will be sentence-based later)
+  const handleNextSegment = useCallback(() => {
+    if (!currentSession) return
+    const newTime = Math.min(currentSession.duration, currentSession.currentTime + 5)
+    onSeek?.(newTime)
+  }, [currentSession, onSeek])
 
-    // Handle close
-    const handleClose = useCallback(() => {
-      hide()
-    }, [hide])
+  // Handle replay current segment (go back 3 seconds for now, will be sentence-based later)
+  const handleReplaySegment = useCallback(() => {
+    if (!currentSession) return
+    const newTime = Math.max(0, currentSession.currentTime - 3)
+    onSeek?.(newTime)
+  }, [currentSession, onSeek])
 
-    // Handle volume change
-    const handleVolumeChange = useCallback(
-      (values: number[]) => {
-        setVolume(values[0])
-      },
-      [setVolume]
-    )
+  // Handle collapse
+  const handleCollapse = useCallback(() => {
+    collapse()
+  }, [collapse])
 
-    // Handle playback rate change
-    const handlePlaybackRateChange = useCallback(
-      (rate: number) => {
-        setPlaybackRate(rate)
-      },
-      [setPlaybackRate]
-    )
+  // Handle close
+  const handleClose = useCallback(() => {
+    hide()
+  }, [hide])
 
-    if (!currentSession) return null
+  // Handle dictation mode (placeholder)
+  const handleDictationMode = useCallback(() => {
+    // TODO: Implement dictation mode
+    console.log('Dictation mode')
+  }, [])
 
-    const progress =
-      currentSession.duration > 0
-        ? (currentSession.currentTime / currentSession.duration) * 100
-        : 0
+  // Handle echo mode (placeholder)
+  const handleEchoMode = useCallback(() => {
+    // TODO: Implement echo/shadowing mode
+    console.log('Echo mode')
+  }, [])
 
-    const isVideo = currentSession.mediaType === 'video'
+  if (!currentSession) return null
 
-    return (
+  const progress =
+    currentSession.duration > 0
+      ? (currentSession.currentTime / currentSession.duration) * 100
+      : 0
+
+  return (
+    <TooltipProvider delayDuration={300}>
       <div
-        ref={ref}
         className={cn(
           'fixed inset-0 z-50',
           'bg-background',
@@ -159,17 +274,21 @@ export const FullPlayer = forwardRef<HTMLDivElement, FullPlayerProps>(
         )}
       >
         {/* Header */}
-        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b">
+        <header className="shrink-0 flex items-center justify-between px-4 h-14 border-b bg-background/95 backdrop-blur-sm">
           <div className="flex items-center gap-3 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0"
-              onClick={handleCollapse}
-            >
-              <Icon icon="lucide:chevron-down" className="w-5 h-5" />
-              <span className="sr-only">{t('player.collapse')}</span>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 h-9 w-9"
+                  onClick={handleCollapse}
+                >
+                  <Icon icon="lucide:chevron-down" className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{t('player.collapse')}</TooltipContent>
+            </Tooltip>
             <div className="min-w-0">
               <h2 className="text-sm font-medium truncate">
                 {currentSession.mediaTitle}
@@ -179,44 +298,43 @@ export const FullPlayer = forwardRef<HTMLDivElement, FullPlayerProps>(
               </p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClose}
-            className="shrink-0 text-muted-foreground hover:text-foreground"
-          >
-            <Icon icon="lucide:x" className="w-5 h-5" />
-            <span className="sr-only">{t('common.close')}</span>
-          </Button>
-        </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+                className="shrink-0 h-9 w-9 text-muted-foreground hover:text-foreground"
+              >
+                <Icon icon="lucide:x" className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{t('common.close')}</TooltipContent>
+          </Tooltip>
+        </header>
 
-        {/* Main content area */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {/* Media display */}
-          <div className="flex-1 flex items-center justify-center bg-black/5 dark:bg-black/20 min-h-0">
-            {isLoading ? (
-              <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                <Icon
-                  icon="lucide:loader-2"
-                  className="w-8 h-8 animate-spin"
-                />
-                <p className="text-sm">{t('common.loading')}</p>
+        {/* Main content area - Media display */}
+        <main className="flex-1 flex items-center justify-center bg-muted/30 min-h-0 overflow-hidden">
+          {isLoading ? (
+            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+              <Icon icon="lucide:loader-2" className="w-10 h-10 animate-spin" />
+              <p className="text-sm">{t('common.loading')}</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center gap-3 text-destructive">
+              <Icon icon="lucide:alert-circle" className="w-10 h-10" />
+              <p className="text-sm">{error}</p>
+            </div>
+          ) : isVideo ? (
+            <div className="flex items-center justify-center w-full h-full p-4">
+              <div className="w-full max-w-4xl aspect-video bg-black/10 dark:bg-black/40 rounded-xl flex items-center justify-center">
+                <Icon icon="lucide:video" className="w-16 h-16 text-muted-foreground/50" />
               </div>
-            ) : error ? (
-              <div className="flex flex-col items-center gap-3 text-destructive">
-                <Icon icon="lucide:alert-circle" className="w-8 h-8" />
-                <p className="text-sm">{error}</p>
-              </div>
-            ) : isVideo ? (
-              <video
-                ref={videoRef as RefObject<HTMLVideoElement>}
-                src={mediaUrl || undefined}
-                className="max-w-full max-h-full object-contain"
-                playsInline
-              />
-            ) : (
-              /* Audio visualization / cover */
-              <div className="w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-2xl">
+            </div>
+          ) : (
+            /* Audio visualization / cover */
+            <div className="flex flex-col items-center gap-6 p-8">
+              <div className="w-56 h-56 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
                 {currentSession.thumbnailUrl ? (
                   <img
                     src={currentSession.thumbnailUrl}
@@ -231,140 +349,145 @@ export const FullPlayer = forwardRef<HTMLDivElement, FullPlayerProps>(
                   />
                 )}
               </div>
-            )}
-
-            {/* Hidden audio element */}
-            {!isVideo && (
-              <audio
-                ref={audioRef as RefObject<HTMLAudioElement>}
-                src={mediaUrl || undefined}
-                className="hidden"
-              />
-            )}
-          </div>
-
-          {/* Controls area */}
-          <div className="shrink-0 px-4 py-4 md:px-8 md:py-6 bg-background border-t">
-            {/* Progress bar */}
-            <div className="mb-4">
-              <ProgressBar
-                progress={progress}
-                onSeek={handleSeek}
-                size="md"
-                className="mb-2"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formatTime(currentSession.currentTime)}</span>
-                <span>{formatTime(currentSession.duration)}</span>
+              <div className="text-center max-w-md">
+                <h3 className="text-lg font-semibold truncate">{currentSession.mediaTitle}</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {currentSession.language.toUpperCase()}
+                </p>
               </div>
             </div>
+          )}
+        </main>
 
-            {/* Main controls */}
-            <div className="flex items-center justify-center gap-4 mb-4">
-              {/* Skip backward */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12"
-                onClick={handleSkipBackward}
-              >
-                <Icon icon="lucide:rotate-ccw" className="w-5 h-5" />
-                <span className="sr-only">{t('player.skipBackward')}</span>
-              </Button>
-
-              {/* Play/Pause */}
-              <Button
-                variant="default"
-                size="icon"
-                className="h-14 w-14 rounded-full"
-                onClick={togglePlay}
-              >
-                <Icon
-                  icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
-                  className="w-6 h-6"
-                />
-                <span className="sr-only">
-                  {isPlaying ? t('player.pause') : t('player.play')}
-                </span>
-              </Button>
-
-              {/* Skip forward */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12"
-                onClick={handleSkipForward}
-              >
-                <Icon icon="lucide:rotate-cw" className="w-5 h-5" />
-                <span className="sr-only">{t('player.skipForward')}</span>
-              </Button>
+        {/* Controls area - Two rows */}
+        <footer className="shrink-0 bg-background border-t">
+          <div className="max-w-3xl mx-auto px-4 py-4 md:px-6">
+            {/* Row 1: Progress bar with time */}
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-xs text-muted-foreground tabular-nums w-12 text-right shrink-0">
+                {formatTime(currentSession.currentTime)}
+              </span>
+              <Slider
+                value={[progress]}
+                min={0}
+                max={100}
+                step={0.1}
+                onValueChange={handleSeek}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground tabular-nums w-12 shrink-0">
+                {formatTime(currentSession.duration)}
+              </span>
             </div>
 
-            {/* Secondary controls */}
+            {/* Row 2: Controls */}
             <div className="flex items-center justify-between">
-              {/* Volume control */}
-              <div className="flex items-center gap-2 w-32">
+              {/* Main controls - Left side */}
+              <div className="flex items-center gap-1">
+                {/* Previous segment */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={handlePrevSegment}
+                    >
+                      <Icon icon="lucide:skip-back" className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{t('player.prevSegment')}</TooltipContent>
+                </Tooltip>
+
+                {/* Play/Pause */}
                 <Button
-                  variant="ghost"
+                  variant="default"
                   size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => setVolume(volume > 0 ? 0 : 1)}
+                  className="h-11 w-11 rounded-full shadow-md"
+                  onClick={onTogglePlay}
                 >
                   <Icon
-                    icon={
-                      volume === 0
-                        ? 'lucide:volume-x'
-                        : volume < 0.5
-                          ? 'lucide:volume-1'
-                          : 'lucide:volume-2'
-                    }
-                    className="w-4 h-4"
+                    icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
+                    className={cn('w-5 h-5', !isPlaying && 'ml-0.5')}
                   />
                 </Button>
-                <Slider
-                  value={[volume]}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  onValueChange={handleVolumeChange}
-                  className="flex-1"
-                />
+
+                {/* Next segment */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={handleNextSegment}
+                    >
+                      <Icon icon="lucide:skip-forward" className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{t('player.nextSegment')}</TooltipContent>
+                </Tooltip>
+
+                {/* Replay current segment */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={handleReplaySegment}
+                    >
+                      <Icon icon="lucide:repeat-1" className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{t('player.replaySegment')}</TooltipContent>
+                </Tooltip>
               </div>
 
-              {/* Playback rate */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 px-3">
-                    <Icon icon="lucide:gauge" className="w-4 h-4 mr-1" />
-                    {playbackRate}x
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center">
-                  {PLAYBACK_RATES.map((rate) => (
-                    <DropdownMenuItem
-                      key={rate}
-                      onClick={() => handlePlaybackRateChange(rate)}
-                      className={cn(
-                        playbackRate === rate && 'bg-accent font-medium'
-                      )}
-                    >
-                      {rate}x
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Secondary controls - Right side */}
+              <div className="flex items-center gap-1">
+                {/* Volume */}
+                <VolumePopover volume={volume} onVolumeChange={setVolume} />
 
-              {/* Placeholder for future controls (repeat, etc.) */}
-              <div className="w-32 flex justify-end">
-                <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
-                  <Icon icon="lucide:repeat" className="w-4 h-4" />
-                </Button>
+                {/* Playback speed */}
+                <SpeedPopover playbackRate={playbackRate} onPlaybackRateChange={setPlaybackRate} />
+
+                {/* Divider */}
+                <div className="w-px h-5 bg-border mx-1" />
+
+                {/* Dictation mode */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={handleDictationMode}
+                    >
+                      <Icon icon="lucide:pencil-line" className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{t('player.dictationMode')}</TooltipContent>
+                </Tooltip>
+
+                {/* Echo/Shadowing mode */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={handleEchoMode}
+                    >
+                      <Icon icon="lucide:mic" className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{t('player.echoMode')}</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </div>
-        </div>
+        </footer>
       </div>
-    )
-  }
-)
-
+    </TooltipProvider>
+  )
+}

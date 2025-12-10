@@ -187,13 +187,20 @@
     "skipBackward": "后退 5 秒",
     "skipForward": "前进 5 秒",
     "volume": "音量",
+    "mute": "静音",
+    "unmute": "取消静音",
     "speed": "播放速度",
     "repeat": "循环",
     "repeatOff": "关闭循环",
     "repeatOne": "单曲循环",
     "repeatAll": "列表循环",
     "continueLearning": "继续学习",
-    "mediaNotFound": "媒体未找到"
+    "mediaNotFound": "媒体未找到",
+    "prevSegment": "上一句",
+    "nextSegment": "下一句",
+    "replaySegment": "重播当前句",
+    "dictationMode": "听写模式",
+    "echoMode": "跟读模式"
   },
   "vocabulary": {
     "title": "词汇表",

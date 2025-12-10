@@ -187,13 +187,20 @@
     "skipBackward": "Voltar 5 segundos",
     "skipForward": "Avançar 5 segundos",
     "volume": "Volume",
+    "mute": "Mudo",
+    "unmute": "Ativar som",
     "speed": "Velocidade de reprodução",
     "repeat": "Repetir",
     "repeatOff": "Repetir desativado",
     "repeatOne": "Repetir um",
     "repeatAll": "Repetir tudo",
     "continueLearning": "Continuar aprendendo",
-    "mediaNotFound": "Mídia não encontrada"
+    "mediaNotFound": "Mídia não encontrada",
+    "prevSegment": "Frase anterior",
+    "nextSegment": "Próxima frase",
+    "replaySegment": "Repetir frase",
+    "dictationMode": "Modo ditado",
+    "echoMode": "Modo eco"
   },
   "vocabulary": {
     "title": "Vocabulário",

@@ -187,13 +187,20 @@
     "skipBackward": "Skip backward 5 seconds",
     "skipForward": "Skip forward 5 seconds",
     "volume": "Volume",
+    "mute": "Mute",
+    "unmute": "Unmute",
     "speed": "Playback speed",
     "repeat": "Repeat",
     "repeatOff": "Repeat off",
     "repeatOne": "Repeat one",
     "repeatAll": "Repeat all",
     "continueLearning": "Continue Learning",
-    "mediaNotFound": "Media not found"
+    "mediaNotFound": "Media not found",
+    "prevSegment": "Previous segment",
+    "nextSegment": "Next segment",
+    "replaySegment": "Replay segment",
+    "dictationMode": "Dictation mode",
+    "echoMode": "Echo practice"
   },
   "vocabulary": {
     "title": "Vocabulary",

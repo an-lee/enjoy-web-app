@@ -187,13 +187,20 @@
     "skipBackward": "5 Sekunden zurück",
     "skipForward": "5 Sekunden vor",
     "volume": "Lautstärke",
+    "mute": "Stumm",
+    "unmute": "Ton aktivieren",
     "speed": "Wiedergabegeschwindigkeit",
     "repeat": "Wiederholen",
     "repeatOff": "Wiederholen aus",
     "repeatOne": "Einen wiederholen",
     "repeatAll": "Alle wiederholen",
     "continueLearning": "Weiter lernen",
-    "mediaNotFound": "Medien nicht gefunden"
+    "mediaNotFound": "Medien nicht gefunden",
+    "prevSegment": "Vorheriger Satz",
+    "nextSegment": "Nächster Satz",
+    "replaySegment": "Satz wiederholen",
+    "dictationMode": "Diktat-Modus",
+    "echoMode": "Nachsprech-Modus"
   },
   "vocabulary": {
     "title": "Wortschatz",

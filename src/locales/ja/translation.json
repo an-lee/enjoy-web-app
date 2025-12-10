@@ -187,13 +187,20 @@
     "skipBackward": "5秒戻る",
     "skipForward": "5秒進む",
     "volume": "音量",
+    "mute": "ミュート",
+    "unmute": "ミュート解除",
     "speed": "再生速度",
     "repeat": "リピート",
     "repeatOff": "リピートオフ",
     "repeatOne": "1曲リピート",
     "repeatAll": "全曲リピート",
     "continueLearning": "学習を続ける",
-    "mediaNotFound": "メディアが見つかりません"
+    "mediaNotFound": "メディアが見つかりません",
+    "prevSegment": "前の文",
+    "nextSegment": "次の文",
+    "replaySegment": "文をリプレイ",
+    "dictationMode": "ディクテーション",
+    "echoMode": "シャドーイング"
   },
   "vocabulary": {
     "title": "語彙",
