@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect, useRef } from 'react'
 import { useDebounce } from '@uidotdev/usehooks'
@@ -8,6 +8,7 @@ import type { Translation, TranslationStyle } from '@/types/db'
 import { smartTranslationService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
+import { AIProvider } from '@/ai/types'
 import {
   useTranslations,
   useCreateTranslation,
@@ -32,7 +33,15 @@ export const Route = createFileRoute('/smart-translation')({
 
 function SmartTranslation() {
   const { t } = useTranslation()
-  const { nativeLanguage, learningLanguage } = useSettingsStore()
+  const { nativeLanguage, learningLanguage, aiServices } = useSettingsStore()
+
+  // Get current provider for smart translation
+  const currentProvider = aiServices.smartTranslation?.defaultProvider || AIProvider.ENJOY
+  const providerName = t(`settings.ai.providers.${currentProvider}`, {
+    defaultValue: currentProvider === AIProvider.ENJOY ? 'Enjoy API' :
+                  currentProvider === AIProvider.LOCAL ? 'Local (Free)' :
+                  'BYOK (Coming Soon)'
+  })
 
   // Initialize with user's settings: source = native, target = learning
   const [sourceLanguage, setSourceLanguage] = useState(nativeLanguage)
@@ -317,6 +326,24 @@ function SmartTranslation() {
   return (
     <div className="container mx-auto max-w-4xl w-full py-8">
       <div className="w-full space-y-6">
+        {/* Provider Info */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Icon icon="lucide:brain" className="h-4 w-4" />
+            <span>
+              {t('translation.currentProvider', { defaultValue: 'Provider' })}: {providerName}
+            </span>
+          </div>
+          <Link
+            to="/settings"
+            search={{ tab: 'ai' }}
+            className="flex items-center gap-1 text-primary hover:underline transition-colors"
+          >
+            <span>{t('translation.changeProvider', { defaultValue: 'Change' })}</span>
+            <Icon icon="lucide:external-link" className="h-3 w-3" />
+          </Link>
+        </div>
+
         {/* Input Section */}
         <div className="space-y-4">
           <LanguageSelector

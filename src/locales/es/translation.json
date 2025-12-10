@@ -184,7 +184,9 @@
     "copied": "¡Copiado!",
     "copyFailed": "Error al copiar",
     "synthesizeAudio": "Sintetizar audio",
-    "regenerateAudio": "Regenerar audio"
+    "regenerateAudio": "Regenerar audio",
+    "currentProvider": "Proveedor",
+    "changeProvider": "Cambiar"
   },
   "tts": {
     "title": "Síntesis de Voz",
@@ -207,6 +209,8 @@
     "noHistory": "Sin historial de síntesis",
     "synthesizeAudio": "Sintetizar Audio",
     "synthesizeDescription": "Generar audio a partir del texto traducido",
-    "synthesized": "Audio sintetizado exitosamente"
+    "synthesized": "Audio sintetizado exitosamente",
+    "currentProvider": "Proveedor",
+    "changeProvider": "Cambiar"
   }
 }

@@ -184,7 +184,9 @@
     "copied": "コピーしました！",
     "copyFailed": "コピーに失敗しました",
     "synthesizeAudio": "音声を合成",
-    "regenerateAudio": "音声を再生成"
+    "regenerateAudio": "音声を再生成",
+    "currentProvider": "プロバイダー",
+    "changeProvider": "変更"
   },
   "tts": {
     "title": "音声合成",
@@ -207,6 +209,8 @@
     "noHistory": "合成履歴がありません",
     "synthesizeAudio": "音声を合成",
     "synthesizeDescription": "翻訳されたテキストから音声を生成",
-    "synthesized": "音声の合成に成功しました"
+    "synthesized": "音声の合成に成功しました",
+    "currentProvider": "プロバイダー",
+    "changeProvider": "変更"
   }
 }

@@ -11,7 +11,7 @@ Non-sensitive configuration values are stored directly in `wrangler.jsonc`:
 ```jsonc
 "vars": {
   "AZURE_SPEECH_REGION": "eastus",
-  "RAILS_API_BASE_URL": "https://enjoy.bot"
+  "API_BASE_URL": "https://enjoy.bot"
 }
 ```
 
@@ -80,7 +80,7 @@ Rate limiting requires a KV namespace:
 |---------|------|----------|-------------|
 | `AZURE_SPEECH_SUBSCRIPTION_KEY` | Secret | Yes | Azure Speech Service subscription key |
 | `AZURE_SPEECH_REGION` | Var | Yes | Azure region (e.g., `eastus`) |
-| `RAILS_API_BASE_URL` | Var | Optional | Rails API base URL (default: `https://enjoy.bot`) |
+| `API_BASE_URL` | Var | Optional | Rails API base URL (default: `https://enjoy.bot`) |
 | `RATE_LIMIT_KV` | Binding | Recommended | KV namespace for rate limiting |
 
 ### Setting Up for First Time
@@ -122,7 +122,7 @@ Define environments in `wrangler.jsonc`:
 "env": {
   "staging": {
     "vars": {
-      "RAILS_API_BASE_URL": "https://staging.enjoy.bot"
+      "API_BASE_URL": "https://staging.enjoy.bot"
     }
   }
 }

@@ -15,7 +15,6 @@ declare namespace Cloudflare {
 		RATE_LIMIT_KV?: KVNamespace
 
 		// Rails API base URL (for authentication)
-		RAILS_API_BASE_URL?: string
-		VITE_API_BASE_URL?: string
+		API_BASE_URL?: string
 	}
 }

@@ -213,7 +213,9 @@
     "copied": "Copied!",
     "copyFailed": "Failed to copy",
     "synthesizeAudio": "Synthesize audio",
-    "regenerateAudio": "Regenerate audio"
+    "regenerateAudio": "Regenerate audio",
+    "currentProvider": "Provider",
+    "changeProvider": "Change"
   },
   "tts": {
     "title": "Voice Synthesis",
@@ -236,6 +238,8 @@
     "noHistory": "No synthesis history",
     "synthesizeAudio": "Synthesize Audio",
     "synthesizeDescription": "Generate audio from the translated text",
-    "synthesized": "Audio synthesized successfully"
+    "synthesized": "Audio synthesized successfully",
+    "currentProvider": "Provider",
+    "changeProvider": "Change"
   }
 }

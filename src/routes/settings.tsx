@@ -1,15 +1,28 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { SettingsTabs } from '@/components/settings'
 
 export const Route = createFileRoute('/settings')({
   component: Settings,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      tab: (search.tab as string) || undefined,
+    }
+  },
 })
 
 function Settings() {
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState('general')
+  const { tab } = Route.useSearch()
+  const [activeTab, setActiveTab] = useState(tab || 'general')
+
+  // Update active tab when URL search param changes
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab)
+    }
+  }, [tab])
 
   return (
     <div className="container mx-auto max-w-6xl py-8">

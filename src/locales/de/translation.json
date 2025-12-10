@@ -184,7 +184,9 @@
     "copied": "Kopiert!",
     "copyFailed": "Kopieren fehlgeschlagen",
     "synthesizeAudio": "Audio synthetisieren",
-    "regenerateAudio": "Audio erneut generieren"
+    "regenerateAudio": "Audio erneut generieren",
+    "currentProvider": "Anbieter",
+    "changeProvider": "Ändern"
   },
   "tts": {
     "title": "Sprachsynthese",
@@ -207,6 +209,8 @@
     "noHistory": "Kein Synthese-Verlauf",
     "synthesizeAudio": "Audio synthetisieren",
     "synthesizeDescription": "Audio aus dem übersetzten Text generieren",
-    "synthesized": "Audio erfolgreich synthetisiert"
+    "synthesized": "Audio erfolgreich synthetisiert",
+    "currentProvider": "Anbieter",
+    "changeProvider": "Ändern"
   }
 }

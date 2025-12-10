@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
@@ -48,6 +48,14 @@ function VoiceSynthesis() {
   const provider = ttsConfig?.defaultProvider || AIProvider.ENJOY
   const aiServiceConfig = getAIServiceConfig('tts')
   const byokProvider = aiServiceConfig.byok?.provider
+
+  // Get current provider name for display
+  const currentProvider = provider
+  const providerName = t(`settings.ai.providers.${currentProvider}`, {
+    defaultValue: currentProvider === AIProvider.ENJOY ? 'Enjoy API' :
+                  currentProvider === AIProvider.LOCAL ? 'Local (Free)' :
+                  'BYOK (Coming Soon)'
+  })
   const [selectedVoice, setSelectedVoice] = useState(() =>
     getDefaultTTSVoice(provider, byokProvider)
   )
@@ -399,6 +407,24 @@ function VoiceSynthesis() {
   return (
     <div className="container mx-auto max-w-4xl w-full py-8">
       <div className="w-full space-y-6">
+        {/* Provider Info */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Icon icon="lucide:brain" className="h-4 w-4" />
+            <span>
+              {t('tts.currentProvider', { defaultValue: 'Provider' })}: {providerName}
+            </span>
+          </div>
+          <Link
+            to="/settings"
+            search={{ tab: 'ai' }}
+            className="flex items-center gap-1 text-primary hover:underline transition-colors"
+          >
+            <span>{t('tts.changeProvider', { defaultValue: 'Change' })}</span>
+            <Icon icon="lucide:external-link" className="h-3 w-3" />
+          </Link>
+        </div>
+
         {/* Input Section */}
         <div className="space-y-4">
           <LanguageSelector

@@ -32,7 +32,7 @@ The API Services module provides a clean, typed interface for interacting with t
 
 The `apiClient` is a configured Axios instance that:
 
-- **Base Configuration**: Uses `VITE_API_BASE_URL` environment variable (defaults to `https://enjoy.bot`)
+- **Base Configuration**: Uses `API_BASE_URL` environment variable (defaults to `https://enjoy.bot`)
 - **Authentication**: Automatically adds Bearer token from auth store to all requests
 - **Error Handling**: Handles 401 errors by clearing auth state and dispatching `auth:unauthorized` event
 - **Timeout**: 30-second timeout for all requests
@@ -173,7 +173,7 @@ await userApi.updateProfile({
 
 The API base URL is configured via environment variable:
 
-- **Environment Variable**: `VITE_API_BASE_URL`
+- **Environment Variable**: `API_BASE_URL`
 - **Default**: `https://enjoy.bot`
 - **Usage**: Set in `.env` or deployment configuration
 

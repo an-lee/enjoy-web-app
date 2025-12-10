@@ -184,7 +184,9 @@
     "copied": "복사되었습니다!",
     "copyFailed": "복사 실패",
     "synthesizeAudio": "오디오 합성",
-    "regenerateAudio": "오디오 재생성"
+    "regenerateAudio": "오디오 재생성",
+    "currentProvider": "프로바이더",
+    "changeProvider": "변경"
   },
   "tts": {
     "title": "음성 합성",
@@ -207,6 +209,8 @@
     "noHistory": "합성 기록이 없습니다",
     "synthesizeAudio": "오디오 합성",
     "synthesizeDescription": "번역된 텍스트에서 오디오 생성",
-    "synthesized": "오디오 합성 성공"
+    "synthesized": "오디오 합성 성공",
+    "currentProvider": "프로바이더",
+    "changeProvider": "변경"
   }
 }

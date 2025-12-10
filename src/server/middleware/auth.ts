@@ -12,7 +12,7 @@ export type { UserProfile, SubscriptionTier }
 const PROFILE_API_PATH = '/api/v1/profile'
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 const CACHE_CLEANUP_INTERVAL = 10 * 60 * 1000 // 10 minutes
-const DEFAULT_RAILS_API_BASE_URL = 'https://enjoy.bot'
+const DEFAULT_VITE_API_BASE_URL = 'https://enjoy.bot'
 
 // ============================================================================
 // Internal Types
@@ -245,9 +245,8 @@ export async function authMiddleware(
 	try {
 		// Get Rails API base URL from environment or use default
 		const railsApiBaseUrl =
-			(c.env as any).RAILS_API_BASE_URL ||
-			(c.env as any).VITE_API_BASE_URL ||
-			DEFAULT_RAILS_API_BASE_URL
+			(c.env as any).API_BASE_URL ||
+			DEFAULT_VITE_API_BASE_URL
 
 		// Get user profile (from cache or API)
 		const profile = await getUserProfile(accessToken, railsApiBaseUrl)

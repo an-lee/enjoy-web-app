@@ -213,7 +213,9 @@
     "copied": "已复制！",
     "copyFailed": "复制失败",
     "synthesizeAudio": "合成音频",
-    "regenerateAudio": "重新生成音频"
+    "regenerateAudio": "重新生成音频",
+    "currentProvider": "提供商",
+    "changeProvider": "更改"
   },
   "tts": {
     "title": "语音合成",
@@ -236,6 +238,8 @@
     "noHistory": "暂无合成历史",
     "synthesizeAudio": "合成音频",
     "synthesizeDescription": "从翻译文本生成音频",
-    "synthesized": "音频合成成功"
+    "synthesized": "音频合成成功",
+    "currentProvider": "提供商",
+    "changeProvider": "更改"
   }
 }
