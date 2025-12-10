@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Icon } from '@iconify/react'
-import type { Audio } from '@/db'
+import type { Audio } from '@/types/db'
 import { AudioHistoryItem } from './history-item'
 
 interface TTSHistoryProps {

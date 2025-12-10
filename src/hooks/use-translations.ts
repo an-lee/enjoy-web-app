@@ -1,5 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { db, type Translation, type TranslationStyle } from '@/db'
+import {
+  db,
+  saveTranslation as dbSaveTranslation,
+  updateTranslation as dbUpdateTranslation,
+  generateTranslationId,
+} from '@/db'
+import type { Translation, TranslationStyle, TranslationInput } from '@/types/db'
 
 const ITEMS_PER_PAGE = 10
 
@@ -63,9 +69,9 @@ async function fetchTranslationHistory(
 
 /**
  * Find existing translation by parameters
- * This is a utility function that can be called directly (not a hook)
+ * This function queries the database for an existing translation
  */
-export async function findExistingTranslation(params: {
+async function fetchExistingTranslation(params: {
   sourceText: string
   targetLanguage: string
   style: TranslationStyle
@@ -89,29 +95,16 @@ export async function findExistingTranslation(params: {
 }
 
 /**
- * Save a new translation to the database
+ * Find existing translation by parameters (utility function for direct calls)
+ * This is kept for backward compatibility but routes through the same logic
  */
-async function saveTranslation(translation: Translation): Promise<Translation> {
-  await db.translations.add(translation)
-  return translation
-}
-
-/**
- * Update an existing translation
- */
-async function updateTranslation(
-  id: string,
-  updates: Partial<Translation>
-): Promise<Translation> {
-  await db.translations.update(id, {
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  })
-  const updated = await db.translations.get(id)
-  if (!updated) {
-    throw new Error('Translation not found after update')
-  }
-  return updated
+export async function findExistingTranslation(params: {
+  sourceText: string
+  targetLanguage: string
+  style: TranslationStyle
+  customPrompt?: string
+}): Promise<Translation | undefined> {
+  return fetchExistingTranslation(params)
 }
 
 /**
@@ -144,7 +137,7 @@ export function useFindExistingTranslation(
 ) {
   return useQuery({
     queryKey: translationKeys.byParams(params!),
-    queryFn: () => findExistingTranslation(params!),
+    queryFn: () => fetchExistingTranslation(params!),
     enabled: enabled && params !== null && params.sourceText.trim() !== '',
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
@@ -152,12 +145,32 @@ export function useFindExistingTranslation(
 
 /**
  * Hook to save a new translation
+ * ID generation is handled internally by the mutation
  */
 export function useSaveTranslation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: saveTranslation,
+    mutationFn: async (input: TranslationInput): Promise<Translation> => {
+      // Generate ID internally
+      const id = generateTranslationId(
+        input.sourceText,
+        input.targetLanguage,
+        input.style,
+        input.customPrompt
+      )
+
+      const now = new Date().toISOString()
+      const translation: Translation = {
+        ...input,
+        id,
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      await dbSaveTranslation(input)
+      return translation
+    },
     onSuccess: (newTranslation) => {
       // Invalidate all list queries to refresh history
       queryClient.invalidateQueries({ queryKey: translationKeys.lists() })
@@ -166,6 +179,15 @@ export function useSaveTranslation() {
         translationKeys.detail(newTranslation.id),
         newTranslation
       )
+      // Invalidate byParams query for this translation
+      queryClient.invalidateQueries({
+        queryKey: translationKeys.byParams({
+          sourceText: newTranslation.sourceText,
+          targetLanguage: newTranslation.targetLanguage,
+          style: newTranslation.style,
+          customPrompt: newTranslation.customPrompt,
+        }),
+      })
     },
   })
 }
@@ -177,8 +199,20 @@ export function useUpdateTranslation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Translation> }) =>
-      updateTranslation(id, updates),
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: string
+      updates: Partial<Translation>
+    }): Promise<Translation> => {
+      await dbUpdateTranslation(id, updates)
+      const updated = await db.translations.get(id)
+      if (!updated) {
+        throw new Error('Translation not found after update')
+      }
+      return updated
+    },
     onSuccess: (updatedTranslation) => {
       // Invalidate all list queries to refresh history
       queryClient.invalidateQueries({ queryKey: translationKeys.lists() })
@@ -190,4 +224,3 @@ export function useUpdateTranslation() {
     },
   })
 }
-

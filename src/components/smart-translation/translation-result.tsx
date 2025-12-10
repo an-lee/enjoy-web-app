@@ -3,7 +3,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
-import { type Translation } from '@/db'
+import type { Translation } from '@/types/db'
 
 interface TranslationResultProps {
   translation: Translation

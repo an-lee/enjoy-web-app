@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useCallback } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { db, getAudiosByTranslationKey, type Audio } from '@/db'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  db,
+  getAudiosByTranslationKey,
+  saveAudio,
+  deleteAudio,
+} from '@/db'
+import type { Audio, AudioInput } from '@/types/db'
 
 const MAX_ITEMS = 50
 
@@ -193,4 +199,70 @@ export function useAudios(options: UseAudiosOptions = {}): UseAudiosReturn {
     addAudio,
     removeAudio,
   }
+}
+
+// ============================================================================
+// Mutation Hooks
+// ============================================================================
+
+/**
+ * Hook to save a new audio to the database
+ */
+export function useSaveAudio() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: AudioInput): Promise<{ id: string; audio: Audio }> => {
+      const id = await saveAudio(input)
+      // Construct the audio record for callback
+      const audio: Audio = {
+        ...input,
+        id,
+        aid: id, // For TTS audio, aid is same as id
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as Audio
+      return { id, audio }
+    },
+    onSuccess: (result) => {
+      // Invalidate history queries to refresh
+      queryClient.invalidateQueries({ queryKey: audioKeys.history() })
+
+      // If the audio has a translationKey, also invalidate that query
+      if (result.audio.translationKey) {
+        queryClient.invalidateQueries({
+          queryKey: audioKeys.byTranslationKey(result.audio.translationKey),
+        })
+      }
+    },
+  })
+}
+
+/**
+ * Hook to delete an audio from the database
+ */
+export function useDeleteAudio() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      audioId,
+    }: {
+      audioId: string
+      translationKey?: string
+    }): Promise<void> => {
+      await deleteAudio(audioId)
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate history queries to refresh
+      queryClient.invalidateQueries({ queryKey: audioKeys.history() })
+
+      // If the audio had a translationKey, also invalidate that query
+      if (variables.translationKey) {
+        queryClient.invalidateQueries({
+          queryKey: audioKeys.byTranslationKey(variables.translationKey),
+        })
+      }
+    },
+  })
 }

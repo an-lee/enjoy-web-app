@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Icon } from '@iconify/react'
-import { type Translation } from '@/db'
+import type { Translation } from '@/types/db'
 import { getDefaultTTSVoice } from '@/ai/constants/tts-voices'
 import { useSettingsStore } from '@/stores/settings'
 import { AIProvider } from '@/ai/types'

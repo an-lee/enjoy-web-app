@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Icon } from '@iconify/react'
-import { type Translation } from '@/db'
+import type { Translation } from '@/types/db'
 import { HistoryItem } from './history-item'
 
 interface TranslationHistoryProps {

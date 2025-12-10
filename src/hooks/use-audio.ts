@@ -1,5 +1,15 @@
-import { useState, useEffect, useCallback } from 'react'
-import { getAudioById, getAudioByTranslationKey, type Audio } from '@/db'
+import { useEffect, useMemo, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getAudioById, getAudioByTranslationKey } from '@/db'
+import type { Audio } from '@/types/db'
+
+// Query keys factory
+export const audioKeys = {
+  all: ['audio'] as const,
+  detail: (id: string) => [...audioKeys.all, 'detail', id] as const,
+  byTranslationKey: (translationKey: string) =>
+    [...audioKeys.all, 'byTranslationKey', translationKey] as const,
+}
 
 export type AudioLoader =
   | { type: 'id'; id: string }
@@ -14,61 +24,70 @@ export interface UseAudioReturn {
   audio: Audio | null
   audioUrl: string | null
   isLoading: boolean
+  isError: boolean
+  error: Error | null
   refetch: () => Promise<void>
   updateAudio: (audio: Audio | null) => void
+}
+
+// Helper to create audio URL from blob
+function createAudioUrl(audio: Audio | undefined | null): string | null {
+  if (!audio?.blob) return null
+  return URL.createObjectURL(audio.blob)
+}
+
+// Fetch function for audio by loader
+async function fetchAudio(loader: AudioLoader): Promise<Audio | undefined> {
+  if (loader.type === 'id') {
+    return getAudioById(loader.id)
+  } else if (loader.type === 'translationKey') {
+    return getAudioByTranslationKey(loader.translationKey)
+  }
+  return undefined
+}
+
+// Get query key based on loader
+function getQueryKey(loader: AudioLoader) {
+  if (loader.type === 'id') {
+    return audioKeys.detail(loader.id)
+  } else {
+    return audioKeys.byTranslationKey(loader.translationKey)
+  }
 }
 
 /**
  * Generic hook for managing audio from database
  * Supports loading by audio ID or translation key
+ * Uses React Query for data fetching and caching
  * Automatically handles blob URL creation and cleanup
  */
 export function useAudio(options: UseAudioOptions = {}): UseAudioReturn {
   const { loader, enabled = true } = options
-  const [audio, setAudio] = useState<Audio | null>(null)
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const queryClient = useQueryClient()
 
-  const loadAudio = useCallback(async () => {
-    if (!loader || !enabled) {
-      setAudio(null)
-      setAudioUrl(null)
-      return
-    }
+  // Query for audio
+  const {
+    data: audio,
+    isLoading,
+    isError,
+    error,
+    refetch: refetchQuery,
+  } = useQuery({
+    queryKey: loader ? getQueryKey(loader) : ['audio', 'none'],
+    queryFn: () => {
+      if (!loader) return Promise.resolve(undefined)
+      return fetchAudio(loader)
+    },
+    enabled: enabled && !!loader,
+    staleTime: 1000 * 30, // 30 seconds
+  })
 
-    setIsLoading(true)
-    try {
-      let existingAudio: Audio | undefined
+  // Create audio URL from blob and memoize
+  const audioUrl = useMemo(() => {
+    return createAudioUrl(audio)
+  }, [audio])
 
-      if (loader.type === 'id') {
-        existingAudio = await getAudioById(loader.id)
-      } else if (loader.type === 'translationKey') {
-        existingAudio = await getAudioByTranslationKey(loader.translationKey)
-      }
-
-      if (existingAudio && existingAudio.blob) {
-        setAudio(existingAudio)
-        const url = URL.createObjectURL(existingAudio.blob)
-        setAudioUrl(url)
-      } else {
-        setAudio(null)
-        setAudioUrl(null)
-      }
-    } catch (error) {
-      console.error('Failed to load audio:', error)
-      setAudio(null)
-      setAudioUrl(null)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [loader, enabled])
-
-  // Load audio when loader changes
-  useEffect(() => {
-    void loadAudio()
-  }, [loadAudio])
-
-  // Clean up audio URL when component unmounts or audio changes
+  // Clean up audio URL when it changes or component unmounts
   useEffect(() => {
     return () => {
       if (audioUrl) {
@@ -77,32 +96,29 @@ export function useAudio(options: UseAudioOptions = {}): UseAudioReturn {
     }
   }, [audioUrl])
 
-  // Update audio and URL when new audio is provided
-  const updateAudio = useCallback((newAudio: Audio | null) => {
-    // Clean up old URL
-    setAudioUrl((prevUrl) => {
-      if (prevUrl) {
-        URL.revokeObjectURL(prevUrl)
-      }
-      return null
-    })
+  // Refetch wrapper
+  const refetch = useCallback(async () => {
+    await refetchQuery()
+  }, [refetchQuery])
 
-    if (newAudio && newAudio.blob) {
-      setAudio(newAudio)
-      const url = URL.createObjectURL(newAudio.blob)
-      setAudioUrl(url)
-    } else {
-      setAudio(null)
-      setAudioUrl(null)
-    }
-  }, [])
+  // Update audio in cache (optimistic update)
+  const updateAudio = useCallback(
+    (newAudio: Audio | null) => {
+      if (!loader) return
+
+      const queryKey = getQueryKey(loader)
+      queryClient.setQueryData(queryKey, newAudio ?? undefined)
+    },
+    [loader, queryClient]
+  )
 
   return {
-    audio,
+    audio: audio ?? null,
     audioUrl,
     isLoading,
-    refetch: loadAudio,
+    isError,
+    error: error as Error | null,
+    refetch,
     updateAudio,
   }
 }
-

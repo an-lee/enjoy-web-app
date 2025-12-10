@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { type TranslationStyle } from '@/db'
+import type { TranslationStyle } from '@/types/db'
 
 const TRANSLATION_STYLES: { value: TranslationStyle; label: string }[] = [
   { value: 'literal', label: 'translation.styleLiteral' },

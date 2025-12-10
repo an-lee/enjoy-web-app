@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
-import { saveAudio, type Audio, type TTSAudioInput } from '@/db'
+import { useSaveAudio } from './use-audios'
+import { useSaveTranscript } from './use-transcripts'
+import type { Audio, TTSAudioInput, TranscriptInput } from '@/types/db'
 
 export interface UseTTSOptions {
   language: string
@@ -22,11 +24,16 @@ export interface UseTTSReturn {
 /**
  * Hook for text-to-speech synthesis
  * Handles TTS synthesis, audio saving, and URL management
+ * Uses React Query mutations for database operations
  */
 export function useTTS(options: UseTTSOptions): UseTTSReturn {
   const { language, voice, translationKey, onSuccess, onError } = options
   const { t } = useTranslation()
   const [isSynthesizing, setIsSynthesizing] = useState(false)
+
+  // React Query mutations
+  const saveAudioMutation = useSaveAudio()
+  const saveTranscriptMutation = useSaveTranscript()
 
   const synthesize = useCallback(
     async (text: string) => {
@@ -64,7 +71,7 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
         const duration = audioElement.duration || 0
         audioElement.remove()
 
-        // Save to database with new schema
+        // Save to database using React Query mutation
         const ttsInput: TTSAudioInput = {
           provider: 'tts',
           title: text.substring(0, 100),
@@ -76,23 +83,22 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
           translationKey,
           syncStatus: 'local',
         }
-        const audioId = await saveAudio(ttsInput)
+        const { audio } = await saveAudioMutation.mutateAsync(ttsInput)
 
-        // Construct audio record for callback
-        const audio: Audio = {
-          id: audioId,
-          aid: audioId, // For TTS, aid is same as id
-          provider: 'tts',
-          title: text.substring(0, 100),
-          duration,
-          language,
-          sourceText: text,
-          voice,
-          blob,
-          translationKey,
-          syncStatus: 'local',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+        // Save transcript if available (from TTS timestamped model)
+        if (
+          result.data.transcript?.timeline &&
+          result.data.transcript.timeline.length > 0
+        ) {
+          const transcriptInput: TranscriptInput = {
+            targetType: 'Audio',
+            targetId: audio.id,
+            language,
+            source: 'ai',
+            timeline: result.data.transcript.timeline,
+            syncStatus: 'local',
+          }
+          await saveTranscriptMutation.mutateAsync(transcriptInput)
         }
 
         toast.success(
@@ -109,7 +115,16 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
         setIsSynthesizing(false)
       }
     },
-    [language, voice, translationKey, t, onSuccess, onError]
+    [
+      language,
+      voice,
+      translationKey,
+      t,
+      onSuccess,
+      onError,
+      saveAudioMutation,
+      saveTranscriptMutation,
+    ]
   )
 
   const reset = useCallback(() => {

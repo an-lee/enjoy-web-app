@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useDebounce } from '@uidotdev/usehooks'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@iconify/react'
-import { type Translation, type TranslationStyle, generateTranslationId } from '@/db'
+import type { Translation, TranslationStyle } from '@/types/db'
 import { smartTranslationService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
@@ -170,13 +170,8 @@ function SmartTranslation() {
         throw new Error(result.error?.message || t('translation.error'))
       }
 
-      const newTranslation: Translation = {
-        id: generateTranslationId(
-          inputText.trim(),
-          targetLanguage,
-          translationStyle,
-          translationStyle === 'custom' ? customPrompt.trim() : undefined
-        ),
+      // Save to database using React Query mutation (ID is generated internally)
+      const savedTranslation = await saveTranslationMutation.mutateAsync({
         sourceText: inputText.trim(),
         sourceLanguage,
         targetLanguage,
@@ -185,12 +180,7 @@ function SmartTranslation() {
         customPrompt: translationStyle === 'custom' ? customPrompt.trim() : undefined,
         aiModel: result.data.aiModel,
         syncStatus: 'local',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      // Save to database using React Query mutation
-      const savedTranslation = await saveTranslationMutation.mutateAsync(newTranslation)
+      })
       setCurrentTranslation(savedTranslation)
 
       // If history is shown, navigate to page 1 and expand the new item

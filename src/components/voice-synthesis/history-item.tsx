@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Label } from '@/components/ui/label'
 import { Icon } from '@iconify/react'
-import type { Audio } from '@/db'
+import type { Audio } from '@/types/db'
 import { AudioPlayer } from './audio-player'
 
 interface AudioHistoryItemProps {
