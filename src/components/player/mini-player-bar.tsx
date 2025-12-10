@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
+import { useDisplayTime } from './global-player'
 
 // ============================================================================
 // Types
@@ -41,6 +42,7 @@ function formatTime(seconds: number): string {
 
 export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBarProps) {
   const { t } = useTranslation()
+  const displayTime = useDisplayTime()
 
   // Player state
   const { currentSession, isPlaying, expand, hide } = usePlayerStore()
@@ -69,7 +71,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
 
   const progress =
     currentSession.duration > 0
-      ? (currentSession.currentTime / currentSession.duration) * 100
+      ? (displayTime / currentSession.duration) * 100
       : 0
 
   return (
@@ -125,7 +127,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
             {currentSession.mediaTitle}
           </h4>
           <p className="text-xs text-muted-foreground tabular-nums">
-            {formatTime(currentSession.currentTime)} / {formatTime(currentSession.duration)}
+            {formatTime(displayTime)} / {formatTime(currentSession.duration)}
           </p>
         </button>
 

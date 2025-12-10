@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/popover'
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
+import { useDisplayTime } from './global-player'
 
 // ============================================================================
 // Types
@@ -189,6 +190,7 @@ export function FullPlayer({
   onTogglePlay,
 }: FullPlayerProps) {
   const { t } = useTranslation()
+  const displayTime = useDisplayTime()
 
   // Player state
   const {
@@ -215,23 +217,23 @@ export function FullPlayer({
   // Handle previous segment (5 seconds back for now, will be sentence-based later)
   const handlePrevSegment = useCallback(() => {
     if (!currentSession) return
-    const newTime = Math.max(0, currentSession.currentTime - 5)
+    const newTime = Math.max(0, displayTime - 5)
     onSeek?.(newTime)
-  }, [currentSession, onSeek])
+  }, [currentSession, displayTime, onSeek])
 
   // Handle next segment (5 seconds forward for now, will be sentence-based later)
   const handleNextSegment = useCallback(() => {
     if (!currentSession) return
-    const newTime = Math.min(currentSession.duration, currentSession.currentTime + 5)
+    const newTime = Math.min(currentSession.duration, displayTime + 5)
     onSeek?.(newTime)
-  }, [currentSession, onSeek])
+  }, [currentSession, displayTime, onSeek])
 
   // Handle replay current segment (go back 3 seconds for now, will be sentence-based later)
   const handleReplaySegment = useCallback(() => {
     if (!currentSession) return
-    const newTime = Math.max(0, currentSession.currentTime - 3)
+    const newTime = Math.max(0, displayTime - 3)
     onSeek?.(newTime)
-  }, [currentSession, onSeek])
+  }, [currentSession, displayTime, onSeek])
 
   // Handle collapse
   const handleCollapse = useCallback(() => {
@@ -259,7 +261,7 @@ export function FullPlayer({
 
   const progress =
     currentSession.duration > 0
-      ? (currentSession.currentTime / currentSession.duration) * 100
+      ? (displayTime / currentSession.duration) * 100
       : 0
 
   return (
@@ -365,7 +367,7 @@ export function FullPlayer({
             {/* Row 1: Progress bar with time */}
             <div className="flex items-center gap-3 mb-4">
               <span className="text-xs text-muted-foreground tabular-nums w-12 text-right shrink-0">
-                {formatTime(currentSession.currentTime)}
+                {formatTime(displayTime)}
               </span>
               <Slider
                 value={[progress]}
