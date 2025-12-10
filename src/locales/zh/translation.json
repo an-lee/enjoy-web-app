@@ -179,6 +179,22 @@
     "nextSentence": "下一句",
     "previousSentence": "上一句"
   },
+  "player": {
+    "play": "播放",
+    "pause": "暂停",
+    "expand": "展开",
+    "collapse": "收起",
+    "skipBackward": "后退 5 秒",
+    "skipForward": "前进 5 秒",
+    "volume": "音量",
+    "speed": "播放速度",
+    "repeat": "循环",
+    "repeatOff": "关闭循环",
+    "repeatOne": "单曲循环",
+    "repeatAll": "列表循环",
+    "continueLearning": "继续学习",
+    "mediaNotFound": "媒体未找到"
+  },
   "vocabulary": {
     "title": "词汇表",
     "words": "单词",

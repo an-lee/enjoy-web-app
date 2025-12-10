@@ -28,6 +28,7 @@ import {
   type LibraryMedia,
 } from '@/hooks/queries'
 import { saveLocalAudio, saveLocalVideo } from '@/db'
+import { usePlayerStore } from '@/stores'
 
 // ============================================================================
 // Route Configuration
@@ -114,11 +115,12 @@ function Library() {
     setCurrentPage(1) // Reset to first page on filter change
   }, [])
 
+  // Player store
+  const loadMedia = usePlayerStore((state) => state.loadMedia)
+
   const handlePlay = useCallback((item: LibraryMedia) => {
-    // TODO: Navigate to player or open player modal
-    console.log('Play:', item)
-    toast.info(t('library.playComingSoon'))
-  }, [t])
+    loadMedia(item)
+  }, [loadMedia])
 
   const handleToggleStar = useCallback(
     async (item: LibraryMedia) => {

@@ -179,6 +179,22 @@
     "nextSentence": "Phrase Suivante",
     "previousSentence": "Phrase Précédente"
   },
+  "player": {
+    "play": "Lire",
+    "pause": "Pause",
+    "expand": "Agrandir",
+    "collapse": "Réduire",
+    "skipBackward": "Reculer de 5 secondes",
+    "skipForward": "Avancer de 5 secondes",
+    "volume": "Volume",
+    "speed": "Vitesse de lecture",
+    "repeat": "Répéter",
+    "repeatOff": "Répétition désactivée",
+    "repeatOne": "Répéter un",
+    "repeatAll": "Répéter tout",
+    "continueLearning": "Continuer à apprendre",
+    "mediaNotFound": "Média non trouvé"
+  },
   "vocabulary": {
     "title": "Vocabulaire",
     "words": "Mots",

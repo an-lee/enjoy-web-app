@@ -18,7 +18,8 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
-import { useAuthStore } from '@/stores'
+import { GlobalPlayer } from '@/components/player'
+import { useAuthStore, usePlayerStore } from '@/stores'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -127,6 +128,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext()
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
+  const playerMode = usePlayerStore((state) => state.mode)
 
   // Mark as hydrated after mount
   // This is the key to avoiding hydration mismatches
@@ -231,7 +233,7 @@ function RootComponent() {
                 </div>
                 <div className="flex flex-1 flex-col min-h-0">
                   <div className="flex flex-1 flex-col gap-2 min-h-0">
-                    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 min-h-0 h-full">
+                    <div className={`flex flex-col gap-4 py-4 md:gap-6 md:py-6 min-h-0 h-full ${playerMode === 'mini' ? 'pb-20' : ''}`}>
                       <div className="px-4 lg:px-6 flex-1 flex flex-col min-h-0">
                         <Outlet />
                       </div>
@@ -242,6 +244,8 @@ function RootComponent() {
             </SidebarInset>
           </SidebarProvider>
         )}
+        {/* Global Player - renders in mini or expanded mode */}
+        {isHydrated && !isLoginPage && <GlobalPlayer />}
       </ThemeProvider>
       <Toaster />
       <ReactQueryDevtools buttonPosition="bottom-left" />

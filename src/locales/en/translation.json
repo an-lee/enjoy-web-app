@@ -179,6 +179,22 @@
     "nextSentence": "Next Sentence",
     "previousSentence": "Previous Sentence"
   },
+  "player": {
+    "play": "Play",
+    "pause": "Pause",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "skipBackward": "Skip backward 5 seconds",
+    "skipForward": "Skip forward 5 seconds",
+    "volume": "Volume",
+    "speed": "Playback speed",
+    "repeat": "Repeat",
+    "repeatOff": "Repeat off",
+    "repeatOne": "Repeat one",
+    "repeatAll": "Repeat all",
+    "continueLearning": "Continue Learning",
+    "mediaNotFound": "Media not found"
+  },
   "vocabulary": {
     "title": "Vocabulary",
     "words": "Words",

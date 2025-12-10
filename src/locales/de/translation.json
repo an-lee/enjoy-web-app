@@ -179,6 +179,22 @@
     "nextSentence": "Nächster Satz",
     "previousSentence": "Vorheriger Satz"
   },
+  "player": {
+    "play": "Abspielen",
+    "pause": "Pause",
+    "expand": "Erweitern",
+    "collapse": "Minimieren",
+    "skipBackward": "5 Sekunden zurück",
+    "skipForward": "5 Sekunden vor",
+    "volume": "Lautstärke",
+    "speed": "Wiedergabegeschwindigkeit",
+    "repeat": "Wiederholen",
+    "repeatOff": "Wiederholen aus",
+    "repeatOne": "Einen wiederholen",
+    "repeatAll": "Alle wiederholen",
+    "continueLearning": "Weiter lernen",
+    "mediaNotFound": "Medien nicht gefunden"
+  },
   "vocabulary": {
     "title": "Wortschatz",
     "words": "Wörter",

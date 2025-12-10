@@ -179,6 +179,22 @@
     "nextSentence": "次の文",
     "previousSentence": "前の文"
   },
+  "player": {
+    "play": "再生",
+    "pause": "一時停止",
+    "expand": "展開",
+    "collapse": "折りたたむ",
+    "skipBackward": "5秒戻る",
+    "skipForward": "5秒進む",
+    "volume": "音量",
+    "speed": "再生速度",
+    "repeat": "リピート",
+    "repeatOff": "リピートオフ",
+    "repeatOne": "1曲リピート",
+    "repeatAll": "全曲リピート",
+    "continueLearning": "学習を続ける",
+    "mediaNotFound": "メディアが見つかりません"
+  },
   "vocabulary": {
     "title": "語彙",
     "words": "単語",
