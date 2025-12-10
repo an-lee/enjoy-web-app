@@ -54,9 +54,52 @@ Words are not learned in isolation.
   4. Call AI Dictionary service for explanation *specific to this context*.
 - **Review**: When reviewing, show the original sentence and play the specific audio clip where the word was encountered.
 
-## 4. Sync Strategy (Offline-First)
+## 4. Data Access Pattern (Offline-First)
 
-- **Dexie.js + TanStack Query**:
-  - Reads are always from Dexie (local).
-  - Writes go to Dexie first, then trigger a background sync mutation.
-- **Conflict Resolution**: Last-write-wins for simple fields. For arrays (vocab), merge strategies are applied.
+### Architecture
+
+The app follows a strict layering pattern for data access:
+
+```
+UI Layer → React Query Hooks → Repository Layer → Dexie (IndexedDB)
+```
+
+### React Query Hooks (`src/hooks/queries/`)
+
+All database operations go through React Query hooks:
+
+- **Query Hooks**: Fetch data from IndexedDB with caching and automatic refetching
+- **Mutation Hooks**: Save/update/delete data with automatic cache invalidation
+- **Query Keys**: Centralized query key factories for cache management
+
+**Example:**
+
+```tsx
+// UI component
+import { useAudios, useSaveAudio } from '@/hooks/queries'
+
+function MyComponent() {
+  const { data: audios, isLoading } = useAudios({ translationKey: 'xyz' })
+  const saveAudio = useSaveAudio()
+
+  const handleSave = async () => {
+    await saveAudio.mutateAsync({ ...audioInput })
+    // Cache automatically invalidated, UI auto-updates
+  }
+}
+```
+
+### Repository Layer (`src/db/repositories/`)
+
+Database operations are encapsulated in repository functions:
+
+- **No direct Dexie access** from UI layer
+- **Type-safe** operations with TypeScript
+- **ID generation** handled internally
+
+### Sync Strategy
+
+- **Offline-First**: Reads are always from IndexedDB (local)
+- **Write Pattern**: Mutations save to IndexedDB first, then trigger background sync
+- **Conflict Resolution**: Last-write-wins for simple fields. For arrays (vocab), merge strategies are applied
+- **Cache Management**: React Query handles cache invalidation automatically on mutations

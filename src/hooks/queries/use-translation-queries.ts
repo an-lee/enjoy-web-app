@@ -1,3 +1,12 @@
+/**
+ * Translation Query Hooks - React Query hooks for Translation entity
+ *
+ * Provides hooks for:
+ * - Translation history with pagination
+ * - Find existing translation by parameters
+ * - Translation mutations (save, update)
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   db,
@@ -9,24 +18,28 @@ import type { Translation, TranslationStyle, TranslationInput } from '@/types/db
 
 const ITEMS_PER_PAGE = 10
 
-// Query keys for React Query
-export const translationKeys = {
+// ============================================================================
+// Query Keys Factory
+// ============================================================================
+
+export const translationQueryKeys = {
   all: ['translations'] as const,
-  lists: () => [...translationKeys.all, 'list'] as const,
+  lists: () => [...translationQueryKeys.all, 'list'] as const,
   list: (page: number, searchQuery?: string) =>
-    [...translationKeys.lists(), page, searchQuery || ''] as const,
-  detail: (id: string) => [...translationKeys.all, 'detail', id] as const,
+    [...translationQueryKeys.lists(), page, searchQuery || ''] as const,
+  detail: (id: string) => [...translationQueryKeys.all, 'detail', id] as const,
   byParams: (params: {
     sourceText: string
     targetLanguage: string
     style: TranslationStyle
     customPrompt?: string
-  }) => [...translationKeys.all, 'byParams', params] as const,
+  }) => [...translationQueryKeys.all, 'byParams', params] as const,
 }
 
-/**
- * Fetch translation history with pagination and optional search
- */
+// ============================================================================
+// Fetch Functions
+// ============================================================================
+
 async function fetchTranslationHistory(
   page: number,
   searchQuery?: string
@@ -37,7 +50,6 @@ async function fetchTranslationHistory(
 }> {
   let query = db.translations.orderBy('createdAt').reverse()
 
-  // Apply search filter if provided
   if (searchQuery && searchQuery.trim()) {
     const searchTerm = searchQuery.toLowerCase().trim()
     const allTranslations = await query.toArray()
@@ -56,7 +68,6 @@ async function fetchTranslationHistory(
     return { translations, total, totalPages }
   }
 
-  // No search - get all and paginate
   const allTranslations = await query.toArray()
   const total = allTranslations.length
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE)
@@ -67,10 +78,6 @@ async function fetchTranslationHistory(
   return { translations, total, totalPages }
 }
 
-/**
- * Find existing translation by parameters
- * This function queries the database for an existing translation
- */
 async function fetchExistingTranslation(params: {
   sourceText: string
   targetLanguage: string
@@ -80,7 +87,6 @@ async function fetchExistingTranslation(params: {
   const { sourceText, targetLanguage, style, customPrompt } = params
 
   if (style === 'custom') {
-    // For custom style, we need to filter by customPrompt as well
     const candidates = await db.translations
       .where('[sourceText+targetLanguage+style]')
       .equals([sourceText.trim(), targetLanguage, style])
@@ -93,6 +99,10 @@ async function fetchExistingTranslation(params: {
       .first()
   }
 }
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
 
 /**
  * Find existing translation by parameters (utility function for direct calls)
@@ -107,6 +117,10 @@ export async function findExistingTranslation(params: {
   return fetchExistingTranslation(params)
 }
 
+// ============================================================================
+// Query Hooks
+// ============================================================================
+
 /**
  * Hook to fetch translation history with pagination and optional search
  */
@@ -116,15 +130,15 @@ export function useTranslationHistory(
   searchQuery?: string
 ) {
   return useQuery({
-    queryKey: translationKeys.list(page, searchQuery),
+    queryKey: translationQueryKeys.list(page, searchQuery),
     queryFn: () => fetchTranslationHistory(page, searchQuery),
     enabled,
-    staleTime: 1000 * 60, // 1 minute - history doesn't change frequently
+    staleTime: 1000 * 60,
   })
 }
 
 /**
- * Hook to find existing translation
+ * Hook to find existing translation by parameters
  */
 export function useFindExistingTranslation(
   params: {
@@ -136,12 +150,16 @@ export function useFindExistingTranslation(
   enabled: boolean = true
 ) {
   return useQuery({
-    queryKey: translationKeys.byParams(params!),
+    queryKey: translationQueryKeys.byParams(params!),
     queryFn: () => fetchExistingTranslation(params!),
     enabled: enabled && params !== null && params.sourceText.trim() !== '',
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   })
 }
+
+// ============================================================================
+// Mutation Hooks
+// ============================================================================
 
 /**
  * Hook to save a new translation
@@ -152,7 +170,6 @@ export function useSaveTranslation() {
 
   return useMutation({
     mutationFn: async (input: TranslationInput): Promise<Translation> => {
-      // Generate ID internally
       const id = generateTranslationId(
         input.sourceText,
         input.targetLanguage,
@@ -172,16 +189,13 @@ export function useSaveTranslation() {
       return translation
     },
     onSuccess: (newTranslation) => {
-      // Invalidate all list queries to refresh history
-      queryClient.invalidateQueries({ queryKey: translationKeys.lists() })
-      // Set the new translation in cache
+      queryClient.invalidateQueries({ queryKey: translationQueryKeys.lists() })
       queryClient.setQueryData(
-        translationKeys.detail(newTranslation.id),
+        translationQueryKeys.detail(newTranslation.id),
         newTranslation
       )
-      // Invalidate byParams query for this translation
       queryClient.invalidateQueries({
-        queryKey: translationKeys.byParams({
+        queryKey: translationQueryKeys.byParams({
           sourceText: newTranslation.sourceText,
           targetLanguage: newTranslation.targetLanguage,
           style: newTranslation.style,
@@ -214,13 +228,12 @@ export function useUpdateTranslation() {
       return updated
     },
     onSuccess: (updatedTranslation) => {
-      // Invalidate all list queries to refresh history
-      queryClient.invalidateQueries({ queryKey: translationKeys.lists() })
-      // Update the detail cache
+      queryClient.invalidateQueries({ queryKey: translationQueryKeys.lists() })
       queryClient.setQueryData(
-        translationKeys.detail(updatedTranslation.id),
+        translationQueryKeys.detail(updatedTranslation.id),
         updatedTranslation
       )
     },
   })
 }
+

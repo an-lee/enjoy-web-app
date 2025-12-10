@@ -1,69 +1,58 @@
 /**
  * Hooks Module - Unified entry point
  *
- * This module exports all React Query hooks for data management.
- * UI components should import hooks from here instead of directly
- * accessing database operations.
+ * Structure:
+ * - /queries/  - React Query hooks for data access (use-xxx-queries.ts)
+ * - Root       - Business logic and utility hooks
  *
- * Pattern:
- * - UI Layer -> Hooks (React Query) -> Database (Dexie)
+ * Pattern: UI Layer -> Hooks -> Database (Dexie)
  */
 
-// Audio hooks
+// ============================================================================
+// React Query Hooks (Data Access Layer)
+// ============================================================================
+
+// Re-export all query hooks from /queries/
 export {
-  // Query hooks
-  useAudioHistory,
+  // Audio
+  audioQueryKeys,
+  useAudio,
   useAudios,
-  // Mutation hooks
+  useAudioHistory,
   useSaveAudio,
   useDeleteAudio,
-  // Types
-  audioKeys,
-  type AudioWithUrl,
-  type UseAudiosOptions,
-  type UseAudiosReturn,
-} from './use-audios'
-
-export {
-  useAudio,
-  audioKeys as audioDetailKeys,
   type AudioLoader,
   type UseAudioOptions,
   type UseAudioReturn,
-} from './use-audio'
-
-// Translation hooks
-export {
-  // Query hooks
+  type AudioWithUrl,
+  type UseAudiosOptions,
+  type UseAudiosReturn,
+  // Translation
+  translationQueryKeys,
   useTranslationHistory,
   useFindExistingTranslation,
-  // Mutation hooks
   useSaveTranslation,
   useUpdateTranslation,
-  // Utility functions (for backward compatibility)
   findExistingTranslation,
-  // Types
-  translationKeys,
-} from './use-translations'
-
-// Transcript hooks
-export {
-  // Query hooks
+  // Transcript
+  transcriptQueryKeys,
   useTranscript,
   useTranscriptsByTarget,
-  // Mutation hooks
   useSaveTranscript,
   useUpdateTranscript,
   useDeleteTranscript,
-  // Types
-  transcriptKeys,
-} from './use-transcripts'
+} from './queries'
 
-// TTS hook
+// ============================================================================
+// Business Logic Hooks
+// ============================================================================
+
 export { useTTS, type UseTTSOptions, type UseTTSReturn } from './use-tts'
 
-// Utility hooks
+// ============================================================================
+// Utility Hooks
+// ============================================================================
+
 export { useCopyWithToast } from './use-copy-with-toast'
 export { useIsMobile } from './use-mobile'
 export { useModelStatus } from './use-model-status'
-

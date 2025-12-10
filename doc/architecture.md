@@ -120,15 +120,30 @@ src/
 ├── server/              # Server-side code (Cloudflare Worker)
 │   ├── index.ts         # Custom server-entry (routes /api/* to Hono)
 │   └── api.ts           # Hono API routes definition
+├── hooks/               # React hooks
+│   ├── queries/         # React Query hooks (data access layer)
+│   │   ├── use-audio-queries.ts      # Audio queries & mutations
+│   │   ├── use-translation-queries.ts # Translation queries & mutations
+│   │   ├── use-transcript-queries.ts  # Transcript queries & mutations
+│   │   └── index.ts                   # Re-exports all query hooks
+│   ├── use-tts.ts       # TTS business logic hook
+│   ├── use-model-status.ts # Service status hook
+│   ├── use-mobile.ts    # UI utility hook
+│   └── index.ts         # Main hooks entry point
 ├── features/            # Business logic isolated by feature
 │   ├── materials/       # Hooks/utils for material management
 │   ├── echo/            # State machines for echo practice loop
 │   └── sync/            # Synchronization logic
 ├── db/                  # Dexie configuration and schema
-│   ├── schema.ts        # TypeScript interfaces for all entities
-│   ├── database.ts      # Dexie database configuration
-│   ├── id-generator.ts   # UUID v5 generators for deterministic IDs
-│   └── *.ts             # Entity-specific helper functions
+│   ├── schema.ts        # Dexie database configuration
+│   ├── repositories/    # Database operations layer
+│   │   ├── video-repository.ts
+│   │   ├── audio-repository.ts
+│   │   ├── transcript-repository.ts
+│   │   ├── translation-repository.ts
+│   │   └── index.ts     # Re-exports all repositories
+│   ├── id-generator.ts  # UUID v5 generators for deterministic IDs
+│   └── index.ts         # Unified database entry point
 ├── api/                 # Rails API client (external backend)
 │   ├── auth.ts          # Authentication endpoints
 │   ├── client.ts         # API client configuration

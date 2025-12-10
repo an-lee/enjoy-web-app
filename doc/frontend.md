@@ -62,10 +62,106 @@ Complex logic resides in `src/features`.
 
 ### Server State (TanStack Query)
 
-Used for all data that persists to the backend.
+Used for all data that persists to the database (local IndexedDB).
 
-- `useMaterials()`: Fetches list of materials.
-- `useVocabulary()`: Syncs vocab list.
+**Architecture Pattern:**
+```
+UI Layer → Query Hooks (React Query) → Database (Dexie)
+```
+
+**Query Hooks Structure:**
+
+All React Query hooks are organized in `src/hooks/queries/`:
+
+- `use-audio-queries.ts`: Audio data operations
+  - `useAudio()`: Fetch single audio by ID or translation key
+  - `useAudios()`: Fetch multiple audios by translation key
+  - `useAudioHistory()`: Fetch TTS audio history with search
+  - `useSaveAudio()`: Save audio mutation
+  - `useDeleteAudio()`: Delete audio mutation
+
+- `use-translation-queries.ts`: Translation data operations
+  - `useTranslationHistory()`: Fetch translation history with pagination
+  - `useFindExistingTranslation()`: Find translation by parameters
+  - `useSaveTranslation()`: Save translation mutation
+  - `useUpdateTranslation()`: Update translation mutation
+
+- `use-transcript-queries.ts`: Transcript data operations
+  - `useTranscript()`: Fetch single transcript by ID
+  - `useTranscriptsByTarget()`: Fetch transcripts by target (Video/Audio)
+  - `useSaveTranscript()`: Save transcript mutation
+  - `useUpdateTranscript()`: Update transcript mutation
+  - `useDeleteTranscript()`: Delete transcript mutation
+
+**Import Pattern:**
+
+```tsx
+// From queries folder (data access layer)
+import { useAudios, useSaveAudio } from '@/hooks/queries'
+
+// From main hooks (includes everything)
+import { useAudios, useTTS, useIsMobile } from '@/hooks'
+```
+
+**Query Keys:**
+
+Each query hook file exports a query keys factory for cache management:
+
+```tsx
+import { audioQueryKeys } from '@/hooks/queries'
+
+// Use query keys for manual cache invalidation
+queryClient.invalidateQueries({ queryKey: audioQueryKeys.history() })
+```
+
+**Benefits:**
+
+- **Separation of Concerns**: Data access layer separated from UI layer
+- **Caching**: Automatic caching and refetching with React Query
+- **Optimistic Updates**: Built-in support for optimistic UI updates
+- **Type Safety**: Full TypeScript support with type inference
+- **Cache Invalidation**: Automatic cache invalidation on mutations
+
+**Usage Examples:**
+
+```tsx
+// Fetching data
+import { useAudios, useAudioHistory } from '@/hooks/queries'
+
+function AudioList() {
+  const { data: history, isLoading } = useAudioHistory(true, 'search term')
+  const { audios, addAudio } = useAudios({ translationKey: 'xyz' })
+
+  if (isLoading) return <Loading />
+  return <div>{audios.map(audio => ...)}</div>
+}
+
+// Mutations
+import { useSaveAudio, useDeleteAudio } from '@/hooks/queries'
+
+function SaveAudioButton() {
+  const saveAudio = useSaveAudio()
+  const deleteAudio = useDeleteAudio()
+
+  const handleSave = async () => {
+    await saveAudio.mutateAsync({
+      provider: 'tts',
+      sourceText: 'Hello',
+      // ... other fields
+    })
+    // Cache automatically invalidated, UI auto-updates
+  }
+
+  return <button onClick={handleSave}>Save</button>
+}
+```
+
+**Naming Convention:**
+
+- Query hooks follow the pattern: `use-{entity}-queries.ts`
+- All React Query hooks are in `src/hooks/queries/`
+- Business logic hooks (e.g., `useTTS`) are in `src/hooks/` root
+- Utility hooks (e.g., `useMobile`) are in `src/hooks/` root
 
 ### Local/Global State (Zustand)
 

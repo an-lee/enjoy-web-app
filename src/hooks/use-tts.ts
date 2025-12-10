@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
-import { useSaveAudio } from './use-audios'
-import { useSaveTranscript } from './use-transcripts'
+import { useSaveAudio, useSaveTranscript } from './queries'
 import type { Audio, TTSAudioInput, TranscriptInput } from '@/types/db'
 
 export interface UseTTSOptions {

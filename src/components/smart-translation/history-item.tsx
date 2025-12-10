@@ -16,7 +16,7 @@ import { getAIServiceConfig } from '@/ai/core/config'
 import { AudioPlayer } from '@/components/voice-synthesis'
 import { VoiceSynthesisSheet } from './voice-synthesis-sheet'
 import { useTTS } from '@/hooks/use-tts'
-import { useAudios } from '@/hooks/use-audios'
+import { useAudios } from '@/hooks/queries'
 import { useCopyWithToast } from '@/hooks/use-copy-with-toast'
 
 interface HistoryItemProps {

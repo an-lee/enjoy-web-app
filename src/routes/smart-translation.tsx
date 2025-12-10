@@ -13,7 +13,7 @@ import {
   useSaveTranslation,
   useUpdateTranslation,
   findExistingTranslation,
-} from '@/hooks/use-translations'
+} from '@/hooks/queries'
 import {
   LanguageSelector,
   TranslationStyleSelector,

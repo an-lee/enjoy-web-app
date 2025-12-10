@@ -15,9 +15,7 @@ import {
   TTSHistoryToggle,
   TTSHistory,
 } from '@/components/voice-synthesis'
-import { useAudioHistory, useSaveAudio } from '@/hooks/use-audios'
-import { useAudio } from '@/hooks/use-audio'
-import { useSaveTranscript } from '@/hooks/use-transcripts'
+import { useAudioHistory, useSaveAudio, useAudio, useSaveTranscript } from '@/hooks/queries'
 import { getDefaultTTSVoice, getTTSVoices } from '@/ai/constants/tts-voices'
 import { AIProvider } from '@/ai/types'
 import type { TTSAudioInput, TranscriptInput } from '@/types/db'

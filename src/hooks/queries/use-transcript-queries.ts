@@ -1,3 +1,12 @@
+/**
+ * Transcript Query Hooks - React Query hooks for Transcript entity
+ *
+ * Provides hooks for:
+ * - Single transcript fetch (by ID)
+ * - Transcripts by target (Video/Audio)
+ * - Transcript mutations (save, update, delete)
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getTranscriptById,
@@ -8,12 +17,15 @@ import {
 } from '@/db'
 import type { Transcript, TranscriptInput, TargetType } from '@/types/db'
 
-// Query keys factory
-export const transcriptKeys = {
+// ============================================================================
+// Query Keys Factory
+// ============================================================================
+
+export const transcriptQueryKeys = {
   all: ['transcripts'] as const,
-  detail: (id: string) => [...transcriptKeys.all, 'detail', id] as const,
+  detail: (id: string) => [...transcriptQueryKeys.all, 'detail', id] as const,
   byTarget: (targetType: TargetType, targetId: string) =>
-    [...transcriptKeys.all, 'byTarget', targetType, targetId] as const,
+    [...transcriptQueryKeys.all, 'byTarget', targetType, targetId] as const,
 }
 
 // ============================================================================
@@ -25,13 +37,13 @@ export const transcriptKeys = {
  */
 export function useTranscript(id: string | null, enabled: boolean = true) {
   return useQuery({
-    queryKey: transcriptKeys.detail(id || ''),
+    queryKey: transcriptQueryKeys.detail(id || ''),
     queryFn: () => {
       if (!id) return Promise.resolve(undefined)
       return getTranscriptById(id)
     },
     enabled: enabled && !!id,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
   })
 }
 
@@ -46,14 +58,14 @@ export function useTranscriptsByTarget(
   return useQuery({
     queryKey:
       targetType && targetId
-        ? transcriptKeys.byTarget(targetType, targetId)
+        ? transcriptQueryKeys.byTarget(targetType, targetId)
         : ['transcripts', 'empty'],
     queryFn: () => {
       if (!targetType || !targetId) return Promise.resolve([])
       return getTranscriptsByTarget(targetType, targetId)
     },
     enabled: enabled && !!targetType && !!targetId,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
   })
 }
 
@@ -72,13 +84,11 @@ export function useSaveTranscript() {
       return saveTranscript(input)
     },
     onSuccess: (id, input) => {
-      // Invalidate queries for the target
       queryClient.invalidateQueries({
-        queryKey: transcriptKeys.byTarget(input.targetType, input.targetId),
+        queryKey: transcriptQueryKeys.byTarget(input.targetType, input.targetId),
       })
-      // Set the detail cache
       queryClient.invalidateQueries({
-        queryKey: transcriptKeys.detail(id),
+        queryKey: transcriptQueryKeys.detail(id),
       })
     },
   })
@@ -101,13 +111,11 @@ export function useUpdateTranscript() {
       await updateTranscript(id, updates)
     },
     onSuccess: (_, variables) => {
-      // Invalidate detail cache
       queryClient.invalidateQueries({
-        queryKey: transcriptKeys.detail(variables.id),
+        queryKey: transcriptQueryKeys.detail(variables.id),
       })
-      // Invalidate all transcript queries (we don't know the target from here)
       queryClient.invalidateQueries({
-        queryKey: transcriptKeys.all,
+        queryKey: transcriptQueryKeys.all,
       })
     },
   })
@@ -130,22 +138,19 @@ export function useDeleteTranscript() {
       await deleteTranscript(id)
     },
     onSuccess: (_, variables) => {
-      // Invalidate detail cache
       queryClient.invalidateQueries({
-        queryKey: transcriptKeys.detail(variables.id),
+        queryKey: transcriptQueryKeys.detail(variables.id),
       })
-      // If we know the target, invalidate that query
       if (variables.targetType && variables.targetId) {
         queryClient.invalidateQueries({
-          queryKey: transcriptKeys.byTarget(
+          queryKey: transcriptQueryKeys.byTarget(
             variables.targetType,
             variables.targetId
           ),
         })
       } else {
-        // Otherwise invalidate all
         queryClient.invalidateQueries({
-          queryKey: transcriptKeys.all,
+          queryKey: transcriptQueryKeys.all,
         })
       }
     },
