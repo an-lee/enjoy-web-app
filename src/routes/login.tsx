@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useAuthStore, type User } from '@/stores'
-import { api } from '@/api'
+import { authApi } from '@/api'
 
 // Storage key for CSRF state
 const AUTH_STATE_KEY = 'enjoy_auth_state'
@@ -128,7 +128,7 @@ function LoginPage() {
 
       // Fetch user profile
       try {
-        const profileResponse = await api.auth.profile()
+        const profileResponse = await authApi.profile()
         console.log('[Login] Profile fetched:', profileResponse.data)
         setUser(profileResponse.data as User)
       } catch (err) {

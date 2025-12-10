@@ -2,6 +2,8 @@
 // Types & Exports
 // ============================================================================
 
+import { apiClient } from "./client"
+
 /**
  * Subscription tier type
  */
@@ -46,7 +48,6 @@ export const authApi = {
    * @returns User profile in camelCase format
    */
   profile: async () => {
-    const { apiClient } = await import('./client')
     return apiClient.get<UserProfile>(PROFILE_API_PATH)
   },
 }
