@@ -315,27 +315,10 @@ function SmartTranslation() {
   }
 
   return (
-    <div
-      className={cn(
-        'container mx-auto max-w-4xl transition-all duration-500 ease-in-out w-full',
-        showHistory
-          ? 'py-8'
-          : 'flex items-center h-full min-h-0'
-      )}
-    >
-      <div
-        className={cn(
-          'w-full space-y-6 transition-all duration-500 ease-in-out',
-          !showHistory && 'mx-auto'
-        )}
-      >
+    <div className="container mx-auto max-w-4xl w-full py-8">
+      <div className="w-full space-y-6">
         {/* Input Section */}
-        <div
-          className={cn(
-            'space-y-4 transition-all duration-500 ease-in-out',
-            !showHistory && 'opacity-100'
-          )}
-        >
+        <div className="space-y-4">
           <LanguageSelector
             sourceLanguage={sourceLanguage}
             targetLanguage={targetLanguage}
@@ -396,7 +379,7 @@ function SmartTranslation() {
 
         {/* Translation Result */}
         {currentTranslation && (
-          <div className="transition-all duration-500 ease-in-out">
+          <div>
             <TranslationResult
               translation={currentTranslation}
               onRegenerate={handleRegenerate}
@@ -407,31 +390,32 @@ function SmartTranslation() {
 
         {/* Error Message */}
         {error && (
-          <div className="transition-all duration-500 ease-in-out">
+          <div>
             <ErrorAlert message={error} />
           </div>
         )}
 
         {/* History Toggle */}
-        <div className="transition-all duration-500 ease-in-out">
+        <div>
           <HistoryToggle isExpanded={showHistory} onToggle={handleHistoryToggle} />
         </div>
 
         {/* History List */}
         <div
           className={cn(
-            'transition-all duration-500 ease-in-out overflow-hidden',
+            'overflow-hidden will-change-[max-height,opacity]',
+            'transition-[max-height,opacity] duration-300 ease-in-out',
             showHistory
-              ? 'max-h-[2000px] opacity-100 mt-6'
-              : 'max-h-0 opacity-0 mt-0'
+              ? 'max-h-[2000px] opacity-100'
+              : 'max-h-0 opacity-0'
           )}
         >
           <div
             className={cn(
-              'transition-all duration-500 ease-in-out',
+              'transition-transform duration-300 ease-in-out',
               showHistory
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-0 -translate-y-4'
+                ? 'translate-y-0'
+                : '-translate-y-2'
             )}
           >
             <TranslationHistory
