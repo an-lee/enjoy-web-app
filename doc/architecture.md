@@ -109,6 +109,7 @@ src/
 ├── components/          # Shared UI components
 │   ├── ui/              # Atom components (buttons, inputs)
 │   ├── player/          # Video/Audio player components
+│   ├── hotkeys/         # Keyboard shortcuts system
 │   ├── echo/            # Echo practice mode specific components
 │   └── dictionary/      # Dictionary popup/panel
 ├── routes/              # TanStack Router definitions

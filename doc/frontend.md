@@ -167,10 +167,116 @@ function SaveAudioButton() {
 
 Used for UI state and device settings.
 
-- `usePlayerStore`: Playback status, volume, speed.
+- `usePlayerStore`: Playback status, volume, speed, current session.
 - `useSettingsStore`: Theme, preferred language, daily goals.
+- `useHotkeysStore`: Custom keyboard shortcut bindings.
 
-## 4. Key Workflows
+## 4. Keyboard Shortcuts System
+
+The app uses **react-hotkeys-hook** for keyboard shortcut handling, with a custom integration layer for:
+- Scope-based activation (global, player, library, modal)
+- User-customizable key bindings
+- Persistent settings via Zustand
+
+### Architecture
+
+```
+src/
+├── stores/
+│   └── hotkeys.ts           # Hotkey definitions & custom bindings store
+└── components/
+    └── hotkeys/
+        ├── index.ts
+        ├── hotkeys-provider.tsx    # HotkeysProvider wrapper with scope management
+        ├── use-app-hotkeys.ts      # useAppHotkey hook (integrates with store)
+        └── hotkeys-help-modal.tsx  # Keyboard shortcuts help dialog
+```
+
+### Key Components
+
+**`HotkeyDefinition`** - Defines a keyboard shortcut:
+
+```typescript
+interface HotkeyDefinition {
+  id: string              // e.g., 'player.togglePlay'
+  defaultKeys: string     // e.g., 'space', 'ctrl+k'
+  description: string
+  descriptionKey: string  // i18n key
+  scope: HotkeyScope      // 'global' | 'player' | 'library' | 'modal'
+  customizable: boolean
+  useKey?: boolean        // Use actual key value (for ?, !)
+}
+```
+
+**`useAppHotkey`** - Hook to register a shortcut:
+
+```tsx
+import { useAppHotkey } from '@/components/hotkeys'
+
+function PlayerControls({ onTogglePlay }) {
+  useAppHotkey('player.togglePlay', (e) => {
+    e.preventDefault()
+    onTogglePlay()
+  }, { deps: [onTogglePlay] })
+}
+```
+
+**`AppHotkeysProvider`** - Wraps the app, manages scope activation:
+
+```tsx
+// In __root.tsx
+<AppHotkeysProvider>
+  {children}
+</AppHotkeysProvider>
+```
+
+### Scopes
+
+Scopes control when shortcuts are active:
+
+| Scope | Active When |
+|-------|-------------|
+| `global` | Always (uses wildcard `*`) |
+| `player` | Player is visible (mini or expanded) |
+| `library` | Library page is active |
+| `modal` | Modal dialog is open |
+
+Scope activation is managed by `ScopeManager` in `hotkeys-provider.tsx`.
+
+### Default Shortcuts
+
+| Shortcut | Action | Scope |
+|----------|--------|-------|
+| `?` | Show keyboard shortcuts help | global |
+| `Ctrl+K` | Open search | global |
+| `Ctrl+,` | Open settings | global |
+| `Space` | Play / Pause | player |
+| `←` / `→` | Seek backward / forward 5s | player |
+| `↑` / `↓` | Volume up / down | player |
+| `M` | Mute / Unmute | player |
+| `R` | Replay segment | player |
+| `Escape` | Collapse player | player |
+
+### Adding New Shortcuts
+
+1. Add definition to `HOTKEY_DEFINITIONS` in `src/stores/hotkeys.ts`
+2. Use `useAppHotkey(actionId, callback)` in your component
+3. Add translation keys to all locale files (`hotkeys.*`)
+
+### Special Characters
+
+For keys like `?`, `!`, use `useKey: true` in the definition:
+
+```typescript
+{
+  id: 'global.help',
+  defaultKeys: '?',
+  useKey: true,  // Required for character-based keys
+  // ...
+}
+```
+
+## 5. Key Workflows
 
 ### Material Import
 
@@ -183,12 +289,9 @@ Used for UI state and device settings.
 
 - **Layout**: Split screen (Video on top/left, Text/Controls on bottom/right).
 - **Immersive Mode**: Fullscreen option hiding navigation.
-- **Shortcuts**:
-  - `Space`: Play/Pause
-  - `R`: Record (Hold to record, release to stop)
-  - `ArrowLeft/Right`: Prev/Next sentence.
+- **Shortcuts**: See Keyboard Shortcuts System above.
 
-## 5. Internationalization (i18n)
+## 6. Internationalization (i18n)
 
 ### i18next Configuration
 
@@ -276,7 +379,7 @@ Translation files follow a nested JSON structure:
 
 Access nested keys using dot notation: `t('common.appName')`
 
-## 6. Styling & Responsiveness
+## 7. Styling & Responsiveness
 
 ### Tailwind CSS v4
 
