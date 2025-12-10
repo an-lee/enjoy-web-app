@@ -6,10 +6,10 @@
  * - Row 2: Main controls (prev/play/next/replay) + Secondary controls (volume/speed/dictation/echo)
  */
 
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn } from '@/lib/utils'
+import { cn, formatTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import {
@@ -43,21 +43,6 @@ interface FullPlayerProps {
   onSeek?: (time: number) => void
   /** Callback to toggle play/pause */
   onTogglePlay?: () => void
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600)
-  const mins = Math.floor((seconds % 3600) / 60)
-  const secs = Math.floor(seconds % 60)
-
-  if (hours > 0) {
-    return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-  return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
 // ============================================================================
@@ -235,27 +220,68 @@ export function FullPlayer({
     onSeek?.(newTime)
   }, [currentSession, displayTime, onSeek])
 
-  // Handle collapse
-  const handleCollapse = useCallback(() => {
-    collapse()
-  }, [collapse])
-
-  // Handle close
-  const handleClose = useCallback(() => {
-    hide()
-  }, [hide])
-
-  // Handle dictation mode (placeholder)
-  const handleDictationMode = useCallback(() => {
+  // Placeholder handlers for future features
+  const handleDictationMode = () => {
     // TODO: Implement dictation mode
     console.log('Dictation mode')
-  }, [])
+  }
 
-  // Handle echo mode (placeholder)
-  const handleEchoMode = useCallback(() => {
+  const handleEchoMode = () => {
     // TODO: Implement echo/shadowing mode
     console.log('Echo mode')
-  }, [])
+  }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+
+      switch (e.key) {
+        case ' ':
+          // Space: Play/Pause
+          e.preventDefault()
+          onTogglePlay?.()
+          break
+        case 'ArrowLeft':
+          // Left arrow: Seek backward 5s
+          e.preventDefault()
+          handlePrevSegment()
+          break
+        case 'ArrowRight':
+          // Right arrow: Seek forward 5s
+          e.preventDefault()
+          handleNextSegment()
+          break
+        case 'ArrowUp':
+          // Up arrow: Volume up
+          e.preventDefault()
+          setVolume(Math.min(1, volume + 0.1))
+          break
+        case 'ArrowDown':
+          // Down arrow: Volume down
+          e.preventDefault()
+          setVolume(Math.max(0, volume - 0.1))
+          break
+        case 'm':
+        case 'M':
+          // M: Mute/Unmute
+          e.preventDefault()
+          setVolume(volume > 0 ? 0 : 1)
+          break
+        case 'Escape':
+          // Escape: Collapse player
+          e.preventDefault()
+          collapse()
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onTogglePlay, handlePrevSegment, handleNextSegment, volume, setVolume, collapse])
 
   if (!currentSession) return null
 
@@ -284,7 +310,7 @@ export function FullPlayer({
                   variant="ghost"
                   size="icon"
                   className="shrink-0 h-9 w-9"
-                  onClick={handleCollapse}
+                  onClick={collapse}
                 >
                   <Icon icon="lucide:chevron-down" className="w-5 h-5" />
                 </Button>
@@ -305,7 +331,7 @@ export function FullPlayer({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleClose}
+                onClick={hide}
                 className="shrink-0 h-9 w-9 text-muted-foreground hover:text-foreground"
               >
                 <Icon icon="lucide:x" className="w-5 h-5" />

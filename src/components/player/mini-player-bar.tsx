@@ -7,7 +7,7 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn } from '@/lib/utils'
+import { cn, formatTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { usePlayerStore } from '@/stores/player'
@@ -24,16 +24,6 @@ interface MiniPlayerBarProps {
   onSeek?: (time: number) => void
   /** Callback to toggle play/pause */
   onTogglePlay?: () => void
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
 // ============================================================================
@@ -56,16 +46,6 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
     },
     [currentSession, onSeek]
   )
-
-  // Handle expand
-  const handleExpand = useCallback(() => {
-    expand()
-  }, [expand])
-
-  // Handle close
-  const handleClose = useCallback(() => {
-    hide()
-  }, [hide])
 
   if (!currentSession) return null
 
@@ -100,7 +80,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
       <div className="flex items-center gap-3 px-4 py-2">
         {/* Thumbnail - clickable to expand */}
         <button
-          onClick={handleExpand}
+          onClick={expand}
           className="relative shrink-0 w-10 h-10 rounded-md overflow-hidden group"
         >
           {currentSession.thumbnailUrl ? (
@@ -122,7 +102,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
         </button>
 
         {/* Title and time - clickable to expand */}
-        <button onClick={handleExpand} className="flex-1 min-w-0 text-left">
+        <button onClick={expand} className="flex-1 min-w-0 text-left">
           <h4 className="text-sm font-medium truncate leading-tight">
             {currentSession.mediaTitle}
           </h4>
@@ -154,7 +134,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
             variant="ghost"
             size="icon"
             className="h-9 w-9"
-            onClick={handleExpand}
+            onClick={expand}
           >
             <Icon icon="lucide:chevron-up" className="w-5 h-5" />
             <span className="sr-only">{t('player.expand')}</span>
@@ -165,7 +145,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
             variant="ghost"
             size="icon"
             className="h-9 w-9 text-muted-foreground hover:text-foreground"
-            onClick={handleClose}
+            onClick={hide}
           >
             <Icon icon="lucide:x" className="w-4 h-4" />
             <span className="sr-only">{t('common.close')}</span>

@@ -13,8 +13,15 @@
 import { useRef, useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { usePlayerStore } from '@/stores/player'
 import { db } from '@/db'
+import { createLogger } from '@/lib/utils'
 import { MiniPlayerBar } from './mini-player-bar'
 import { FullPlayer } from './full-player'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'Player' })
 
 // ============================================================================
 // Time Display Store (separate from main store to avoid re-renders)
@@ -43,17 +50,6 @@ export function useDisplayTime() {
 }
 
 // ============================================================================
-// Debug logging
-// ============================================================================
-
-const DEBUG = true
-function log(...args: unknown[]) {
-  if (DEBUG) {
-    console.log('[GlobalPlayer]', ...args)
-  }
-}
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -77,11 +73,11 @@ export function GlobalPlayer() {
 
   // Log render
   renderCountRef.current++
-  log('Render #', renderCountRef.current, { mode, isPlaying, isReady, mediaUrl: !!mediaUrl })
+  log.debug('Render #', renderCountRef.current, { mode, isPlaying, isReady, mediaUrl: !!mediaUrl })
 
   // Load media blob from IndexedDB
   useEffect(() => {
-    log('Effect: Load media', { sessionId: currentSession?.mediaId })
+    log.debug('Effect: Load media', { sessionId: currentSession?.mediaId })
 
     // Reset position restoration flag for new media
     hasRestoredPositionRef.current = false
@@ -97,7 +93,7 @@ export function GlobalPlayer() {
     let isMounted = true
 
     const loadMedia = async () => {
-      log('Loading media blob from IndexedDB...')
+      log.debug('Loading media blob from IndexedDB...')
       setIsLoading(true)
       setError(null)
       setIsReady(false)
@@ -108,17 +104,17 @@ export function GlobalPlayer() {
         if (currentSession.mediaType === 'audio') {
           const audio = await db.audios.get(currentSession.mediaId)
           blob = audio?.blob
-          log('Audio blob loaded:', { size: blob?.size, type: blob?.type })
+          log.debug('Audio blob loaded:', { size: blob?.size, type: blob?.type })
         } else {
           const video = await db.videos.get(currentSession.mediaId)
           blob = video?.blob
-          log('Video blob loaded:', { size: blob?.size, type: blob?.type })
+          log.debug('Video blob loaded:', { size: blob?.size, type: blob?.type })
         }
 
         if (!isMounted) return
 
         if (!blob) {
-          log('ERROR: Blob not found!')
+          log.error('Blob not found!')
           setError('Media not found in local storage')
           setIsLoading(false)
           return
@@ -126,12 +122,12 @@ export function GlobalPlayer() {
 
         // Create object URL from blob
         objectUrl = URL.createObjectURL(blob)
-        log('Object URL created:', objectUrl)
+        log.debug('Object URL created:', objectUrl)
         setMediaUrl(objectUrl)
         setIsLoading(false)
       } catch (err) {
         if (!isMounted) return
-        log('ERROR loading media:', err)
+        log.error('Loading media failed:', err)
         setError(err instanceof Error ? err.message : 'Failed to load media')
         setIsLoading(false)
       }
@@ -141,7 +137,7 @@ export function GlobalPlayer() {
 
     // Cleanup: revoke object URL when session changes
     return () => {
-      log('Cleanup: revoking object URL')
+      log.debug('Cleanup: revoking object URL')
       isMounted = false
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl)
@@ -152,7 +148,7 @@ export function GlobalPlayer() {
   // Sync volume with media element
   useEffect(() => {
     if (mediaRef.current) {
-      log('Syncing volume:', volume)
+      log.debug('Syncing volume:', volume)
       mediaRef.current.volume = volume
     }
   }, [volume])
@@ -160,7 +156,7 @@ export function GlobalPlayer() {
   // Sync playback rate with media element
   useEffect(() => {
     if (mediaRef.current) {
-      log('Syncing playback rate:', playbackRate)
+      log.debug('Syncing playback rate:', playbackRate)
       mediaRef.current.playbackRate = playbackRate
     }
   }, [playbackRate])
@@ -168,24 +164,24 @@ export function GlobalPlayer() {
   // Sync play state with media element
   useEffect(() => {
     const el = mediaRef.current
-    log('Effect: Sync play state', { isPlaying, isReady, hasElement: !!el })
+    log.debug('Effect: Sync play state', { isPlaying, isReady, hasElement: !!el })
 
     if (!el || !isReady) {
-      log('Skipping play sync - not ready')
+      log.debug('Skipping play sync - not ready')
       return
     }
 
     if (isPlaying) {
-      log('Calling el.play()...')
+      log.debug('Calling el.play()...')
       el.play().then(() => {
-        log('el.play() succeeded')
+        log.debug('el.play() succeeded')
       }).catch((err) => {
-        log('el.play() FAILED:', err)
+        log.warn('el.play() blocked:', err)
         // Auto-play was prevented
         setPlaying(false)
       })
     } else {
-      log('Calling el.pause()')
+      log.debug('Calling el.pause()')
       el.pause()
     }
   }, [isPlaying, isReady, setPlaying])
@@ -202,13 +198,13 @@ export function GlobalPlayer() {
     const now = Date.now()
     if (now - lastStoreUpdateRef.current >= 2000) {
       lastStoreUpdateRef.current = now
-      log('TimeUpdate (throttled):', time.toFixed(2))
+      log.debug('TimeUpdate (throttled):', time.toFixed(2))
       updateProgress(time)
     }
   }, [updateProgress])
 
   const handleEnded = useCallback(() => {
-    log('Media ended')
+    log.debug('Media ended')
     setPlaying(false)
     // Save final progress
     if (mediaRef.current) {
@@ -218,11 +214,9 @@ export function GlobalPlayer() {
 
   const handleCanPlay = useCallback((e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
     const el = e.currentTarget
-    log('canplay event fired', {
+    log.debug('canplay event', {
       readyState: el.readyState,
-      networkState: el.networkState,
       duration: el.duration,
-      paused: el.paused,
       hasRestoredPosition: hasRestoredPositionRef.current,
     })
 
@@ -234,7 +228,7 @@ export function GlobalPlayer() {
       // Restore playback position if needed
       const session = usePlayerStore.getState().currentSession
       if (session && session.currentTime > 0) {
-        log('Restoring position to:', session.currentTime)
+        log.debug('Restoring position to:', session.currentTime)
         el.currentTime = session.currentTime
         setDisplayTime(session.currentTime)
       }
@@ -248,7 +242,7 @@ export function GlobalPlayer() {
 
   const handleLoadError = useCallback((e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
     const el = e.currentTarget
-    log('ERROR loading media:', {
+    log.error('Media load error:', {
       error: el.error,
       networkState: el.networkState,
       readyState: el.readyState,
@@ -269,32 +263,23 @@ export function GlobalPlayer() {
   // Handle toggle play
   const handleTogglePlay = useCallback(() => {
     const el = mediaRef.current
-    log('handleTogglePlay called', {
-      hasElement: !!el,
-      paused: el?.paused,
-      readyState: el?.readyState,
-      networkState: el?.networkState,
-    })
+    log.debug('handleTogglePlay', { hasElement: !!el, paused: el?.paused })
 
     if (!el) {
-      log('No media element!')
+      log.warn('No media element!')
       return
     }
 
     if (el.paused) {
-      log('Element is paused, calling play()...')
       el.play().then(() => {
-        log('play() promise resolved')
+        log.debug('play() resolved')
         setPlaying(true)
       }).catch((err) => {
-        log('play() promise REJECTED:', err)
-        // Auto-play was prevented
+        log.warn('play() blocked:', err)
       })
     } else {
-      log('Element is playing, calling pause()')
       el.pause()
       setPlaying(false)
-      // Save progress when pausing
       updateProgress(el.currentTime)
     }
   }, [setPlaying, updateProgress])
@@ -346,15 +331,8 @@ export function GlobalPlayer() {
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEnded}
               onCanPlay={handleCanPlay}
-              onCanPlayThrough={() => log('canplaythrough')}
-              onLoadedData={() => log('loadeddata')}
-              onLoadedMetadata={() => log('loadedmetadata')}
-              onPlay={() => log('play event')}
-              onPause={() => log('pause event')}
-              onWaiting={() => log('waiting - buffering...')}
-              onPlaying={() => log('playing event')}
-              onStalled={() => log('stalled!')}
-              onSuspend={() => log('suspend')}
+              onWaiting={() => log.debug('buffering...')}
+              onStalled={() => log.warn('stalled!')}
               onError={handleLoadError}
               playsInline
               preload="auto"
@@ -366,15 +344,8 @@ export function GlobalPlayer() {
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEnded}
               onCanPlay={handleCanPlay}
-              onCanPlayThrough={() => log('canplaythrough')}
-              onLoadedData={() => log('loadeddata')}
-              onLoadedMetadata={() => log('loadedmetadata')}
-              onPlay={() => log('play event')}
-              onPause={() => log('pause event')}
-              onWaiting={() => log('waiting - buffering...')}
-              onPlaying={() => log('playing event')}
-              onStalled={() => log('stalled!')}
-              onSuspend={() => log('suspend')}
+              onWaiting={() => log.debug('buffering...')}
+              onStalled={() => log.warn('stalled!')}
               onError={handleLoadError}
               preload="auto"
             />
@@ -385,62 +356,3 @@ export function GlobalPlayer() {
   )
 }
 
-// ============================================================================
-// Continue Learning Button Component
-// ============================================================================
-
-interface ContinueLearningButtonProps {
-  className?: string
-  variant?: 'default' | 'compact'
-}
-
-export function ContinueLearningButton({
-  className,
-  variant = 'default',
-}: ContinueLearningButtonProps) {
-  const { recentSession, resumeSession, currentSession } = usePlayerStore()
-
-  // Don't show if there's no recent session or if there's already an active session
-  if (!recentSession || currentSession) {
-    return null
-  }
-
-  // Format relative time
-  const formatRelativeTime = (isoString: string): string => {
-    const date = new Date(isoString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMins / 60)
-    const diffDays = Math.floor(diffHours / 24)
-
-    if (diffMins < 1) return 'just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    return `${diffDays}d ago`
-  }
-
-  if (variant === 'compact') {
-    return (
-      <button
-        onClick={resumeSession}
-        className={className}
-      >
-        Continue: {recentSession.mediaTitle.slice(0, 20)}
-        {recentSession.mediaTitle.length > 20 ? '...' : ''}
-      </button>
-    )
-  }
-
-  return (
-    <button
-      onClick={resumeSession}
-      className={className}
-    >
-      <span>Continue Learning</span>
-      <span className="text-muted-foreground">
-        {recentSession.mediaTitle} • {formatRelativeTime(recentSession.lastActiveAt)}
-      </span>
-    </button>
-  )
-}
