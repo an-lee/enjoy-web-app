@@ -192,7 +192,7 @@ export async function synthesize(
     return {
       success: false,
       error: {
-        code: 'ENJOY_AZURE_TTS_ERROR',
+        code: 'ENJOY_TTS_ERROR',
         message: error.message || 'Azure Speech TTS failed',
       },
       metadata: {

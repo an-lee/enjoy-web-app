@@ -46,7 +46,7 @@ export function getTTSVoices(
 ): VoiceOption[] {
   switch (provider) {
     case AIProvider.LOCAL:
-      return getLocalTTSVoices()
+      return getLocalTTSVoices(undefined, language)
 
     case AIProvider.ENJOY:
       return getAzureTTSVoices(language)
@@ -75,7 +75,7 @@ export function getDefaultTTSVoice(
 ): string {
   switch (provider) {
     case AIProvider.LOCAL:
-      return getDefaultLocalTTSVoice()
+      return getDefaultLocalTTSVoice(undefined, language)
 
     case AIProvider.ENJOY:
       return getDefaultAzureTTSVoice(language)
