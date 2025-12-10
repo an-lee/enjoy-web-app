@@ -8,6 +8,13 @@ import { useEffect, useState } from 'react'
 import type { QueryClient } from '@tanstack/react-query'
 
 import '../lib/i18n'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: '__root' })
 
 import appCss from '../styles.css?url'
 import { AppSidebar, SiteHeader, ThemeProvider } from '@/components/layout'
@@ -42,7 +49,7 @@ function GlobalHotkeysHandler({ onOpenHelp }: GlobalHotkeysHandlerProps) {
   useAppHotkey('global.search', (e) => {
     e.preventDefault()
     // TODO: Open command palette / search
-    console.log('Open search')
+    log.info('Open search')
   })
 
   // Settings shortcut (Ctrl+,)

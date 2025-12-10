@@ -9,7 +9,14 @@ import { useDebounce } from '@uidotdev/usehooks'
 import { Icon } from '@iconify/react'
 import { toast } from 'sonner'
 
+import { createLogger } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'library' })
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   MediaCard,
@@ -134,7 +141,7 @@ function Library() {
           item.starred ? t('library.unstarred') : t('library.starred')
         )
       } catch (err) {
-        console.error('Failed to toggle star:', err)
+        log.error('Failed to toggle star:', err)
         toast.error(t('library.starFailed'))
       }
     },
@@ -150,7 +157,7 @@ function Library() {
         })
         toast.success(t('library.deleted'))
       } catch (err) {
-        console.error('Failed to delete:', err)
+        log.error('Failed to delete:', err)
         toast.error(t('library.deleteFailed'))
       }
     },

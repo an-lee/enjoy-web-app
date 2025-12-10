@@ -8,6 +8,19 @@ import { pipeline, env } from '@huggingface/transformers'
 import { buildSmartTranslationPrompt } from '../../../prompts'
 import { DEFAULT_SMART_TRANSLATION_MODEL } from '../constants'
 
+// ============================================================================
+// Logger
+// ============================================================================
+
+// Note: Web Workers don't have access to createLogger, use console with prefix
+const logPrefix = '[SmartTranslationWorker]'
+const log = {
+  error: (...args: unknown[]) => console.error(logPrefix, ...args),
+  warn: (...args: unknown[]) => console.warn(logPrefix, ...args),
+  info: (...args: unknown[]) => console.info(logPrefix, ...args),
+  debug: (...args: unknown[]) => console.debug(logPrefix, ...args),
+}
+
 // Configure transformers.js
 env.allowLocalModels = false
 env.allowRemoteModels = true
@@ -103,14 +116,14 @@ class SmartTranslationPipelineSingleton {
       this.modelName = null
 
       // Log detailed error for debugging
-      console.error('[SmartTranslationPipeline] Failed to load model:', modelName)
-      console.error('Error object:', error)
-      console.error('Error message:', error?.message)
-      console.error('Error stack:', error?.stack)
-      console.error('Error name:', error?.name)
-      console.error('Error cause:', error?.cause)
-      console.error('Error string:', String(error))
-      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+      log.error('[SmartTranslationPipeline] Failed to load model:', modelName)
+      log.error('Error object:', error)
+      log.error('Error message:', error?.message)
+      log.error('Error stack:', error?.stack)
+      log.error('Error name:', error?.name)
+      log.error('Error cause:', error?.cause)
+      log.error('Error string:', String(error))
+      log.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
 
       throw error
     }
@@ -383,18 +396,18 @@ self.addEventListener('message', async (event: MessageEvent<SmartTranslationWork
     }
   } catch (error: any) {
     // Log detailed error information for debugging
-    console.error('[SmartTranslationWorker] Error in message handler')
-    console.error('Message type:', type)
-    console.error('Error object:', error)
-    console.error('Error message:', error?.message)
-    console.error('Error stack:', error?.stack)
-    console.error('Error name:', error?.name)
-    console.error('Error cause:', error?.cause)
-    console.error('Error string:', String(error))
+    log.error('Error in message handler')
+    log.error('Message type:', type)
+    log.error('Error object:', error)
+    log.error('Error message:', error?.message)
+    log.error('Error stack:', error?.stack)
+    log.error('Error name:', error?.name)
+    log.error('Error cause:', error?.cause)
+    log.error('Error string:', String(error))
     try {
-      console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+      log.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
     } catch (e) {
-      console.error('Cannot stringify error:', e)
+      log.error('Cannot stringify error:', e)
     }
 
     // Extract detailed error message

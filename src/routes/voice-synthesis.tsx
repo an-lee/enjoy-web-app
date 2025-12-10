@@ -6,6 +6,13 @@ import { Icon } from '@iconify/react'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'voice-synthesis' })
 import {
   TextInput,
   LanguageSelector,
@@ -263,7 +270,7 @@ function VoiceSynthesis() {
         return
       }
       setError(t('tts.error'))
-      console.error('TTS synthesis failed:', err)
+      log.error('TTS synthesis failed:', err)
       // Reset loading state on error
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null
@@ -375,7 +382,7 @@ function VoiceSynthesis() {
         return
       }
       setError(t('tts.error'))
-      console.error('TTS regeneration failed:', err)
+      log.error('TTS regeneration failed:', err)
       // Reset loading state on error
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null

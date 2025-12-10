@@ -5,6 +5,13 @@
 import { incrementRateLimit } from '../utils/rate-limit'
 import { ConfigurationError, ServiceError } from '../utils/errors'
 import type { UserProfile } from '@/api/auth'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'azure' })
 
 export interface AzureTokenResponse {
 	token: string
@@ -65,7 +72,7 @@ export async function generateAzureToken(
 
 	if (!response.ok) {
 		const errorText = await response.text()
-		console.error('Azure Speech token generation failed:', {
+		log.error('Azure Speech token generation failed:', {
 			status: response.status,
 			statusText: response.statusText,
 			error: errorText,

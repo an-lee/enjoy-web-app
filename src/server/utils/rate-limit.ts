@@ -3,6 +3,14 @@
  * Uses Cloudflare KV to track daily usage per user per service
  */
 
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'rate-limit' })
+
 export type ServiceType = 'translation' | 'dictionary' | 'asr' | 'tts' | 'assessment'
 
 export interface RateLimitResult {
@@ -105,7 +113,7 @@ export async function checkRateLimit(
 	// If KV is not available (e.g., in development), allow the request
 	// In production, KV should always be available
 	if (!kv) {
-		console.warn(`KV namespace not available for service ${service}, rate limiting disabled`)
+		log.warn(`KV namespace not available for service ${service}, rate limiting disabled`)
 		return {
 			allowed: true,
 			count: 0,
@@ -141,7 +149,7 @@ export async function incrementRateLimit(
 	kv: KVNamespace | undefined
 ): Promise<void> {
 	if (!kv) {
-		console.warn(`KV namespace not available for service ${service}, cannot increment rate limit`)
+		log.warn(`KV namespace not available for service ${service}, cannot increment rate limit`)
 		return
 	}
 

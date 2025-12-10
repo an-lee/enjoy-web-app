@@ -7,6 +7,13 @@ import { checkRateLimit, type ServiceType, type RateLimitResult } from '../utils
 import { RateLimitError } from '../utils/errors'
 import type { UserProfile } from '@/api/auth'
 import { isValidSubscriptionTier } from './auth'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'rate-limit' })
 
 /**
  * Create rate limiting middleware for a specific service
@@ -29,7 +36,7 @@ export function createRateLimitMiddleware(service: ServiceType) {
 
 		// Validate user subscription tier (should already be validated in auth middleware, but double-check)
 		if (!isValidSubscriptionTier(user.subscriptionTier)) {
-			console.error('Invalid subscription tier:', user.subscriptionTier, 'User:', user)
+			log.error('Invalid subscription tier:', user.subscriptionTier, 'User:', user)
 			throw new Error(
 				`Invalid subscription tier: ${user.subscriptionTier}. Expected 'free' or 'pro'.`
 			)

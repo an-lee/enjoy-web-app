@@ -2,6 +2,13 @@ import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCopyToClipboard } from '@uidotdev/usehooks'
 import { toast } from 'sonner'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'useCopyWithToast' })
 
 /**
  * Hook for copying text to clipboard with toast notifications
@@ -23,7 +30,7 @@ export function useCopyWithToast() {
         )
         setTimeout(() => setCopied(false), 2000)
       } catch (error) {
-        console.error('Failed to copy:', error)
+        log.error('Failed to copy:', error)
         toast.error(
           options?.errorMessage || t('translation.copyFailed', { defaultValue: 'Failed to copy' })
         )

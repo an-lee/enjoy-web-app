@@ -1,8 +1,15 @@
 import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
 import { router } from './router'
+import { createLogger } from '@/lib/utils'
 
 // Env type is declared globally in worker-configuration.d.ts
 // No need to import it
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'server' })
 
 /**
  * Custom server entry point that integrates Hono API with TanStack Start
@@ -46,7 +53,7 @@ export default {
 			try {
 				return await router.fetch(apiRequest, env, ctx)
 			} catch (error) {
-				console.error('API handler error:', error)
+				log.error('API handler error:', error)
 				return new Response(
 					JSON.stringify({ error: 'Internal Server Error' }),
 					{

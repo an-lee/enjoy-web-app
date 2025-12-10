@@ -1,9 +1,16 @@
 import type { Context, Next } from 'hono'
 import type { UserProfile, SubscriptionTier } from '@/api/auth'
 import { convertSnakeToCamel } from '@/api/utils'
+import { createLogger } from '@/lib/utils'
 
 // Re-export for convenience
 export type { UserProfile, SubscriptionTier }
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'Auth' })
 
 // ============================================================================
 // Constants
@@ -113,7 +120,7 @@ async function fetchUserProfile(
 	railsApiBaseUrl: string
 ): Promise<UserProfile> {
 	const url = `${railsApiBaseUrl}${PROFILE_API_PATH}`
-	console.log(`[Auth] Making request to: ${url}`)
+	log.debug(`Making request to: ${url}`)
 
 	const response = await fetch(url, {
 		method: 'GET',
@@ -123,11 +130,11 @@ async function fetchUserProfile(
 		},
 	})
 
-	console.log(`[Auth] Response status: ${response.status} ${response.statusText}`)
+	log.debug(`Response status: ${response.status} ${response.statusText}`)
 
 	if (!response.ok) {
 		const errorText = await response.text().catch(() => 'No error details')
-		console.error(`[Auth] Profile fetch failed: ${response.status} ${response.statusText}`, errorText)
+		log.error(`Profile fetch failed: ${response.status} ${response.statusText}`, errorText)
 		if (response.status === 401) {
 			throw new Error('Unauthorized: Invalid or expired access token')
 		}
@@ -138,11 +145,11 @@ async function fetchUserProfile(
 
 	// Parse Rails API response (snake_case)
 	const railsProfile = await response.json()
-	console.log(`[Auth] Profile response received (raw):`, railsProfile)
+	log.debug(`Profile response received (raw):`, railsProfile)
 
 	// Convert to camelCase format using shared utility
 	const profile = convertSnakeToCamel<UserProfile>(railsProfile)
-	console.log(`[Auth] Profile converted:`, {
+	log.debug(`Profile converted:`, {
 		id: profile.id,
 		email: profile.email,
 		subscriptionTier: profile.subscriptionTier,
@@ -165,14 +172,14 @@ async function getUserProfile(
 	// Check cache first
 	const cached = profileCache.get(accessToken)
 	if (cached && cached.expiresAt > Date.now()) {
-		console.log(`[Auth] Using cached profile:`, {
+		log.debug(`Using cached profile:`, {
 			id: cached.profile.id,
 			email: cached.profile.email,
 			subscriptionTier: cached.profile.subscriptionTier,
 		})
 		// Validate cached profile
 		if (!isValidSubscriptionTier(cached.profile.subscriptionTier)) {
-			console.warn(`[Auth] Invalid subscription tier in cached profile, fetching fresh profile`)
+			log.warn(`Invalid subscription tier in cached profile, fetching fresh profile`)
 			// Remove invalid cache entry and fetch fresh
 			profileCache.delete(accessToken)
 		} else {
@@ -181,9 +188,9 @@ async function getUserProfile(
 	}
 
 	// Fetch from Rails API
-	console.log(`[Auth] Fetching user profile from: ${railsApiBaseUrl}${PROFILE_API_PATH}`)
+	log.debug(`Fetching user profile from: ${railsApiBaseUrl}${PROFILE_API_PATH}`)
 	const profile = await fetchUserProfile(accessToken, railsApiBaseUrl)
-	console.log(`[Auth] Profile fetched:`, {
+	log.debug(`Profile fetched:`, {
 		id: profile.id,
 		email: profile.email,
 		subscriptionTier: profile.subscriptionTier,
@@ -193,7 +200,7 @@ async function getUserProfile(
 	try {
 		validateUserProfile(profile)
 	} catch (error) {
-		console.error('[Auth] Invalid profile structure:', error, profile)
+		log.error('Invalid profile structure:', error, profile)
 		throw error
 	}
 

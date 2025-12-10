@@ -9,6 +9,13 @@ import { smartTranslationService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/stores/settings'
 import { AIProvider } from '@/ai/types'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'smart-translation' })
 import {
   useTranslations,
   useCreateTranslation,
@@ -214,7 +221,7 @@ function SmartTranslation() {
         return
       }
       setError(t('translation.error'))
-      console.error('Translation failed:', err)
+      log.error('Translation failed:', err)
       // Reset loading state on error
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null
@@ -287,7 +294,7 @@ function SmartTranslation() {
         return
       }
       setError(t('translation.error'))
-      console.error('Regeneration failed:', err)
+      log.error('Regeneration failed:', err)
       // Reset loading state on error
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null

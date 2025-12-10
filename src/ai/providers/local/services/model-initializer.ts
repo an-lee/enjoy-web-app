@@ -5,6 +5,13 @@
 
 import type { LocalModelConfig } from '../../../types'
 import { useLocalModelsStore } from '@/stores/local-models'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'ModelInitializer' })
 import {
   getASRWorker,
   getSmartTranslationWorker,
@@ -90,7 +97,7 @@ async function isModelCached(modelName: string): Promise<boolean> {
       }
     })
   } catch (error) {
-    console.warn('[ModelInitializer] Failed to check model cache:', error)
+    log.warn('Failed to check model cache:', error)
     return false
   }
 }
@@ -241,13 +248,13 @@ export async function initializeModel(
           store.setModelLoading('smartTranslation', false)
 
           // Log detailed error for debugging
-          console.error('[ModelInitializer] SmartTranslation error')
-          console.error('Model name:', modelName)
-          console.error('Error message:', data.message)
-          console.error('Error stack:', data.stack)
-          console.error('Error name:', data.name)
-          console.error('Error cause:', data.cause)
-          console.error('Full error data:', data)
+          log.error('SmartTranslation error')
+          log.error('Model name:', modelName)
+          log.error('Error message:', data.message)
+          log.error('Error stack:', data.stack)
+          log.error('Error name:', data.name)
+          log.error('Error cause:', data.cause)
+          log.error('Full error data:', data)
 
           reject(new Error(data.message || 'Failed to initialize model'))
         }

@@ -3,6 +3,17 @@ import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useAuthStore, type User } from '@/stores'
 import { authApi } from '@/api'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'Login' })
+
+// ============================================================================
+// Constants
+// ============================================================================
 
 // Storage key for CSRF state
 const AUTH_STATE_KEY = 'enjoy_auth_state'
@@ -81,15 +92,15 @@ function LoginPage() {
   // Handle fragment token on page load (callback from main site)
   useEffect(() => {
     const hash = window.location.hash
-    console.log('[Login] Checking hash:', hash)
+    log.debug('Checking hash:', hash)
 
     if (!hash) {
-      console.log('[Login] No hash found')
+      log.debug('No hash found')
       return
     }
 
     const params = parseFragmentParams(hash)
-    console.log('[Login] Parsed params:', params)
+    log.debug('Parsed params:', params)
 
     const token = params.access_token || params.token
     const returnedState = params.state
@@ -102,7 +113,7 @@ function LoginPage() {
     )
 
     if (!token) {
-      console.log('[Login] No token in hash')
+      log.debug('No token in hash')
       return
     }
 
@@ -111,34 +122,34 @@ function LoginPage() {
 
     // Verify state for CSRF protection (skip in development if no stored state)
     const storedState = sessionStorage.getItem(AUTH_STATE_KEY)
-    console.log('[Login] State check - returned:', returnedState, 'stored:', storedState)
+    log.debug('State check - returned:', returnedState, 'stored:', storedState)
     sessionStorage.removeItem(AUTH_STATE_KEY)
 
     // Only enforce state check if we have both states
     if (returnedState && storedState && returnedState !== storedState) {
-      console.error('[Login] State mismatch - possible CSRF attack')
+      log.error('State mismatch - possible CSRF attack')
       setIsProcessingCallback(false)
       return
     }
 
     // Process the token
     const processToken = async () => {
-      console.log('[Login] Processing token...')
+      log.info('Processing token...')
       setToken(token)
 
       // Fetch user profile
       try {
         const profileResponse = await authApi.profile()
-        console.log('[Login] Profile fetched:', profileResponse.data)
+        log.info('Profile fetched:', profileResponse.data)
         setUser(profileResponse.data as User)
       } catch (err) {
-        console.error('[Login] Failed to fetch user profile:', err)
+        log.error('Failed to fetch user profile:', err)
         // Continue even if profile fetch fails
       }
 
       // Navigate to the redirect destination
       const redirectTo = getRedirectUrl(search.redirect)
-      console.log('[Login] Navigating to:', redirectTo)
+      log.info('Navigating to:', redirectTo)
 
       // Use replace to prevent back button issues
       navigate({
@@ -153,7 +164,7 @@ function LoginPage() {
   // Redirect if already authenticated (but not if processing callback)
   useEffect(() => {
     if (isAuthenticated && !isProcessingCallback) {
-      console.log('[Login] Already authenticated, redirecting...')
+      log.info('Already authenticated, redirecting...')
       const redirectTo = getRedirectUrl(search.redirect)
       navigate({
         to: redirectTo as Parameters<typeof navigate>[0]['to'],
@@ -170,7 +181,7 @@ function LoginPage() {
     // Generate and store state for CSRF protection
     const state = generateState()
     sessionStorage.setItem(AUTH_STATE_KEY, state)
-    console.log('[Login] Generated state:', state)
+    log.debug('Generated state:', state)
 
     // Build the callback URL
     const callbackUrl = new URL(window.location.origin + '/login')
@@ -184,7 +195,7 @@ function LoginPage() {
     loginUrl.searchParams.set('return_to', callbackUrl.toString())
     loginUrl.searchParams.set('state', state)
 
-    console.log('[Login] Redirecting to:', loginUrl.toString())
+    log.info('Redirecting to:', loginUrl.toString())
 
     // Redirect to main site
     window.location.href = loginUrl.toString()

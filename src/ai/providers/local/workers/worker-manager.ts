@@ -5,6 +5,13 @@
 
 import { useLocalModelsStore } from '@/stores/local-models'
 import { normalizeProgress } from '../utils/progress'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'WorkerManager' })
 
 /**
  * Create and manage ASR worker
@@ -66,13 +73,13 @@ export function getSmartTranslationWorker(): Worker {
         })
       } else if (type === 'error') {
         // Log detailed error for debugging
-        console.error('[SmartTranslationWorker] Error received from worker')
-        console.error('Error message:', data.message)
-        console.error('Error stack:', data.stack)
-        console.error('Error name:', data.name)
-        console.error('Error cause:', data.cause)
-        console.error('Original error:', data.originalError)
-        console.error('Full error data:', data)
+        log.error('Error received from worker')
+        log.error('Error message:', data.message)
+        log.error('Error stack:', data.stack)
+        log.error('Error name:', data.name)
+        log.error('Error cause:', data.cause)
+        log.error('Original error:', data.originalError)
+        log.error('Full error data:', data)
         useLocalModelsStore.getState().setModelError('smartTranslation', data.message, {
           stack: data.stack,
           name: data.name,

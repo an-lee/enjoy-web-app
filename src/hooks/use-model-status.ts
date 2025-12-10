@@ -2,7 +2,14 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocalModelsStore } from '@/stores'
 import { localModelService } from '@/ai/providers/local'
+import { createLogger } from '@/lib/utils'
 import type { ModelType } from '@/stores/local-models'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'useModelStatus' })
 
 interface UseModelStatusOptions {
   isLocal: boolean
@@ -72,7 +79,7 @@ export function useModelStatus({ isLocal, modelType, currentModel }: UseModelSta
         return
       }
     } catch (error) {
-      console.warn('[useModelStatus] Failed to check worker status:', error)
+      log.warn('Failed to check worker status:', error)
     }
 
     setInitializing(true)
@@ -84,7 +91,7 @@ export function useModelStatus({ isLocal, modelType, currentModel }: UseModelSta
       if (cached) {
         // Model is cached, loading should be fast
         setLoadingFromCache(true)
-        console.log(`[useModelStatus] Model ${currentModel} is cached, loading from cache...`)
+        log.info(`Model ${currentModel} is cached, loading from cache...`)
       } else {
         setLoadingFromCache(false)
       }
@@ -98,19 +105,19 @@ export function useModelStatus({ isLocal, modelType, currentModel }: UseModelSta
       }
     } catch (error: any) {
       // Log detailed error for debugging
-      console.error('[useModelStatus] Model initialization error')
-      console.error('Model type:', modelType)
-      console.error('Current model:', currentModel)
-      console.error('Error object:', error)
-      console.error('Error message:', error?.message)
-      console.error('Error stack:', error?.stack)
-      console.error('Error name:', error?.name)
-      console.error('Error cause:', error?.cause)
-      console.error('Error string:', String(error))
+      log.error('Model initialization error')
+      log.error('Model type:', modelType)
+      log.error('Current model:', currentModel)
+      log.error('Error object:', error)
+      log.error('Error message:', error?.message)
+      log.error('Error stack:', error?.stack)
+      log.error('Error name:', error?.name)
+      log.error('Error cause:', error?.cause)
+      log.error('Error string:', String(error))
       try {
-        console.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+        log.error('Error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
       } catch (e) {
-        console.error('Cannot stringify error:', e)
+        log.error('Cannot stringify error:', e)
       }
 
       const errorMessage =
@@ -136,7 +143,7 @@ export function useModelStatus({ isLocal, modelType, currentModel }: UseModelSta
         return
       }
     } catch (error) {
-      console.warn('[useModelStatus] Failed to check worker status:', error)
+      log.warn('Failed to check worker status:', error)
     }
 
     // If model is already loaded but different model is selected, reset status

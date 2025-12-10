@@ -1,4 +1,11 @@
 import { QueryClient } from '@tanstack/react-query'
+import { createLogger } from './utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'query-client' })
 
 /**
  * Creates and configures a QueryClient instance with best practices.
@@ -25,7 +32,7 @@ export function createQueryClient(): QueryClient {
         retry: 1,
         onError: (error) => {
           // Global error handler for mutations
-          console.error('Mutation error:', error)
+          log.error('Mutation error:', error)
         },
       },
     },

@@ -4,6 +4,13 @@
  */
 
 import Dexie, { type Table } from 'dexie'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'schema' })
 import type {
   Video,
   Audio,
@@ -84,7 +91,7 @@ export async function initDatabase(): Promise<void> {
   try {
     await db.open()
   } catch (error) {
-    console.error('Failed to initialize database:', error)
+    log.error('Failed to initialize database:', error)
     throw error
   }
 }

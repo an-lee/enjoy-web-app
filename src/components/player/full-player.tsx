@@ -9,7 +9,7 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn, formatTime } from '@/lib/utils'
+import { cn, formatTime, createLogger } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import {
@@ -26,6 +26,12 @@ import {
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
 import { useDisplayTime } from './global-player'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'FullPlayer' })
 
 // ============================================================================
 // Types
@@ -223,12 +229,12 @@ export function FullPlayer({
   // Placeholder handlers for future features
   const handleDictationMode = () => {
     // TODO: Implement dictation mode
-    console.log('Dictation mode')
+    log.info('Dictation mode')
   }
 
   const handleEchoMode = () => {
     // TODO: Implement echo/shadowing mode
-    console.log('Echo mode')
+    log.info('Echo mode')
   }
 
   // Note: Keyboard shortcuts are handled by PlayerHotkeys component in GlobalPlayer

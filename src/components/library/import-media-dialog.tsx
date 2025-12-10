@@ -5,8 +5,14 @@
 import { useState, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn } from '@/lib/utils'
+import { cn, createLogger } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'ImportMediaDialog' })
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -187,7 +193,7 @@ export function ImportMediaDialog({
       })
       handleOpenChange(false)
     } catch (err) {
-      console.error('Import failed:', err)
+      log.error('Import failed:', err)
       setError(t('library.import.failed'))
     } finally {
       setIsImporting(false)

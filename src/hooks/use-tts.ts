@@ -4,7 +4,14 @@ import { toast } from 'sonner'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useCreateAudio, useCreateTranscript } from './queries'
+import { createLogger } from '@/lib/utils'
 import type { Audio, TTSAudioInput, TranscriptInput } from '@/types/db'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'useTTS' })
 
 export interface UseTTSOptions {
   language: string
@@ -107,7 +114,7 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
         onSuccess?.(audio, url)
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error))
-        console.error('TTS synthesis failed:', err)
+        log.error('TTS synthesis failed:', err)
         toast.error(t('tts.error'))
         onError?.(err)
       } finally {

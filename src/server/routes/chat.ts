@@ -10,6 +10,13 @@ import { createRateLimitMiddleware } from '../middleware/rate-limit'
 import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
 import { handleError } from '@/server/utils/errors'
 import { streamSSE } from 'hono/streaming'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'chat' })
 
 const chat = new Hono<{
 	Bindings: Env
@@ -118,7 +125,7 @@ chat.post('/completions', async (c) => {
 									await stream.writeSSE({ data: JSON.stringify(openaiChunk) })
 								} catch (e) {
 									// Skip invalid JSON lines
-									console.warn('Failed to parse SSE data:', data)
+									log.warn('Failed to parse SSE data:', data)
 								}
 							}
 						}
@@ -127,7 +134,7 @@ chat.post('/completions', async (c) => {
 					// Send final [DONE] message
 					await stream.writeSSE({ data: '[DONE]' })
 				} catch (error) {
-					console.error('Streaming error:', error)
+					log.error('Streaming error:', error)
 					await stream.writeSSE({
 						data: JSON.stringify({ error: 'Stream processing failed' }),
 					})

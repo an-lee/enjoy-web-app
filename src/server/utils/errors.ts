@@ -3,6 +3,13 @@
  */
 
 import type { Context } from 'hono'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'errors' })
 
 export interface ApiError {
 	error: string
@@ -37,7 +44,7 @@ export function createErrorResponse(
  * Handle errors and return appropriate HTTP response
  */
 export function handleError(c: Context, error: unknown, defaultMessage = 'Internal server error') {
-	console.error('API Error:', error)
+	log.error('API Error:', error)
 
 	if (error instanceof RateLimitError) {
 		return c.json(
