@@ -138,7 +138,8 @@ class KokoroTTSSingleton {
  */
 function extractTimestamps(
   text: string,
-  result: any
+  result: any,
+  language?: string
 ): TTSTranscript | undefined {
   // Check if we have timestamp/duration information
   // The result may contain timestamps or durations depending on the model version
@@ -241,7 +242,7 @@ function extractTimestamps(
   }
 
   // Convert raw timings to TranscriptLine format (sentence -> word hierarchy)
-  return convertToTranscriptFormat(text, rawTimings)
+  return convertToTranscriptFormat(text, rawTimings, language)
 }
 
 
@@ -432,7 +433,7 @@ self.addEventListener('message', async (event: MessageEvent<TTSWorkerMessage>) =
         }
 
         // Extract timestamps if available (timestamped model)
-        const transcript = extractTimestamps(text, result)
+        const transcript = extractTimestamps(text, result, data.language)
 
         // Calculate duration
         const duration =

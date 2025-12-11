@@ -8,6 +8,7 @@ import {
   convertToTranscriptFormat,
   type RawWordTiming,
 } from './transcript-segmentation'
+import { segmentSentences, supportsIntlSegmenter } from './multilingual-segmenter'
 
 describe('convertToTranscriptFormat', () => {
   describe('Edge Cases', () => {
@@ -360,6 +361,70 @@ describe('convertToTranscriptFormat', () => {
       const result = convertToTranscriptFormat(text, timings)
       // Should break at commas and periods
       expect(result.timeline.length).toBeGreaterThan(1)
+    })
+  })
+
+  describe('Multilingual Support', () => {
+    it('should handle Chinese text segmentation', () => {
+      const text = '你好世界。你好吗？我很好。'
+      const timings: RawWordTiming[] = [
+        { text: '你好', startTime: 0, endTime: 0.5 },
+        { text: '世界', startTime: 0.6, endTime: 1.0 },
+        { text: '你好', startTime: 1.5, endTime: 2.0 },
+        { text: '吗', startTime: 2.1, endTime: 2.4 },
+        { text: '我', startTime: 3.0, endTime: 3.3 },
+        { text: '很', startTime: 3.4, endTime: 3.7 },
+        { text: '好', startTime: 3.8, endTime: 4.1 },
+      ]
+      const result = convertToTranscriptFormat(text, timings, 'zh')
+      expect(result.timeline.length).toBeGreaterThan(0)
+      expect(result.timeline[0].text).toContain('你好')
+    })
+
+    it('should handle Japanese text segmentation', () => {
+      const text = 'こんにちは世界。元気ですか？'
+      const timings: RawWordTiming[] = [
+        { text: 'こんにちは', startTime: 0, endTime: 0.8 },
+        { text: '世界', startTime: 0.9, endTime: 1.3 },
+        { text: '元気', startTime: 2.0, endTime: 2.5 },
+        { text: 'です', startTime: 2.6, endTime: 3.0 },
+        { text: 'か', startTime: 3.1, endTime: 3.4 },
+      ]
+      const result = convertToTranscriptFormat(text, timings, 'ja')
+      expect(result.timeline.length).toBeGreaterThan(0)
+    })
+
+    it('should work without language parameter (backward compatibility)', () => {
+      const timings: RawWordTiming[] = [
+        { text: 'Hello', startTime: 0, endTime: 0.5 },
+        { text: 'world', startTime: 0.6, endTime: 1.0 },
+      ]
+      const result = convertToTranscriptFormat('Hello world', timings)
+      expect(result.timeline.length).toBeGreaterThan(0)
+    })
+
+    it('should use Intl.Segmenter when available', () => {
+      if (supportsIntlSegmenter()) {
+        const sentences = segmentSentences('Hello world. How are you?', 'en')
+        expect(sentences.length).toBeGreaterThanOrEqual(1)
+        expect(sentences[0]).toContain('Hello')
+      } else {
+        // Skip test if not supported (older browsers)
+        expect(true).toBe(true)
+      }
+    })
+
+    it('should handle mixed language text', () => {
+      const text = 'Hello 世界。How are you?'
+      const timings: RawWordTiming[] = [
+        { text: 'Hello', startTime: 0, endTime: 0.5 },
+        { text: '世界', startTime: 0.6, endTime: 1.0 },
+        { text: 'How', startTime: 1.5, endTime: 1.8 },
+        { text: 'are', startTime: 1.9, endTime: 2.1 },
+        { text: 'you', startTime: 2.2, endTime: 2.5 },
+      ]
+      const result = convertToTranscriptFormat(text, timings, 'zh')
+      expect(result.timeline.length).toBeGreaterThan(0)
     })
   })
 })

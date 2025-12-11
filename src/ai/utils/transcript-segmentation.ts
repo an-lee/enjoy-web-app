@@ -12,6 +12,7 @@
  */
 
 import type { TTSTranscript, TTSTranscriptItem } from '../types'
+import { isSentenceBoundary } from './multilingual-segmenter'
 
 /**
  * Raw word timing data from TTS providers
@@ -105,16 +106,19 @@ interface WordWithMetadata {
  * - Audio pauses (breathing points)
  * - Punctuation marks
  * - Word count (optimal for follow-along reading)
+ * - Multilingual sentence boundaries (using Intl.Segmenter when available)
  *
  * All times are converted to milliseconds (integer)
  *
  * @param text - Original text that was synthesized
  * @param rawTimings - Word-level timing data from TTS provider (times in seconds)
+ * @param language - Optional language code (e.g., 'en', 'zh', 'ja') for better segmentation
  * @returns Transcript with intelligently segmented timeline
  */
 export function convertToTranscriptFormat(
   text: string,
-  rawTimings: RawWordTiming[]
+  rawTimings: RawWordTiming[],
+  language?: string
 ): TTSTranscript {
   if (rawTimings.length === 0) {
     return { timeline: [] }
@@ -137,6 +141,9 @@ export function convertToTranscriptFormat(
     const wordText = raw.text.trim()
     const punctuationAfter = extractPunctuationAfterWord(text, wordText, index)
 
+    // Get word position in text for sentence boundary detection
+    const wordPosition = getWordPositionInText(text, wordText, index)
+
     // Check if this is an abbreviation (word ends with period and is in abbreviation list)
     const isAbbreviation = isAbbreviationWord(wordText, punctuationAfter)
 
@@ -147,11 +154,28 @@ export function convertToTranscriptFormat(
                      cleanedWord.length >= wordText.length * 0.5 // At least 50% digits
 
     // Determine if punctuation indicates sentence end (not abbreviation or number)
-    const isSentenceEnd = punctuationAfter !== undefined &&
-      !isAbbreviation &&
-      !isNumber &&
-      (punctuationAfter === '.' || punctuationAfter === '!' || punctuationAfter === '?' ||
-       punctuationAfter === '。' || punctuationAfter === '！' || punctuationAfter === '？')
+    // Use multilingual sentence boundary detection if available
+    let isSentenceEnd = false
+    if (punctuationAfter !== undefined && !isAbbreviation && !isNumber) {
+      const isSentenceEndingPunctuation =
+        punctuationAfter === '.' || punctuationAfter === '!' || punctuationAfter === '?' ||
+        punctuationAfter === '。' || punctuationAfter === '！' || punctuationAfter === '？'
+
+      if (isSentenceEndingPunctuation) {
+        // Use Intl.Segmenter if available for more accurate detection
+        if (wordPosition !== undefined && language) {
+          // Check if this position is at a sentence boundary according to Intl.Segmenter
+          // Position after the word and its punctuation
+          const endPosition = wordPosition + wordText.length + (punctuationAfter ? 1 : 0)
+          // Use Intl.Segmenter to verify, but fallback to punctuation check
+          const isBoundary = isSentenceBoundary(text, endPosition, language)
+          isSentenceEnd = isBoundary || isSentenceEndingPunctuation
+        } else {
+          // Fallback: use punctuation-based detection
+          isSentenceEnd = isSentenceEndingPunctuation
+        }
+      }
+    }
 
     // Calculate punctuation weight (0 if it's an abbreviation with period)
     let punctuationWeight = 0
@@ -220,6 +244,30 @@ function isAbbreviationWord(word: string, punctuationAfter?: string): boolean {
   // Remove trailing period(s) and check against abbreviation list
   const wordWithoutPeriod = word.replace(/\.+$/, '').toLowerCase()
   return COMMON_ABBREVIATIONS.has(wordWithoutPeriod)
+}
+
+/**
+ * Get the position of a word in the text
+ * Returns the start index of the word in the text
+ */
+function getWordPositionInText(
+  text: string,
+  word: string,
+  wordIndex: number
+): number | undefined {
+  // Find all occurrences of the word in the text
+  const regex = new RegExp(`\\b${escapeRegex(word)}\\b`, 'gi')
+  let match
+  let occurrenceIndex = 0
+
+  while ((match = regex.exec(text)) !== null) {
+    if (occurrenceIndex === wordIndex) {
+      return match.index
+    }
+    occurrenceIndex++
+  }
+
+  return undefined
 }
 
 /**

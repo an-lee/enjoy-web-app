@@ -174,7 +174,7 @@ export async function synthesize(
       }))
 
       const transcript = rawTimings.length > 0
-        ? convertToTranscriptFormat(text, rawTimings)
+        ? convertToTranscriptFormat(text, rawTimings, language)
         : undefined
 
       return {
