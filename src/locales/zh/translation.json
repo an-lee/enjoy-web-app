@@ -207,7 +207,27 @@
       "secondary": "翻译",
       "selectLanguage": "选择",
       "noTranscript": "暂无字幕",
-      "noTranscriptHint": "字幕将自动生成或可手动导入"
+      "noTranscriptHint": "字幕将自动生成或可手动导入",
+      "retranscribe": "重新识别",
+      "retranscribing": "识别中...",
+      "provider": {
+        "enjoy": "Enjoy AI",
+        "local": "本地模型",
+        "byok": "自带密钥"
+      },
+      "confirmRetranscribe": {
+        "title": "确认重新识别",
+        "currentProvider": "当前提供商",
+        "changeSettings": "在设置中修改",
+        "limitations": "限制说明",
+        "limitation": {
+          "local": "本地模型处理大文件可能需要较长时间",
+          "enjoy": "云服务有文件大小和时长限制",
+          "longDuration": "此媒体时长为 {{minutes}} 分钟，处理可能需要较长时间"
+        },
+        "localNote": "注意：本地模型识别将显示进度，长音频文件可能需要几分钟时间。",
+        "confirm": "开始识别"
+      }
     }
   },
   "vocabulary": {

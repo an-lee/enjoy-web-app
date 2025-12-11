@@ -207,7 +207,27 @@
       "secondary": "Translation",
       "selectLanguage": "Select",
       "noTranscript": "No transcript available",
-      "noTranscriptHint": "Transcripts will be generated automatically or can be imported"
+      "noTranscriptHint": "Transcripts will be generated automatically or can be imported",
+      "retranscribe": "Retranscribe",
+      "retranscribing": "Transcribing...",
+      "provider": {
+        "enjoy": "Enjoy AI",
+        "local": "Local Model",
+        "byok": "Bring Your Own Key"
+      },
+      "confirmRetranscribe": {
+        "title": "Confirm Retranscription",
+        "currentProvider": "Current Provider",
+        "changeSettings": "Change in Settings",
+        "limitations": "Limitations",
+        "limitation": {
+          "local": "Local models may take longer for large files",
+          "enjoy": "Cloud service has file size and duration limits",
+          "longDuration": "This media is {{minutes}} minutes long, which may take significant time to process"
+        },
+        "localNote": "Note: Local model transcription will show progress and may take several minutes for long audio files.",
+        "confirm": "Start Transcription"
+      }
     }
   },
   "vocabulary": {

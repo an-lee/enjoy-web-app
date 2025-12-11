@@ -207,7 +207,27 @@
       "secondary": "Traduction",
       "selectLanguage": "Sélectionner",
       "noTranscript": "Aucune transcription disponible",
-      "noTranscriptHint": "Les transcriptions seront générées automatiquement ou peuvent être importées"
+      "noTranscriptHint": "Les transcriptions seront générées automatiquement ou peuvent être importées",
+      "retranscribe": "Re-transcrire",
+      "retranscribing": "Transcription en cours...",
+      "provider": {
+        "enjoy": "Enjoy AI",
+        "local": "Modèle Local",
+        "byok": "Apportez Votre Propre Clé"
+      },
+      "confirmRetranscribe": {
+        "title": "Confirmer la Re-transcription",
+        "currentProvider": "Fournisseur Actuel",
+        "changeSettings": "Modifier dans les Paramètres",
+        "limitations": "Limitations",
+        "limitation": {
+          "local": "Les modèles locaux peuvent prendre plus de temps pour les gros fichiers",
+          "enjoy": "Le service cloud a des limites de taille de fichier et de durée",
+          "longDuration": "Ce média dure {{minutes}} minutes, ce qui peut prendre beaucoup de temps à traiter"
+        },
+        "localNote": "Note : La transcription du modèle local affichera la progression et peut prendre plusieurs minutes pour les longs fichiers audio.",
+        "confirm": "Démarrer la Transcription"
+      }
     }
   },
   "vocabulary": {
