@@ -10,10 +10,11 @@
  * - expanded: Full-screen player
  */
 
-import { useRef, useCallback, useEffect, useState, useSyncExternalStore } from 'react'
+import { useRef, useCallback, useEffect, useState } from 'react'
 import { usePlayerStore } from '@/stores/player'
 import { db } from '@/db'
 import { createLogger } from '@/lib/utils'
+import { setDisplayTime } from '@/hooks/use-display-time'
 import { MiniPlayerBar } from './mini-player-bar'
 import { ExpandedPlayer } from './expanded-player'
 import { PlayerHotkeys } from './player-hotkeys'
@@ -23,32 +24,6 @@ import { PlayerHotkeys } from './player-hotkeys'
 // ============================================================================
 
 const log = createLogger({ name: 'PlayerContainer' })
-
-// ============================================================================
-// Time Display Store (separate from main store to avoid re-renders)
-// ============================================================================
-
-let currentDisplayTime = 0
-const timeListeners = new Set<() => void>()
-
-function subscribeToTime(callback: () => void) {
-  timeListeners.add(callback)
-  return () => timeListeners.delete(callback)
-}
-
-function getDisplayTime() {
-  return currentDisplayTime
-}
-
-function setDisplayTime(time: number) {
-  currentDisplayTime = time
-  timeListeners.forEach((listener) => listener())
-}
-
-// Hook to subscribe to display time changes
-export function useDisplayTime() {
-  return useSyncExternalStore(subscribeToTime, getDisplayTime, getDisplayTime)
-}
 
 // ============================================================================
 // Component

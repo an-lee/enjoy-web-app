@@ -2,7 +2,7 @@
  * Player components
  */
 
-export { PlayerContainer, useDisplayTime } from './player-container'
+export { PlayerContainer } from './player-container'
 export { MiniPlayerBar } from './mini-player-bar'
 export { ExpandedPlayer } from './expanded-player'
 export { PlayerHotkeys } from './player-hotkeys'

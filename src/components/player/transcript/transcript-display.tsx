@@ -36,9 +36,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Progress } from '@/components/ui/progress'
-import { useDisplayTime } from '../player-container'
+import { useDisplayTime } from '@/hooks/use-display-time'
 import { useTranscriptDisplay } from './use-transcript-display'
-import { useRetranscribe } from './use-retranscribe'
+import { useRetranscribe } from '@/hooks/use-retranscribe'
 import type {
   TranscriptDisplayProps,
   TranscriptLineState,

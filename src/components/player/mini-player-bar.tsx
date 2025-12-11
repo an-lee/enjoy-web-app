@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
-import { useDisplayTime } from './player-container'
+import { useDisplayTime } from '@/hooks/use-display-time'
 import { useSidebar } from '@/components/ui/sidebar'
 import { useIsMobile } from '@/hooks/use-mobile'
 

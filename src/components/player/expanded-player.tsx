@@ -24,7 +24,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { usePlayerStore } from '@/stores/player'
-import { useDisplayTime } from './player-container'
+import { useDisplayTime } from '@/hooks/use-display-time'
 import { TranscriptDisplay } from './transcript'
 
 // ============================================================================

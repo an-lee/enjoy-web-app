@@ -49,6 +49,7 @@ export {
 // ============================================================================
 
 export { useTTS, type UseTTSOptions, type UseTTSReturn } from './use-tts'
+export { useRetranscribe } from './use-retranscribe'
 
 // ============================================================================
 // Utility Hooks
@@ -57,3 +58,4 @@ export { useTTS, type UseTTSOptions, type UseTTSReturn } from './use-tts'
 export { useCopyWithToast } from './use-copy-with-toast'
 export { useIsMobile } from './use-mobile'
 export { useModelStatus } from './use-model-status'
+export { useDisplayTime } from './use-display-time'
