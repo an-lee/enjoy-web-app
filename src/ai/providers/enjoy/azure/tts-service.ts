@@ -11,15 +11,17 @@ import { getAzureToken } from './token-manager'
 import type {
   AIServiceResponse,
   TTSResponse,
-  TTSTranscript,
-  TTSTranscriptItem,
 } from '../../../types'
 import { AIServiceType, AIProvider } from '../../../types'
+import {
+  convertToTranscriptFormat,
+  type RawWordTiming,
+} from '../../../utils/transcript-segmentation'
 
 /**
  * Raw word timing data from Azure word boundary events (internal use)
  */
-interface RawWordTiming {
+interface AzureWordTiming {
   text: string
   startTime: number // seconds
   endTime: number // seconds
@@ -98,7 +100,7 @@ export async function synthesize(
     synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig)
 
     // Collect word boundary events for transcript
-    const wordBoundaries: RawWordTiming[] = []
+    const wordBoundaries: AzureWordTiming[] = []
 
     // Subscribe to word boundary events
     synthesizer.wordBoundary = (
@@ -164,10 +166,16 @@ export async function synthesize(
       const duration = audioData.byteLength / 4000
 
       // Build transcript from word boundaries in TranscriptLine format
-      const transcript: TTSTranscript | undefined =
-        wordBoundaries.length > 0
-          ? convertToTranscriptFormat(text, wordBoundaries)
-          : undefined
+      // Convert AzureWordTiming to RawWordTiming format
+      const rawTimings: RawWordTiming[] = wordBoundaries.map((w) => ({
+        text: w.text,
+        startTime: w.startTime,
+        endTime: w.endTime,
+      }))
+
+      const transcript = rawTimings.length > 0
+        ? convertToTranscriptFormat(text, rawTimings)
+        : undefined
 
       return {
         success: true,
@@ -208,91 +216,4 @@ export async function synthesize(
   }
 }
 
-/**
- * Convert raw word timings to TranscriptLine format
- * Groups words into sentences (based on punctuation) with nested word timeline
- * All times are converted to milliseconds (integer)
- */
-function convertToTranscriptFormat(
-  text: string,
-  rawTimings: RawWordTiming[]
-): TTSTranscript {
-  // Split text into sentences using common sentence-ending punctuation
-  // Handles: . ! ? and their Unicode variants, including ellipsis
-  const sentenceRegex = /[^.!?。！？…]+[.!?。！？…]*/g
-  const sentences = text.match(sentenceRegex) || [text]
-
-  // Map words to sentences
-  const timeline: TTSTranscriptItem[] = []
-  let wordIndex = 0
-
-  for (const sentence of sentences) {
-    const trimmedSentence = sentence.trim()
-    if (!trimmedSentence) continue
-
-    // Get words in this sentence
-    const sentenceWords = trimmedSentence
-      .split(/\s+/)
-      .filter((w) => w.length > 0)
-    const sentenceWordTimings: TTSTranscriptItem[] = []
-
-    // Collect word timings for this sentence
-    for (
-      let i = 0;
-      i < sentenceWords.length && wordIndex < rawTimings.length;
-      i++
-    ) {
-      const rawTiming = rawTimings[wordIndex]
-      // Convert seconds to milliseconds (integer)
-      const startMs = Math.round(rawTiming.startTime * 1000)
-      const durationMs = Math.round(
-        (rawTiming.endTime - rawTiming.startTime) * 1000
-      )
-
-      sentenceWordTimings.push({
-        text: rawTiming.text,
-        start: startMs,
-        duration: durationMs,
-      })
-      wordIndex++
-    }
-
-    // Create sentence item with word timeline
-    if (sentenceWordTimings.length > 0) {
-      const sentenceStart = sentenceWordTimings[0].start
-      const lastWord = sentenceWordTimings[sentenceWordTimings.length - 1]
-      const sentenceEnd = lastWord.start + lastWord.duration
-      const sentenceDuration = sentenceEnd - sentenceStart
-
-      timeline.push({
-        text: trimmedSentence,
-        start: sentenceStart,
-        duration: sentenceDuration,
-        timeline: sentenceWordTimings,
-      })
-    }
-  }
-
-  // If no sentences were created, create a single sentence with all words
-  if (timeline.length === 0 && rawTimings.length > 0) {
-    const wordTimeline: TTSTranscriptItem[] = rawTimings.map((raw) => ({
-      text: raw.text,
-      start: Math.round(raw.startTime * 1000),
-      duration: Math.round((raw.endTime - raw.startTime) * 1000),
-    }))
-
-    const start = wordTimeline[0].start
-    const lastWord = wordTimeline[wordTimeline.length - 1]
-    const end = lastWord.start + lastWord.duration
-
-    timeline.push({
-      text: text.trim(),
-      start,
-      duration: end - start,
-      timeline: wordTimeline,
-    })
-  }
-
-  return { timeline }
-}
 

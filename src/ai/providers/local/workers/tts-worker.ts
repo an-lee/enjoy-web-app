@@ -6,26 +6,11 @@
 
 import { KokoroTTS } from 'kokoro-js'
 import { DEFAULT_TTS_MODEL } from '../constants'
-
-/**
- * TTS Transcript Item with timing information
- * Matches TranscriptLine format from db schema
- * Timeline uses milliseconds (integer) for precision
- */
-interface TTSTranscriptItem {
-  text: string
-  start: number // milliseconds
-  duration: number // milliseconds
-  timeline?: TTSTranscriptItem[] // nested: Sentence → Word
-  confidence?: number
-}
-
-/**
- * TTS Transcript with sentence-level timestamps and nested word timeline
- */
-interface TTSTranscript {
-  timeline: TTSTranscriptItem[]
-}
+import {
+  convertToTranscriptFormat,
+  type RawWordTiming,
+} from '../../../utils/transcript-segmentation'
+import type { TTSTranscript } from '../../../types'
 
 interface TTSWorkerMessage {
   type: 'init' | 'synthesize' | 'checkStatus' | 'cancel'
@@ -139,14 +124,6 @@ class KokoroTTSSingleton {
   }
 }
 
-/**
- * Raw word timing data (internal use)
- */
-interface RawWordTiming {
-  text: string
-  startTime: number // seconds
-  endTime: number // seconds
-}
 
 /**
  * Extract word-level timestamps from Kokoro TTS output
@@ -267,85 +244,6 @@ function extractTimestamps(
   return convertToTranscriptFormat(text, rawTimings)
 }
 
-/**
- * Convert raw word timings to TranscriptLine format
- * Groups words into sentences (based on punctuation) with nested word timeline
- * All times are converted to milliseconds (integer)
- */
-function convertToTranscriptFormat(
-  text: string,
-  rawTimings: RawWordTiming[]
-): TTSTranscript {
-  // Split text into sentences using common sentence-ending punctuation
-  // Handles: . ! ? and their Unicode variants, including ellipsis
-  const sentenceRegex = /[^.!?。！？…]+[.!?。！？…]*/g
-  const sentences = text.match(sentenceRegex) || [text]
-
-  // Map words to sentences
-  const timeline: TTSTranscriptItem[] = []
-  let wordIndex = 0
-
-  for (const sentence of sentences) {
-    const trimmedSentence = sentence.trim()
-    if (!trimmedSentence) continue
-
-    // Get words in this sentence
-    const sentenceWords = trimmedSentence.split(/\s+/).filter((w) => w.length > 0)
-    const sentenceWordTimings: TTSTranscriptItem[] = []
-
-    // Collect word timings for this sentence
-    for (let i = 0; i < sentenceWords.length && wordIndex < rawTimings.length; i++) {
-      const rawTiming = rawTimings[wordIndex]
-      // Convert seconds to milliseconds (integer)
-      const startMs = Math.round(rawTiming.startTime * 1000)
-      const durationMs = Math.round((rawTiming.endTime - rawTiming.startTime) * 1000)
-
-      sentenceWordTimings.push({
-        text: rawTiming.text,
-        start: startMs,
-        duration: durationMs,
-      })
-      wordIndex++
-    }
-
-    // Create sentence item with word timeline
-    if (sentenceWordTimings.length > 0) {
-      const sentenceStart = sentenceWordTimings[0].start
-      const lastWord = sentenceWordTimings[sentenceWordTimings.length - 1]
-      const sentenceEnd = lastWord.start + lastWord.duration
-      const sentenceDuration = sentenceEnd - sentenceStart
-
-      timeline.push({
-        text: trimmedSentence,
-        start: sentenceStart,
-        duration: sentenceDuration,
-        timeline: sentenceWordTimings,
-      })
-    }
-  }
-
-  // If no sentences were created, create a single sentence with all words
-  if (timeline.length === 0 && rawTimings.length > 0) {
-    const wordTimeline: TTSTranscriptItem[] = rawTimings.map((raw) => ({
-      text: raw.text,
-      start: Math.round(raw.startTime * 1000),
-      duration: Math.round((raw.endTime - raw.startTime) * 1000),
-    }))
-
-    const start = wordTimeline[0].start
-    const lastWord = wordTimeline[wordTimeline.length - 1]
-    const end = lastWord.start + lastWord.duration
-
-    timeline.push({
-      text: text.trim(),
-      start,
-      duration: end - start,
-      timeline: wordTimeline,
-    })
-  }
-
-  return { timeline }
-}
 
 /**
  * Convert Float32Array audio to WAV format ArrayBuffer
