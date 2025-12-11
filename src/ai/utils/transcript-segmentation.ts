@@ -18,6 +18,10 @@ import {
   detectEntitiesWithCompromise,
   isPositionInEntity,
   type EntityPosition,
+  detectMeaningGroups,
+  isMeaningGroupBoundary,
+  isPositionInMeaningGroup,
+  type MeaningGroupBoundary,
 } from './compromise-helper'
 
 /**
@@ -53,19 +57,34 @@ const COMMON_ABBREVIATIONS = new Set([
 ])
 
 /**
+ * Words that should NOT be break points (e.g., articles, prepositions)
+ * These should bridge segments even if there's a pause
+ */
+const NO_BREAK_WORDS = new Set([
+  // Articles
+  'a', 'an', 'the',
+  // Prepositions (short ones that attach to following noun)
+  'of', 'to', 'in', 'on', 'at', 'for', 'by', 'with', 'from', 'about',
+  // Possessives
+  'my', 'your', 'his', 'her', 'its', 'our', 'their',
+  // Conjunctions (that usually link close items)
+  'and', 'or', 'nor'
+])
+
+/**
  * Configuration for transcript segmentation
  * Optimized for language learning follow-along reading
  */
 const SEGMENTATION_CONFIG = {
   // Word count limits per segment (for readability)
-  minWordsPerSegment: 3, // Minimum words in a segment (can be overridden for strong breaks)
-  maxWordsPerSegment: 15, // Maximum words in a segment (ideal for follow-along)
-  preferredWordsPerSegment: 8, // Preferred word count for optimal learning
+  minWordsPerSegment: 1, // Minimum words in a segment (can be overridden for strong breaks)
+  maxWordsPerSegment: 12, // Maximum words in a segment (ideal for follow-along)
+  preferredWordsPerSegment: 6, // Preferred word count for optimal learning
 
   // Pause detection (in milliseconds)
   // Detects natural breathing points in speech
-  pauseThreshold: 300, // Minimum gap between words to consider a pause
-  longPauseThreshold: 600, // Longer pause indicating a stronger break
+  pauseThreshold: 250, // Minimum gap between words to consider a pause
+  longPauseThreshold: 500, // Longer pause indicating a stronger break
 
   // Punctuation weights (higher = stronger break point)
   punctuationWeights: {
@@ -104,6 +123,8 @@ interface WordWithMetadata {
   isAbbreviation: boolean // true if this word is an abbreviation (e.g., "Mr.")
   isNumber: boolean // true if this word is a number
   isSentenceEnd: boolean // true if punctuation after this word indicates sentence end
+  isInMeaningGroup?: boolean // true if this word is inside a meaning group (意群)
+  isAtMeaningGroupBoundary?: boolean // true if position after this word is at a meaning group boundary
 }
 
 /**
@@ -133,6 +154,7 @@ export function convertToTranscriptFormat(
   // For English text, use Compromise to enhance detection
   const isEnglish = language?.startsWith('en') ?? false
   let entities: EntityPosition[] = []
+  let meaningGroups: MeaningGroupBoundary[] = []
 
   if (isEnglish) {
     try {
@@ -140,6 +162,13 @@ export function convertToTranscriptFormat(
     } catch (error) {
       // If Compromise fails, continue without entity detection
       console.warn('Compromise entity detection failed, continuing without it:', error)
+    }
+
+    try {
+      meaningGroups = detectMeaningGroups(text)
+    } catch (error) {
+      // If Compromise fails, continue without meaning group detection
+      console.warn('Compromise meaning group detection failed, continuing without it:', error)
     }
   }
 
@@ -158,10 +187,23 @@ export function convertToTranscriptFormat(
     // Extract punctuation after this word from the original text
     // Find the word in the text and check what follows it
     const wordText = raw.text.trim()
-    const punctuationAfter = extractPunctuationAfterWord(text, wordText, index)
+    // Clean word for position finding (remove trailing punctuation)
+    const cleanWordText = wordText.replace(/[.,!?;:，。！？；：]+$/, '')
+
+    // Use cleaned word to find position and punctuation
+    // This ensures words like "saying," (in raw data) are matched correctly as "saying"
+    let punctuationAfter = extractPunctuationAfterWord(text, cleanWordText, index)
+
+    // If we couldn't find punctuation in text, check if the word itself has it
+    if (!punctuationAfter) {
+      const punctMatch = wordText.match(/[.,!?;:，。！？；：]+$/)
+      if (punctMatch) {
+        punctuationAfter = punctMatch[0]
+      }
+    }
 
     // Get word position in text for sentence boundary detection
-    const wordPosition = getWordPositionInText(text, wordText, index)
+    const wordPosition = getWordPositionInText(text, cleanWordText, index)
 
     // Check if this is an abbreviation
     // For English, use enhanced detection with Compromise
@@ -170,12 +212,12 @@ export function convertToTranscriptFormat(
       // Use Compromise-enhanced detection for English
       isAbbreviation = detectAbbreviationsEnhanced(
         text,
-        wordText,
+        cleanWordText,
         COMMON_ABBREVIATIONS
       )
     } else {
       // Use manual detection for other languages
-      isAbbreviation = isAbbreviationWord(wordText, punctuationAfter)
+      isAbbreviation = isAbbreviationWord(cleanWordText, punctuationAfter)
     }
 
     // Check if this word is part of an entity (person, place, organization)
@@ -184,11 +226,20 @@ export function convertToTranscriptFormat(
     const isInEntity = wordPosition !== undefined &&
       isPositionInEntity(wordPosition, entities)
 
+    // Check if this word is part of a meaning group (意群)
+    // Avoid breaking in the middle of meaning groups
+    const isInMeaningGroup = wordPosition !== undefined &&
+      isPositionInMeaningGroup(wordPosition, meaningGroups)
+
+    // Check if position after this word is at a meaning group boundary
+    const isAtMeaningGroupBoundary = wordPosition !== undefined &&
+      isMeaningGroupBoundary(wordPosition + cleanWordText.length, meaningGroups)
+
     // Check if this word is a number (contains digits and is primarily numeric)
     // Examples: "3.14", "2024", "1,000" but not "3rd", "1st", "2nd"
-    const cleanedWord = wordText.replace(/[^\d.,]/g, '')
+    const cleanedWord = cleanWordText.replace(/[^\d.,]/g, '')
     const isNumber = cleanedWord.length > 0 && /^\d+([.,]\d+)*$/.test(cleanedWord) &&
-                     cleanedWord.length >= wordText.length * 0.5 // At least 50% digits
+                     cleanedWord.length >= cleanWordText.length * 0.5 // At least 50% digits
 
     // Determine if punctuation indicates sentence end (not abbreviation or number)
     // Use multilingual sentence boundary detection if available
@@ -203,7 +254,7 @@ export function convertToTranscriptFormat(
         if (wordPosition !== undefined && language) {
           // Check if this position is at a sentence boundary according to Intl.Segmenter
           // Position after the word and its punctuation
-          const endPosition = wordPosition + wordText.length + (punctuationAfter ? 1 : 0)
+          const endPosition = wordPosition + cleanWordText.length + (punctuationAfter ? 1 : 0)
           // Use Intl.Segmenter to verify, but fallback to punctuation check
           const isBoundary = isSentenceBoundary(text, endPosition, language)
           isSentenceEnd = isBoundary || isSentenceEndingPunctuation
@@ -236,10 +287,13 @@ export function convertToTranscriptFormat(
       isNumber,
       isSentenceEnd,
       isInEntity,
+      isInMeaningGroup,
+      isAtMeaningGroupBoundary,
     }
   })
 
   // Segment words into optimal chunks for follow-along reading
+  // Meaning group information is already stored in word metadata
   const segments = segmentWords(words)
 
   // Convert segments to TTSTranscriptItem format
@@ -345,6 +399,8 @@ function escapeRegex(str: string): string {
 /**
  * Segment words into optimal chunks for language learning
  * Uses a scoring system to find the best break points
+ * Considers meaning groups (意群) to avoid breaking semantic units
+ * Meaning group information is already stored in word.isInMeaningGroup and word.isAtMeaningGroupBoundary
  */
 function segmentWords(
   words: WordWithMetadata[]
@@ -369,6 +425,8 @@ function segmentWords(
       currentWordCount
     )
 
+    // console.log(`Word: ${word.text}, Gap: ${word.gapAfter}, ShouldBreak: ${shouldBreak}`)
+
     if (shouldBreak) {
       // Finalize current segment
       if (currentSegment.length > 0) {
@@ -392,10 +450,45 @@ function segmentWords(
         currentSegment = secondPart
         currentWordCount = secondPart.length
       } else {
-        // No good break point found, force break here
-        segments.push({ words: [...currentSegment] })
-        currentSegment = []
-        currentWordCount = 0
+        // No good break point found, try to break at preferredWordsPerSegment
+        // This ensures we don't create overly long segments
+        // Look backwards from the end to find a good break point
+        let foundBreak = false
+        for (let j = currentSegment.length - 1; j >= SEGMENTATION_CONFIG.preferredWordsPerSegment; j--) {
+          const checkWord = currentSegment[j]
+          // Check if this position has any break signal
+          if (checkWord.isAtMeaningGroupBoundary ||
+              checkWord.punctuationWeight > 0 ||
+              checkWord.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold) {
+            // Found a good break point
+            const firstPart = currentSegment.slice(0, j + 1)
+            const secondPart = currentSegment.slice(j + 1)
+
+            segments.push({ words: firstPart })
+            currentSegment = secondPart
+            currentWordCount = secondPart.length
+            foundBreak = true
+            break
+          }
+        }
+
+        if (!foundBreak) {
+          // If still no break point, break at preferredWordsPerSegment
+          if (currentWordCount >= SEGMENTATION_CONFIG.preferredWordsPerSegment + 3) {
+            const breakAt = SEGMENTATION_CONFIG.preferredWordsPerSegment
+            const firstPart = currentSegment.slice(0, breakAt)
+            const secondPart = currentSegment.slice(breakAt)
+
+            segments.push({ words: firstPart })
+            currentSegment = secondPart
+            currentWordCount = secondPart.length
+          } else {
+            // Force break here if segment is at max length
+            segments.push({ words: [...currentSegment] })
+            currentSegment = []
+            currentWordCount = 0
+          }
+        }
       }
     }
   }
@@ -411,6 +504,8 @@ function segmentWords(
 
 /**
  * Determine if we should break at the current position
+ * Considers meaning groups (意群) to avoid breaking semantic units
+ * Meaning group information is already stored in word.isInMeaningGroup and word.isAtMeaningGroupBoundary
  */
 function shouldBreakAtPosition(
   words: WordWithMetadata[],
@@ -423,6 +518,16 @@ function shouldBreakAtPosition(
   }
 
   const word = words[currentIndex]
+
+  // Avoid breaking in the middle of a meaning group (意群)
+  // Unless there's a very strong break signal (sentence end)
+  if (word.isInMeaningGroup && !word.isSentenceEnd) {
+    // Don't break if we're inside a meaning group and it's not a sentence end
+    // Wait until we reach the boundary
+    if (!word.isAtMeaningGroupBoundary) {
+      return false
+    }
+  }
 
   // Special case: Single-word sentences with strong punctuation
   // Examples: "Why?", "Yes!", "No."
@@ -454,24 +559,155 @@ function shouldBreakAtPosition(
   }
 
   // Factor 3: Pause detection (natural breathing point)
-  if (word.gapAfter >= SEGMENTATION_CONFIG.longPauseThreshold) {
-    breakScore += 8 // Strong pause
-  } else if (word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold) {
-    breakScore += 4 // Medium pause
+  // We assume any gap > threshold is a deliberate pause by the speaker/TTS
+  if (word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold) {
+    // Exception: Don't break after "bad break words" (articles, prepositions)
+    // unless the pause is VERY long (> longPauseThreshold)
+    // This heals "hiccups" in TTS or natural speech where a speaker pauses after "the..."
+    const textLower = word.text.toLowerCase().trim()
+    if (NO_BREAK_WORDS.has(textLower)) {
+      if (word.gapAfter < SEGMENTATION_CONFIG.longPauseThreshold) {
+        // Ignore this pause, it's likely a hesitation after a function word
+        // e.g., "destroy a [pause] generation" -> Keep "destroy a generation"
+        // Don't add to breakScore
+      } else {
+        breakScore += 8 // Strong pause (force break even for bad words if long enough)
+      }
+    } else {
+      // Normal pause
+      if (word.gapAfter >= SEGMENTATION_CONFIG.longPauseThreshold) {
+        breakScore += 8 // Strong pause
+      } else {
+        breakScore += 4 // Medium pause
+      }
+    }
   }
 
   // Factor 4: Word count (prefer breaking near preferred length)
+  // Only add score if we have enough words AND there's some break signal
+  // This prevents breaking just because we have enough words
   if (currentWordCount >= SEGMENTATION_CONFIG.preferredWordsPerSegment) {
-    breakScore += 3
+    // Only add score if there's at least some signal (punctuation, pause, or meaning group)
+    const hasAnySignal = word.punctuationWeight > 0 ||
+                        word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold ||
+                        word.isAtMeaningGroupBoundary ||
+                        word.isSentenceEnd
+    if (hasAnySignal) {
+      breakScore += 3
+    }
+    // Also add score if we're significantly over preferred length (encourage breaking)
+    if (currentWordCount >= SEGMENTATION_CONFIG.maxWordsPerSegment - 2) {
+      breakScore += 2 // Additional encouragement to break when approaching max
+    }
   }
 
-  // Factor 5: Avoid breaking too early (unless there's a very strong signal)
+  // Factor 5: Meaning group boundaries (意群边界)
+  // Prefer breaking at meaning group boundaries for better semantic coherence
+  if (word.isAtMeaningGroupBoundary) {
+    breakScore += 5 // Strong preference for breaking at meaning group boundaries
+  } else if (word.isInMeaningGroup) {
+    // Penalize breaking inside meaning groups (unless there's a very strong signal)
+    breakScore -= 3
+  }
+
+  // Factor 6: Avoid breaking too early (unless there's a very strong signal)
   if (currentWordCount < SEGMENTATION_CONFIG.minWordsPerSegment) {
     // Only break if there's a very strong signal:
     // - Sentence end (isSentenceEnd = true, score +12)
     // - Long pause (8+)
+    // - Meaning group boundary (5+)
     // - Combined strong signals (score >= 10)
     if (breakScore < 10) {
+      return false
+    }
+  }
+
+  // Factor 7: Prefer accumulating words when there's no strong break signal
+  // BUT: Always allow breaking at meaning group boundaries if we have enough words
+  // This is critical for semantic coherence
+
+  // PRIORITY 1: If we're at a meaning group boundary and have enough words, BREAK
+  // This should happen regardless of other factors
+  if (word.isAtMeaningGroupBoundary && currentWordCount >= SEGMENTATION_CONFIG.minWordsPerSegment) {
+    // Always break at meaning group boundaries if we have at least minWordsPerSegment
+    // This ensures semantic units are respected
+    return true
+  }
+
+  // PRIORITY 1.5: Heuristic - Break before clause-starting words
+  // This creates natural breaks at semantic boundaries even with fewer words
+  if (currentIndex < words.length - 1 && currentWordCount >= SEGMENTATION_CONFIG.minWordsPerSegment) {
+    const nextWord = words[currentIndex + 1]
+    const nextWordText = nextWord.text.toLowerCase()
+
+    // Break before relative pronouns (who, which, that, whom, whose)
+    // Example: "psychologist" -> "who" (creates break after "As a social psychologist")
+    if (['who', 'which', 'that', 'whom', 'whose'].includes(nextWordText)) {
+      // Only break if we have at least minWordsPerSegment words
+      // This prevents breaking too early
+      return true
+    }
+
+    // Break before question words that start object clauses (what, how, why, when, where)
+    // Example: "out" -> "what" (creates break after "to figure out")
+    // But require more words to avoid breaking too early
+    if (['what', 'how', 'why', 'when', 'where'].includes(nextWordText) &&
+        currentWordCount >= SEGMENTATION_CONFIG.minWordsPerSegment + 1) {
+      return true
+    }
+
+    // Break before main clause starters (I, you, he, she, it, we, they) if current word ends with comma
+    // Example: "Z," -> "I" (creates break after "what unearth was happening to Gen Z,")
+    const mainClauseStarters = ['i', 'you', 'he', 'she', 'it', 'we', 'they', 'this', 'that', 'these', 'those']
+    if (mainClauseStarters.includes(nextWordText)) {
+      // Check if current word ends with comma (either in punctuationAfter or in word text)
+      const currentWordHasComma = word.punctuationAfter === ',' || word.punctuationAfter === '，' ||
+                                  word.text.endsWith(',') || word.text.endsWith('，')
+      if (currentWordHasComma && currentWordCount >= SEGMENTATION_CONFIG.minWordsPerSegment) {
+        return true
+      }
+    }
+  }
+
+  // PRIORITY 2: If we have >= preferredWordsPerSegment words, be aggressive about breaking
+  // This prevents segments from growing too long
+  if (currentWordCount >= SEGMENTATION_CONFIG.preferredWordsPerSegment) {
+    // Break if we have ANY signal (punctuation, pause, or meaning group boundary)
+    // This ensures we don't wait until maxWordsPerSegment to break
+    const isPause = word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold
+    const isBadBreakWord = NO_BREAK_WORDS.has(word.text.toLowerCase().trim())
+
+    // Don't break on pause if it's a bad break word (unless very long pause)
+    const validPause = isPause && (!isBadBreakWord || word.gapAfter >= SEGMENTATION_CONFIG.longPauseThreshold)
+
+    if (word.punctuationWeight > 0 ||
+        validPause ||
+        word.isAtMeaningGroupBoundary ||
+        breakScore >= 5) {
+      return true
+    }
+
+    // Even without strong signals, if we're getting close to max, break
+    if (currentWordCount >= SEGMENTATION_CONFIG.maxWordsPerSegment - 3) {
+      // Force break to prevent overly long segments
+      // Prefer breaking at any punctuation or meaning group boundary
+      if (word.punctuationWeight > 0 || word.isAtMeaningGroupBoundary || breakScore >= 3) {
+        return true
+      }
+    }
+  }
+
+  // PRIORITY 3: If we have fewer words, only break with strong signals
+  if (currentWordCount < SEGMENTATION_CONFIG.preferredWordsPerSegment) {
+    // If there's no punctuation, no pause, and no meaning group boundary,
+    // we should accumulate more words before breaking
+    const hasWeakSignals = word.punctuationWeight > 0 ||
+                          word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold ||
+                          word.isAtMeaningGroupBoundary
+
+    if (!hasWeakSignals && breakScore < 8) {
+      // Don't break if we have weak signals and low score
+      // Wait until we have more words or stronger signals
       return false
     }
   }
@@ -479,14 +715,70 @@ function shouldBreakAtPosition(
   // Break if score is high enough
   // Sentence endings (weight 12+) always break
   // Long pauses (8+) usually break
+  // Meaning group boundaries (5+) with enough words should break
   // Other factors contribute to the decision
-  return breakScore >= 6
+  // Increased threshold to prevent over-segmentation when words have minimal gaps
+  // Require at least 8 points OR a combination of signals
+  if (breakScore >= 8) {
+    return true
+  }
+
+  // Special case: Meaning group boundary with enough words
+  // This is important for semantic coherence even if other signals are weak
+  // Already handled in Factor 7 above, but keep this as a fallback
+  if (word.isAtMeaningGroupBoundary &&
+      currentWordCount >= SEGMENTATION_CONFIG.minWordsPerSegment) {
+    // Always break at meaning group boundaries if we have enough words
+    // Don't require breakScore >= 5, as meaning group boundary itself is a strong signal
+    return true
+  }
+
+  // Special case: If we have a comma or semicolon, break if we have enough words
+  // Comma/semicolon indicates a clause boundary, which is a good break point
+  // Even without a pause, we should break at commas if we have enough words
+  // Check both punctuationAfter and if word itself ends with comma
+  const hasComma = word.punctuationAfter === ',' || word.punctuationAfter === '，' ||
+                   word.text.endsWith(',') || word.text.endsWith('，')
+  const hasSemicolon = word.punctuationAfter === ';' || word.punctuationAfter === '；' ||
+                       word.text.endsWith(';') || word.text.endsWith('；')
+
+  if ((hasComma || hasSemicolon) &&
+      currentWordCount >= SEGMENTATION_CONFIG.minWordsPerSegment) {
+    // If there's a pause, definitely break
+    if (word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold) {
+      return true
+    }
+
+    // Check if next word starts a new main clause (pronouns like I, you, he, she, it, we, they)
+    // This helps break at "Z, I was stunned" -> "Z," and "I was stunned"
+    if (currentIndex < words.length - 1) {
+      const nextWord = words[currentIndex + 1]
+      const nextWordText = nextWord.text.toLowerCase()
+      const mainClauseStarters = ['i', 'you', 'he', 'she', 'it', 'we', 'they', 'this', 'that', 'these', 'those']
+
+      if (mainClauseStarters.includes(nextWordText)) {
+        // Break at comma before main clause if we have at least minWordsPerSegment words
+        // This creates natural breaks like "Z, I" -> break after "Z,"
+        // This should happen BEFORE checking other conditions to ensure it takes priority
+        return true
+      }
+    }
+
+    // Even without pause or main clause starter, break if we have enough words (comma indicates clause boundary)
+    // Lower threshold to allow breaking at "Z," (which has 7 words from "what" to "Z,")
+    if (currentWordCount >= SEGMENTATION_CONFIG.minWordsPerSegment + 2) {
+      return true
+    }
+  }
+
+  // Don't break if score is too low
+  return false
 }
 
 /**
  * Find the best break point within a segment that's too long
  * Looks for punctuation or pauses in the last few words
- * Avoids breaking at abbreviations and entities
+ * Avoids breaking at abbreviations, entities, and inside meaning groups
  */
 function findBestBreakPointInSegment(
   segment: WordWithMetadata[]
@@ -506,6 +798,19 @@ function findBestBreakPointInSegment(
       continue
     }
 
+    // Skip "bad break words" - don't break after articles/prepositions
+    // unless they have strong punctuation (unlikely)
+    if (NO_BREAK_WORDS.has(word.text.toLowerCase().trim()) && !word.punctuationWeight) {
+      continue
+    }
+
+    // Prefer breaking at meaning group boundaries
+    // Avoid breaking inside meaning groups
+    if (word.isInMeaningGroup && !word.isAtMeaningGroupBoundary) {
+      // Skip positions inside meaning groups (unless it's the boundary)
+      continue
+    }
+
     let score = 0
 
     // Prefer sentence-ending punctuation breaks
@@ -513,6 +818,11 @@ function findBestBreakPointInSegment(
       score += 15 // Very strong preference
     } else if (word.punctuationWeight > 0) {
       score += word.punctuationWeight * 2
+    }
+
+    // Prefer meaning group boundaries
+    if (word.isAtMeaningGroupBoundary) {
+      score += 8 // Strong preference for meaning group boundaries
     }
 
     // Prefer pause breaks
@@ -555,32 +865,81 @@ function mergeShortSegments(
 
   while (i < segments.length) {
     const current = segments[i]
+
+    // If this is the last segment, just add it
+    if (i === segments.length - 1) {
+      merged.push(current)
+      break
+    }
+
+    const next = segments[i + 1]
     const lastWord = current.words[current.words.length - 1]
 
-    // Don't merge single-word sentences with sentence-ending punctuation
-    // Examples: "Why?", "Yes!", "No." - these should stay separate
-    const isSingleWordSentence = current.words.length === 1 && lastWord.isSentenceEnd
+    // DECISION: Should we merge [current] + [next]?
 
-    // If segment is too short and not a single-word sentence, try to merge with next
-    if (
-      !isSingleWordSentence &&
-      current.words.length < SEGMENTATION_CONFIG.minWordsPerSegment &&
-      i < segments.length - 1
-    ) {
-      const next = segments[i + 1]
-      const combinedLength = current.words.length + next.words.length
-
-      // Merge if combined length is acceptable
-      if (combinedLength <= SEGMENTATION_CONFIG.maxWordsPerSegment) {
+    // Special case: Check if we are splitting an abbreviation like "Mr" + "."
+    // If the current segment ends with "." and the word before it is a known abbreviation (without period),
+    // we should almost certainly merge with the next word (e.g. "Mr" + "." + "Smith")
+    if (current.words.length >= 2) {
+      const lastWord = current.words[current.words.length - 1]
+      const secondLastWord = current.words[current.words.length - 2]
+      if (
+        lastWord.text === '.' &&
+        COMMON_ABBREVIATIONS.has(secondLastWord.text.toLowerCase())
+      ) {
         merged.push({
           words: [...current.words, ...next.words],
         })
-        i += 2 // Skip both segments
+        i += 2
         continue
       }
     }
 
-    // Keep segment as is
+    // 1. Check audio gap (Pause)
+    // If there is a distinct pause between segments, DO NOT MERGE.
+    // We respect the "breathing point" rule strictly.
+    if (lastWord.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold) {
+      merged.push(current)
+      i++
+      continue
+    }
+
+    // 2. Check Punctuation
+    // If current segment ends with distinct punctuation, DO NOT MERGE.
+    // e.g. "Hello," + "world" -> Keep separate if there's a comma,
+    // unless it's extremely short/fast.
+    const hasStrongPunctuation =
+      lastWord.isSentenceEnd ||
+      (lastWord.punctuationAfter &&
+        [',', '，', ';', '；', ':', '：'].includes(lastWord.punctuationAfter))
+
+    if (hasStrongPunctuation) {
+      // Only merge if it's really short (1 word) AND the gap is tiny (< 100ms)
+      // Otherwise, keep the punctuation break.
+      const isVeryShort = current.words.length <= 1
+      const isVeryFast = lastWord.gapAfter < 100
+
+      if (!isVeryShort || !isVeryFast) {
+        merged.push(current)
+        i++
+        continue
+      }
+    }
+
+    // 3. Check Combined Length
+    // Only merge if the result is still "short enough"
+    const combinedLength = current.words.length + next.words.length
+    if (combinedLength <= SEGMENTATION_CONFIG.preferredWordsPerSegment) {
+      // strict limit for merging
+      // Merge them!
+      merged.push({
+        words: [...current.words, ...next.words],
+      })
+      i += 2
+      continue
+    }
+
+    // Default: Don't merge
     merged.push(current)
     i++
   }
