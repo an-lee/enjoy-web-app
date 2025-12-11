@@ -26,12 +26,13 @@ export async function transcribe(
   try {
     const client = getEnjoyClient()
 
-    // Request JSON format to get all Cloudflare data
+    // Request JSON format - our backend always returns full Cloudflare result
+    // regardless of response_format parameter
     const result = await client.transcribeSpeech(audioBlob, {
       language,
       prompt,
       model: '@cf/openai/whisper-large-v3-turbo',
-      responseFormat: 'json', // Get raw Cloudflare result
+      responseFormat: 'json', // Backend returns full result anyway
     })
 
     // Cloudflare returns data with timestamps in seconds

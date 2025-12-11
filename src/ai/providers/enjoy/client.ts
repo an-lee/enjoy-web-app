@@ -179,21 +179,33 @@ export class EnjoyAIClient {
       type: audioBlob.type || 'audio/wav',
     })
 
-    const transcription = await this.openaiClient.audio.transcriptions.create({
-      file: audioFile,
-      model: options?.model || 'whisper-1',
-      language: options?.language,
-      prompt: options?.prompt,
-      response_format: options?.responseFormat || 'json',
+    // Use OpenAI SDK to create the request, but intercept the response
+    // to get the full Cloudflare result (our backend returns full data)
+    const formData = new FormData()
+    formData.append('file', audioFile)
+    formData.append('model', options?.model || 'whisper-1')
+    if (options?.language) {
+      formData.append('language', options.language)
+    }
+    if (options?.prompt) {
+      formData.append('prompt', options.prompt)
+    }
+    formData.append('response_format', options?.responseFormat || 'json')
+
+    // Use authenticated fetch to get the raw response
+    const response = await this.authenticatedFetch(`${this.baseUrl}/audio/transcriptions`, {
+      method: 'POST',
+      body: formData,
     })
 
-    // If response_format is verbose_json, return the full response object
-    if (options?.responseFormat === 'verbose_json') {
-      return transcription as any
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error((error as any).error || `Transcription failed: ${response.status}`)
     }
 
-    // Otherwise return text
-    return { text: transcription.text }
+    // Parse the full JSON response (our backend returns complete Cloudflare result)
+    const result = await response.json()
+    return result
   }
 
   // ============================================
