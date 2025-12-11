@@ -25,7 +25,11 @@ import { generateText } from 'ai'
 import { useAuthStore } from '@/stores/auth'
 
 // Base URL for the Hono API Worker
-const ENJOY_API_BASE_URL = '/api'
+// Use relative path, but ensure it's properly handled by OpenAI SDK
+// OpenAI SDK will construct full URL using window.location.origin if needed
+const ENJOY_API_BASE_URL = typeof window !== 'undefined'
+  ? `${window.location.origin}/api`
+  : '/api'
 
 /**
  * Translation request parameters
@@ -159,7 +163,7 @@ export class EnjoyAIClient {
    * Uses OpenAI-compatible Whisper endpoint
    *
    * @param audioBlob - Audio data to transcribe
-   * @param options - ASR options (language, prompt)
+   * @param options - ASR options (language, prompt, model, responseFormat)
    * @returns Transcription result
    */
   async transcribeSpeech(
@@ -168,8 +172,9 @@ export class EnjoyAIClient {
       language?: string
       prompt?: string
       model?: string
+      responseFormat?: 'json' | 'text' | 'srt' | 'verbose_json' | 'vtt'
     }
-  ): Promise<{ text: string }> {
+  ): Promise<any> {
     const audioFile = new File([audioBlob], 'audio.wav', {
       type: audioBlob.type || 'audio/wav',
     })
@@ -179,8 +184,15 @@ export class EnjoyAIClient {
       model: options?.model || 'whisper-1',
       language: options?.language,
       prompt: options?.prompt,
+      response_format: options?.responseFormat || 'json',
     })
 
+    // If response_format is verbose_json, return the full response object
+    if (options?.responseFormat === 'verbose_json') {
+      return transcription as any
+    }
+
+    // Otherwise return text
     return { text: transcription.text }
   }
 
