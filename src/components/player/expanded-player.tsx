@@ -26,6 +26,7 @@ import {
 import { usePlayerStore } from '@/stores/player'
 import { useDisplayTime } from '@/hooks/use-display-time'
 import { TranscriptDisplay } from './transcript'
+import { useTranscriptDisplay } from './transcript/use-transcript-display'
 
 // ============================================================================
 // Logger
@@ -193,7 +194,13 @@ export function ExpandedPlayer({
     hide,
     setVolume,
     setPlaybackRate,
+    echoModeActive,
+    activateEchoMode,
+    deactivateEchoMode,
   } = usePlayerStore()
+
+  // Get transcript data to find active line
+  const { lines, activeLineIndex } = useTranscriptDisplay(displayTime)
 
   // Handle seek via slider
   const handleSeek = useCallback(
@@ -232,10 +239,34 @@ export function ExpandedPlayer({
     log.info('Dictation mode')
   }
 
-  const handleEchoMode = () => {
-    // TODO: Implement echo/shadowing mode
-    log.info('Echo mode')
-  }
+  // Echo mode handler - toggle echo mode based on current state
+  const handleEchoMode = useCallback(() => {
+    if (echoModeActive) {
+      log.debug('Deactivating echo mode from expanded player')
+      deactivateEchoMode()
+    } else {
+      // Activate echo mode based on current active line
+      if (activeLineIndex >= 0 && activeLineIndex < lines.length) {
+        const line = lines[activeLineIndex]
+        log.debug('Activating echo mode from expanded player', {
+          activeLineIndex,
+          startTime: line.startTimeSeconds,
+          endTime: line.endTimeSeconds,
+        })
+        activateEchoMode(
+          activeLineIndex,
+          activeLineIndex,
+          line.startTimeSeconds,
+          line.endTimeSeconds
+        )
+      } else {
+        log.warn('Cannot activate echo mode: no active line found', {
+          activeLineIndex,
+          linesCount: lines.length,
+        })
+      }
+    }
+  }, [echoModeActive, activeLineIndex, lines, activateEchoMode, deactivateEchoMode])
 
   // Note: Keyboard shortcuts are handled by PlayerHotkeys component in PlayerContainer
 
@@ -449,15 +480,20 @@ export function ExpandedPlayer({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant={echoModeActive ? 'secondary' : 'ghost'}
                       size="icon"
-                      className="h-9 w-9"
+                      className={cn(
+                        'h-9 w-9',
+                        echoModeActive && 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600 dark:text-orange-400'
+                      )}
                       onClick={handleEchoMode}
                     >
                       <Icon icon="lucide:mic" className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="top">{t('player.echoMode')}</TooltipContent>
+                  <TooltipContent side="top">
+                    {echoModeActive ? t('player.transcript.exitEchoMode') : t('player.echoMode')}
+                  </TooltipContent>
                 </Tooltip>
 
                 {/* Divider */}
