@@ -227,7 +227,19 @@
         },
         "localNote": "Hinweis: Die Transkription des lokalen Modells zeigt den Fortschritt an und kann bei langen Audiodateien mehrere Minuten dauern.",
         "confirm": "Transkription starten"
-      }
+      },
+      "activateEchoMode": "Echo-Modus aktivieren",
+      "deactivateEchoMode": "Echo-Modus deaktivieren",
+      "exitEchoMode": "Echo-Modus beenden",
+      "expandEchoForward": "Nach vorne erweitern",
+      "expandEchoBackward": "Nach hinten erweitern",
+      "shrinkEchoForward": "Nach vorne verkleinern",
+      "shrinkEchoBackward": "Nach hinten verkleinern",
+      "shadowReading": "Schattenlesen",
+      "shadowReadingHint": "Nehmen Sie sich auf, während Sie mit dem Segment sprechen. Passen Sie Geschwindigkeit und Intonation an. Drücken Sie R zum Starten/Stoppen.",
+      "showPitchContour": "Tonhöhenverlauf anzeigen",
+      "record": "Aufnehmen",
+      "stopRecording": "Stoppen"
     }
   },
   "vocabulary": {

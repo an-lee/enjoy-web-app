@@ -9,11 +9,11 @@
  * - Smooth transitions and elegant styling
  */
 
-import { useRef, useEffect, useCallback, memo, useState } from 'react'
+import { useRef, useEffect, useCallback, memo, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Link } from '@tanstack/react-router'
-import { cn } from '@/lib/utils'
+import { cn, formatTime, createLogger } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/player'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { AIProvider } from '@/ai/types'
@@ -51,6 +51,9 @@ import type {
 
 const SCROLL_OFFSET = 120 // px offset from top when scrolling
 
+// Logger for debugging
+const log = createLogger({ name: 'TranscriptDisplay' })
+
 // Language display names (could be moved to a shared constant)
 const LANGUAGE_NAMES: Record<string, string> = {
   en: 'English',
@@ -69,41 +72,132 @@ const LANGUAGE_NAMES: Record<string, string> = {
 // Sub-components
 // ============================================================================
 
+// Shadow Reading Panel Component
+interface ShadowReadingPanelProps {
+  startTime: number
+  endTime: number
+  onRecord: () => void
+  isRecording: boolean
+}
+
+function ShadowReadingPanel({
+  startTime,
+  endTime,
+  onRecord,
+  isRecording,
+}: ShadowReadingPanelProps) {
+  const { t } = useTranslation()
+  const duration = endTime - startTime
+
+  return (
+    <div className="shrink-0 bg-orange-950/30 border-t border-orange-800/50 shadow-lg">
+      {/* Header row */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-orange-800/30">
+        <div className="flex items-center gap-2">
+          <Icon icon="lucide:mic" className="w-5 h-5 text-orange-500" />
+          <h3 className="text-base font-semibold text-foreground">
+            {t('player.transcript.shadowReading')}
+          </h3>
+        </div>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Icon icon="lucide:clock" className="w-4 h-4" />
+          <span className="tabular-nums font-medium">{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div className="px-6 py-4">
+        <p className="text-sm text-muted-foreground mb-5">
+          {t('player.transcript.shadowReadingHint')}
+        </p>
+
+        {/* Controls row */}
+        <div className="flex items-center justify-center gap-4">
+          {/* Pitch contour button */}
+          <button
+            type="button"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-orange-900/20 rounded-lg transition-colors"
+          >
+            <Icon icon="lucide:activity" className="w-4 h-4" />
+            <span>{t('player.transcript.showPitchContour')}</span>
+          </button>
+
+          {/* Record button - prominent orange */}
+          <button
+            type="button"
+            onClick={onRecord}
+            className={cn(
+              'flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-medium transition-all',
+              'shadow-md hover:shadow-lg',
+              isRecording
+                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            )}
+          >
+            <Icon
+              icon={isRecording ? 'lucide:square' : 'lucide:mic'}
+              className="w-5 h-5"
+            />
+            <span>
+              {isRecording
+                ? t('player.transcript.stopRecording')
+                : t('player.transcript.record')}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface TranscriptLineItemProps {
   line: TranscriptLineState
   showSecondary: boolean
   onClick: () => void
+  isInEchoRegion: boolean
 }
 
 const TranscriptLineItem = memo(function TranscriptLineItem({
   line,
   showSecondary,
   onClick,
+  isInEchoRegion,
 }: TranscriptLineItemProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        'group w-full text-center px-6 py-4 rounded-xl transition-all duration-300',
+        'group w-full text-left px-6 py-4 transition-all duration-300',
         'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        // Active state - highlighted with scale and glow
-        line.isActive && [
-          'bg-primary/10 scale-[1.02]',
-          'shadow-[0_0_30px_rgba(var(--primary),0.12)]',
+        // Echo region - prominent orange/amber background (matching reference)
+        isInEchoRegion && [
+          'bg-orange-600/90 text-white rounded-lg',
+          'hover:bg-orange-600',
+          'shadow-md',
         ],
-        // Past state - dimmed
-        line.isPast && !line.isActive && 'opacity-50',
-        // Future state - slightly dimmed
-        !line.isPast && !line.isActive && 'opacity-70 hover:opacity-100'
+        // Non-echo region styles
+        !isInEchoRegion && [
+          'rounded-xl',
+          // Active state - highlighted with scale and glow
+          line.isActive && [
+            'bg-primary/10 scale-[1.02]',
+            'shadow-[0_0_30px_rgba(var(--primary),0.12)]',
+          ],
+          // Past state - dimmed
+          line.isPast && !line.isActive && 'opacity-50',
+          // Future state - slightly dimmed
+          !line.isPast && !line.isActive && 'opacity-70 hover:opacity-100',
+        ]
       )}
     >
       {/* Primary text */}
       <p
         className={cn(
           'text-lg md:text-xl leading-relaxed transition-all duration-300',
-          line.isActive && 'text-primary font-medium text-xl md:text-2xl',
-          !line.isActive && 'text-foreground'
+          isInEchoRegion && 'text-white font-medium',
+          !isInEchoRegion && line.isActive && 'text-primary font-medium text-xl md:text-2xl',
+          !isInEchoRegion && !line.isActive && 'text-foreground'
         )}
       >
         {line.primary.text}
@@ -114,8 +208,9 @@ const TranscriptLineItem = memo(function TranscriptLineItem({
         <p
           className={cn(
             'mt-2 text-base leading-relaxed transition-all duration-300',
-            line.isActive && 'text-primary/70',
-            !line.isActive && 'text-muted-foreground'
+            isInEchoRegion && 'text-white/80',
+            !isInEchoRegion && line.isActive && 'text-primary/70',
+            !isInEchoRegion && !line.isActive && 'text-muted-foreground'
           )}
         >
           {line.secondary.text}
@@ -190,6 +285,14 @@ export function TranscriptDisplay({
   onLineClick,
   config: configOverrides,
 }: TranscriptDisplayProps) {
+  const renderCountRef = useRef(0)
+  renderCountRef.current++
+  log.debug('TranscriptDisplay render', {
+    renderCount: renderCountRef.current,
+    isPlaying,
+    currentTime: _currentTimeProp,
+  })
+
   const { t } = useTranslation()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const activeLineRef = useRef<HTMLDivElement>(null)
@@ -199,15 +302,18 @@ export function TranscriptDisplay({
   // Get real-time display time from the external store
   const currentTime = useDisplayTime()
 
-  // Merge config with defaults
-  const config: TranscriptDisplayConfig = {
-    autoScroll: true,
-    scrollBehavior: 'smooth',
-    scrollPosition: 'center',
-    showSecondary: true,
-    highlightMode: 'line',
-    ...configOverrides,
-  }
+  // Merge config with defaults - memoized to prevent unnecessary re-renders
+  const config: TranscriptDisplayConfig = useMemo(() => {
+    log.debug('Config recalculated', { configOverrides })
+    return {
+      autoScroll: true,
+      scrollBehavior: 'smooth',
+      scrollPosition: 'center',
+      showSecondary: true,
+      highlightMode: 'line',
+      ...configOverrides,
+    }
+  }, [configOverrides])
 
   // Get transcript state
   const {
@@ -220,6 +326,181 @@ export function TranscriptDisplay({
     primaryLanguage,
     secondaryLanguage,
   } = useTranscriptDisplay(currentTime)
+
+  const linesRef = useRef<TranscriptLineState[]>([])
+
+  // Update lines ref
+  useEffect(() => {
+    log.debug('Lines updated', { count: lines.length })
+    linesRef.current = lines
+  }, [lines])
+
+  // Echo mode state - use separate selectors to prevent object recreation issues
+  // This prevents infinite loops caused by object reference changes
+  const echoModeActive = usePlayerStore((state) => state.echoModeActive)
+  const echoStartLineIndex = usePlayerStore((state) => state.echoStartLineIndex)
+  const echoEndLineIndex = usePlayerStore((state) => state.echoEndLineIndex)
+  const echoStartTime = usePlayerStore((state) => state.echoStartTime)
+  const echoEndTime = usePlayerStore((state) => state.echoEndTime)
+  const activateEchoMode = usePlayerStore((state) => state.activateEchoMode)
+  const deactivateEchoMode = usePlayerStore((state) => state.deactivateEchoMode)
+  const updateEchoRegion = usePlayerStore((state) => state.updateEchoRegion)
+
+  // Debug log for echo mode state changes
+  useEffect(() => {
+    log.debug('Echo mode state changed', {
+      echoModeActive,
+      echoStartLineIndex,
+      echoEndLineIndex,
+      echoStartTime,
+      echoEndTime,
+    })
+  }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, echoStartTime, echoEndTime])
+
+  // Get echo region time range from store - memoized to prevent object recreation
+  const echoRegionTimeRange = useMemo(
+    () =>
+      echoModeActive && echoStartTime >= 0 && echoEndTime >= 0
+        ? { startTime: echoStartTime, endTime: echoEndTime }
+        : null,
+    [echoModeActive, echoStartTime, echoEndTime]
+  )
+
+  // Handle echo mode activation
+  const handleActivateEchoMode = useCallback(() => {
+    log.debug('Activating echo mode', { activeLineIndex })
+    const currentLines = linesRef.current
+    if (activeLineIndex >= 0 && activeLineIndex < currentLines.length) {
+      const line = currentLines[activeLineIndex]
+      log.debug('Echo mode activation', {
+        lineIndex: activeLineIndex,
+        startTime: line.startTimeSeconds,
+        endTime: line.endTimeSeconds,
+      })
+      activateEchoMode(
+        activeLineIndex,
+        activeLineIndex,
+        line.startTimeSeconds,
+        line.endTimeSeconds
+      )
+    } else {
+      log.warn('Cannot activate echo mode: invalid activeLineIndex', {
+        activeLineIndex,
+        linesCount: currentLines.length,
+      })
+    }
+  }, [activeLineIndex, activateEchoMode])
+
+  // Handle echo mode deactivation
+  const handleDeactivateEchoMode = useCallback(() => {
+    log.debug('Deactivating echo mode')
+    deactivateEchoMode()
+  }, [deactivateEchoMode])
+
+  // Handle expand echo region forward
+  const handleExpandEchoForward = useCallback(() => {
+    log.debug('Expanding echo region forward', {
+      echoStartLineIndex,
+      echoEndLineIndex,
+    })
+    const currentLines = linesRef.current
+    if (echoEndLineIndex >= 0 && echoEndLineIndex < currentLines.length - 1) {
+      const startLine = currentLines[echoStartLineIndex]
+      const newEndLine = currentLines[echoEndLineIndex + 1]
+      if (startLine && newEndLine) {
+        log.debug('Updating echo region forward', {
+          newEndLineIndex: echoEndLineIndex + 1,
+          newEndTime: newEndLine.endTimeSeconds,
+        })
+        updateEchoRegion(
+          echoStartLineIndex,
+          echoEndLineIndex + 1,
+          startLine.startTimeSeconds,
+          newEndLine.endTimeSeconds
+        )
+      }
+    }
+  }, [echoStartLineIndex, echoEndLineIndex, updateEchoRegion])
+
+  // Handle expand echo region backward
+  const handleExpandEchoBackward = useCallback(() => {
+    log.debug('Expanding echo region backward', {
+      echoStartLineIndex,
+      echoEndLineIndex,
+    })
+    const currentLines = linesRef.current
+    if (echoStartLineIndex > 0 && echoEndLineIndex >= 0) {
+      const newStartLine = currentLines[echoStartLineIndex - 1]
+      const endLine = currentLines[echoEndLineIndex]
+      if (newStartLine && endLine) {
+        log.debug('Updating echo region backward', {
+          newStartLineIndex: echoStartLineIndex - 1,
+          newStartTime: newStartLine.startTimeSeconds,
+        })
+        updateEchoRegion(
+          echoStartLineIndex - 1,
+          echoEndLineIndex,
+          newStartLine.startTimeSeconds,
+          endLine.endTimeSeconds
+        )
+      }
+    }
+  }, [echoStartLineIndex, echoEndLineIndex, updateEchoRegion])
+
+  // Handle shrink echo region forward
+  const handleShrinkEchoForward = useCallback(() => {
+    log.debug('Shrinking echo region forward', {
+      echoStartLineIndex,
+      echoEndLineIndex,
+    })
+    const currentLines = linesRef.current
+    if (echoEndLineIndex > echoStartLineIndex && echoStartLineIndex >= 0) {
+      const startLine = currentLines[echoStartLineIndex]
+      const newEndLine = currentLines[echoEndLineIndex - 1]
+      if (startLine && newEndLine) {
+        log.debug('Updating echo region shrink forward', {
+          newEndLineIndex: echoEndLineIndex - 1,
+        })
+        updateEchoRegion(
+          echoStartLineIndex,
+          echoEndLineIndex - 1,
+          startLine.startTimeSeconds,
+          newEndLine.endTimeSeconds
+        )
+      }
+    }
+  }, [echoStartLineIndex, echoEndLineIndex, updateEchoRegion])
+
+  // Handle shrink echo region backward
+  const handleShrinkEchoBackward = useCallback(() => {
+    log.debug('Shrinking echo region backward', {
+      echoStartLineIndex,
+      echoEndLineIndex,
+    })
+    const currentLines = linesRef.current
+    if (echoStartLineIndex < echoEndLineIndex && echoEndLineIndex >= 0) {
+      const newStartLine = currentLines[echoStartLineIndex + 1]
+      const endLine = currentLines[echoEndLineIndex]
+      if (newStartLine && endLine) {
+        log.debug('Updating echo region shrink backward', {
+          newStartLineIndex: echoStartLineIndex + 1,
+        })
+        updateEchoRegion(
+          echoStartLineIndex + 1,
+          echoEndLineIndex,
+          newStartLine.startTimeSeconds,
+          endLine.endTimeSeconds
+        )
+      }
+    }
+  }, [echoStartLineIndex, echoEndLineIndex, updateEchoRegion])
+
+  // Placeholder for recording (not implemented yet)
+  const [isRecording, setIsRecording] = useState(false)
+  const handleRecord = useCallback(() => {
+    // TODO: Implement recording
+    setIsRecording((prev) => !prev)
+  }, [])
 
   // Retranscribe functionality
   const { retranscribe, isTranscribing, progress, progressPercent } = useRetranscribe()
@@ -248,11 +529,21 @@ export function TranscriptDisplay({
     retranscribe(primaryLanguage || undefined)
   }, [retranscribe, primaryLanguage])
 
-  // Build language options
-  const languageOptions = availableTranscripts.map((t) => ({
-    value: t.language,
-    label: LANGUAGE_NAMES[t.language] || t.language.toUpperCase(),
-  }))
+  // Build language options - memoized to prevent unnecessary re-renders
+  const languageOptions = useMemo(
+    () =>
+      availableTranscripts.map((t) => ({
+        value: t.language,
+        label: LANGUAGE_NAMES[t.language] || t.language.toUpperCase(),
+      })),
+    [availableTranscripts]
+  )
+
+  // Secondary language options - filtered to exclude primary
+  const secondaryLanguageOptions = useMemo(
+    () => languageOptions.filter((o) => o.value !== primaryLanguage),
+    [languageOptions, primaryLanguage]
+  )
 
   // Handle line click
   const handleLineClick = useCallback(
@@ -322,6 +613,11 @@ export function TranscriptDisplay({
     },
     [setSecondaryLanguage]
   )
+
+  // Handle clear secondary language
+  const handleClearSecondaryLanguage = useCallback(() => {
+    setSecondaryLanguage(null)
+  }, [setSecondaryLanguage])
 
   // Loading state
   if (transcripts.isLoading) {
@@ -400,39 +696,74 @@ export function TranscriptDisplay({
           <LanguageSelector
             label={t('player.transcript.secondary')}
             value={secondaryLanguage}
-            options={languageOptions.filter((o) => o.value !== primaryLanguage)}
+            options={secondaryLanguageOptions}
             onChange={handleSecondaryChange}
             placeholder={t('player.transcript.selectLanguage')}
             allowNone
-            onClear={() => setSecondaryLanguage(null)}
+            onClear={handleClearSecondaryLanguage}
           />
         </div>
 
-        {/* Retranscribe button */}
-        <button
-          type="button"
-          onClick={handleRetranscribeClick}
-          disabled={isTranscribing || !currentSession}
-          className={cn(
-            'flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
-            'bg-primary text-primary-foreground hover:bg-primary/90',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-          )}
-          title={t('player.transcript.retranscribe')}
-        >
-          {isTranscribing ? (
-            <>
-              <Icon icon="lucide:loader-2" className="w-3 h-3 animate-spin" />
-              <span>{progress || t('player.transcript.retranscribing')}</span>
-            </>
+        <div className="flex items-center gap-2">
+          {/* Echo mode toggle */}
+          {echoModeActive ? (
+            <button
+              type="button"
+              onClick={handleDeactivateEchoMode}
+              className={cn(
+                'flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                'bg-orange-500 text-white hover:bg-orange-600',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+              title={t('player.transcript.deactivateEchoMode')}
+            >
+              <Icon icon="lucide:x" className="w-3 h-3" />
+              <span>{t('player.transcript.exitEchoMode')}</span>
+            </button>
           ) : (
-            <>
-              <Icon icon="lucide:refresh-cw" className="w-3 h-3" />
-              <span>{t('player.transcript.retranscribe')}</span>
-            </>
+            <button
+              type="button"
+              onClick={handleActivateEchoMode}
+              disabled={activeLineIndex < 0 || !currentSession}
+              className={cn(
+                'flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+              title={t('player.transcript.activateEchoMode')}
+            >
+              <Icon icon="lucide:mic" className="w-3 h-3" />
+              <span>{t('player.transcript.echoMode')}</span>
+            </button>
           )}
-        </button>
+
+          {/* Retranscribe button */}
+          <button
+            type="button"
+            onClick={handleRetranscribeClick}
+            disabled={isTranscribing || !currentSession}
+            className={cn(
+              'flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+              'bg-primary text-primary-foreground hover:bg-primary/90',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            )}
+            title={t('player.transcript.retranscribe')}
+          >
+            {isTranscribing ? (
+              <>
+                <Icon icon="lucide:loader-2" className="w-3 h-3 animate-spin" />
+                <span>{progress || t('player.transcript.retranscribing')}</span>
+              </>
+            ) : (
+              <>
+                <Icon icon="lucide:refresh-cw" className="w-3 h-3" />
+                <span>{t('player.transcript.retranscribe')}</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Progress indicator for local model */}
@@ -503,21 +834,118 @@ export function TranscriptDisplay({
       {/* Transcript lines */}
       <ScrollArea ref={scrollAreaRef} className="flex-1">
         <div className="py-8 px-4 space-y-2">
-          {lines.map((line) => (
-            <div
-              key={line.index}
-              ref={line.isActive ? activeLineRef : undefined}
-              data-line-index={line.index}
-            >
-              <TranscriptLineItem
-                line={line}
-                showSecondary={config.showSecondary && !!secondaryLanguage}
-                onClick={() => handleLineClick(line.startTimeSeconds)}
-              />
-            </div>
-          ))}
+          {lines.map((line) => {
+            const isInEchoRegion =
+              echoModeActive &&
+              line.index >= echoStartLineIndex &&
+              line.index <= echoEndLineIndex
+            const isEchoStart = echoModeActive && line.index === echoStartLineIndex
+            const isEchoEnd = echoModeActive && line.index === echoEndLineIndex
+
+            return (
+              <div
+                key={line.index}
+                ref={(el) => {
+                  // Only set ref if this is the active line to prevent ref callback loops
+                  if (line.isActive && el) {
+                    activeLineRef.current = el
+                  } else if (!line.isActive && activeLineRef.current === el) {
+                    // Clear ref if it's no longer active
+                    activeLineRef.current = null
+                  }
+                }}
+                data-line-index={line.index}
+                className="relative"
+              >
+                {/* Echo region top controls - shown above the first line of echo region */}
+                {isEchoStart && echoModeActive && (
+                  <div className="flex items-center justify-center gap-2 py-2 mb-1">
+                    <div className="h-px bg-border flex-1 max-w-[60px]" />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleExpandEchoBackward}
+                        disabled={echoStartLineIndex === 0}
+                        className={cn(
+                          'p-1.5 rounded-full hover:bg-accent transition-colors text-muted-foreground hover:text-foreground',
+                          'disabled:opacity-30 disabled:cursor-not-allowed'
+                        )}
+                        title={t('player.transcript.expandEchoBackward')}
+                      >
+                        <Icon icon="lucide:chevron-up" className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleShrinkEchoBackward}
+                        disabled={echoStartLineIndex >= echoEndLineIndex}
+                        className={cn(
+                          'p-1.5 rounded-full hover:bg-accent transition-colors text-muted-foreground hover:text-foreground',
+                          'disabled:opacity-30 disabled:cursor-not-allowed'
+                        )}
+                        title={t('player.transcript.shrinkEchoBackward')}
+                      >
+                        <Icon icon="lucide:minus" className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="h-px bg-border flex-1 max-w-[60px]" />
+                  </div>
+                )}
+
+                <TranscriptLineItem
+                  line={line}
+                  showSecondary={config.showSecondary && !!secondaryLanguage}
+                  onClick={() => handleLineClick(line.startTimeSeconds)}
+                  isInEchoRegion={isInEchoRegion}
+                />
+
+                {/* Echo region bottom controls - shown below the last line of echo region */}
+                {isEchoEnd && echoModeActive && (
+                  <div className="flex items-center justify-center gap-2 py-2 mt-1">
+                    <div className="h-px bg-border flex-1 max-w-[60px]" />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleShrinkEchoForward}
+                        disabled={echoEndLineIndex <= echoStartLineIndex}
+                        className={cn(
+                          'p-1.5 rounded-full hover:bg-accent transition-colors text-muted-foreground hover:text-foreground',
+                          'disabled:opacity-30 disabled:cursor-not-allowed'
+                        )}
+                        title={t('player.transcript.shrinkEchoForward')}
+                      >
+                        <Icon icon="lucide:minus" className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleExpandEchoForward}
+                        disabled={echoEndLineIndex >= lines.length - 1}
+                        className={cn(
+                          'p-1.5 rounded-full hover:bg-accent transition-colors text-muted-foreground hover:text-foreground',
+                          'disabled:opacity-30 disabled:cursor-not-allowed'
+                        )}
+                        title={t('player.transcript.expandEchoForward')}
+                      >
+                        <Icon icon="lucide:chevron-down" className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="h-px bg-border flex-1 max-w-[60px]" />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </ScrollArea>
+
+      {/* Shadow Reading Panel - shown when echo mode is active */}
+      {echoModeActive && echoRegionTimeRange && (
+        <ShadowReadingPanel
+          startTime={echoRegionTimeRange.startTime}
+          endTime={echoRegionTimeRange.endTime}
+          onRecord={handleRecord}
+          isRecording={isRecording}
+        />
+      )}
     </div>
   )
 }

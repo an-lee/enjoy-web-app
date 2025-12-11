@@ -227,7 +227,19 @@
         },
         "localNote": "注意：本地模型识别将显示进度，长音频文件可能需要几分钟时间。",
         "confirm": "开始识别"
-      }
+      },
+      "activateEchoMode": "激活跟读模式",
+      "deactivateEchoMode": "取消跟读模式",
+      "exitEchoMode": "退出跟读模式",
+      "expandEchoForward": "向前扩展",
+      "expandEchoBackward": "向后扩展",
+      "shrinkEchoForward": "向前收缩",
+      "shrinkEchoBackward": "向后收缩",
+      "shadowReading": "跟读练习",
+      "shadowReadingHint": "跟随片段录音。匹配语速和语调。按 R 键开始/停止。",
+      "showPitchContour": "显示音调轮廓",
+      "record": "录音",
+      "stopRecording": "停止"
     }
   },
   "vocabulary": {

@@ -77,6 +77,25 @@ interface PlayerState {
   repeatMode: 'none' | 'single' | 'segment'
 
   // ============================================================================
+  // Echo Mode State (for shadow reading practice)
+  // ============================================================================
+
+  /** Whether echo mode is currently active */
+  echoModeActive: boolean
+
+  /** Start line index of echo region */
+  echoStartLineIndex: number
+
+  /** End line index of echo region */
+  echoEndLineIndex: number
+
+  /** Start time of echo region in seconds */
+  echoStartTime: number
+
+  /** End time of echo region in seconds */
+  echoEndTime: number
+
+  // ============================================================================
   // Actions
   // ============================================================================
 
@@ -121,6 +140,29 @@ interface PlayerState {
 
   /** Seek to a specific time */
   seekTo: (time: number) => void
+
+  // ============================================================================
+  // Echo Mode Actions
+  // ============================================================================
+
+  /** Activate echo mode with a region */
+  activateEchoMode: (
+    startLineIndex: number,
+    endLineIndex: number,
+    startTime: number,
+    endTime: number
+  ) => void
+
+  /** Deactivate echo mode */
+  deactivateEchoMode: () => void
+
+  /** Update echo region boundaries */
+  updateEchoRegion: (
+    startLineIndex: number,
+    endLineIndex: number,
+    startTime: number,
+    endTime: number
+  ) => void
 }
 
 // ============================================================================
@@ -142,6 +184,13 @@ export const usePlayerStore = create<PlayerState>()(
       volume: 1,
       playbackRate: 1,
       repeatMode: 'none',
+
+      // Initial echo mode state
+      echoModeActive: false,
+      echoStartLineIndex: -1,
+      echoEndLineIndex: -1,
+      echoStartTime: -1,
+      echoEndTime: -1,
 
       // Actions
       loadMedia: (media: LibraryMedia) => {
@@ -287,6 +336,46 @@ export const usePlayerStore = create<PlayerState>()(
             currentTime: clampedTime,
             lastActiveAt: new Date().toISOString(),
           },
+        })
+      },
+
+      // Echo mode actions
+      activateEchoMode: (
+        startLineIndex: number,
+        endLineIndex: number,
+        startTime: number,
+        endTime: number
+      ) => {
+        set({
+          echoModeActive: true,
+          echoStartLineIndex: startLineIndex,
+          echoEndLineIndex: endLineIndex,
+          echoStartTime: startTime,
+          echoEndTime: endTime,
+        })
+      },
+
+      deactivateEchoMode: () => {
+        set({
+          echoModeActive: false,
+          echoStartLineIndex: -1,
+          echoEndLineIndex: -1,
+          echoStartTime: -1,
+          echoEndTime: -1,
+        })
+      },
+
+      updateEchoRegion: (
+        startLineIndex: number,
+        endLineIndex: number,
+        startTime: number,
+        endTime: number
+      ) => {
+        set({
+          echoStartLineIndex: startLineIndex,
+          echoEndLineIndex: endLineIndex,
+          echoStartTime: startTime,
+          echoEndTime: endTime,
         })
       },
     }),

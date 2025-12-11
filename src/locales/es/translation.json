@@ -227,7 +227,19 @@
         },
         "localNote": "Nota: La transcripción del modelo local mostrará el progreso y puede tardar varios minutos para archivos de audio largos.",
         "confirm": "Iniciar Transcripción"
-      }
+      },
+      "activateEchoMode": "Activar Modo Eco",
+      "deactivateEchoMode": "Desactivar Modo Eco",
+      "exitEchoMode": "Salir del Modo Eco",
+      "expandEchoForward": "Expandir hacia adelante",
+      "expandEchoBackward": "Expandir hacia atrás",
+      "shrinkEchoForward": "Reducir hacia adelante",
+      "shrinkEchoBackward": "Reducir hacia atrás",
+      "shadowReading": "Lectura en Sombra",
+      "shadowReadingHint": "Grabe usted mismo hablando junto con el segmento. Coincida con la velocidad y la entonación. Presione R para iniciar/detener.",
+      "showPitchContour": "Mostrar Contorno de Tono",
+      "record": "Grabar",
+      "stopRecording": "Detener"
     }
   },
   "vocabulary": {

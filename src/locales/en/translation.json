@@ -227,7 +227,19 @@
         },
         "localNote": "Note: Local model transcription will show progress and may take several minutes for long audio files.",
         "confirm": "Start Transcription"
-      }
+      },
+      "activateEchoMode": "Activate Echo Mode",
+      "deactivateEchoMode": "Deactivate Echo Mode",
+      "exitEchoMode": "Exit Echo Mode",
+      "expandEchoForward": "Expand forward",
+      "expandEchoBackward": "Expand backward",
+      "shrinkEchoForward": "Shrink forward",
+      "shrinkEchoBackward": "Shrink backward",
+      "shadowReading": "Shadow Reading",
+      "shadowReadingHint": "Record yourself speaking along with the segment. Match the speed and intonation. Press R to start/stop.",
+      "showPitchContour": "Show Pitch Contour",
+      "record": "Record",
+      "stopRecording": "Stop"
     }
   },
   "vocabulary": {

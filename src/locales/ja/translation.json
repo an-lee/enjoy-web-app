@@ -227,7 +227,19 @@
         },
         "localNote": "注意：ローカルモデルの文字起こしは進行状況を表示し、長い音声ファイルには数分かかる場合があります。",
         "confirm": "文字起こしを開始"
-      }
+      },
+      "activateEchoMode": "シャドーイングモードを有効化",
+      "deactivateEchoMode": "シャドーイングモードを無効化",
+      "exitEchoMode": "シャドーイングモードを終了",
+      "expandEchoForward": "前方に拡張",
+      "expandEchoBackward": "後方に拡張",
+      "shrinkEchoForward": "前方に縮小",
+      "shrinkEchoBackward": "後方に縮小",
+      "shadowReading": "シャドーイング",
+      "shadowReadingHint": "セグメントに合わせて自分を録音してください。速度とイントネーションを合わせてください。Rキーで開始/停止します。",
+      "showPitchContour": "ピッチ輪郭を表示",
+      "record": "録音",
+      "stopRecording": "停止"
     }
   },
   "vocabulary": {
