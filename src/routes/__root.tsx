@@ -284,10 +284,10 @@ function RootComponent() {
                 </div>
               </div>
             </SidebarInset>
+            {/* Global Player - renders in mini or expanded mode */}
+            {isHydrated && !isLoginPage && <PlayerContainer />}
           </SidebarProvider>
         )}
-          {/* Global Player - renders in mini or expanded mode */}
-          {isHydrated && !isLoginPage && <PlayerContainer />}
 
           {/* Hotkeys Help Modal */}
           <HotkeysHelpModal

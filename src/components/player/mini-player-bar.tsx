@@ -13,6 +13,8 @@ import { Slider } from '@/components/ui/slider'
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
 import { useDisplayTime } from './player-container'
+import { useSidebar } from '@/components/ui/sidebar'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 // ============================================================================
 // Types
@@ -33,6 +35,8 @@ interface MiniPlayerBarProps {
 export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBarProps) {
   const { t } = useTranslation()
   const displayTime = useDisplayTime()
+  const isMobile = useIsMobile()
+  const { state: sidebarState, open: sidebarOpen } = useSidebar()
 
   // Player state
   const { currentSession, isPlaying, expand, hide } = usePlayerStore()
@@ -54,13 +58,25 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
       ? (displayTime / currentSession.duration) * 100
       : 0
 
+  // Calculate left offset based on sidebar state
+  // On mobile, sidebar is hidden, so no offset needed
+  // On desktop, offset by sidebar width when sidebar is open and expanded
+  // When sidebar is collapsed (offcanvas mode), it's completely hidden, so no offset
+  const leftOffset = isMobile
+    ? 'left-0'
+    : sidebarOpen && sidebarState === 'expanded'
+    ? 'left-[var(--sidebar-width)]'
+    : 'left-0'
+
   return (
     <div
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-50',
+        'fixed bottom-0 right-0 z-50',
+        leftOffset,
         'bg-background/95 backdrop-blur-lg border-t',
         'shadow-[0_-2px_10px_rgba(0,0,0,0.08)]',
         'animate-in slide-in-from-bottom duration-300',
+        'transition-[left] duration-200 ease-linear',
         className
       )}
     >
