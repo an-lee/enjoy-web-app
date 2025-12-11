@@ -225,6 +225,27 @@ export function useRetranscribe() {
         // Save transcript
         await createTranscript.mutateAsync(transcriptInput)
 
+        // Update video/audio language if detected language differs
+        if (detectedLanguage) {
+          if (currentSession.mediaType === 'video') {
+            const video = await db.videos.get(currentSession.mediaId)
+            if (video && video.language !== detectedLanguage) {
+              await db.videos.update(currentSession.mediaId, {
+                language: detectedLanguage,
+                updatedAt: new Date().toISOString(),
+              })
+            }
+          } else {
+            const audio = await db.audios.get(currentSession.mediaId)
+            if (audio && audio.language !== detectedLanguage) {
+              await db.audios.update(currentSession.mediaId, {
+                language: detectedLanguage,
+                updatedAt: new Date().toISOString(),
+              })
+            }
+          }
+        }
+
         setProgress(null)
         setProgressPercent(null)
         setIsTranscribing(false)
