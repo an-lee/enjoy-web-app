@@ -1,5 +1,5 @@
 /**
- * FullPlayer - Expanded player view for language learning practice
+ * ExpandedPlayer - Expanded player view for language learning practice
  *
  * Modern, minimal design with learning-focused controls:
  * - Row 1: Progress bar with time labels
@@ -24,20 +24,20 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { usePlayerStore } from '@/stores/player'
-import { useDisplayTime } from './global-player'
+import { useDisplayTime } from './player-container'
 import { TranscriptDisplay } from './transcript'
 
 // ============================================================================
 // Logger
 // ============================================================================
 
-const log = createLogger({ name: 'FullPlayer' })
+const log = createLogger({ name: 'ExpandedPlayer' })
 
 // ============================================================================
 // Types
 // ============================================================================
 
-interface FullPlayerProps {
+interface ExpandedPlayerProps {
   className?: string
   /** Whether media is loading */
   isLoading?: boolean
@@ -172,14 +172,14 @@ function SpeedPopover({ playbackRate, onPlaybackRateChange }: SpeedPopoverProps)
 // Component
 // ============================================================================
 
-export function FullPlayer({
+export function ExpandedPlayer({
   className,
   isLoading,
   error,
   isVideo,
   onSeek,
   onTogglePlay,
-}: FullPlayerProps) {
+}: ExpandedPlayerProps) {
   const { t } = useTranslation()
   const displayTime = useDisplayTime()
 
@@ -237,7 +237,7 @@ export function FullPlayer({
     log.info('Echo mode')
   }
 
-  // Note: Keyboard shortcuts are handled by PlayerHotkeys component in GlobalPlayer
+  // Note: Keyboard shortcuts are handled by PlayerHotkeys component in PlayerContainer
 
   if (!currentSession) return null
 

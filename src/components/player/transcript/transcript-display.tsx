@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useDisplayTime } from '../global-player'
+import { useDisplayTime } from '../player-container'
 import { useTranscriptDisplay } from './use-transcript-display'
 import type {
   TranscriptDisplayProps,

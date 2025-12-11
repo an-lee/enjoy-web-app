@@ -2,9 +2,9 @@
  * Player components
  */
 
-export { GlobalPlayer, useDisplayTime } from './global-player'
+export { PlayerContainer, useDisplayTime } from './player-container'
 export { MiniPlayerBar } from './mini-player-bar'
-export { FullPlayer } from './full-player'
+export { ExpandedPlayer } from './expanded-player'
 export { PlayerHotkeys } from './player-hotkeys'
 export { ContinueLearningButton } from './continue-learning-button'
 export { ProgressBar } from './shared/progress-bar'

@@ -7,7 +7,7 @@
 
 import { useAppHotkey } from '@/components/hotkeys'
 import { usePlayerStore } from '@/stores/player'
-import { useDisplayTime } from './global-player'
+import { useDisplayTime } from './player-container'
 
 interface PlayerHotkeysProps {
   onTogglePlay: () => void

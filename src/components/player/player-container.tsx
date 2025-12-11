@@ -1,5 +1,5 @@
 /**
- * GlobalPlayer - Global player container that manages player modes and media playback
+ * PlayerContainer - Global player container that manages player modes and media playback
  *
  * This component should be placed in the root layout to enable
  * media playback across all pages.
@@ -15,14 +15,14 @@ import { usePlayerStore } from '@/stores/player'
 import { db } from '@/db'
 import { createLogger } from '@/lib/utils'
 import { MiniPlayerBar } from './mini-player-bar'
-import { FullPlayer } from './full-player'
+import { ExpandedPlayer } from './expanded-player'
 import { PlayerHotkeys } from './player-hotkeys'
 
 // ============================================================================
 // Logger
 // ============================================================================
 
-const log = createLogger({ name: 'Player' })
+const log = createLogger({ name: 'PlayerContainer' })
 
 // ============================================================================
 // Time Display Store (separate from main store to avoid re-renders)
@@ -54,7 +54,7 @@ export function useDisplayTime() {
 // Component
 // ============================================================================
 
-export function GlobalPlayer() {
+export function PlayerContainer() {
   const mode = usePlayerStore((state) => state.mode)
   const currentSession = usePlayerStore((state) => state.currentSession)
   const isPlaying = usePlayerStore((state) => state.isPlaying)
@@ -318,7 +318,7 @@ export function GlobalPlayer() {
 
       {/* Full player - shown in expanded mode */}
       {mode === 'expanded' && currentSession && (
-        <FullPlayer
+        <ExpandedPlayer
           isLoading={isLoading}
           error={error}
           isVideo={isVideo}

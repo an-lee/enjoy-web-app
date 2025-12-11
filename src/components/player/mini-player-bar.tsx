@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
-import { useDisplayTime } from './global-player'
+import { useDisplayTime } from './player-container'
 
 // ============================================================================
 // Types

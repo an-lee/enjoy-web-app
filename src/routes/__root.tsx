@@ -25,7 +25,7 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
-import { GlobalPlayer } from '@/components/player'
+import { PlayerContainer } from '@/components/player'
 import { AppHotkeysProvider, HotkeysHelpModal, useAppHotkey } from '@/components/hotkeys'
 import { useAuthStore, usePlayerStore } from '@/stores'
 
@@ -287,7 +287,7 @@ function RootComponent() {
           </SidebarProvider>
         )}
           {/* Global Player - renders in mini or expanded mode */}
-          {isHydrated && !isLoginPage && <GlobalPlayer />}
+          {isHydrated && !isLoginPage && <PlayerContainer />}
 
           {/* Hotkeys Help Modal */}
           <HotkeysHelpModal
