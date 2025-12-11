@@ -13,6 +13,12 @@
 
 import type { TTSTranscript, TTSTranscriptItem } from '../types'
 import { isSentenceBoundary } from './multilingual-segmenter'
+import {
+  detectAbbreviationsEnhanced,
+  detectEntitiesWithCompromise,
+  isPositionInEntity,
+  type EntityPosition,
+} from './compromise-helper'
 
 /**
  * Raw word timing data from TTS providers
@@ -124,6 +130,19 @@ export function convertToTranscriptFormat(
     return { timeline: [] }
   }
 
+  // For English text, use Compromise to enhance detection
+  const isEnglish = language?.startsWith('en') ?? false
+  let entities: EntityPosition[] = []
+
+  if (isEnglish) {
+    try {
+      entities = detectEntitiesWithCompromise(text)
+    } catch (error) {
+      // If Compromise fails, continue without entity detection
+      console.warn('Compromise entity detection failed, continuing without it:', error)
+    }
+  }
+
   // Convert raw timings to milliseconds and enrich with metadata
   const words: WordWithMetadata[] = rawTimings.map((raw, index) => {
     const start = Math.round(raw.startTime * 1000)
@@ -144,8 +163,26 @@ export function convertToTranscriptFormat(
     // Get word position in text for sentence boundary detection
     const wordPosition = getWordPositionInText(text, wordText, index)
 
-    // Check if this is an abbreviation (word ends with period and is in abbreviation list)
-    const isAbbreviation = isAbbreviationWord(wordText, punctuationAfter)
+    // Check if this is an abbreviation
+    // For English, use enhanced detection with Compromise
+    let isAbbreviation = false
+    if (isEnglish && wordPosition !== undefined) {
+      // Use Compromise-enhanced detection for English
+      isAbbreviation = detectAbbreviationsEnhanced(
+        text,
+        wordText,
+        COMMON_ABBREVIATIONS
+      )
+    } else {
+      // Use manual detection for other languages
+      isAbbreviation = isAbbreviationWord(wordText, punctuationAfter)
+    }
+
+    // Check if this word is part of an entity (person, place, organization)
+    // Avoid breaking in the middle of entity names
+    // Note: This information is used in segmentWords function
+    const isInEntity = wordPosition !== undefined &&
+      isPositionInEntity(wordPosition, entities)
 
     // Check if this word is a number (contains digits and is primarily numeric)
     // Examples: "3.14", "2024", "1,000" but not "3rd", "1st", "2nd"
@@ -198,6 +235,7 @@ export function convertToTranscriptFormat(
       isAbbreviation,
       isNumber,
       isSentenceEnd,
+      isInEntity,
     }
   })
 
@@ -448,7 +486,7 @@ function shouldBreakAtPosition(
 /**
  * Find the best break point within a segment that's too long
  * Looks for punctuation or pauses in the last few words
- * Avoids breaking at abbreviations
+ * Avoids breaking at abbreviations and entities
  */
 function findBestBreakPointInSegment(
   segment: WordWithMetadata[]

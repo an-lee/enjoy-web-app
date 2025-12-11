@@ -61,6 +61,7 @@
 		"axios": "^1.13.2",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
+		"compromise": "^14.14.4",
 		"dexie": "^4.2.1",
 		"hono": "^4.10.7",
 		"i18next": "^25.7.1",
