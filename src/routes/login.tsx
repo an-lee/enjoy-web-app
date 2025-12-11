@@ -175,8 +175,8 @@ function LoginPage() {
 
   // Handle login button click - redirect to main site
   const handleLogin = () => {
-    const MAIN_SITE_URL =
-      import.meta.env.VITE_MAIN_SITE_URL || 'https://enjoy.bot'
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.API_BASE_URL
+    log.debug('API_BASE_URL:', API_BASE_URL)
 
     // Generate and store state for CSRF protection
     const state = generateState()
@@ -191,7 +191,7 @@ function LoginPage() {
     }
 
     // Build the main site login URL with parameters
-    const loginUrl = new URL(`${MAIN_SITE_URL}/login`)
+    const loginUrl = new URL(`${API_BASE_URL}/login`)
     loginUrl.searchParams.set('return_to', callbackUrl.toString())
     loginUrl.searchParams.set('state', state)
 
