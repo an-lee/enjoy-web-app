@@ -24,7 +24,7 @@
   ```
 
 ### 数据处理流程
-项目已经实现了 `convertToTranscriptFormat` 函数（`src/ai/utils/transcript-segmentation.ts`），用于：
+项目已经实现了 `convertToTranscriptFormat` 函数（`src/ai/utils/transcript-segmentation/index.ts`），用于：
 1. 将 word-level chunks 转换为 segment -> words 的嵌套结构
 2. 智能分段（基于停顿、标点、词数等）
 3. 生成符合 `TranscriptLine` 格式的时间线数据
