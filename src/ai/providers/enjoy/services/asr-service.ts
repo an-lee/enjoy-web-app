@@ -8,6 +8,8 @@
 import { getEnjoyClient } from '../client'
 import type { AIServiceResponse, ASRResponse } from '@/ai/types'
 import { AIServiceType, AIProvider } from '@/ai/types'
+import { convertToTranscriptFormat } from '@/ai/utils/transcript-segmentation'
+import type { RawWordTiming } from '@/ai/utils/transcript-segmentation'
 
 /**
  * Transcribe speech to text
@@ -66,41 +68,41 @@ export async function transcribe(
 
     const cloudflareResult = result as CloudflareResult
 
-    // Convert segments to timeline format
-    // segments are the main timeline, words are nested timeline within each segment
-    const timeline = cloudflareResult.segments
-      ? cloudflareResult.segments.map((seg) => {
-          // Convert segment times from seconds to milliseconds
-          const start = Math.round(seg.start * 1000)
-          const end = Math.round(seg.end * 1000)
-          const duration = end - start
+    // Extract all words from segments and convert to RawWordTiming format
+    // Use intelligent segmentation instead of Cloudflare's segments
+    const allWords: RawWordTiming[] = cloudflareResult.segments
+      ? cloudflareResult.segments
+          .flatMap((seg) => seg.words || [])
+          .map((w) => ({
+            text: w.word,
+            startTime: w.start, // seconds (convertToTranscriptFormat expects seconds)
+            endTime: w.end, // seconds
+          }))
+      : []
 
-          // Convert words to nested timeline if available
-          const wordTimeline = seg.words
-            ? seg.words.map((w) => ({
-                text: w.word,
-                start: Math.round(w.start * 1000), // Convert seconds to milliseconds
-                duration: Math.round((w.end - w.start) * 1000), // Convert seconds to milliseconds
-              }))
-            : undefined
+    // Use intelligent segmentation for better follow-along reading
+    // This considers pauses, punctuation, word count, and meaning groups
+    const detectedLanguage = cloudflareResult.transcription_info?.language || language
+    const transcript = convertToTranscriptFormat(
+      cloudflareResult.text,
+      allWords,
+      detectedLanguage
+    )
 
-          return {
-            text: seg.text || '',
-            start,
-            duration,
-            timeline: wordTimeline, // Nested timeline for words
-          }
-        })
-      : undefined
+    // Convert TTSTranscript to ASRResponse format
+    const timeline = transcript.timeline.map((item) => ({
+      text: item.text,
+      start: item.start, // Already in milliseconds
+      duration: item.duration, // Already in milliseconds
+      timeline: item.timeline, // Nested word timeline
+    }))
 
     // Convert segments for backward compatibility (flat format)
-    const segments = cloudflareResult.segments
-      ? cloudflareResult.segments.map((seg) => ({
-          text: seg.text || '',
-          start: Math.round(seg.start * 1000), // Convert seconds to milliseconds
-          end: Math.round(seg.end * 1000), // Convert seconds to milliseconds
-        }))
-      : undefined
+    const segments = timeline.map((item) => ({
+      text: item.text,
+      start: item.start,
+      end: item.start + item.duration,
+    }))
 
     return {
       success: true,
