@@ -58,6 +58,7 @@ export const asrService = {
             return {
               text: result.text,
               segments: result.segments,
+              timeline: result.timeline,
               language: result.language,
             }
           },

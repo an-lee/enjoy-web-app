@@ -189,11 +189,13 @@ export function useRetranscribe() {
           throw new Error(asrResult.error?.message || 'ASR transcription failed')
         }
 
-        const { text, segments, language: detectedLanguage } = asrResult.data
+        const { text, segments, timeline: asrTimeline, language: detectedLanguage } = asrResult.data
 
         // If no segments, create a single segment from the full text
         let timeline: Array<{ text: string; start: number; duration: number }>
-        if (!segments || segments.length === 0) {
+        if (asrTimeline && asrTimeline.length > 0) {
+          timeline = asrTimeline
+        } else if (!segments || segments.length === 0) {
           // Fallback: create a single segment for the entire duration
           // We don't have duration info, so we'll use a placeholder
           timeline = [

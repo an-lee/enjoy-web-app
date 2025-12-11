@@ -9,6 +9,8 @@ import { getASRWorker } from '../workers/worker-manager'
 import { audioBlobToFloat32Array } from '../utils/audio'
 import { DEFAULT_ASR_MODEL } from '../constants'
 import type { LocalASRResult } from '../types'
+import { convertToTranscriptFormat } from '../../../utils/transcript-segmentation'
+import type { TranscriptLine } from '@/types/db/transcript'
 
 /**
  * Transcribe audio using local ASR model
@@ -78,16 +80,48 @@ export async function transcribe(
         clearTimeout(timeout)
         worker.removeEventListener('message', messageHandler)
 
-        // Process chunks into segments if available
-        const segments = data.chunks?.map((chunk: any) => ({
+        // Process chunks: chunks are word-level timestamps
+        const wordChunks = data.chunks || []
+
+        // Legacy segments format (for backward compatibility)
+        const segments = wordChunks.map((chunk: any) => ({
           text: chunk.text || '',
           start: chunk.timestamp?.[0] || 0,
           end: chunk.timestamp?.[1] || 0,
         }))
 
+        // Convert word chunks to segment + word nested structure using intelligent segmentation
+        // Convert ASR chunks format to RawWordTiming format (times in seconds)
+        const rawTimings = wordChunks.map((chunk: any) => ({
+          text: chunk.text || '',
+          startTime: chunk.timestamp?.[0] || 0,
+          endTime: chunk.timestamp?.[1] || 0,
+        }))
+
+        // Use intelligent segmentation to create segments with nested word timeline
+        const transcript = convertToTranscriptFormat(
+          data.text || '',
+          rawTimings,
+          language
+        )
+
+        // Convert TTSTranscriptItem[] to TranscriptLine[]
+        // Both formats are compatible, but we need to ensure type consistency
+        const timeline: TranscriptLine[] = transcript.timeline.map((item) => ({
+          text: item.text,
+          start: item.start,
+          duration: item.duration,
+          timeline: item.timeline?.map((word) => ({
+            text: word.text,
+            start: word.start,
+            duration: word.duration,
+          })),
+        }))
+
         resolve({
           text: data.text || '',
           segments,
+          timeline,
           language: language,
         })
       } else if (type === 'error' && responseTaskId === taskId) {

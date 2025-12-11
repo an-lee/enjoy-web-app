@@ -2,6 +2,8 @@
  * Local Model Result Types
  */
 
+import type { TranscriptLine } from '@/types/db/transcript'
+
 export interface LocalASRResult {
   text: string
   segments?: Array<{
@@ -9,6 +11,7 @@ export interface LocalASRResult {
     start: number
     end: number
   }>
+  timeline?: TranscriptLine[]
   language?: string
 }
 

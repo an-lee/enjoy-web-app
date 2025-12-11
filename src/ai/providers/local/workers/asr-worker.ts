@@ -5,6 +5,13 @@
 
 import { pipeline, env } from '@huggingface/transformers'
 import { DEFAULT_ASR_MODEL } from '../constants'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'ASRWorker' })
 
 // Configure transformers.js
 env.allowLocalModels = false
@@ -60,8 +67,10 @@ class ASRPipelineSingleton {
     this.progressCallback = progressCallback || null
 
     try {
+      log.info('Loading model:', modelName)
       this.instance = await pipeline('automatic-speech-recognition', modelName, {
         progress_callback: (progress: any) => {
+          log.debug('Model loading progress:', progress)
           if (this.progressCallback) {
             this.progressCallback(progress)
           }
@@ -74,6 +83,7 @@ class ASRPipelineSingleton {
       })
 
       this.loading = false
+      log.info('Model loaded successfully:', modelName)
 
       // Notify main thread that model is ready
       self.postMessage({
@@ -139,13 +149,47 @@ self.addEventListener('message', async (event: MessageEvent<ASRWorkerMessage>) =
         const transcriber = await ASRPipelineSingleton.getInstance(modelName)
 
         // Prepare options
-        const options: any = {}
+        const options: any = {
+          return_timestamps: 'word',
+        }
         if (data.language) {
           options.language = data.language
         }
 
+        // Debug: Log input information
+        log.debug('Transcription request:', {
+          model: modelName,
+          audioDataLength: data.audioData.length,
+          audioDataSampleRate: '16kHz (expected)',
+          audioDuration: `${(data.audioData.length / 16000).toFixed(2)}s`,
+          options,
+          taskId: data?.taskId,
+        })
+
         // Run transcription
         const result = await transcriber(data.audioData, options)
+
+        // Debug: Log raw result from model
+        log.debug('Raw transcription result:', {
+          text: result.text,
+          textLength: result.text?.length || 0,
+          chunks: result.chunks,
+          chunksCount: result.chunks?.length || 0,
+          fullResult: result, // Complete result object for inspection
+        })
+
+        // Debug: Log detailed chunk information
+        if (result.chunks && Array.isArray(result.chunks)) {
+          log.debug('Chunks details:', result.chunks.map((chunk: any, index: number) => ({
+            index,
+            text: chunk.text,
+            timestamp: chunk.timestamp,
+            start: chunk.timestamp?.[0],
+            end: chunk.timestamp?.[1],
+            duration: chunk.timestamp ? (chunk.timestamp[1] - chunk.timestamp[0]) : undefined,
+            fullChunk: chunk, // Complete chunk object
+          })))
+        }
 
         // Send result back to main thread
         self.postMessage({

@@ -10,7 +10,7 @@
 /**
  * Default ASR model (Whisper)
  */
-export const DEFAULT_ASR_MODEL = 'Xenova/whisper-tiny'
+export const DEFAULT_ASR_MODEL = 'onnx-community/whisper-tiny_timestamped'
 
 /**
  * Default Smart Translation model (Qwen3)
@@ -64,24 +64,24 @@ export interface ModelOption {
  */
 export const ASR_MODEL_OPTIONS: ModelOption[] = [
   {
-    value: 'Xenova/whisper-tiny',
-    label: 'Whisper Tiny',
-    description: 'Fastest, smallest model (~75MB). Good for low-end devices.',
+    value: 'onnx-community/whisper-tiny_timestamped',
+    label: 'Whisper Tiny (Timestamped)',
+    description: 'Fastest, smallest model (~75MB). Good for low-end devices. Word-level timestamps.',
     size: '~75MB',
     performance: 'low',
   },
   {
-    value: 'Xenova/whisper-small',
-    label: 'Whisper Small',
-    description: 'Balanced model (~290MB). Better accuracy than Tiny.',
-    size: '~290MB',
+    value: 'onnx-community/whisper-base_timestamped',
+    label: 'Whisper Base (Timestamped)',
+    description: 'Balanced model (~145MB). Better accuracy. Word-level timestamps.',
+    size: '~145MB',
     performance: 'medium',
   },
   {
-    value: 'Xenova/whisper-base',
-    label: 'Whisper Base',
-    description: 'Larger model (~290MB). Best accuracy, requires more resources.',
-    size: '~290MB',
+    value: 'onnx-community/whisper-small_timestamped',
+    label: 'Whisper Small (Timestamped)',
+    description: 'Larger model (~483MB). Best accuracy, requires more resources. Word-level timestamps.',
+    size: '~483MB',
     performance: 'high',
   },
 ]

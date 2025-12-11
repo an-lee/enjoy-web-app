@@ -56,6 +56,12 @@ export interface ASRResponse {
     start: number
     end: number
   }>
+  timeline?: Array<{
+    text: string
+    start: number
+    duration: number
+    timeline?: any[]
+  }>
   language?: string
   duration?: number
 }
