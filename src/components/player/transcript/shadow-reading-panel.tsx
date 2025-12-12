@@ -12,14 +12,6 @@ import { Icon } from '@iconify/react'
 import { cn, formatTime } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/player'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import type { EchoRegionAnalysisResult } from '@/lib/audio/echo-region-analysis'
 import {
   analyzeEchoRegionFromBlob,
@@ -44,7 +36,7 @@ export function ShadowReadingPanel({
   const duration = endTime - startTime
   const currentSession = usePlayerStore((s) => s.currentSession)
 
-  const [pitchOpen, setPitchOpen] = useState(false)
+  const [isPitchExpanded, setIsPitchExpanded] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [analysis, setAnalysis] = useState<EchoRegionAnalysisResult | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
@@ -97,7 +89,7 @@ export function ShadowReadingPanel({
   }
 
   useEffect(() => {
-    if (!pitchOpen) return
+    if (!isPitchExpanded) return
 
     let cancelled = false
     setStatus('loading')
@@ -115,7 +107,7 @@ export function ShadowReadingPanel({
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pitchOpen, cacheKey])
+  }, [isPitchExpanded, cacheKey])
 
   return (
     <div className="bg-shadow-panel text-shadow-panel-foreground border-t border-(--shadow-panel-foreground)/30 rounded-b-lg shadow-sm px-4 py-4 -mt-1">
@@ -134,81 +126,90 @@ export function ShadowReadingPanel({
       </div>
 
       {/* Content area */}
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         <p className="text-sm text-(--shadow-panel-foreground)/75 leading-relaxed">
           {t('player.transcript.shadowReadingHint')}
         </p>
 
-        {/* Pitch contour */}
-        <div className="flex items-center justify-center gap-3">
-          {/* Pitch contour button */}
-          <Dialog open={pitchOpen} onOpenChange={setPitchOpen}>
-            <DialogTrigger asChild>
-              <button
-                type="button"
-                className="btn-text cursor-pointer flex items-center gap-2 px-4 py-2 text-sm text-(--shadow-panel-foreground)/80 hover:text-shadow-panel-foreground hover:bg-(--shadow-panel-foreground)/10 rounded-md transition-all hover:border-(--shadow-panel-foreground)/30"
-              >
-                <Icon icon="lucide:activity" className="w-4 h-4" />
-                <span>{t('player.transcript.showPitchContour')}</span>
-              </button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>{t('player.transcript.pitchContourTitle')}</DialogTitle>
-                <DialogDescription>
-                  {t('player.transcript.pitchContourDescription')}
-                </DialogDescription>
-              </DialogHeader>
+        {/* Pitch contour section */}
+        <div className="border border-(--shadow-panel-foreground)/20 rounded-lg overflow-hidden">
+          {/* Pitch contour header - toggle button */}
+          <button
+            type="button"
+            onClick={() => setIsPitchExpanded(!isPitchExpanded)}
+            className={cn(
+              'w-full flex items-center justify-between gap-2 px-4 py-2.5',
+              'text-sm font-medium text-(--shadow-panel-foreground)/90',
+              'hover:bg-(--shadow-panel-foreground)/5 transition-colors',
+              'focus:outline-none focus:ring-2 focus:ring-(--shadow-panel-foreground)/20 focus:ring-offset-1'
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <Icon icon="lucide:activity" className="w-4 h-4" />
+              <span>{t('player.transcript.pitchContourTitle')}</span>
+            </div>
+            <Icon
+              icon="lucide:chevron-down"
+              className={cn(
+                'w-4 h-4 transition-transform duration-200',
+                isPitchExpanded && 'rotate-180'
+              )}
+            />
+          </button>
 
-              <div className="grid gap-3">
-                {status === 'loading' && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Icon icon="lucide:loader-2" className="h-4 w-4 animate-spin" />
-                    <span>{t('player.transcript.pitchContourLoading')}</span>
+          {/* Pitch contour content - collapsible */}
+          {isPitchExpanded && (
+            <div className="border-t border-(--shadow-panel-foreground)/10 px-4 py-3 bg-(--shadow-panel-foreground)/2">
+              {status === 'loading' && (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-(--shadow-panel-foreground)/70">
+                  <Icon icon="lucide:loader-2" className="h-4 w-4 animate-spin" />
+                  <span>{t('player.transcript.pitchContourLoading')}</span>
+                </div>
+              )}
+
+              {status === 'error' && (
+                <div className="grid gap-3 py-4">
+                  <div className="text-sm text-destructive">
+                    {t('player.transcript.pitchContourError')} {analysisError}
                   </div>
-                )}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={runAnalysis}
+                    className="w-fit"
+                  >
+                    {t('player.transcript.pitchContourRetry')}
+                  </Button>
+                </div>
+              )}
 
-                {status === 'error' && (
-                  <div className="grid gap-2">
-                    <div className="text-sm text-destructive">
-                      {t('player.transcript.pitchContourError')} {analysisError}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button type="button" variant="secondary" onClick={runAnalysis}>
-                        {t('player.transcript.pitchContourRetry')}
-                      </Button>
-                    </div>
+              {status === 'ready' && analysis && (
+                <div className="grid gap-3">
+                  <PitchContourChart
+                    data={analysis.points}
+                    className="w-full h-[200px]"
+                    labels={{
+                      waveform: t('player.transcript.pitchContourWaveform'),
+                      pitch: t('player.transcript.pitchContourPitch'),
+                      yourWaveform: t('player.transcript.pitchContourYourWaveform'),
+                      yourPitch: t('player.transcript.pitchContourYourPitch'),
+                    }}
+                  />
+                  <div className="text-xs text-(--shadow-panel-foreground)/60 text-center">
+                    {t('player.transcript.pitchContourMeta', {
+                      sampleRate: Math.round(analysis.meta.sampleRate),
+                      essentiaVersion: analysis.meta.essentiaVersion ?? 'unknown',
+                    })}
                   </div>
-                )}
-
-                {status === 'ready' && analysis && (
-                  <>
-                    <PitchContourChart
-                      data={analysis.points}
-                      className="w-full"
-                      labels={{
-                        waveform: t('player.transcript.pitchContourWaveform'),
-                        pitch: t('player.transcript.pitchContourPitch'),
-                        yourWaveform: t('player.transcript.pitchContourYourWaveform'),
-                        yourPitch: t('player.transcript.pitchContourYourPitch'),
-                      }}
-                    />
-                    <div className="text-xs text-muted-foreground">
-                      {t('player.transcript.pitchContourMeta', {
-                        sampleRate: Math.round(analysis.meta.sampleRate),
-                        essentiaVersion: analysis.meta.essentiaVersion ?? 'unknown',
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Record button */}
-        <div className="flex items-center justify-center gap-3">
-          {/* Record button - using shadow panel foreground color */}
+        <div className="flex items-center justify-center gap-3 pt-1">
           <button
             type="button"
             onClick={onRecord}

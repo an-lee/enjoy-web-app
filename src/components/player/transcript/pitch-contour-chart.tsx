@@ -3,6 +3,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Line,
   XAxis,
   YAxis,
 } from 'recharts'
@@ -14,6 +15,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
+import { useIsMobile } from '@/hooks/use-mobile'
 import type { EchoRegionSeriesPoint } from '@/lib/audio/echo-region-analysis'
 
 function formatSecondsShort(value: number) {
@@ -54,9 +56,20 @@ export function PitchContourChart({
     [data]
   )
 
+  const isMobile = useIsMobile()
+
+  // Adjust margins and axis widths for mobile
+  const margin = React.useMemo(
+    () => (isMobile ? { left: 0, right: 0, top: 10, bottom: 6 } : { left: 10, right: 16, top: 10, bottom: 6 }),
+    [isMobile]
+  )
+
+  const ampAxisWidth = isMobile ? 0 : 36
+  const pitchAxisWidth = isMobile ? 0 : 48
+
   return (
     <ChartContainer className={className} config={chartConfig}>
-      <AreaChart data={data} margin={{ left: 10, right: 16, top: 10, bottom: 6 }}>
+      <AreaChart data={data} margin={margin}>
         <CartesianGrid vertical={false} />
 
         <XAxis
@@ -64,7 +77,7 @@ export function PitchContourChart({
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          minTickGap={24}
+          minTickGap={isMobile ? 32 : 24}
           tickFormatter={(v) => formatSecondsShort(Number(v))}
         />
 
@@ -74,7 +87,8 @@ export function PitchContourChart({
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          width={36}
+          width={ampAxisWidth}
+          hide={isMobile}
         />
 
         <YAxis
@@ -84,7 +98,8 @@ export function PitchContourChart({
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          width={48}
+          width={pitchAxisWidth}
+          hide={isMobile}
           tickFormatter={(v) => (Number.isFinite(Number(v)) ? `${Math.round(Number(v))}` : '')}
         />
 
@@ -116,15 +131,13 @@ export function PitchContourChart({
         <ChartLegend content={<ChartLegendContent />} />
 
         {/* Waveform envelope (reference) - background layer, subtle */}
-        <Area
+        <Line
           yAxisId="amp"
           type="monotone"
           dataKey="ampRef"
-          baseValue={0}
           stroke="var(--color-ampRef)"
-          fill="var(--color-ampRef)"
-          fillOpacity={0.12}
-          strokeWidth={1}
+          strokeWidth={0.5}
+          strokeOpacity={0.25}
           isAnimationActive={false}
           dot={false}
           name="ampRef"
@@ -149,15 +162,13 @@ export function PitchContourChart({
         {hasUser && (
           <>
             {/* User waveform - background layer */}
-            <Area
+            <Line
               yAxisId="amp"
               type="monotone"
               dataKey="ampUser"
-              baseValue={0}
               stroke="var(--color-ampUser)"
-              fill="var(--color-ampUser)"
-              fillOpacity={0.1}
-              strokeWidth={1}
+              strokeWidth={0.5}
+              strokeOpacity={0.2}
               isAnimationActive={false}
               dot={false}
               name="ampUser"
