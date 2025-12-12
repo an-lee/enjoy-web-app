@@ -38,7 +38,7 @@ export function TranscriptLines({
   const { t } = useTranslation()
 
   return (
-    <div className="py-8 px-4 space-y-2">
+    <div className="py-4 px-3 space-y-1.5">
       {lines.map((line, lineArrayIndex) => {
         const isInEchoRegion =
           echoModeActive &&

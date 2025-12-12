@@ -31,7 +31,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
       type="button"
       onClick={onClick}
       className={cn(
-        'group w-full text-left px-6 py-4 transition-all duration-300',
+        'group w-full text-left px-4 py-2.5 transition-all duration-300',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         // Echo region - prominent orange/amber background (matching reference)
         // Only apply rounded corners to first and last lines
@@ -64,9 +64,9 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
       {/* Primary text */}
       <p
         className={cn(
-          'text-lg md:text-xl leading-relaxed transition-all duration-300',
+          'text-base md:text-lg leading-relaxed transition-all duration-300',
           isInEchoRegion && 'text-white font-medium',
-          !isInEchoRegion && line.isActive && 'text-primary font-medium text-xl md:text-2xl',
+          !isInEchoRegion && line.isActive && 'text-primary font-medium text-lg md:text-xl',
           !isInEchoRegion && !line.isActive && 'text-foreground'
         )}
       >
@@ -77,7 +77,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
       {showSecondary && line.secondary && (
         <p
           className={cn(
-            'mt-2 text-base leading-relaxed transition-all duration-300',
+            'mt-1.5 text-sm leading-relaxed transition-all duration-300',
             isInEchoRegion && 'text-white/80',
             !isInEchoRegion && line.isActive && 'text-primary/70',
             !isInEchoRegion && !line.isActive && 'text-muted-foreground'
