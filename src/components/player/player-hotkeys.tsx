@@ -8,6 +8,8 @@
 import { useAppHotkey } from '@/components/hotkeys'
 import { usePlayerStore } from '@/stores/player'
 import { useDisplayTime } from '@/hooks/use-display-time'
+import { useTranscriptDisplay } from './transcript/use-transcript-display'
+import { useEchoRegion } from './transcript/use-echo-region'
 
 interface PlayerHotkeysProps {
   onTogglePlay: () => void
@@ -22,9 +24,25 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     setVolume,
     collapse,
     mode,
+    echoModeActive,
+    activateEchoMode,
+    deactivateEchoMode,
+    playbackRate,
+    setPlaybackRate,
   } = usePlayerStore()
 
   const duration = currentSession?.duration ?? 0
+
+  // Get transcript data for line navigation
+  const { lines, activeLineIndex } = useTranscriptDisplay(displayTime)
+
+  // Get echo region handlers
+  const {
+    handleExpandEchoForward,
+    handleExpandEchoBackward,
+    handleShrinkEchoForward,
+    handleShrinkEchoBackward,
+  } = useEchoRegion(lines)
 
   // Play/Pause
   useAppHotkey(
@@ -109,6 +127,181 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
       onSeek(newTime)
     },
     { deps: [displayTime, onSeek], preventDefault: true }
+  )
+
+  // Play previous line (A)
+  useAppHotkey(
+    'player.prevLine',
+    (e) => {
+      e.preventDefault()
+      if (lines.length === 0 || activeLineIndex < 0) return
+
+      // Find previous line
+      const prevIndex = activeLineIndex > 0 ? activeLineIndex - 1 : 0
+      const prevLine = lines[prevIndex]
+      if (prevLine) {
+        onSeek(prevLine.startTimeSeconds)
+      }
+    },
+    { deps: [lines, activeLineIndex, onSeek], preventDefault: true }
+  )
+
+  // Play next line (D)
+  useAppHotkey(
+    'player.nextLine',
+    (e) => {
+      e.preventDefault()
+      if (lines.length === 0) return
+
+      // Find next line
+      const nextIndex = activeLineIndex < lines.length - 1 ? activeLineIndex + 1 : lines.length - 1
+      const nextLine = lines[nextIndex]
+      if (nextLine) {
+        onSeek(nextLine.startTimeSeconds)
+      }
+    },
+    { deps: [lines, activeLineIndex, onSeek], preventDefault: true }
+  )
+
+  // Replay current line (S)
+  useAppHotkey(
+    'player.replayLine',
+    (e) => {
+      e.preventDefault()
+      if (lines.length === 0 || activeLineIndex < 0) return
+
+      const currentLine = lines[activeLineIndex]
+      if (currentLine) {
+        onSeek(currentLine.startTimeSeconds)
+      }
+    },
+    { deps: [lines, activeLineIndex, onSeek], preventDefault: true }
+  )
+
+  // Toggle Echo mode (E)
+  useAppHotkey(
+    'player.toggleEchoMode',
+    (e) => {
+      e.preventDefault()
+      if (echoModeActive) {
+        deactivateEchoMode()
+      } else {
+        // Activate echo mode based on current active line
+        if (activeLineIndex >= 0 && activeLineIndex < lines.length) {
+          const line = lines[activeLineIndex]
+          activateEchoMode(
+            activeLineIndex,
+            activeLineIndex,
+            line.startTimeSeconds,
+            line.endTimeSeconds
+          )
+        }
+      }
+    },
+    { deps: [echoModeActive, activeLineIndex, lines, activateEchoMode, deactivateEchoMode], preventDefault: true }
+  )
+
+  // Toggle dictation mode (H) - placeholder for future implementation
+  useAppHotkey(
+    'player.toggleDictationMode',
+    (e) => {
+      e.preventDefault()
+      // TODO: Implement dictation mode toggle
+      console.log('Toggle dictation mode - not yet implemented')
+    },
+    { deps: [], preventDefault: true }
+  )
+
+  // Toggle recording (R) - placeholder for future implementation
+  useAppHotkey(
+    'player.toggleRecording',
+    (e) => {
+      e.preventDefault()
+      // TODO: Implement recording toggle
+      console.log('Toggle recording - not yet implemented')
+    },
+    { deps: [], preventDefault: true }
+  )
+
+  // Toggle pronunciation assessment (V) - placeholder for future implementation
+  useAppHotkey(
+    'player.toggleAssessment',
+    (e) => {
+      e.preventDefault()
+      // TODO: Implement assessment visibility toggle
+      console.log('Toggle pronunciation assessment - not yet implemented')
+    },
+    { deps: [], preventDefault: true }
+  )
+
+  // Slow down playback speed (<)
+  useAppHotkey(
+    'player.slowDown',
+    (e) => {
+      e.preventDefault()
+      const newRate = Math.max(0.25, playbackRate - 0.05)
+      setPlaybackRate(newRate)
+    },
+    { deps: [playbackRate, setPlaybackRate], preventDefault: true }
+  )
+
+  // Speed up playback speed (>)
+  useAppHotkey(
+    'player.speedUp',
+    (e) => {
+      e.preventDefault()
+      const newRate = Math.min(2, playbackRate + 0.05)
+      setPlaybackRate(newRate)
+    },
+    { deps: [playbackRate, setPlaybackRate], preventDefault: true }
+  )
+
+  // Expand Echo region backward ([) - only when echo mode is active
+  useAppHotkey(
+    'player.expandEchoBackward',
+    (e) => {
+      e.preventDefault()
+      if (echoModeActive) {
+        handleExpandEchoBackward()
+      }
+    },
+    { deps: [echoModeActive, handleExpandEchoBackward], preventDefault: true }
+  )
+
+  // Expand Echo region forward (]) - only when echo mode is active
+  useAppHotkey(
+    'player.expandEchoForward',
+    (e) => {
+      e.preventDefault()
+      if (echoModeActive) {
+        handleExpandEchoForward()
+      }
+    },
+    { deps: [echoModeActive, handleExpandEchoForward], preventDefault: true }
+  )
+
+  // Shrink Echo region backward ({) - only when echo mode is active
+  useAppHotkey(
+    'player.shrinkEchoBackward',
+    (e) => {
+      e.preventDefault()
+      if (echoModeActive) {
+        handleShrinkEchoBackward()
+      }
+    },
+    { deps: [echoModeActive, handleShrinkEchoBackward], preventDefault: true }
+  )
+
+  // Shrink Echo region forward (}) - only when echo mode is active
+  useAppHotkey(
+    'player.shrinkEchoForward',
+    (e) => {
+      e.preventDefault()
+      if (echoModeActive) {
+        handleShrinkEchoForward()
+      }
+    },
+    { deps: [echoModeActive, handleShrinkEchoForward], preventDefault: true }
   )
 
   return null
