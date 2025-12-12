@@ -117,7 +117,20 @@ export function TranscriptDisplay({
   } = useEchoRegion(lines)
 
   // Auto-scroll to active line
-  useAutoScroll(activeLineIndex, isPlaying, config, scrollAreaRef)
+  const scrollTargetIndex = useMemo(() => {
+    // In echo mode, we want playback UX to keep the echo region in view.
+    // If activeLineIndex is momentarily unknown (e.g., timestamp gaps), we fall back to the echo start line.
+    if (echoModeActive && echoStartLineIndex >= 0 && echoEndLineIndex >= echoStartLineIndex) {
+      if (activeLineIndex < 0) return echoStartLineIndex
+      if (activeLineIndex < echoStartLineIndex) return echoStartLineIndex
+      if (activeLineIndex > echoEndLineIndex) return echoEndLineIndex
+      return activeLineIndex
+    }
+
+    return activeLineIndex
+  }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, activeLineIndex])
+
+  useAutoScroll(scrollTargetIndex, isPlaying, config, scrollAreaRef)
 
   // Placeholder for recording (not implemented yet)
   const [isRecording, setIsRecording] = useState(false)

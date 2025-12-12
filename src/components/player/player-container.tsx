@@ -10,7 +10,7 @@
  * - expanded: Full-screen player
  */
 
-import { useRef, useCallback, useEffect, useState } from 'react'
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react'
 import { usePlayerStore } from '@/stores/player'
 import { db } from '@/db'
 import { createLogger } from '@/lib/utils'
@@ -18,6 +18,11 @@ import { setDisplayTime } from '@/hooks/use-display-time'
 import { MiniPlayerBar } from './mini-player-bar'
 import { ExpandedPlayer } from './expanded-player'
 import { PlayerHotkeys } from './player-hotkeys'
+import {
+  clampSeekTimeToEchoWindow,
+  decideEchoPlaybackTime,
+  normalizeEchoWindow,
+} from './echo/echo-constraints'
 
 // ============================================================================
 // Logger
@@ -37,6 +42,9 @@ export function PlayerContainer() {
   const playbackRate = usePlayerStore((state) => state.playbackRate)
   const setPlaying = usePlayerStore((state) => state.setPlaying)
   const updateProgress = usePlayerStore((state) => state.updateProgress)
+  const echoModeActive = usePlayerStore((state) => state.echoModeActive)
+  const echoStartTime = usePlayerStore((state) => state.echoStartTime)
+  const echoEndTime = usePlayerStore((state) => state.echoEndTime)
 
   const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null)
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
@@ -46,6 +54,15 @@ export function PlayerContainer() {
   const lastStoreUpdateRef = useRef(0)
   const renderCountRef = useRef(0)
   const hasRestoredPositionRef = useRef(false)
+
+  const echoWindow = useMemo(() => {
+    return normalizeEchoWindow({
+      active: echoModeActive,
+      startTimeSeconds: echoStartTime,
+      endTimeSeconds: echoEndTime,
+      durationSeconds: currentSession?.duration,
+    })
+  }, [echoModeActive, echoStartTime, echoEndTime, currentSession?.duration])
 
   // Log render
   renderCountRef.current++
@@ -167,6 +184,20 @@ export function PlayerContainer() {
     const el = e.currentTarget
     const time = el.currentTime
 
+    // Echo mode guard: keep playback strictly inside window.
+    // This is applied before throttled store updates so looping/clamping is immediate.
+    if (echoWindow) {
+      const decision = decideEchoPlaybackTime(time, echoWindow)
+      if (decision.kind !== 'ok') {
+        const nextTime = decision.timeSeconds
+        el.currentTime = nextTime
+        setDisplayTime(nextTime)
+        updateProgress(nextTime)
+        lastStoreUpdateRef.current = Date.now()
+        return
+      }
+    }
+
     // Update display time (external store, doesn't cause re-render of this component)
     setDisplayTime(time)
 
@@ -177,16 +208,30 @@ export function PlayerContainer() {
       log.debug('TimeUpdate (throttled):', time.toFixed(2))
       updateProgress(time)
     }
-  }, [updateProgress])
+  }, [updateProgress, echoWindow])
 
   const handleEnded = useCallback(() => {
     log.debug('Media ended')
+    const el = mediaRef.current
+    if (el && echoWindow) {
+      // If echo window reaches the end of the media, the browser may emit "ended".
+      // In echo mode we loop back to the start of the echo window instead of stopping.
+      el.currentTime = echoWindow.start
+      setDisplayTime(echoWindow.start)
+      updateProgress(echoWindow.start)
+      el.play().catch((err) => {
+        log.warn('Loop play() blocked after ended:', err)
+        setPlaying(false)
+      })
+      return
+    }
+
     setPlaying(false)
     // Save final progress
-    if (mediaRef.current) {
-      updateProgress(mediaRef.current.currentTime)
+    if (el) {
+      updateProgress(el.currentTime)
     }
-  }, [setPlaying, updateProgress])
+  }, [setPlaying, updateProgress, echoWindow])
 
   const handleCanPlay = useCallback((e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
     const el = e.currentTarget
@@ -205,8 +250,18 @@ export function PlayerContainer() {
       const session = usePlayerStore.getState().currentSession
       if (session && session.currentTime > 0) {
         log.debug('Restoring position to:', session.currentTime)
-        el.currentTime = session.currentTime
-        setDisplayTime(session.currentTime)
+        const state = usePlayerStore.getState()
+        const maybeWindow = normalizeEchoWindow({
+          active: state.echoModeActive,
+          startTimeSeconds: state.echoStartTime,
+          endTimeSeconds: state.echoEndTime,
+          durationSeconds: session.duration,
+        })
+        const restoredTime = maybeWindow
+          ? clampSeekTimeToEchoWindow(session.currentTime, maybeWindow)
+          : session.currentTime
+        el.currentTime = restoredTime
+        setDisplayTime(restoredTime)
       }
 
       // Sync volume and playback rate
@@ -230,11 +285,14 @@ export function PlayerContainer() {
   // Handle seek from progress bar
   const handleSeek = useCallback((time: number) => {
     if (mediaRef.current) {
-      mediaRef.current.currentTime = time
-      setDisplayTime(time)
-      updateProgress(time)
+      const nextTime = echoWindow
+        ? clampSeekTimeToEchoWindow(time, echoWindow)
+        : time
+      mediaRef.current.currentTime = nextTime
+      setDisplayTime(nextTime)
+      updateProgress(nextTime)
     }
-  }, [updateProgress])
+  }, [updateProgress, echoWindow])
 
   // Handle toggle play
   const handleTogglePlay = useCallback(() => {
@@ -268,6 +326,20 @@ export function PlayerContainer() {
       }
     }
   }, [updateProgress, currentSession?.mediaId])
+
+  // When echo mode becomes active / window changes, ensure current time is inside the window.
+  useEffect(() => {
+    const el = mediaRef.current
+    if (!el || !isReady || !echoWindow) return
+
+    const decision = decideEchoPlaybackTime(el.currentTime, echoWindow)
+    if (decision.kind === 'ok') return
+
+    el.currentTime = decision.timeSeconds
+    setDisplayTime(decision.timeSeconds)
+    updateProgress(decision.timeSeconds)
+    lastStoreUpdateRef.current = Date.now()
+  }, [echoWindow, isReady, updateProgress])
 
   // Don't render anything if no session and mode is hidden
   if (mode === 'hidden' && !currentSession) {

@@ -26,6 +26,15 @@ graph TD
 - **Audio Context**: Use Web Audio API for precise playback and recording.
 - **Latency**: Assessment is async. UI must show a "processing" state but allow the user to listen to their raw recording immediately while waiting for the score.
 
+## 1.1 Echo Mode (Transcript Region Loop)
+
+Echo mode constrains playback to a selected transcript time window:
+
+- **Window definition**: A contiguous transcript line range defines an echo window \([startTime, endTime]\) in seconds.
+- **Seek clamping**: Any seek request is clamped into the window \([startTime, endTime)\) (with a small epsilon to avoid landing exactly at the end).
+- **Playback looping**: During playback, if media time reaches the end of the window (accounting for timeupdate granularity), playback loops back to `startTime`.
+- **Robustness**: The window is validated and normalized (finite numbers, ordered start/end, optional duration clamping) to tolerate imperfect timestamps and browser precision.
+
 ## 2. Local ASR (Offline Transcription)
 
 To support free users and offline mode, we use **Transformers.js** to run OpenAI's Whisper model in the browser.

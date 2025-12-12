@@ -9,7 +9,7 @@ import type { TranscriptDisplayConfig } from './types'
 import { SCROLL_OFFSET } from './constants'
 
 export function useAutoScroll(
-  activeLineIndex: number,
+  scrollToLineIndex: number,
   isPlaying: boolean,
   config: TranscriptDisplayConfig,
   scrollAreaRef: React.RefObject<HTMLDivElement | null>
@@ -20,20 +20,20 @@ export function useAutoScroll(
     if (
       !config.autoScroll ||
       !isPlaying ||
-      activeLineIndex < 0 ||
-      activeLineIndex === lastScrolledIndexRef.current
+      scrollToLineIndex < 0 ||
+      scrollToLineIndex === lastScrolledIndexRef.current
     ) {
       return
     }
 
-    lastScrolledIndexRef.current = activeLineIndex
+    lastScrolledIndexRef.current = scrollToLineIndex
 
     // Find the active line element
     const scrollArea = scrollAreaRef.current
     if (!scrollArea) return
 
     const lineElements = scrollArea.querySelectorAll('[data-line-index]')
-    const activeLine = lineElements[activeLineIndex] as HTMLElement | undefined
+    const activeLine = lineElements[scrollToLineIndex] as HTMLElement | undefined
 
     if (!activeLine) return
 
@@ -62,6 +62,6 @@ export function useAutoScroll(
       top: Math.max(0, targetScrollTop),
       behavior: config.scrollBehavior,
     })
-  }, [activeLineIndex, isPlaying, config.autoScroll, config.scrollBehavior, config.scrollPosition, scrollAreaRef])
+  }, [scrollToLineIndex, isPlaying, config.autoScroll, config.scrollBehavior, config.scrollPosition, scrollAreaRef])
 }
 

@@ -87,7 +87,11 @@ export function TranscriptLines({
             <TranscriptLineItem
               line={line}
               showSecondary={showSecondary}
-              onClick={() => onLineClick(line.startTimeSeconds)}
+              onClick={
+                // In echo mode, we disable click-to-seek inside the echo region
+                // to allow reliable text selection.
+                isInEchoRegion ? undefined : () => onLineClick(line.startTimeSeconds)
+              }
               isInEchoRegion={isInEchoRegion}
               isEchoStart={isEchoStart}
               isEchoEnd={isEchoEnd}
