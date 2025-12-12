@@ -140,10 +140,18 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
       const prevIndex = activeLineIndex > 0 ? activeLineIndex - 1 : 0
       const prevLine = lines[prevIndex]
       if (prevLine) {
+        if (echoModeActive) {
+          activateEchoMode(
+            prevIndex,
+            prevIndex,
+            prevLine.startTimeSeconds,
+            prevLine.endTimeSeconds
+          )
+        }
         onSeek(prevLine.startTimeSeconds)
       }
     },
-    { deps: [lines, activeLineIndex, onSeek], preventDefault: true }
+    { deps: [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode], preventDefault: true }
   )
 
   // Play next line (D)
@@ -157,10 +165,18 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
       const nextIndex = activeLineIndex < lines.length - 1 ? activeLineIndex + 1 : lines.length - 1
       const nextLine = lines[nextIndex]
       if (nextLine) {
+        if (echoModeActive) {
+          activateEchoMode(
+            nextIndex,
+            nextIndex,
+            nextLine.startTimeSeconds,
+            nextLine.endTimeSeconds
+          )
+        }
         onSeek(nextLine.startTimeSeconds)
       }
     },
-    { deps: [lines, activeLineIndex, onSeek], preventDefault: true }
+    { deps: [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode], preventDefault: true }
   )
 
   // Replay current line (S)
@@ -172,10 +188,18 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
 
       const currentLine = lines[activeLineIndex]
       if (currentLine) {
+        if (echoModeActive) {
+          activateEchoMode(
+            activeLineIndex,
+            activeLineIndex,
+            currentLine.startTimeSeconds,
+            currentLine.endTimeSeconds
+          )
+        }
         onSeek(currentLine.startTimeSeconds)
       }
     },
-    { deps: [lines, activeLineIndex, onSeek], preventDefault: true }
+    { deps: [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode], preventDefault: true }
   )
 
   // Toggle Echo mode (E)

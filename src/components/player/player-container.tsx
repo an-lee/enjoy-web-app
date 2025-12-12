@@ -194,6 +194,10 @@ export function PlayerContainer() {
         setDisplayTime(nextTime)
         updateProgress(nextTime)
         lastStoreUpdateRef.current = Date.now()
+        // Echo mode should not auto-loop infinitely.
+        // When reaching the end, rewind to start and pause.
+        el.pause()
+        setPlaying(false)
         return
       }
     }
@@ -208,21 +212,19 @@ export function PlayerContainer() {
       log.debug('TimeUpdate (throttled):', time.toFixed(2))
       updateProgress(time)
     }
-  }, [updateProgress, echoWindow])
+  }, [updateProgress, echoWindow, setPlaying])
 
   const handleEnded = useCallback(() => {
     log.debug('Media ended')
     const el = mediaRef.current
     if (el && echoWindow) {
       // If echo window reaches the end of the media, the browser may emit "ended".
-      // In echo mode we loop back to the start of the echo window instead of stopping.
+      // In echo mode, we rewind to the start of the echo window and pause.
       el.currentTime = echoWindow.start
       setDisplayTime(echoWindow.start)
       updateProgress(echoWindow.start)
-      el.play().catch((err) => {
-        log.warn('Loop play() blocked after ended:', err)
-        setPlaying(false)
-      })
+      el.pause()
+      setPlaying(false)
       return
     }
 

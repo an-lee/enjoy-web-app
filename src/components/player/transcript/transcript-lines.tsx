@@ -13,7 +13,7 @@ import type { TranscriptLineState } from './types'
 interface TranscriptLinesProps {
   lines: TranscriptLineState[]
   showSecondary: boolean
-  onLineClick: (startTimeSeconds: number) => void
+  onLineClick: (line: TranscriptLineState) => void
   echoModeActive: boolean
   echoStartLineIndex: number
   echoEndLineIndex: number
@@ -90,7 +90,7 @@ export function TranscriptLines({
               onClick={
                 // In echo mode, we disable click-to-seek inside the echo region
                 // to allow reliable text selection.
-                isInEchoRegion ? undefined : () => onLineClick(line.startTimeSeconds)
+                isInEchoRegion ? undefined : () => onLineClick(line)
               }
               isInEchoRegion={isInEchoRegion}
               isEchoStart={isEchoStart}

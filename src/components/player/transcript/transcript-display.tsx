@@ -30,6 +30,7 @@ import { DEFAULT_TRANSCRIPT_CONFIG } from './types'
 import type {
   TranscriptDisplayProps,
   TranscriptDisplayConfig,
+  TranscriptLineState,
 } from './types'
 
 // ============================================================================
@@ -67,6 +68,7 @@ export function TranscriptDisplay({
   const { t } = useTranslation()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const currentSession = usePlayerStore((state) => state.currentSession)
+  const activateEchoMode = usePlayerStore((state) => state.activateEchoMode)
 
   // Get real-time display time from the external store
   const currentTime = useDisplayTime()
@@ -157,10 +159,22 @@ export function TranscriptDisplay({
 
   // Handle line click
   const handleLineClick = useCallback(
-    (startTimeSeconds: number) => {
-      onLineClick?.(startTimeSeconds)
+    (line: TranscriptLineState) => {
+      // In echo mode, clicking outside the current region should still work:
+      // we move the echo region to the selected line (single-line window),
+      // then seek (PlayerContainer will enforce the updated window).
+      if (echoModeActive) {
+        activateEchoMode(
+          line.index,
+          line.index,
+          line.startTimeSeconds,
+          line.endTimeSeconds
+        )
+      }
+
+      onLineClick?.(line.startTimeSeconds)
     },
-    [onLineClick]
+    [onLineClick, echoModeActive, activateEchoMode]
   )
 
   // Loading state - only show if managing state internally
