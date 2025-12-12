@@ -71,7 +71,7 @@ export function ExpandedPlayerHeader({
   return (
     <header
       className={cn(
-        'shrink-0 flex items-center gap-2 px-4 h-14 border-b bg-background/95 backdrop-blur-sm',
+        'shrink-0 flex items-center justify-between gap-2 px-4 h-14 border-b bg-background/95 backdrop-blur-sm',
         availableTranscripts.length > 0 && 'md:grid md:grid-cols-[1fr_auto_1fr]'
       )}
     >
@@ -121,68 +121,6 @@ export function ExpandedPlayerHeader({
             />
           </div>
 
-          {/* Mobile: Drawer trigger button */}
-          <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="top">
-            <DrawerTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden shrink-0 h-9 w-9"
-              >
-                <Icon icon="lucide:settings" className="w-5 h-5" />
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="max-h-[60vh]">
-              <DrawerHeader>
-                <DrawerTitle>{t('player.transcript.title')}</DrawerTitle>
-              </DrawerHeader>
-              <div className="px-4 pb-4 space-y-4">
-                <div className="flex flex-col gap-4">
-                  <LanguageSelector
-                    label={t('player.transcript.primary')}
-                    value={primaryLanguage}
-                    options={languageOptions}
-                    onChange={setPrimaryLanguage}
-                    placeholder={t('player.transcript.selectLanguage')}
-                  />
-                  <LanguageSelector
-                    label={t('player.transcript.secondary')}
-                    value={secondaryLanguage}
-                    options={secondaryLanguageOptions}
-                    onChange={handleSecondaryChange}
-                    placeholder={t('player.transcript.selectLanguage')}
-                    allowNone
-                    onClear={handleClearSecondaryLanguage}
-                  />
-                </div>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => {
-                    setDrawerOpen(false)
-                    handleRetranscribeClick()
-                  }}
-                  disabled={isTranscribing || !currentSession}
-                  className={cn(
-                    'w-full',
-                    'disabled:opacity-50 disabled:cursor-not-allowed'
-                  )}
-                >
-                  {isTranscribing ? (
-                    <>
-                      <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin mr-2" />
-                      {retranscribeProgress || t('player.transcript.retranscribing')}
-                    </>
-                  ) : (
-                    <>
-                      <Icon icon="lucide:refresh-cw" className="w-4 h-4 mr-2" />
-                      {t('player.transcript.retranscribe')}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </DrawerContent>
-          </Drawer>
         </>
       )}
 
@@ -225,6 +163,70 @@ export function ExpandedPlayerHeader({
             </TooltipContent>
           </Tooltip>
         )}
+
+        {/* Mobile: Drawer trigger button */}
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="top">
+          <DrawerTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden shrink-0 h-9 w-9"
+            >
+              <Icon icon="lucide:settings" className="w-5 h-5" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent className="max-h-[60vh]">
+            <DrawerHeader>
+              <DrawerTitle>{t('player.transcript.title')}</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4 space-y-4">
+              <div className="flex flex-col gap-4">
+                <LanguageSelector
+                  label={t('player.transcript.primary')}
+                  value={primaryLanguage}
+                  options={languageOptions}
+                  onChange={setPrimaryLanguage}
+                  placeholder={t('player.transcript.selectLanguage')}
+                />
+                <LanguageSelector
+                  label={t('player.transcript.secondary')}
+                  value={secondaryLanguage}
+                  options={secondaryLanguageOptions}
+                  onChange={handleSecondaryChange}
+                  placeholder={t('player.transcript.selectLanguage')}
+                  allowNone
+                  onClear={handleClearSecondaryLanguage}
+                />
+              </div>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  setDrawerOpen(false)
+                  handleRetranscribeClick()
+                }}
+                disabled={isTranscribing || !currentSession}
+                className={cn(
+                  'w-full',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                {isTranscribing ? (
+                  <>
+                    <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin mr-2" />
+                    {retranscribeProgress || t('player.transcript.retranscribing')}
+                  </>
+                ) : (
+                  <>
+                    <Icon icon="lucide:refresh-cw" className="w-4 h-4 mr-2" />
+                    {t('player.transcript.retranscribe')}
+                  </>
+                )}
+              </Button>
+            </div>
+          </DrawerContent>
+        </Drawer>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
