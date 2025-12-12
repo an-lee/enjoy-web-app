@@ -97,6 +97,16 @@ export interface TranscriptDisplayProps {
   onLineClick?: (startTimeSeconds: number) => void
   /** Display configuration */
   config?: Partial<TranscriptDisplayConfig>
+  /** Transcript lines (if provided, component won't manage transcript state internally) */
+  lines?: TranscriptLineState[]
+  /** Active line index */
+  activeLineIndex?: number
+  /** Primary language */
+  primaryLanguage?: string | null
+  /** Secondary language */
+  secondaryLanguage?: string | null
+  /** Whether to show secondary transcript */
+  showSecondary?: boolean
 }
 
 /**

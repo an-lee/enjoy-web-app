@@ -24,7 +24,6 @@ import { useRetranscribe } from '@/hooks/use-retranscribe'
 import { useEchoRegion } from './use-echo-region'
 import { useAutoScroll } from './use-auto-scroll'
 import { ShadowReadingPanel } from './shadow-reading-panel'
-import { TranscriptHeader } from './transcript-header'
 import { TranscriptLines } from './transcript-lines'
 import { RetranscribeDialog } from './retranscribe-dialog'
 import { DEFAULT_TRANSCRIPT_CONFIG } from './types'
@@ -50,6 +49,12 @@ export function TranscriptDisplay({
   isPlaying,
   onLineClick,
   config: configOverrides,
+  // Optional props for external state management
+  lines: externalLines,
+  activeLineIndex: externalActiveLineIndex,
+  primaryLanguage: externalPrimaryLanguage,
+  secondaryLanguage: externalSecondaryLanguage,
+  showSecondary: externalShowSecondary,
 }: TranscriptDisplayProps) {
   const renderCountRef = useRef(0)
   renderCountRef.current++
@@ -75,17 +80,29 @@ export function TranscriptDisplay({
     }
   }, [configOverrides])
 
-  // Get transcript state
-  const {
-    lines,
-    activeLineIndex,
-    transcripts,
-    availableTranscripts,
-    setPrimaryLanguage,
-    setSecondaryLanguage,
-    primaryLanguage,
-    secondaryLanguage,
-  } = useTranscriptDisplay(currentTime)
+  // Use external props if provided, otherwise use internal state
+  const useExternalState = externalLines !== undefined
+  const internalTranscriptState = useTranscriptDisplay(currentTime)
+
+  const lines = useExternalState ? externalLines! : internalTranscriptState.lines
+  const activeLineIndex = useExternalState
+    ? externalActiveLineIndex ?? -1
+    : internalTranscriptState.activeLineIndex
+  const transcripts = useExternalState
+    ? { primary: null, secondary: null, isLoading: false, error: null }
+    : internalTranscriptState.transcripts
+  const availableTranscripts = useExternalState
+    ? []
+    : internalTranscriptState.availableTranscripts
+  const primaryLanguage = useExternalState
+    ? externalPrimaryLanguage ?? null
+    : internalTranscriptState.primaryLanguage
+  const secondaryLanguage = useExternalState
+    ? externalSecondaryLanguage ?? null
+    : internalTranscriptState.secondaryLanguage
+  const showSecondary = useExternalState
+    ? externalShowSecondary ?? false
+    : config.showSecondary && !!secondaryLanguage
 
   // Echo region management
   const {
@@ -109,7 +126,7 @@ export function TranscriptDisplay({
     setIsRecording((prev) => !prev)
   }, [])
 
-  // Retranscribe functionality
+  // Retranscribe functionality - only used if managing state internally
   const { retranscribe, isTranscribing, progress, progressPercent } = useRetranscribe()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
@@ -119,32 +136,11 @@ export function TranscriptDisplay({
   // Get media duration for limitations
   const mediaDuration = currentSession?.duration || 0
 
-  // Handle retranscribe with confirmation
-  const handleRetranscribeClick = useCallback(() => {
-    setShowConfirmDialog(true)
-  }, [])
-
+  // Handle retranscribe with confirmation - only if managing state internally
   const handleConfirmRetranscribe = useCallback(() => {
     setShowConfirmDialog(false)
     retranscribe(primaryLanguage || undefined)
   }, [retranscribe, primaryLanguage])
-
-  // Handle secondary language change
-  const handleSecondaryChange = useCallback(
-    (value: string) => {
-      if (value === 'none') {
-        setSecondaryLanguage(null)
-      } else {
-        setSecondaryLanguage(value)
-      }
-    },
-    [setSecondaryLanguage]
-  )
-
-  // Handle clear secondary language
-  const handleClearSecondaryLanguage = useCallback(() => {
-    setSecondaryLanguage(null)
-  }, [setSecondaryLanguage])
 
   // Handle line click
   const handleLineClick = useCallback(
@@ -154,8 +150,8 @@ export function TranscriptDisplay({
     [onLineClick]
   )
 
-  // Loading state
-  if (transcripts.isLoading) {
+  // Loading state - only show if managing state internally
+  if (!useExternalState && transcripts.isLoading) {
     return (
       <div
         className={cn(
@@ -174,8 +170,8 @@ export function TranscriptDisplay({
     )
   }
 
-  // Error state
-  if (transcripts.error) {
+  // Error state - only show if managing state internally
+  if (!useExternalState && transcripts.error) {
     return (
       <div
         className={cn(
@@ -192,8 +188,8 @@ export function TranscriptDisplay({
     )
   }
 
-  // Empty state - no transcripts available
-  if (availableTranscripts.length === 0) {
+  // Empty state - only show if managing state internally
+  if (!useExternalState && availableTranscripts.length === 0) {
     return (
       <div
         className={cn(
@@ -215,24 +211,31 @@ export function TranscriptDisplay({
     )
   }
 
+  // Empty state if no lines provided
+  if (lines.length === 0) {
+    return (
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center h-full text-center px-4',
+          className
+        )}
+      >
+        <Icon
+          icon="lucide:subtitles"
+          className="w-12 h-12 text-muted-foreground/40 mb-3"
+        />
+        <p className="text-sm text-muted-foreground">
+          {t('player.transcript.noTranscript')}
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className={cn('flex flex-col h-full', className)}>
-      {/* Header with language selectors and retranscribe button */}
-      <TranscriptHeader
-        primaryLanguage={primaryLanguage}
-        secondaryLanguage={secondaryLanguage}
-        availableTranscripts={availableTranscripts}
-        onPrimaryLanguageChange={setPrimaryLanguage}
-        onSecondaryLanguageChange={handleSecondaryChange}
-        onClearSecondaryLanguage={handleClearSecondaryLanguage}
-        onRetranscribe={handleRetranscribeClick}
-        isTranscribing={isTranscribing}
-        progress={progress}
-        hasCurrentSession={!!currentSession}
-      />
 
-      {/* Progress indicator for local model */}
-      {isTranscribing && asrConfig.provider === AIProvider.LOCAL && progressPercent !== null && (
+      {/* Progress indicator for local model - only if managing state internally */}
+      {!useExternalState && isTranscribing && asrConfig.provider === AIProvider.LOCAL && progressPercent !== null && (
         <div className="shrink-0 px-4 py-2 border-b bg-background/50">
           <div className="flex items-center gap-2 mb-1">
             <Icon icon="lucide:activity" className="w-3 h-3 text-primary" />
@@ -245,19 +248,21 @@ export function TranscriptDisplay({
         </div>
       )}
 
-      {/* Confirmation Dialog */}
-      <RetranscribeDialog
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        onConfirm={handleConfirmRetranscribe}
-        mediaDuration={mediaDuration}
-      />
+      {/* Confirmation Dialog - only if managing state internally */}
+      {!useExternalState && (
+        <RetranscribeDialog
+          open={showConfirmDialog}
+          onOpenChange={setShowConfirmDialog}
+          onConfirm={handleConfirmRetranscribe}
+          mediaDuration={mediaDuration}
+        />
+      )}
 
       {/* Transcript lines */}
       <ScrollArea ref={scrollAreaRef} className="flex-1">
         <TranscriptLines
           lines={lines}
-          showSecondary={config.showSecondary && !!secondaryLanguage}
+          showSecondary={showSecondary}
           onLineClick={handleLineClick}
           echoModeActive={echoModeActive}
           echoStartLineIndex={echoStartLineIndex}
