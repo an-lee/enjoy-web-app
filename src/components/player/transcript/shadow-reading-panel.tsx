@@ -1,8 +1,9 @@
 /**
  * ShadowReadingPanel Component
  *
- * Panel displayed at the bottom of transcript when echo mode is active.
+ * Panel displayed below Echo Region when echo mode is active.
  * Provides controls for shadow reading practice.
+ * Styled with soft purple tone to distinguish from Echo Region.
  */
 
 import { useTranslation } from 'react-i18next'
@@ -26,48 +27,48 @@ export function ShadowReadingPanel({
   const duration = endTime - startTime
 
   return (
-    <div className="shrink-0 bg-orange-950/30 border-t border-orange-800/50 shadow-lg">
+    <div className="bg-shadow-panel text-shadow-panel-foreground border-t border-(--shadow-panel-foreground)/30 rounded-b-lg shadow-sm px-4 py-4 -mt-1">
       {/* Header row */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-orange-800/30">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Icon icon="lucide:mic" className="w-5 h-5 text-orange-500" />
-          <h3 className="text-base font-semibold text-foreground">
+          <Icon icon="lucide:mic" className="w-5 h-5 text-shadow-panel-foreground" />
+          <h3 className="text-base font-semibold text-shadow-panel-foreground">
             {t('player.transcript.shadowReading')}
           </h3>
         </div>
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-sm text-(--shadow-panel-foreground)/70">
           <Icon icon="lucide:clock" className="w-4 h-4" />
           <span className="tabular-nums font-medium">{formatTime(duration)}</span>
         </div>
       </div>
 
       {/* Content area */}
-      <div className="px-6 py-4">
-        <p className="text-sm text-muted-foreground mb-5">
+      <div>
+        <p className="text-sm text-(--shadow-panel-foreground)/75 mb-4 leading-relaxed">
           {t('player.transcript.shadowReadingHint')}
         </p>
 
         {/* Controls row */}
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-3">
           {/* Pitch contour button */}
           <button
             type="button"
-            className="flex items-center gap-2 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-orange-900/20 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-(--shadow-panel-foreground)/80 hover:text-shadow-panel-foreground hover:bg-(--shadow-panel-foreground)/10 rounded-md transition-all border border-(--shadow-panel-foreground)/20 hover:border-(--shadow-panel-foreground)/30"
           >
             <Icon icon="lucide:activity" className="w-4 h-4" />
             <span>{t('player.transcript.showPitchContour')}</span>
           </button>
 
-          {/* Record button - prominent orange */}
+          {/* Record button - using shadow panel foreground color */}
           <button
             type="button"
             onClick={onRecord}
             className={cn(
-              'flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-medium transition-all',
-              'shadow-md hover:shadow-lg',
+              'flex items-center justify-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all',
+              'shadow-sm hover:shadow-md',
               isRecording
                 ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                : 'bg-orange-500 text-white hover:bg-orange-600'
+                : 'bg-shadow-panel-foreground text-shadow-panel hover:opacity-90'
             )}
           >
             <Icon

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
 import { EchoRegionControls } from './echo-region-controls'
+import { ShadowReadingPanel } from './shadow-reading-panel'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLinesProps {
@@ -21,6 +22,10 @@ interface TranscriptLinesProps {
   onExpandEchoBackward: () => void
   onShrinkEchoForward: () => void
   onShrinkEchoBackward: () => void
+  echoStartTime?: number
+  echoEndTime?: number
+  onRecord?: () => void
+  isRecording?: boolean
 }
 
 export function TranscriptLines({
@@ -34,6 +39,10 @@ export function TranscriptLines({
   onExpandEchoBackward,
   onShrinkEchoForward,
   onShrinkEchoBackward,
+  echoStartTime,
+  echoEndTime,
+  onRecord,
+  isRecording,
 }: TranscriptLinesProps) {
   const { t } = useTranslation()
 
@@ -99,15 +108,26 @@ export function TranscriptLines({
 
             {/* Echo region bottom controls - shown below the last line of echo region */}
             {isEchoEnd && echoModeActive && (
-              <EchoRegionControls
-                position="bottom"
-                onExpand={onExpandEchoForward}
-                onShrink={onShrinkEchoForward}
-                expandDisabled={echoEndLineIndex >= lines.length - 1}
-                shrinkDisabled={echoEndLineIndex <= echoStartLineIndex}
-                expandLabel={t('player.transcript.expandEchoForward')}
-                shrinkLabel={t('player.transcript.shrinkEchoForward')}
-              />
+              <>
+                <EchoRegionControls
+                  position="bottom"
+                  onExpand={onExpandEchoForward}
+                  onShrink={onShrinkEchoForward}
+                  expandDisabled={echoEndLineIndex >= lines.length - 1}
+                  shrinkDisabled={echoEndLineIndex <= echoStartLineIndex}
+                  expandLabel={t('player.transcript.expandEchoForward')}
+                  shrinkLabel={t('player.transcript.shrinkEchoForward')}
+                />
+                {/* Shadow Reading Panel - shown below echo region controls */}
+                {echoStartTime !== undefined && echoEndTime !== undefined && onRecord && (
+                  <ShadowReadingPanel
+                    startTime={echoStartTime}
+                    endTime={echoEndTime}
+                    onRecord={onRecord}
+                    isRecording={isRecording ?? false}
+                  />
+                )}
+              </>
             )}
           </div>
         )

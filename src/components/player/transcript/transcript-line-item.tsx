@@ -33,23 +33,23 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
     isInteractive && 'cursor-pointer',
     !isInteractive && 'cursor-text select-text',
     isInteractive &&
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-    // Echo region - prominent orange/amber background (matching reference)
+      'focus-visible:outline-none focus-visible:ring-none',
+    // Echo region - warm orange tone with subtle styling
     // Only apply rounded corners to first and last lines
     isInEchoRegion && [
-      'bg-orange-600/90 text-white',
+      'bg-[var(--echo-region)] text-[var(--echo-region-foreground)]',
+      'border-l-4 border-[var(--echo-region-foreground)]/50',
       isEchoStart && 'rounded-t-lg',
       isEchoEnd && 'rounded-b-lg',
       // If it's both start and end (single line), apply both corners
       isEchoStart && isEchoEnd && 'rounded-lg',
       // Remove hover effect for middle lines to maintain unified appearance
-      isEchoStart || isEchoEnd ? 'hover:bg-orange-600' : 'hover:bg-orange-600/95',
-      'shadow-md',
+      'shadow-sm',
       // Active line inside echo region should stand out from other echo lines
       line.isActive && [
-        'bg-orange-700/95',
-        'ring-2 ring-white/60',
-        'shadow-[0_0_24px_rgba(255,255,255,0.18)]',
+        'border-l-[var(--echo-region-foreground)]/70',
+        'font-bold',
+        'shadow-md',
       ],
     ],
     // Non-echo region styles
@@ -79,7 +79,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
         <p
           className={cn(
             'text-base md:text-lg leading-relaxed transition-all duration-300',
-            isInEchoRegion && 'text-white font-medium',
+            isInEchoRegion && 'text-echo-region-foreground',
             !isInEchoRegion && line.isActive && 'text-primary font-medium text-lg md:text-xl',
             !isInEchoRegion && !line.isActive && 'text-foreground'
           )}
@@ -92,7 +92,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
           <p
             className={cn(
               'mt-1.5 text-sm leading-relaxed transition-all duration-300',
-              isInEchoRegion && 'text-white/80',
+              isInEchoRegion && 'text-(--echo-region-foreground)/80',
               !isInEchoRegion && line.isActive && 'text-primary/70',
               !isInEchoRegion && !line.isActive && 'text-muted-foreground'
             )}
@@ -107,7 +107,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
       <p
         className={cn(
           'text-base md:text-lg leading-relaxed transition-all duration-300',
-          isInEchoRegion && 'text-white font-medium',
+          isInEchoRegion && 'text-echo-region-foreground',
           !isInEchoRegion && line.isActive && 'text-primary font-medium text-lg md:text-xl',
           !isInEchoRegion && !line.isActive && 'text-foreground'
         )}
@@ -120,7 +120,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
         <p
           className={cn(
             'mt-1.5 text-sm leading-relaxed transition-all duration-300',
-            isInEchoRegion && 'text-white/80',
+            isInEchoRegion && 'text-(--echo-region-foreground)/80',
             !isInEchoRegion && line.isActive && 'text-primary/70',
             !isInEchoRegion && !line.isActive && 'text-muted-foreground'
           )}

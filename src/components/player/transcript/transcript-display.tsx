@@ -23,7 +23,6 @@ import { useTranscriptDisplay } from './use-transcript-display'
 import { useRetranscribe } from '@/hooks/use-retranscribe'
 import { useEchoRegion } from './use-echo-region'
 import { useAutoScroll } from './use-auto-scroll'
-import { ShadowReadingPanel } from './shadow-reading-panel'
 import { TranscriptLines } from './transcript-lines'
 import { RetranscribeDialog } from './retranscribe-dialog'
 import { DEFAULT_TRANSCRIPT_CONFIG } from './types'
@@ -298,18 +297,12 @@ export function TranscriptDisplay({
           onExpandEchoBackward={handleExpandEchoBackward}
           onShrinkEchoForward={handleShrinkEchoForward}
           onShrinkEchoBackward={handleShrinkEchoBackward}
-        />
-      </ScrollArea>
-
-      {/* Shadow Reading Panel - shown when echo mode is active */}
-      {echoModeActive && echoRegionTimeRange ? (
-        <ShadowReadingPanel
-          startTime={echoRegionTimeRange.startTime}
-          endTime={echoRegionTimeRange.endTime}
-          onRecord={handleRecord}
+          echoStartTime={echoRegionTimeRange?.startTime}
+          echoEndTime={echoRegionTimeRange?.endTime}
+          onRecord={echoModeActive ? handleRecord : undefined}
           isRecording={isRecording}
         />
-      ) : null}
+      </ScrollArea>
     </div>
   )
 }
