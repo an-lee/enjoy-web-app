@@ -43,22 +43,25 @@ export function ShadowReadingPanel({
       </div>
 
       {/* Content area */}
-      <div>
-        <p className="text-sm text-(--shadow-panel-foreground)/75 mb-4 leading-relaxed">
+      <div className="grid gap-4">
+        <p className="text-sm text-(--shadow-panel-foreground)/75 leading-relaxed">
           {t('player.transcript.shadowReadingHint')}
         </p>
 
-        {/* Controls row */}
+        {/* Pitch contour */}
         <div className="flex items-center justify-center gap-3">
           {/* Pitch contour button */}
           <button
             type="button"
-            className="flex items-center gap-2 px-4 py-2 text-sm text-(--shadow-panel-foreground)/80 hover:text-shadow-panel-foreground hover:bg-(--shadow-panel-foreground)/10 rounded-md transition-all border border-(--shadow-panel-foreground)/20 hover:border-(--shadow-panel-foreground)/30"
+            className="btn-text cursor-pointer flex items-center gap-2 px-4 py-2 text-sm text-(--shadow-panel-foreground)/80 hover:text-shadow-panel-foreground hover:bg-(--shadow-panel-foreground)/10 rounded-md transition-all hover:border-(--shadow-panel-foreground)/30"
           >
             <Icon icon="lucide:activity" className="w-4 h-4" />
             <span>{t('player.transcript.showPitchContour')}</span>
           </button>
+        </div>
 
+        {/* Record button */}
+        <div className="flex items-center justify-center gap-3">
           {/* Record button - using shadow panel foreground color */}
           <button
             type="button"
