@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next'
+import { formatHotkey } from '@/lib/format-hotkey'
+import { useHotkeyBinding } from '@/stores/hotkeys'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import {
@@ -20,6 +22,8 @@ interface SpeedPopoverProps {
 export function SpeedPopover({ playbackRate, onPlaybackRateChange }: SpeedPopoverProps) {
   const { t } = useTranslation()
   const presets = [0.5, 0.75, 1, 1.25]
+  const slowDownKey = formatHotkey(useHotkeyBinding('player.slowDown'))
+  const speedUpKey = formatHotkey(useHotkeyBinding('player.speedUp'))
 
   return (
     <Popover>
@@ -31,7 +35,14 @@ export function SpeedPopover({ playbackRate, onPlaybackRateChange }: SpeedPopove
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
-        <TooltipContent side="top">{t('player.speed')}</TooltipContent>
+        <TooltipContent side="top">
+          {t('player.speed')}
+          {(slowDownKey || speedUpKey) && (
+            <span className="ml-2 text-muted-foreground">
+              ({slowDownKey}/{speedUpKey})
+            </span>
+          )}
+        </TooltipContent>
       </Tooltip>
       <PopoverContent className="w-56 p-3" side="top" align="center">
         <div className="flex flex-col gap-3">

@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn, formatTime } from '@/lib/utils'
+import { formatHotkey } from '@/lib/format-hotkey'
+import { useHotkeyBinding } from '@/stores/hotkeys'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import {
@@ -50,6 +52,14 @@ export function ExpandedPlayerControls({
 }: ExpandedPlayerControlsProps) {
   const { t } = useTranslation()
 
+  // Get hotkey bindings
+  const togglePlayKey = formatHotkey(useHotkeyBinding('player.togglePlay'))
+  const prevSegmentKey = formatHotkey(useHotkeyBinding('player.prevSegment'))
+  const nextSegmentKey = formatHotkey(useHotkeyBinding('player.nextSegment'))
+  const replaySegmentKey = formatHotkey(useHotkeyBinding('player.replaySegment'))
+  const echoModeKey = formatHotkey(useHotkeyBinding('player.toggleEchoMode'))
+  const dictationKey = formatHotkey(useHotkeyBinding('player.toggleDictationMode'))
+
   return (
     <footer className="shrink-0 bg-background border-t">
       <div className="max-w-3xl mx-auto px-4 py-4 md:px-6">
@@ -76,17 +86,25 @@ export function ExpandedPlayerControls({
           {/* Main controls - Left side */}
           <div className="flex items-center gap-1">
             {/* Play/Pause */}
-            <Button
-              variant="default"
-              size="icon"
-              className="h-12 w-11 rounded-full shadow-md"
-              onClick={onTogglePlay}
-            >
-              <Icon
-                icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
-                className={cn('w-6 h-5', !isPlaying && 'ml-0.5')}
-              />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="h-12 w-11 rounded-full shadow-md"
+                  onClick={onTogglePlay}
+                >
+                  <Icon
+                    icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
+                    className={cn('w-6 h-5', !isPlaying && 'ml-0.5')}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {t('hotkeys.togglePlay')}
+                {togglePlayKey && <span className="ml-2 text-muted-foreground">({togglePlayKey})</span>}
+              </TooltipContent>
+            </Tooltip>
 
             {/* Previous segment */}
             <Tooltip>
@@ -100,7 +118,10 @@ export function ExpandedPlayerControls({
                   <Icon icon="lucide:skip-back" className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{t('player.prevSegment')}</TooltipContent>
+              <TooltipContent side="top">
+                {t('player.prevSegment')}
+                {prevSegmentKey && <span className="ml-2 text-muted-foreground">({prevSegmentKey})</span>}
+              </TooltipContent>
             </Tooltip>
 
             {/* Next segment */}
@@ -115,7 +136,10 @@ export function ExpandedPlayerControls({
                   <Icon icon="lucide:skip-forward" className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{t('player.nextSegment')}</TooltipContent>
+              <TooltipContent side="top">
+                {t('player.nextSegment')}
+                {nextSegmentKey && <span className="ml-2 text-muted-foreground">({nextSegmentKey})</span>}
+              </TooltipContent>
             </Tooltip>
 
             {/* Replay current segment */}
@@ -130,7 +154,10 @@ export function ExpandedPlayerControls({
                   <Icon icon="lucide:repeat-1" className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{t('player.replaySegment')}</TooltipContent>
+              <TooltipContent side="top">
+                {t('player.replaySegment')}
+                {replaySegmentKey && <span className="ml-2 text-muted-foreground">({replaySegmentKey})</span>}
+              </TooltipContent>
             </Tooltip>
           </div>
 
@@ -148,7 +175,10 @@ export function ExpandedPlayerControls({
                   <Icon icon="lucide:pencil-line" className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{t('player.dictationMode')}</TooltipContent>
+              <TooltipContent side="top">
+                {t('player.dictationMode')}
+                {dictationKey && <span className="ml-2 text-muted-foreground">({dictationKey})</span>}
+              </TooltipContent>
             </Tooltip>
 
             {/* Echo/Shadowing mode */}
@@ -169,6 +199,7 @@ export function ExpandedPlayerControls({
               </TooltipTrigger>
               <TooltipContent side="top">
                 {echoModeActive ? t('player.transcript.exitEchoMode') : t('player.echoMode')}
+                {echoModeKey && <span className="ml-2 text-muted-foreground">({echoModeKey})</span>}
               </TooltipContent>
             </Tooltip>
 
