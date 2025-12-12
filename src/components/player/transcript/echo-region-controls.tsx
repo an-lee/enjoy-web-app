@@ -6,7 +6,7 @@
 
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
-import { formatHotkey } from '@/lib/format-hotkey'
+import { formatHotkeyAsKbd } from '@/lib/format-hotkey'
 import { useHotkeyBinding } from '@/stores/hotkeys'
 import {
   Tooltip,
@@ -34,11 +34,11 @@ export function EchoRegionControls({
   shrinkLabel,
 }: EchoRegionControlsProps) {
   // Get hotkey bindings based on position
-  const expandKey = formatHotkey(
-    useHotkeyBinding(position === 'top' ? 'player.expandEchoBackward' : 'player.expandEchoForward')
+  const expandKey = useHotkeyBinding(
+    position === 'top' ? 'player.expandEchoBackward' : 'player.expandEchoForward'
   )
-  const shrinkKey = formatHotkey(
-    useHotkeyBinding(position === 'top' ? 'player.shrinkEchoBackward' : 'player.shrinkEchoForward')
+  const shrinkKey = useHotkeyBinding(
+    position === 'top' ? 'player.shrinkEchoBackward' : 'player.shrinkEchoForward'
   )
 
   return (
@@ -62,9 +62,9 @@ export function EchoRegionControls({
               />
             </button>
           </TooltipTrigger>
-          <TooltipContent side={position === 'top' ? 'bottom' : 'top'}>
-            {expandLabel}
-            {expandKey && <span className="ml-2 text-muted-foreground">({expandKey})</span>}
+          <TooltipContent side={position === 'top' ? 'bottom' : 'top'} className="flex items-center gap-2">
+            <span>{expandLabel}</span>
+            {expandKey && formatHotkeyAsKbd(expandKey)}
           </TooltipContent>
         </Tooltip>
         <Tooltip>
@@ -81,9 +81,9 @@ export function EchoRegionControls({
               <Icon icon="lucide:minus" className="w-4 h-4" />
             </button>
           </TooltipTrigger>
-          <TooltipContent side={position === 'top' ? 'bottom' : 'top'}>
-            {shrinkLabel}
-            {shrinkKey && <span className="ml-2 text-muted-foreground">({shrinkKey})</span>}
+          <TooltipContent side={position === 'top' ? 'bottom' : 'top'} className="flex items-center gap-2">
+            <span>{shrinkLabel}</span>
+            {shrinkKey && formatHotkeyAsKbd(shrinkKey)}
           </TooltipContent>
         </Tooltip>
       </div>
