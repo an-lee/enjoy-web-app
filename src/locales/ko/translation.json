@@ -346,7 +346,7 @@
     "volumeUp": "볼륨 높이기",
     "volumeDown": "볼륨 낮추기",
     "toggleMute": "음소거 / 음소거 해제",
-    "collapse": "플레이어 접기",
+    "toggleExpand": "플레이어 확장/축소 전환",
     "replaySegment": "구간 다시 재생",
     "prevSegment": "이전 구간",
     "nextSegment": "다음 구간",

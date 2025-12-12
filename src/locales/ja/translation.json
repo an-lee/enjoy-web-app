@@ -346,7 +346,7 @@
     "volumeUp": "音量を上げる",
     "volumeDown": "音量を下げる",
     "toggleMute": "ミュート / ミュート解除",
-    "collapse": "プレーヤーを縮小",
+    "toggleExpand": "プレーヤーの展開/縮小を切り替え",
     "replaySegment": "セグメントを再生",
     "prevSegment": "前のセグメント",
     "nextSegment": "次のセグメント",

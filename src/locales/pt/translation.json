@@ -346,7 +346,7 @@
     "volumeUp": "Aumentar volume",
     "volumeDown": "Diminuir volume",
     "toggleMute": "Silenciar / Ativar som",
-    "collapse": "Minimizar reprodutor",
+    "toggleExpand": "Expandir/Minimizar reprodutor",
     "replaySegment": "Repetir segmento",
     "prevSegment": "Segmento anterior",
     "nextSegment": "Próximo segmento",

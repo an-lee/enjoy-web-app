@@ -346,7 +346,7 @@
     "volumeUp": "Lautstärke erhöhen",
     "volumeDown": "Lautstärke verringern",
     "toggleMute": "Stummschalten / Ton an",
-    "collapse": "Player minimieren",
+    "toggleExpand": "Player erweitern/minimieren",
     "replaySegment": "Segment wiederholen",
     "prevSegment": "Vorheriges Segment",
     "nextSegment": "Nächstes Segment",

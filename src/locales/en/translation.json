@@ -346,7 +346,7 @@
     "volumeUp": "Volume up",
     "volumeDown": "Volume down",
     "toggleMute": "Mute / Unmute",
-    "collapse": "Collapse player",
+    "toggleExpand": "Toggle player expand/collapse",
     "replaySegment": "Replay segment",
     "prevSegment": "Previous segment",
     "nextSegment": "Next segment",

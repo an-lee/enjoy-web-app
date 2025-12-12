@@ -346,7 +346,7 @@
     "volumeUp": "增大音量",
     "volumeDown": "减小音量",
     "toggleMute": "静音 / 取消静音",
-    "collapse": "收起播放器",
+    "toggleExpand": "切换播放器展开/收起",
     "replaySegment": "重播片段",
     "prevSegment": "上一片段",
     "nextSegment": "下一片段",

@@ -23,6 +23,7 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     volume,
     setVolume,
     collapse,
+    expand,
     mode,
     echoModeActive,
     activateEchoMode,
@@ -106,16 +107,18 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     { deps: [volume, setVolume], preventDefault: true }
   )
 
-  // Collapse player (only when expanded)
+  // Toggle player expand/collapse
   useAppHotkey(
-    'player.collapse',
+    'player.toggleExpand',
     (e) => {
       e.preventDefault()
       if (mode === 'expanded') {
         collapse()
+      } else if (mode === 'mini') {
+        expand()
       }
     },
-    { deps: [mode, collapse], preventDefault: true }
+    { deps: [mode, collapse, expand], preventDefault: true }
   )
 
   // Replay segment (go back 3 seconds)
