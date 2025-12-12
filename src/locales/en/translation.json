@@ -238,6 +238,17 @@
       "shadowReading": "Shadow Reading",
       "shadowReadingHint": "Record yourself speaking along with the segment. Match the speed and intonation. Press R to start/stop.",
       "showPitchContour": "Show Pitch Contour",
+      "pitchContourTitle": "Pitch contour",
+      "pitchContourDescription": "Visualize waveform and pitch for this echo region. Later you'll be able to overlay your recording for comparison.",
+      "pitchContourLoading": "Analyzing audio...",
+      "pitchContourError": "Could not analyze audio.",
+      "pitchContourRetry": "Retry",
+      "pitchContourNoMedia": "No media loaded.",
+      "pitchContourWaveform": "Waveform",
+      "pitchContourPitch": "Pitch (Hz)",
+      "pitchContourYourWaveform": "Your waveform",
+      "pitchContourYourPitch": "Your pitch (Hz)",
+      "pitchContourMeta": "Sample rate: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Record",
       "stopRecording": "Stop"
     }

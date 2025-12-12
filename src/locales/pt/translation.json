@@ -238,6 +238,17 @@
       "shadowReading": "Leitura em Sombra",
       "shadowReadingHint": "Grave-se falando junto com o segmento. Combine a velocidade e a entonação. Pressione R para iniciar/parar.",
       "showPitchContour": "Mostrar Contorno de Tom",
+      "pitchContourTitle": "Contorno de tom",
+      "pitchContourDescription": "Visualize a forma de onda e o tom desta região eco. Mais tarde, você poderá sobrepor sua gravação para comparar.",
+      "pitchContourLoading": "Analisando áudio...",
+      "pitchContourError": "Não foi possível analisar o áudio.",
+      "pitchContourRetry": "Tentar novamente",
+      "pitchContourNoMedia": "Nenhuma mídia carregada.",
+      "pitchContourWaveform": "Forma de onda",
+      "pitchContourPitch": "Tom (Hz)",
+      "pitchContourYourWaveform": "Sua forma de onda",
+      "pitchContourYourPitch": "Seu tom (Hz)",
+      "pitchContourMeta": "Taxa de amostragem: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Gravar",
       "stopRecording": "Parar"
     }

@@ -238,6 +238,17 @@
       "shadowReading": "Schattenlesen",
       "shadowReadingHint": "Nehmen Sie sich auf, während Sie mit dem Segment sprechen. Passen Sie Geschwindigkeit und Intonation an. Drücken Sie R zum Starten/Stoppen.",
       "showPitchContour": "Tonhöhenverlauf anzeigen",
+      "pitchContourTitle": "Tonhöhenverlauf",
+      "pitchContourDescription": "Visualisieren Sie Wellenform und Tonhöhe für diesen Echo-Abschnitt. Später können Sie Ihre Aufnahme zum Vergleich darüberlegen.",
+      "pitchContourLoading": "Audio wird analysiert...",
+      "pitchContourError": "Audio konnte nicht analysiert werden.",
+      "pitchContourRetry": "Erneut versuchen",
+      "pitchContourNoMedia": "Kein Medium geladen.",
+      "pitchContourWaveform": "Wellenform",
+      "pitchContourPitch": "Tonhöhe (Hz)",
+      "pitchContourYourWaveform": "Ihre Wellenform",
+      "pitchContourYourPitch": "Ihre Tonhöhe (Hz)",
+      "pitchContourMeta": "Abtastrate: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Aufnehmen",
       "stopRecording": "Stoppen"
     }

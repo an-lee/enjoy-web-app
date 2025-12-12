@@ -238,6 +238,17 @@
       "shadowReading": "シャドーイング",
       "shadowReadingHint": "セグメントに合わせて自分を録音してください。速度とイントネーションを合わせてください。Rキーで開始/停止します。",
       "showPitchContour": "ピッチ輪郭を表示",
+      "pitchContourTitle": "ピッチ輪郭",
+      "pitchContourDescription": "このエコー範囲の波形とピッチを可視化します。今後、録音を重ねて比較できるようになります。",
+      "pitchContourLoading": "音声を解析中...",
+      "pitchContourError": "音声を解析できませんでした。",
+      "pitchContourRetry": "再試行",
+      "pitchContourNoMedia": "メディアが読み込まれていません。",
+      "pitchContourWaveform": "波形",
+      "pitchContourPitch": "ピッチ (Hz)",
+      "pitchContourYourWaveform": "あなたの波形",
+      "pitchContourYourPitch": "あなたのピッチ (Hz)",
+      "pitchContourMeta": "サンプルレート: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "録音",
       "stopRecording": "停止"
     }

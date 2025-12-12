@@ -238,6 +238,17 @@
       "shadowReading": "섀도우 리딩",
       "shadowReadingHint": "세그먼트와 함께 말하기를 녹음하세요. 속도와 억양을 맞추세요. R 키를 눌러 시작/중지하세요.",
       "showPitchContour": "음조 윤곽 표시",
+      "pitchContourTitle": "음조 윤곽",
+      "pitchContourDescription": "이 에코 구간의 파형과 음높이를 시각화합니다. 추후에는 녹음을 겹쳐서 비교할 수 있습니다.",
+      "pitchContourLoading": "오디오 분석 중...",
+      "pitchContourError": "오디오를 분석할 수 없습니다.",
+      "pitchContourRetry": "다시 시도",
+      "pitchContourNoMedia": "미디어가 로드되지 않았습니다.",
+      "pitchContourWaveform": "파형",
+      "pitchContourPitch": "음높이 (Hz)",
+      "pitchContourYourWaveform": "내 파형",
+      "pitchContourYourPitch": "내 음높이 (Hz)",
+      "pitchContourMeta": "샘플 레이트: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "녹음",
       "stopRecording": "중지"
     }

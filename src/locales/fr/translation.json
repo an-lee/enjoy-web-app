@@ -238,6 +238,17 @@
       "shadowReading": "Lecture en Ombre",
       "shadowReadingHint": "Enregistrez-vous en parlant avec le segment. Correspondre à la vitesse et à l'intonation. Appuyez sur R pour démarrer/arrêter.",
       "showPitchContour": "Afficher le Contour de Hauteur",
+      "pitchContourTitle": "Contour de hauteur",
+      "pitchContourDescription": "Visualisez la forme d’onde et la hauteur pour cette région écho. Plus tard, vous pourrez superposer votre enregistrement pour comparer.",
+      "pitchContourLoading": "Analyse de l’audio...",
+      "pitchContourError": "Impossible d’analyser l’audio.",
+      "pitchContourRetry": "Réessayer",
+      "pitchContourNoMedia": "Aucun média chargé.",
+      "pitchContourWaveform": "Forme d’onde",
+      "pitchContourPitch": "Hauteur (Hz)",
+      "pitchContourYourWaveform": "Votre forme d’onde",
+      "pitchContourYourPitch": "Votre hauteur (Hz)",
+      "pitchContourMeta": "Fréquence d’échantillonnage : {{sampleRate}} Hz · Essentia : {{essentiaVersion}}",
       "record": "Enregistrer",
       "stopRecording": "Arrêter"
     }

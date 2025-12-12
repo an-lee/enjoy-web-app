@@ -238,6 +238,17 @@
       "shadowReading": "跟读练习",
       "shadowReadingHint": "跟随片段录音。匹配语速和语调。按 R 键开始/停止。",
       "showPitchContour": "显示音调轮廓",
+      "pitchContourTitle": "音调轮廓",
+      "pitchContourDescription": "可视化当前跟读片段的波形与音高，帮助你模仿语调与节奏。后续可将你的录音叠加对比。",
+      "pitchContourLoading": "正在分析音频…",
+      "pitchContourError": "无法分析音频。",
+      "pitchContourRetry": "重试",
+      "pitchContourNoMedia": "未加载媒体。",
+      "pitchContourWaveform": "波形",
+      "pitchContourPitch": "音高 (Hz)",
+      "pitchContourYourWaveform": "你的波形",
+      "pitchContourYourPitch": "你的音高 (Hz)",
+      "pitchContourMeta": "采样率：{{sampleRate}} Hz · Essentia：{{essentiaVersion}}",
       "record": "录音",
       "stopRecording": "停止"
     }
