@@ -9,7 +9,7 @@ export default defineConfig({
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
     }),
-  ],
+  ] as any,
   test: {
     globals: true,
     environment: 'jsdom',
