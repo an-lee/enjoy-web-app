@@ -181,6 +181,8 @@ export {
   getEchoSessionById,
   getEchoSessionsByTarget,
   getLatestEchoSessionByTarget,
+  getActiveEchoSessionByTarget,
+  getOrCreateActiveEchoSession,
   getEchoSessionsBySyncStatus,
   getEchoSessionsByLanguage,
   getActiveEchoSessions,

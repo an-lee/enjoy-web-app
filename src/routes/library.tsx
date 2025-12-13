@@ -125,9 +125,17 @@ function Library() {
   // Player store
   const loadMedia = usePlayerStore((state) => state.loadMedia)
 
-  const handlePlay = useCallback((item: LibraryMedia) => {
-    loadMedia(item)
-  }, [loadMedia])
+  const handlePlay = useCallback(
+    async (item: LibraryMedia) => {
+      try {
+        await loadMedia(item)
+      } catch (error) {
+        log.error('Failed to load media:', error)
+        toast.error(t('library.loadFailed'))
+      }
+    },
+    [loadMedia, t]
+  )
 
   const handleToggleStar = useCallback(
     async (item: LibraryMedia) => {

@@ -49,6 +49,90 @@ export async function getLatestEchoSessionByTarget(
   )[0]
 }
 
+/**
+ * Get the active (not completed) session for a target media
+ * Ensures only one active session exists per media
+ * If multiple active sessions exist, returns the most recent one
+ */
+export async function getActiveEchoSessionByTarget(
+  targetType: TargetType,
+  targetId: string
+): Promise<EchoSession | undefined> {
+  const sessions = await getEchoSessionsByTarget(targetType, targetId)
+  const activeSessions = sessions.filter((s) => !s.completedAt)
+
+  if (activeSessions.length === 0) return undefined
+
+  // If multiple active sessions exist, return the most recent one
+  // (This shouldn't happen in normal operation, but handle it gracefully)
+  return activeSessions.sort(
+    (a, b) =>
+      new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime()
+  )[0]
+}
+
+/**
+ * Get or create an active EchoSession for a target media
+ * Ensures only one active session exists per media:
+ * - If an active session exists, returns it
+ * - If only completed sessions exist, creates a new one
+ * - If no sessions exist, creates a new one
+ *
+ * @param targetType - 'Video' or 'Audio'
+ * @param targetId - Video.id or Audio.id
+ * @param language - BCP 47 language code
+ * @param initialValues - Optional initial values for new session
+ * @returns The active EchoSession ID
+ */
+export async function getOrCreateActiveEchoSession(
+  targetType: TargetType,
+  targetId: string,
+  language: string,
+  initialValues?: {
+    currentTime?: number
+    playbackRate?: number
+    volume?: number
+    transcriptId?: string
+  }
+): Promise<string> {
+  // Try to get existing active session
+  const activeSession = await getActiveEchoSessionByTarget(targetType, targetId)
+
+  if (activeSession) {
+    // Update lastActiveAt to mark it as recently used
+    const now = new Date().toISOString()
+    await db.echoSessions.update(activeSession.id, {
+      lastActiveAt: now,
+      updatedAt: now,
+    })
+    return activeSession.id
+  }
+
+  // No active session exists, create a new one
+  const now = new Date().toISOString()
+  const id = generateEchoSessionId()
+
+  const session: EchoSession = {
+    id,
+    targetType,
+    targetId,
+    language,
+    currentTime: initialValues?.currentTime ?? 0,
+    playbackRate: initialValues?.playbackRate ?? 1,
+    volume: initialValues?.volume ?? 1,
+    transcriptId: initialValues?.transcriptId,
+    recordingsCount: 0,
+    recordingsDuration: 0,
+    startedAt: now,
+    lastActiveAt: now,
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  await db.echoSessions.put(session)
+  return id
+}
+
 export async function getEchoSessionsBySyncStatus(
   status: SyncStatus
 ): Promise<EchoSession[]> {
@@ -184,6 +268,8 @@ export const echoSessionRepository = {
   getById: getEchoSessionById,
   getByTarget: getEchoSessionsByTarget,
   getLatestByTarget: getLatestEchoSessionByTarget,
+  getActiveByTarget: getActiveEchoSessionByTarget,
+  getOrCreateActive: getOrCreateActiveEchoSession,
   getBySyncStatus: getEchoSessionsBySyncStatus,
   getByLanguage: getEchoSessionsByLanguage,
   getActive: getActiveEchoSessions,

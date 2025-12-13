@@ -1,16 +1,29 @@
 /**
- * Player Store - Global playback state management with session persistence
+ * Player Store - Global playback state management with EchoSession persistence
  *
  * Manages:
  * - Current playback session (media, progress, state)
- * - Recent session for "continue learning" feature
  * - Playback settings (volume, speed)
  * - Player UI state (expanded/collapsed)
+ * - Automatic persistence via EchoSession in database
  */
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { LibraryMedia } from '@/hooks/queries'
+import {
+  getOrCreateActiveEchoSession,
+  updateEchoSessionProgress,
+  getEchoSessionById,
+} from '@/db'
+import type { TargetType } from '@/types/db'
+import { createLogger } from '@/lib/utils'
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const log = createLogger({ name: 'player-store' })
 
 // ============================================================================
 // Types
@@ -20,6 +33,8 @@ export type PlayerMode = 'hidden' | 'mini' | 'expanded'
 
 /**
  * Playback session - represents a media being played
+ * This is a lightweight in-memory representation
+ * Full state is persisted in EchoSession database
  */
 export interface PlaybackSession {
   // Media info
@@ -60,8 +75,8 @@ interface PlayerState {
   /** Current active playback session */
   currentSession: PlaybackSession | null
 
-  /** Most recent session for "continue learning" feature */
-  recentSession: PlaybackSession | null
+  /** Current EchoSession ID (for database persistence) */
+  currentEchoSessionId: string | null
 
   // ============================================================================
   // Playback Settings (persisted)
@@ -99,10 +114,10 @@ interface PlayerState {
   // Actions
   // ============================================================================
 
-  /** Load a media item and start playback */
-  loadMedia: (media: LibraryMedia) => void
+  /** Load a media item and start playback (async - loads/creates EchoSession) */
+  loadMedia: (media: LibraryMedia) => Promise<void>
 
-  /** Update playback progress */
+  /** Update playback progress (with debounced save to database) */
   updateProgress: (currentTime: number, segmentIndex?: number) => void
 
   /** Set playing state */
@@ -111,14 +126,8 @@ interface PlayerState {
   /** Toggle play/pause */
   togglePlay: () => void
 
-  /** Save current session as recent (for resume later) */
-  saveSession: () => void
-
   /** Clear current session */
   clearSession: () => void
-
-  /** Resume the recent session */
-  resumeSession: () => void
 
   /** Expand player to full mode */
   expand: () => void
@@ -129,23 +138,23 @@ interface PlayerState {
   /** Hide player completely */
   hide: () => void
 
-  /** Set volume (0-1) */
+  /** Set volume (0-1) and save to database */
   setVolume: (volume: number) => void
 
-  /** Set playback rate (0.25-2) */
+  /** Set playback rate (0.25-2) and save to database */
   setPlaybackRate: (rate: number) => void
 
   /** Set repeat mode */
   setRepeatMode: (mode: 'none' | 'single' | 'segment') => void
 
-  /** Seek to a specific time */
+  /** Seek to a specific time and save to database */
   seekTo: (time: number) => void
 
   // ============================================================================
   // Echo Mode Actions
   // ============================================================================
 
-  /** Activate echo mode with a region */
+  /** Activate echo mode with a region and save to database */
   activateEchoMode: (
     startLineIndex: number,
     endLineIndex: number,
@@ -156,13 +165,45 @@ interface PlayerState {
   /** Deactivate echo mode */
   deactivateEchoMode: () => void
 
-  /** Update echo region boundaries */
+  /** Update echo region boundaries and save to database */
   updateEchoRegion: (
     startLineIndex: number,
     endLineIndex: number,
     startTime: number,
     endTime: number
   ) => void
+}
+
+// ============================================================================
+// Debounce utility for progress updates
+// ============================================================================
+
+let progressUpdateTimer: ReturnType<typeof setTimeout> | null = null
+const PROGRESS_UPDATE_DEBOUNCE_MS = 2000 // 2 seconds
+
+function debouncedSaveProgress(echoSessionId: string, currentTime: number) {
+  if (progressUpdateTimer) {
+    clearTimeout(progressUpdateTimer)
+  }
+
+  progressUpdateTimer = setTimeout(async () => {
+    try {
+      await updateEchoSessionProgress(echoSessionId, {
+        currentTime,
+      })
+      log.debug('Progress saved to EchoSession', { echoSessionId, currentTime })
+    } catch (error) {
+      log.error('Failed to save progress to EchoSession:', error)
+    }
+  }, PROGRESS_UPDATE_DEBOUNCE_MS)
+}
+
+// ============================================================================
+// Helper: Convert media type to TargetType
+// ============================================================================
+
+function mediaTypeToTargetType(mediaType: 'audio' | 'video'): TargetType {
+  return mediaType === 'audio' ? 'Audio' : 'Video'
 }
 
 // ============================================================================
@@ -178,7 +219,7 @@ export const usePlayerStore = create<PlayerState>()(
 
       // Initial session state
       currentSession: null,
-      recentSession: null,
+      currentEchoSessionId: null,
 
       // Initial playback settings
       volume: 1,
@@ -193,40 +234,88 @@ export const usePlayerStore = create<PlayerState>()(
       echoEndTime: -1,
 
       // Actions
-      loadMedia: (media: LibraryMedia) => {
-        const now = new Date().toISOString()
+      loadMedia: async (media: LibraryMedia) => {
+        try {
+          const targetType = mediaTypeToTargetType(media.type)
+          const state = get()
 
-        // Save current session as recent before loading new media
-        const { currentSession } = get()
-        if (currentSession && currentSession.mediaId !== media.id) {
-          set({ recentSession: { ...currentSession, lastActiveAt: now } })
+          // Get or create active EchoSession for this media
+          const echoSessionId = await getOrCreateActiveEchoSession(
+            targetType,
+            media.id,
+            media.language,
+            {
+              currentTime: 0, // Will be overridden if session exists
+              playbackRate: state.playbackRate,
+              volume: state.volume,
+            }
+          )
+
+          // Load the EchoSession to get persisted state
+          const echoSession = await getEchoSessionById(echoSessionId)
+          if (!echoSession) {
+            log.error('Failed to load EchoSession after creation', {
+              echoSessionId,
+            })
+            return
+          }
+
+          // Create PlaybackSession from EchoSession
+          const newSession: PlaybackSession = {
+            mediaId: media.id,
+            mediaType: media.type,
+            mediaTitle: media.title,
+            thumbnailUrl: media.thumbnailUrl,
+            duration: media.duration,
+            currentTime: echoSession.currentTime,
+            currentSegmentIndex: 0, // Not persisted, always start at 0
+            language: echoSession.language,
+            transcriptId: echoSession.transcriptId,
+            startedAt: echoSession.startedAt,
+            lastActiveAt: echoSession.lastActiveAt,
+          }
+
+          // Restore playback settings from EchoSession
+          const restoredPlaybackRate = echoSession.playbackRate ?? state.playbackRate
+          const restoredVolume = echoSession.volume ?? state.volume
+
+          // Restore echo mode state if exists
+          const hasEchoRegion =
+            echoSession.echoStartTime !== undefined &&
+            echoSession.echoEndTime !== undefined &&
+            echoSession.echoStartTime >= 0 &&
+            echoSession.echoEndTime >= 0
+
+          set({
+            currentSession: newSession,
+            currentEchoSessionId: echoSessionId,
+            mode: 'expanded',
+            isPlaying: true,
+            playbackRate: restoredPlaybackRate,
+            volume: restoredVolume,
+            echoModeActive: hasEchoRegion,
+            echoStartTime: echoSession.echoStartTime ?? -1,
+            echoEndTime: echoSession.echoEndTime ?? -1,
+            // Note: echoStartLineIndex and echoEndLineIndex are not persisted
+            // They will be recalculated when echo mode is activated
+          })
+
+          log.debug('Media loaded with EchoSession', {
+            mediaId: media.id,
+            echoSessionId,
+            currentTime: echoSession.currentTime,
+          })
+        } catch (error) {
+          log.error('Failed to load media:', error)
+          // Don't update state on error - keep previous session
         }
-
-        // Create new session
-        const newSession: PlaybackSession = {
-          mediaId: media.id,
-          mediaType: media.type,
-          mediaTitle: media.title,
-          thumbnailUrl: media.thumbnailUrl,
-          duration: media.duration,
-          currentTime: 0,
-          currentSegmentIndex: 0,
-          language: media.language,
-          startedAt: now,
-          lastActiveAt: now,
-        }
-
-        set({
-          currentSession: newSession,
-          mode: 'expanded',
-          isPlaying: true,
-        })
       },
 
       updateProgress: (currentTime: number, segmentIndex?: number) => {
-        const { currentSession } = get()
+        const { currentSession, currentEchoSessionId } = get()
         if (!currentSession) return
 
+        // Update in-memory state immediately
         set({
           currentSession: {
             ...currentSession,
@@ -235,6 +324,11 @@ export const usePlayerStore = create<PlayerState>()(
             lastActiveAt: new Date().toISOString(),
           },
         })
+
+        // Debounced save to database
+        if (currentEchoSessionId) {
+          debouncedSaveProgress(currentEchoSessionId, currentTime)
+        }
       },
 
       setPlaying: (playing: boolean) => {
@@ -245,48 +339,24 @@ export const usePlayerStore = create<PlayerState>()(
         set((state) => ({ isPlaying: !state.isPlaying }))
       },
 
-      saveSession: () => {
-        const { currentSession } = get()
-        if (currentSession) {
-          set({
-            recentSession: {
-              ...currentSession,
-              lastActiveAt: new Date().toISOString(),
-            },
-          })
-        }
-      },
-
       clearSession: () => {
-        const { currentSession } = get()
-        // Save to recent before clearing
-        if (currentSession) {
-          set({
-            recentSession: {
-              ...currentSession,
-              lastActiveAt: new Date().toISOString(),
-            },
-          })
+        // Clear debounce timer
+        if (progressUpdateTimer) {
+          clearTimeout(progressUpdateTimer)
+          progressUpdateTimer = null
         }
+
         set({
           currentSession: null,
+          currentEchoSessionId: null,
           mode: 'hidden',
           isPlaying: false,
+          echoModeActive: false,
+          echoStartLineIndex: -1,
+          echoEndLineIndex: -1,
+          echoStartTime: -1,
+          echoEndTime: -1,
         })
-      },
-
-      resumeSession: () => {
-        const { recentSession } = get()
-        if (recentSession) {
-          set({
-            currentSession: {
-              ...recentSession,
-              lastActiveAt: new Date().toISOString(),
-            },
-            mode: 'expanded',
-            isPlaying: true,
-          })
-        }
       },
 
       expand: () => {
@@ -304,32 +374,64 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       hide: () => {
-        // Save session before hiding
-        get().saveSession()
-        set({
-          currentSession: null,
-          mode: 'hidden',
-          isPlaying: false,
-        })
+        // Clear session (which will also clear echoSessionId)
+        get().clearSession()
       },
 
-      setVolume: (volume: number) => {
-        set({ volume: Math.max(0, Math.min(1, volume)) })
+      setVolume: async (volume: number) => {
+        const clampedVolume = Math.max(0, Math.min(1, volume))
+        set({ volume: clampedVolume })
+
+        // Save to database immediately
+        const { currentEchoSessionId } = get()
+        if (currentEchoSessionId) {
+          try {
+            await updateEchoSessionProgress(currentEchoSessionId, {
+              volume: clampedVolume,
+            })
+            log.debug('Volume saved to EchoSession', {
+              echoSessionId: currentEchoSessionId,
+              volume: clampedVolume,
+            })
+          } catch (error) {
+            log.error('Failed to save volume to EchoSession:', error)
+          }
+        }
       },
 
-      setPlaybackRate: (rate: number) => {
-        set({ playbackRate: Math.max(0.25, Math.min(2, rate)) })
+      setPlaybackRate: async (rate: number) => {
+        const clampedRate = Math.max(0.25, Math.min(2, rate))
+        set({ playbackRate: clampedRate })
+
+        // Save to database immediately
+        const { currentEchoSessionId } = get()
+        if (currentEchoSessionId) {
+          try {
+            await updateEchoSessionProgress(currentEchoSessionId, {
+              playbackRate: clampedRate,
+            })
+            log.debug('Playback rate saved to EchoSession', {
+              echoSessionId: currentEchoSessionId,
+              playbackRate: clampedRate,
+            })
+          } catch (error) {
+            log.error('Failed to save playback rate to EchoSession:', error)
+          }
+        }
       },
 
       setRepeatMode: (repeatMode: 'none' | 'single' | 'segment') => {
         set({ repeatMode })
+        // Note: repeatMode is not persisted in EchoSession (it's a UI preference)
       },
 
-      seekTo: (time: number) => {
-        const { currentSession } = get()
+      seekTo: async (time: number) => {
+        const { currentSession, currentEchoSessionId } = get()
         if (!currentSession) return
 
         const clampedTime = Math.max(0, Math.min(time, currentSession.duration))
+
+        // Update in-memory state immediately
         set({
           currentSession: {
             ...currentSession,
@@ -337,10 +439,25 @@ export const usePlayerStore = create<PlayerState>()(
             lastActiveAt: new Date().toISOString(),
           },
         })
+
+        // Save to database immediately (seek is explicit user action)
+        if (currentEchoSessionId) {
+          try {
+            await updateEchoSessionProgress(currentEchoSessionId, {
+              currentTime: clampedTime,
+            })
+            log.debug('Seek saved to EchoSession', {
+              echoSessionId: currentEchoSessionId,
+              currentTime: clampedTime,
+            })
+          } catch (error) {
+            log.error('Failed to save seek to EchoSession:', error)
+          }
+        }
       },
 
       // Echo mode actions
-      activateEchoMode: (
+      activateEchoMode: async (
         startLineIndex: number,
         endLineIndex: number,
         startTime: number,
@@ -353,9 +470,27 @@ export const usePlayerStore = create<PlayerState>()(
           echoStartTime: startTime,
           echoEndTime: endTime,
         })
+
+        // Save to database immediately
+        const { currentEchoSessionId } = get()
+        if (currentEchoSessionId) {
+          try {
+            await updateEchoSessionProgress(currentEchoSessionId, {
+              echoStartTime: startTime,
+              echoEndTime: endTime,
+            })
+            log.debug('Echo mode activated and saved to EchoSession', {
+              echoSessionId: currentEchoSessionId,
+              echoStartTime: startTime,
+              echoEndTime: endTime,
+            })
+          } catch (error) {
+            log.error('Failed to save echo mode to EchoSession:', error)
+          }
+        }
       },
 
-      deactivateEchoMode: () => {
+      deactivateEchoMode: async () => {
         set({
           echoModeActive: false,
           echoStartLineIndex: -1,
@@ -363,9 +498,25 @@ export const usePlayerStore = create<PlayerState>()(
           echoStartTime: -1,
           echoEndTime: -1,
         })
+
+        // Save to database immediately
+        const { currentEchoSessionId } = get()
+        if (currentEchoSessionId) {
+          try {
+            await updateEchoSessionProgress(currentEchoSessionId, {
+              echoStartTime: undefined,
+              echoEndTime: undefined,
+            })
+            log.debug('Echo mode deactivated and saved to EchoSession', {
+              echoSessionId: currentEchoSessionId,
+            })
+          } catch (error) {
+            log.error('Failed to save echo mode deactivation to EchoSession:', error)
+          }
+        }
       },
 
-      updateEchoRegion: (
+      updateEchoRegion: async (
         startLineIndex: number,
         endLineIndex: number,
         startTime: number,
@@ -377,16 +528,33 @@ export const usePlayerStore = create<PlayerState>()(
           echoStartTime: startTime,
           echoEndTime: endTime,
         })
+
+        // Save to database immediately
+        const { currentEchoSessionId } = get()
+        if (currentEchoSessionId) {
+          try {
+            await updateEchoSessionProgress(currentEchoSessionId, {
+              echoStartTime: startTime,
+              echoEndTime: endTime,
+            })
+            log.debug('Echo region updated and saved to EchoSession', {
+              echoSessionId: currentEchoSessionId,
+              echoStartTime: startTime,
+              echoEndTime: endTime,
+            })
+          } catch (error) {
+            log.error('Failed to save echo region update to EchoSession:', error)
+          }
+        }
       },
     }),
     {
       name: 'enjoy-player',
-      // Only persist specific fields
+      // Only persist playback settings (not session state - that's in EchoSession)
       partialize: (state) => ({
         volume: state.volume,
         playbackRate: state.playbackRate,
         repeatMode: state.repeatMode,
-        recentSession: state.recentSession,
       }),
     }
   )
