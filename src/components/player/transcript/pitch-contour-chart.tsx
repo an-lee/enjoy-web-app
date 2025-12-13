@@ -29,6 +29,7 @@ export function PitchContourChart({
   data,
   className,
   labels,
+  currentTimeRelative,
 }: {
   data: EchoRegionSeriesPoint[]
   className?: string
@@ -38,6 +39,8 @@ export function PitchContourChart({
     yourWaveform: string
     yourPitch: string
   }
+  /** Current playback time relative to region start (in seconds), undefined to hide progress */
+  currentTimeRelative?: number
 }) {
   const chartConfig: ChartConfig = React.useMemo(
     () => ({
@@ -67,9 +70,42 @@ export function PitchContourChart({
   const ampAxisWidth = isMobile ? 0 : 36
   const pitchAxisWidth = isMobile ? 0 : 48
 
+  // Calculate max time and pitch from data for boundary check
+  const maxTime = React.useMemo(() => {
+    return data.length > 0 ? Math.max(...data.map((d) => d.t)) : 0
+  }, [data])
+
+  const maxPitch = React.useMemo(() => {
+    const pitches = data
+      .map((d) => [d.pitchRefHz, d.pitchUserHz])
+      .flat()
+      .filter((p): p is number => p !== null && p !== undefined && Number.isFinite(p))
+    // Add 20% padding and round up to nearest 50 for stability
+    const rawMax = pitches.length > 0 ? Math.max(...pitches) : 1000
+    return Math.ceil(rawMax * 1.2 / 50) * 50
+  }, [data])
+
+  // Merge progress background data into main data array
+  const dataWithProgress = React.useMemo(() => {
+    if (
+      currentTimeRelative === undefined ||
+      !Number.isFinite(currentTimeRelative) ||
+      currentTimeRelative <= 0 ||
+      data.length === 0
+    ) {
+      return data
+    }
+    const progressEnd = Math.min(currentTimeRelative, maxTime)
+    // Add progress background value to each data point
+    return data.map((point) => ({
+      ...point,
+      progressBg: point.t <= progressEnd ? maxPitch : null,
+    }))
+  }, [data, currentTimeRelative, maxTime, maxPitch])
+
   return (
     <ChartContainer className={className} config={chartConfig}>
-      <AreaChart data={data} margin={margin}>
+      <AreaChart data={dataWithProgress} margin={margin}>
         <CartesianGrid vertical={false} />
 
         <XAxis
@@ -94,7 +130,7 @@ export function PitchContourChart({
         <YAxis
           yAxisId="pitch"
           orientation="right"
-          domain={[0, 'dataMax']}
+          domain={[0, maxPitch]}
           tickLine={false}
           axisLine={false}
           tickMargin={8}
@@ -102,6 +138,26 @@ export function PitchContourChart({
           hide={isMobile}
           tickFormatter={(v) => (Number.isFinite(Number(v)) ? `${Math.round(Number(v))}` : '')}
         />
+
+        {/* Playback progress background - using Area component for reliable rendering */}
+        {currentTimeRelative !== undefined &&
+          Number.isFinite(currentTimeRelative) &&
+          currentTimeRelative > 0 && (
+            <Area
+              yAxisId="pitch"
+              type="stepAfter"
+              dataKey="progressBg"
+              baseValue={0}
+              fill="oklch(0.35 0.1 280 / 0.12)"
+              fillOpacity={1}
+              stroke="none"
+              isAnimationActive={false}
+              dot={false}
+              connectNulls={false}
+              name="progress"
+              legendType="none"
+            />
+          )}
 
         <ChartTooltip
           cursor={false}

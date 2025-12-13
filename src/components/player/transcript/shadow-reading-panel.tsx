@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn, formatTime } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/player'
+import { useDisplayTime } from '@/hooks/use-display-time'
 import { Button } from '@/components/ui/button'
 import type { EchoRegionAnalysisResult } from '@/lib/audio/echo-region-analysis'
 import {
@@ -35,6 +36,16 @@ export function ShadowReadingPanel({
   const { t } = useTranslation()
   const duration = endTime - startTime
   const currentSession = usePlayerStore((s) => s.currentSession)
+  const displayTime = useDisplayTime()
+
+  // Calculate relative time for progress indicator (0 to duration)
+  const currentTimeRelative = useMemo(() => {
+    if (!Number.isFinite(displayTime)) return undefined
+    // Clamp to region bounds
+    if (displayTime < startTime) return 0
+    if (displayTime >= endTime) return duration
+    return displayTime - startTime
+  }, [displayTime, startTime, endTime, duration])
 
   const [isPitchExpanded, setIsPitchExpanded] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
@@ -189,6 +200,7 @@ export function ShadowReadingPanel({
                   <PitchContourChart
                     data={analysis.points}
                     className="w-full h-[200px]"
+                    currentTimeRelative={currentTimeRelative}
                     labels={{
                       waveform: t('player.transcript.pitchContourWaveform'),
                       pitch: t('player.transcript.pitchContourPitch'),
