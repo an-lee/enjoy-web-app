@@ -110,3 +110,22 @@ export {
   cleanupExpiredCache,
 } from './cached-definition-repository'
 
+// EchoSession Repository
+export {
+  echoSessionRepository,
+  getEchoSessionById,
+  getEchoSessionsByTarget,
+  getLatestEchoSessionByTarget,
+  getEchoSessionsBySyncStatus,
+  getEchoSessionsByLanguage,
+  getActiveEchoSessions,
+  getCompletedEchoSessions,
+  getAllEchoSessions,
+  saveEchoSession,
+  updateEchoSession,
+  updateEchoSessionProgress,
+  incrementEchoSessionRecording,
+  completeEchoSession,
+  deleteEchoSession,
+} from './echo-session-repository'
+

@@ -19,6 +19,7 @@ import type {
   Dictation,
   Translation,
   CachedDefinition,
+  EchoSession,
   SyncQueueItem,
 } from '@/types/db'
 
@@ -37,6 +38,7 @@ export class EnjoyDatabase extends Dexie {
   dictations!: Table<Dictation, string>
   translations!: Table<Translation, string>
   cachedDefinitions!: Table<CachedDefinition, [string, string]>
+  echoSessions!: Table<EchoSession, string>
   syncQueue!: Table<SyncQueueItem, number>
 
   constructor() {
@@ -74,6 +76,13 @@ export class EnjoyDatabase extends Dexie {
 
       // SyncQueue: auto-increment primary key
       syncQueue: '++id, entityType, entityId, action, retryCount, createdAt',
+    })
+
+    // Version 7: Add EchoSession table
+    this.version(7).stores({
+      // EchoSession: id (UUID v4 primary key)
+      echoSessions:
+        'id, [targetType+targetId], targetType, targetId, language, syncStatus, startedAt, lastActiveAt, createdAt, updatedAt',
     })
   }
 }

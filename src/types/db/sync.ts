@@ -11,7 +11,7 @@
  */
 export interface SyncQueueItem {
   id: number // auto-increment
-  entityType: 'video' | 'transcript' | 'recording' | 'dictation'
+  entityType: 'video' | 'transcript' | 'recording' | 'dictation' | 'echoSession'
   entityId: string
   action: 'create' | 'update' | 'delete'
   payload?: unknown

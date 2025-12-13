@@ -17,5 +17,6 @@ export * from './recording'
 export * from './dictation'
 export * from './translation'
 export * from './cached-definition'
+export * from './echo-session'
 export * from './sync'
 

@@ -52,6 +52,7 @@ export type {
   Dictation,
   Translation,
   CachedDefinition,
+  EchoSession,
   SyncQueueItem,
   // Input types
   VideoInput,
@@ -62,6 +63,7 @@ export type {
   RecordingInput,
   DictationInput,
   TranslationInput,
+  EchoSessionInput,
 } from '@/types/db'
 
 // ============================================================================
@@ -173,6 +175,25 @@ export {
   cleanupExpiredCache,
 } from './repositories/cached-definition-repository'
 
+// EchoSession
+export {
+  echoSessionRepository,
+  getEchoSessionById,
+  getEchoSessionsByTarget,
+  getLatestEchoSessionByTarget,
+  getEchoSessionsBySyncStatus,
+  getEchoSessionsByLanguage,
+  getActiveEchoSessions,
+  getCompletedEchoSessions,
+  getAllEchoSessions,
+  saveEchoSession,
+  updateEchoSession,
+  updateEchoSessionProgress,
+  incrementEchoSessionRecording,
+  completeEchoSession,
+  deleteEchoSession,
+} from './repositories/echo-session-repository'
+
 // ============================================================================
 // ID Generator Exports
 // ============================================================================
@@ -194,4 +215,5 @@ export {
   generateDictationId,
   generateTranslationId,
   generateCachedDefinitionId,
+  generateEchoSessionId,
 } from './id-generator'

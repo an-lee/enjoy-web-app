@@ -187,6 +187,36 @@ interface Dictation extends SyncableEntity {
   createdAt: string    // ISO 8601
   updatedAt: string    // ISO 8601
 }
+
+// EchoSession - Practice session for shadow reading/echo practice
+// ID generation: UUID v4 (random)
+// Tracks player settings, progress, and practice statistics
+interface EchoSession extends SyncableEntity {
+  id: string           // UUID v4
+  targetType: TargetType
+  targetId: string     // Video.id or Audio.id
+  language: string     // BCP 47
+
+  // Player settings
+  currentTime: number  // seconds
+  playbackRate: number // 0.25-2
+  volume: number       // 0-1
+  echoStartTime?: number  // seconds
+  echoEndTime?: number    // seconds
+  transcriptId?: string   // Current main transcript ID used for practice
+
+  // Practice statistics
+  recordingsCount: number
+  recordingsDuration: number  // milliseconds
+  lastRecordingAt?: string  // ISO 8601
+
+  // Metadata
+  startedAt: string     // ISO 8601
+  lastActiveAt: string // ISO 8601
+  completedAt?: string // ISO 8601
+  createdAt: string     // ISO 8601
+  updatedAt: string     // ISO 8601
+}
 ```
 
 ### Local-Only Entities (Not Synced)
@@ -238,6 +268,7 @@ interface CachedDefinition {
 | Transcript | UUID v5 | `transcript:${targetType}:${targetId}:${language}:${source}` |
 | Recording | UUID v4 | Random |
 | Dictation | UUID v4 | Random |
+| EchoSession | UUID v4 | Random |
 | Translation | UUID v5 | `translation:${sourceText}:${targetLanguage}:${style}:${customPrompt}` |
 | CachedDefinition | UUID v5 | `cache:${word}:${languagePair}` |
 
@@ -267,7 +298,7 @@ Local changes are queued first, then batch-synced to server:
 ```typescript
 interface SyncQueueItem {
   id: number                // auto-increment
-  entityType: 'video' | 'transcript' | 'recording' | 'dictation'
+  entityType: 'video' | 'transcript' | 'recording' | 'dictation' | 'echoSession'
   entityId: string          // UUID
   action: 'create' | 'update' | 'delete'
   payload?: unknown

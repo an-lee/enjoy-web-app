@@ -173,3 +173,15 @@ export function generateCachedDefinitionId(
 ): string {
   return uuidv5(`cache:${word}:${languagePair}`, UUID_NAMESPACE)
 }
+
+// ============================================================================
+// EchoSession ID Generation
+// ============================================================================
+
+/**
+ * Generate UUID v4 for EchoSession (random)
+ * Each practice session is unique, even for the same media
+ */
+export function generateEchoSessionId(): string {
+  return uuidv4()
+}
