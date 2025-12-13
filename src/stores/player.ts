@@ -286,8 +286,33 @@ export const usePlayerStore = create<PlayerState>()(
             echoSession.echoStartTime >= 0 &&
             echoSession.echoEndTime >= 0
 
+          // Handle currentTime outside echo region
+          let restoredCurrentTime = echoSession.currentTime
+          if (hasEchoRegion && echoSession.echoStartTime !== undefined && echoSession.echoEndTime !== undefined) {
+            // Clamp currentTime to echo region if it's outside
+            if (restoredCurrentTime < echoSession.echoStartTime) {
+              restoredCurrentTime = echoSession.echoStartTime
+              log.debug('CurrentTime before echo region, clamping to start', {
+                originalTime: echoSession.currentTime,
+                clampedTime: restoredCurrentTime,
+              })
+            } else if (restoredCurrentTime >= echoSession.echoEndTime) {
+              restoredCurrentTime = echoSession.echoStartTime
+              log.debug('CurrentTime at or after echo region end, resetting to start', {
+                originalTime: echoSession.currentTime,
+                resetTime: restoredCurrentTime,
+              })
+            }
+          }
+
+          // Update session with potentially adjusted currentTime
+          const finalSession: PlaybackSession = {
+            ...newSession,
+            currentTime: restoredCurrentTime,
+          }
+
           set({
-            currentSession: newSession,
+            currentSession: finalSession,
             currentEchoSessionId: echoSessionId,
             mode: 'expanded',
             isPlaying: true,
@@ -297,8 +322,23 @@ export const usePlayerStore = create<PlayerState>()(
             echoStartTime: echoSession.echoStartTime ?? -1,
             echoEndTime: echoSession.echoEndTime ?? -1,
             // Note: echoStartLineIndex and echoEndLineIndex are not persisted
-            // They will be recalculated when echo mode is activated
+            // They will be recalculated from echoStartTime/echoEndTime when transcript loads
           })
+
+          // If currentTime was adjusted, save it to database
+          if (restoredCurrentTime !== echoSession.currentTime) {
+            try {
+              await updateEchoSessionProgress(echoSessionId, {
+                currentTime: restoredCurrentTime,
+              })
+              log.debug('Saved adjusted currentTime to EchoSession', {
+                echoSessionId,
+                adjustedTime: restoredCurrentTime,
+              })
+            } catch (error) {
+              log.error('Failed to save adjusted currentTime to EchoSession:', error)
+            }
+          }
 
           log.debug('Media loaded with EchoSession', {
             mediaId: media.id,

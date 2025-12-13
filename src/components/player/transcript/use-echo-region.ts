@@ -11,6 +11,55 @@ import type { TranscriptLineState } from './types'
 
 const log = createLogger({ name: 'useEchoRegion' })
 
+/**
+ * Find line index by time (similar to findActiveLineIndex but finds the line that contains or is closest to the time)
+ */
+function findLineIndexByTime(
+  lines: TranscriptLineState[],
+  timeSeconds: number
+): number {
+  if (lines.length === 0) return -1
+
+  // Binary search for efficiency
+  let left = 0
+  let right = lines.length - 1
+  let result = -1
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+    const line = lines[mid]
+
+    // Check if time is within this line
+    if (
+      timeSeconds >= line.startTimeSeconds &&
+      timeSeconds < line.endTimeSeconds
+    ) {
+      return mid
+    }
+
+    // Check if time is before this line
+    if (timeSeconds < line.startTimeSeconds) {
+      right = mid - 1
+    } else {
+      // Time is after this line, keep track of the last line before time
+      result = mid
+      left = mid + 1
+    }
+  }
+
+  // If no exact match, return the closest line
+  // If result is -1, time is before all lines, return first line
+  if (result < 0) return 0
+  // If result is last line and time is after it, return last line
+  if (result >= lines.length - 1) return lines.length - 1
+  // Otherwise, check which line is closer
+  const line1 = lines[result]
+  const line2 = lines[result + 1]
+  const diff1 = Math.abs(timeSeconds - line1.endTimeSeconds)
+  const diff2 = Math.abs(timeSeconds - line2.startTimeSeconds)
+  return diff1 < diff2 ? result : result + 1
+}
+
 export function useEchoRegion(lines: TranscriptLineState[]) {
   const linesRef = useRef<TranscriptLineState[]>([])
 
@@ -37,6 +86,63 @@ export function useEchoRegion(lines: TranscriptLineState[]) {
       echoEndTime,
     })
   }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, echoStartTime, echoEndTime])
+
+  // Restore echo region line indices from time when transcript lines are available
+  // This handles the case when echo mode is restored from EchoSession but line indices are not set
+  useEffect(() => {
+    const currentLines = linesRef.current
+    if (
+      echoModeActive &&
+      echoStartTime >= 0 &&
+      echoEndTime >= 0 &&
+      currentLines.length > 0 &&
+      (echoStartLineIndex < 0 || echoEndLineIndex < 0)
+    ) {
+      log.debug('Restoring echo region line indices from time', {
+        echoStartTime,
+        echoEndTime,
+        currentLineCount: currentLines.length,
+      })
+
+      // Find line indices based on time
+      const startIndex = findLineIndexByTime(currentLines, echoStartTime)
+      const endIndex = findLineIndexByTime(currentLines, echoEndTime)
+
+      // Ensure endIndex >= startIndex
+      const finalEndIndex = Math.max(startIndex, endIndex)
+
+      if (startIndex >= 0 && finalEndIndex >= 0) {
+        const startLine = currentLines[startIndex]
+        const endLine = currentLines[finalEndIndex]
+
+        if (startLine && endLine) {
+          log.debug('Updating echo region with calculated line indices', {
+            startIndex,
+            endIndex: finalEndIndex,
+            startTime: startLine.startTimeSeconds,
+            endTime: endLine.endTimeSeconds,
+          })
+
+          // Update with calculated line indices and actual line times
+          // Use the actual line times to ensure consistency
+          updateEchoRegion(
+            startIndex,
+            finalEndIndex,
+            startLine.startTimeSeconds,
+            endLine.endTimeSeconds
+          )
+        }
+      }
+    }
+  }, [
+    echoModeActive,
+    echoStartTime,
+    echoEndTime,
+    echoStartLineIndex,
+    echoEndLineIndex,
+    lines.length, // Re-run when lines change
+    updateEchoRegion,
+  ])
 
   // Get echo region time range from store - memoized to prevent object recreation
   const echoRegionTimeRange = useMemo(
