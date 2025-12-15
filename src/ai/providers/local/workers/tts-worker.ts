@@ -9,8 +9,8 @@ import { DEFAULT_TTS_MODEL } from '../constants'
 import {
   convertToTranscriptFormat,
   type RawWordTiming,
-} from '@/ai/utils/transcript-segmentation'
-import type { TTSTranscript } from '@/ai/types'
+} from '../../../utils/transcript-segmentation'
+import type { TTSTranscript } from '../../../types'
 
 interface TTSWorkerMessage {
   type: 'init' | 'synthesize' | 'checkStatus' | 'cancel'
