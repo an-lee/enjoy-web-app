@@ -26,10 +26,10 @@ interface Logger {
 }
 
 const LOG_STYLES: Record<LogLevel, string> = {
-  debug: 'color: #6b7280',
-  info: 'color: #3b82f6',
-  warn: 'color: #f59e0b',
-  error: 'color: #ef4444',
+  debug: 'color: #6b7280;',
+  info: 'color: #3b82f6;',
+  warn: 'color: #f59e0b;',
+  error: 'color: #ef4444;',
 }
 
 /**
@@ -54,18 +54,31 @@ export function createLogger(options: LoggerOptions): Logger {
       const prefix = `[${name}]`
       const style = LOG_STYLES[level]
 
+      // Construct format string and arguments array for %c styling
+      // %c applies CSS styles to the text that follows it in the format string
+      // We use two %c: one to apply color to prefix, one to reset for remaining content
+      const formatStr = '%c' + prefix + '%c'
+      const logArgs: unknown[] = [formatStr, style, '']
+
+      // Add remaining arguments after style reset
+      if (args.length > 0) {
+        logArgs.push(...args)
+      }
+
+      // Use appropriate console method for each log level
+      // %c formatting works with all console methods (log, info, warn, error)
       switch (level) {
         case 'debug':
-          console.log(`%c${prefix}`, style, ...args)
+          console.log.apply(console, logArgs as Parameters<typeof console.log>)
           break
         case 'info':
-          console.info(`%c${prefix}`, style, ...args)
+          console.info.apply(console, logArgs as Parameters<typeof console.info>)
           break
         case 'warn':
-          console.warn(`%c${prefix}`, style, ...args)
+          console.warn.apply(console, logArgs as Parameters<typeof console.warn>)
           break
         case 'error':
-          console.error(`%c${prefix}`, style, ...args)
+          console.error.apply(console, logArgs as Parameters<typeof console.error>)
           break
       }
     }
