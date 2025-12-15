@@ -8,7 +8,7 @@
  * - Delete: useDeleteAudio
  */
 
-import { useEffect, useMemo, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   db,
@@ -16,9 +16,11 @@ import {
   getAudioByTranslationKey,
   getAudiosByTranslationKey,
   saveAudio,
+  saveTTSAudio,
   deleteAudio,
 } from '@/db'
-import type { Audio, AudioInput } from '@/types/db'
+import { getMediaUrl } from '@/lib/file-access'
+import type { Audio, UserAudioInput, TTSAudioInput } from '@/types/db'
 
 const MAX_HISTORY_ITEMS = 50
 
@@ -85,22 +87,30 @@ export interface UseAudiosByTranslationKeyReturn {
 // Helper Functions
 // ============================================================================
 
-function createAudioUrl(audio: Audio | undefined | null): string | null {
-  if (!audio?.blob) return null
-  return URL.createObjectURL(audio.blob)
-}
-
-function createAudioWithUrl(audio: Audio): AudioWithUrl | null {
-  if (!audio.blob) return null
-  return {
-    audio,
-    audioUrl: URL.createObjectURL(audio.blob),
+async function createAudioUrl(audio: Audio | undefined | null): Promise<string | null> {
+  if (!audio) return null
+  try {
+    return await getMediaUrl(audio)
+  } catch {
+    return null
   }
 }
 
-function createAudiosWithUrls(audios: Audio[]): AudioWithUrl[] {
-  return audios
-    .map(createAudioWithUrl)
+async function createAudioWithUrl(audio: Audio): Promise<AudioWithUrl | null> {
+  try {
+    const audioUrl = await getMediaUrl(audio)
+    return {
+      audio,
+      audioUrl,
+    }
+  } catch {
+    return null
+  }
+}
+
+async function createAudiosWithUrls(audios: Audio[]): Promise<AudioWithUrl[]> {
+  const results = await Promise.all(audios.map(createAudioWithUrl))
+  return results
     .filter((item): item is AudioWithUrl => item !== null)
     .sort((a, b) => {
       const dateA = a.audio.createdAt || ''
@@ -182,15 +192,26 @@ export function useAudio(options: UseAudioOptions = {}): UseAudioReturn {
     staleTime: 1000 * 30,
   })
 
-  const audioUrl = useMemo(() => createAudioUrl(audio), [audio])
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
 
   useEffect(() => {
+    let mounted = true
+    let url: string | null = null
+
+    createAudioUrl(audio).then((result) => {
+      if (mounted) {
+        url = result
+        setAudioUrl(result)
+      }
+    })
+
     return () => {
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl)
+      mounted = false
+      if (url) {
+        URL.revokeObjectURL(url)
       }
     }
-  }, [audioUrl])
+  }, [audio])
 
   const refetch = useCallback(async () => {
     await refetchQuery()
@@ -259,15 +280,26 @@ export function useAudiosByTranslationKey(
     staleTime: 1000 * 30,
   })
 
-  const audios = useMemo(() => createAudiosWithUrls(audioList), [audioList])
+  const [audios, setAudios] = useState<AudioWithUrl[]>([])
 
   useEffect(() => {
+    let mounted = true
+    let urls: string[] = []
+
+    createAudiosWithUrls(audioList).then((results) => {
+      if (mounted) {
+        urls = results.map((a) => a.audioUrl)
+        setAudios(results)
+      }
+    })
+
     return () => {
-      audios.forEach(({ audioUrl }) => {
-        URL.revokeObjectURL(audioUrl)
+      mounted = false
+      urls.forEach((url) => {
+        URL.revokeObjectURL(url)
       })
     }
-  }, [audios])
+  }, [audioList])
 
   const refetch = useCallback(async () => {
     await refetchQuery()
@@ -275,7 +307,7 @@ export function useAudiosByTranslationKey(
 
   const addAudio = useCallback(
     (newAudio: Audio) => {
-      if (!translationKey || !newAudio.blob) return
+      if (!translationKey) return
 
       const queryKey = audioQueryKeys.listByTranslationKey(translationKey)
       queryClient.setQueryData<Audio[]>(queryKey, (oldData = []) => {
@@ -316,21 +348,45 @@ export function useAudiosByTranslationKey(
 // ============================================================================
 
 /**
- * Hook to create a new audio
+ * Hook to create a new user-uploaded audio
  */
 export function useCreateAudio() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (input: AudioInput): Promise<{ id: string; audio: Audio }> => {
+    mutationFn: async (input: UserAudioInput): Promise<{ id: string; audio: Audio }> => {
       const id = await saveAudio(input)
-      const audio: Audio = {
-        ...input,
-        id,
-        aid: id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } as Audio
+      const audio = await getAudioById(id)
+      if (!audio) {
+        throw new Error('Failed to retrieve created audio')
+      }
+      return { id, audio }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: audioQueryKeys.history() })
+
+      if (result.audio.translationKey) {
+        queryClient.invalidateQueries({
+          queryKey: audioQueryKeys.listByTranslationKey(result.audio.translationKey),
+        })
+      }
+    },
+  })
+}
+
+/**
+ * Hook to create TTS-generated audio
+ */
+export function useCreateTTSAudio() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: TTSAudioInput): Promise<{ id: string; audio: Audio }> => {
+      const id = await saveTTSAudio(input)
+      const audio = await getAudioById(id)
+      if (!audio) {
+        throw new Error('Failed to retrieve created TTS audio')
+      }
       return { id, audio }
     },
     onSuccess: (result) => {

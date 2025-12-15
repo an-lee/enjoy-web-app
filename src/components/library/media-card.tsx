@@ -25,7 +25,6 @@ import type { LibraryMedia } from '@/hooks/queries'
 export interface MediaCardProps {
   item: LibraryMedia
   onPlay?: (item: LibraryMedia) => void
-  onToggleStar?: (item: LibraryMedia) => void
   onDelete?: (item: LibraryMedia) => void
   isDeleting?: boolean
 }
@@ -61,7 +60,6 @@ function formatDate(dateString: string): string {
 export function MediaCard({
   item,
   onPlay,
-  onToggleStar,
   onDelete,
   isDeleting = false,
 }: MediaCardProps) {
@@ -75,14 +73,6 @@ export function MediaCard({
   const handlePlay = useCallback(() => {
     onPlay?.(item)
   }, [item, onPlay])
-
-  const handleToggleStar = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      onToggleStar?.(item)
-    },
-    [item, onToggleStar]
-  )
 
   const handleDelete = useCallback(() => {
     onDelete?.(item)
@@ -151,20 +141,7 @@ export function MediaCard({
         </div>
 
         {/* Star button */}
-        <button
-          onClick={handleToggleStar}
-          className={cn(
-            'absolute top-2 right-2 p-1.5 rounded-full transition-all duration-200',
-            item.starred
-              ? 'bg-yellow-500/90 text-white'
-              : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100'
-          )}
-        >
-          <Icon
-            icon={item.starred ? 'lucide:star' : 'lucide:star'}
-            className={cn('w-4 h-4', item.starred && 'fill-current')}
-          />
-        </button>
+        {/* Star button removed - starred field deprecated */}
       </div>
 
       {/* Content */}
@@ -197,13 +174,7 @@ export function MediaCard({
                 <Icon icon="lucide:play" className="w-4 h-4 mr-2" />
                 {t('library.play')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleToggleStar}>
-                <Icon
-                  icon={item.starred ? 'lucide:star-off' : 'lucide:star'}
-                  className="w-4 h-4 mr-2"
-                />
-                {item.starred ? t('library.unstar') : t('library.star')}
-              </DropdownMenuItem>
+              {/* Star menu item removed - starred field deprecated */}
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="text-destructive focus:text-destructive"
@@ -221,14 +192,6 @@ export function MediaCard({
           <span>{item.language.toUpperCase()}</span>
           <span>•</span>
           <span>{formatDate(item.createdAt)}</span>
-          {item.level && (
-            <>
-              <span>•</span>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                {t(`library.level.${item.level}`)}
-              </Badge>
-            </>
-          )}
         </div>
       </CardContent>
     </Card>

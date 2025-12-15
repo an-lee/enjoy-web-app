@@ -8,7 +8,7 @@
  * - Delete: useDeleteVideo
  */
 
-import { useCallback, useMemo, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   db,
@@ -68,9 +68,15 @@ export interface UseVideosOptions {
 // Helper Functions
 // ============================================================================
 
-function createVideoUrl(video: Video | undefined | null): string | null {
-  if (!video?.blob) return null
-  return URL.createObjectURL(video.blob)
+import { getMediaUrl } from '@/lib/file-access'
+
+async function createVideoUrl(video: Video | undefined | null): Promise<string | null> {
+  if (!video) return null
+  try {
+    return await getMediaUrl(video)
+  } catch {
+    return null
+  }
 }
 
 // Future use: when video list needs URLs
@@ -125,15 +131,26 @@ export function useVideo(options: UseVideoOptions = {}): UseVideoReturn {
     staleTime: 1000 * 30,
   })
 
-  const videoUrl = useMemo(() => createVideoUrl(video), [video])
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
 
   useEffect(() => {
+    let mounted = true
+    let url: string | null = null
+
+    createVideoUrl(video).then((result) => {
+      if (mounted) {
+        url = result
+        setVideoUrl(result)
+      }
+    })
+
     return () => {
-      if (videoUrl) {
-        URL.revokeObjectURL(videoUrl)
+      mounted = false
+      if (url) {
+        URL.revokeObjectURL(url)
       }
     }
-  }, [videoUrl])
+  }, [video])
 
   const refetch = useCallback(async () => {
     await refetchQuery()
@@ -216,13 +233,13 @@ export function useSaveLocalVideo() {
 
   return useMutation({
     mutationFn: async ({
-      blob,
+      fileHandle,
       input,
     }: {
-      blob: Blob
-      input: Omit<VideoInput, 'vid' | 'provider'>
+      fileHandle: FileSystemFileHandle
+      input: Omit<VideoInput, 'vid' | 'provider' | 'fileHandle' | 'md5' | 'size'>
     }): Promise<{ id: string }> => {
-      const id = await saveLocalVideo(blob, input)
+      const id = await saveLocalVideo(fileHandle, input)
       return { id }
     },
     onSuccess: () => {

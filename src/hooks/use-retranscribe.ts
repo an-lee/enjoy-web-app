@@ -133,18 +133,28 @@ export function useRetranscribe() {
 
         if (currentSession.mediaType === 'audio') {
           const audio = await db.audios.get(currentSession.mediaId)
-          blob = audio?.blob
+          if (!audio) throw new Error('Audio not found')
+          // Get blob from audio (for TTS) or fileHandle
+          if (audio.blob) {
+            blob = audio.blob
+          } else if (audio.fileHandle) {
+            blob = await audio.fileHandle.getFile()
+          } else {
+            throw new Error('Audio file not available')
+          }
           targetType = 'Audio'
           targetId = currentSession.mediaId
         } else {
           const video = await db.videos.get(currentSession.mediaId)
-          blob = video?.blob
+          if (!video) throw new Error('Video not found')
+          // Get file from fileHandle
+          if (video.fileHandle) {
+            blob = await video.fileHandle.getFile()
+          } else {
+            throw new Error('Video file not available')
+          }
           targetType = 'Video'
           targetId = currentSession.mediaId
-        }
-
-        if (!blob) {
-          throw new Error('Media blob not found in local storage')
         }
 
         setProgress('Extracting audio...')

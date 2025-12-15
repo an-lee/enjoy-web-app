@@ -23,8 +23,6 @@ export interface LibraryMedia {
   thumbnailUrl?: string
   duration: number
   language: string
-  level?: string
-  starred?: boolean
   createdAt: string
   updatedAt: string
   // Original entity reference
@@ -75,8 +73,6 @@ function audioToLibraryMedia(audio: Audio): LibraryMedia {
     thumbnailUrl: audio.thumbnailUrl,
     duration: audio.duration,
     language: audio.language,
-    level: audio.level,
-    starred: audio.starred,
     createdAt: audio.createdAt,
     updatedAt: audio.updatedAt,
     audio,
@@ -92,8 +88,6 @@ function videoToLibraryMedia(video: Video): LibraryMedia {
     thumbnailUrl: video.thumbnailUrl,
     duration: video.duration,
     language: video.language,
-    level: video.level,
-    starred: video.starred,
     createdAt: video.createdAt,
     updatedAt: video.updatedAt,
     video,
@@ -218,26 +212,22 @@ export function useLibraryStats(enabled: boolean = true) {
 
 /**
  * Hook to toggle starred status for a media item
+ * @deprecated starred field has been removed from the schema
+ */
+/**
+ * @deprecated starred field has been removed from the schema
  */
 export function useToggleStarred() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      type,
-      starred,
-    }: {
+    mutationFn: async (_params: {
       id: string
       type: MediaType
       starred: boolean
     }): Promise<void> => {
-      const now = new Date().toISOString()
-      if (type === 'audio') {
-        await db.audios.update(id, { starred, updatedAt: now })
-      } else {
-        await db.videos.update(id, { starred, updatedAt: now })
-      }
+      // No-op: starred field has been removed
+      // This function is kept for backward compatibility but does nothing
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: libraryQueryKeys.all })

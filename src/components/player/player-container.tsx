@@ -15,6 +15,7 @@ import { usePlayerStore } from '@/stores/player'
 import { db } from '@/db'
 import { createLogger } from '@/lib/utils'
 import { setDisplayTime } from '@/hooks/use-display-time'
+import { getMediaUrl } from '@/lib/file-access'
 import { MiniPlayerBar } from './mini-player-bar'
 import { ExpandedPlayer } from './expanded-player'
 import { PlayerHotkeys } from './player-hotkeys'
@@ -86,36 +87,32 @@ export function PlayerContainer() {
     let isMounted = true
 
     const loadMedia = async () => {
-      log.debug('Loading media blob from IndexedDB...')
+      log.debug('Loading media from database...')
       setIsLoading(true)
       setError(null)
       setIsReady(false)
 
       try {
-        let blob: Blob | undefined
+        let media
 
         if (currentSession.mediaType === 'audio') {
-          const audio = await db.audios.get(currentSession.mediaId)
-          blob = audio?.blob
-          log.debug('Audio blob loaded:', { size: blob?.size, type: blob?.type })
+          media = await db.audios.get(currentSession.mediaId)
         } else {
-          const video = await db.videos.get(currentSession.mediaId)
-          blob = video?.blob
-          log.debug('Video blob loaded:', { size: blob?.size, type: blob?.type })
+          media = await db.videos.get(currentSession.mediaId)
         }
 
         if (!isMounted) return
 
-        if (!blob) {
-          log.error('Blob not found!')
+        if (!media) {
+          log.error('Media not found!')
           setError('Media not found in local storage')
           setIsLoading(false)
           return
         }
 
-        // Create object URL from blob
-        objectUrl = URL.createObjectURL(blob)
-        log.debug('Object URL created:', objectUrl)
+        // Get media URL using unified interface
+        objectUrl = await getMediaUrl(media)
+        log.debug('Media URL created:', objectUrl)
         setMediaUrl(objectUrl)
         setIsLoading(false)
       } catch (err) {

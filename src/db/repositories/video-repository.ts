@@ -6,6 +6,14 @@ import { db } from '../schema'
 import { generateVideoId, generateLocalVideoVid } from '../id-generator'
 import type { Video, VideoProvider, SyncStatus, VideoInput } from '@/types/db'
 
+// Ensure provider defaults to 'user'
+function ensureUserProvider(input: VideoInput): VideoInput {
+  return {
+    ...input,
+    provider: input.provider || 'user',
+  }
+}
+
 // ============================================================================
 // Query Operations
 // ============================================================================
@@ -25,9 +33,6 @@ export async function getVideosBySyncStatus(status: SyncStatus): Promise<Video[]
   return db.videos.where('syncStatus').equals(status).toArray()
 }
 
-export async function getStarredVideos(): Promise<Video[]> {
-  return db.videos.where('starred').equals(1).toArray()
-}
 
 export async function getVideosByProvider(provider: VideoProvider): Promise<Video[]> {
   return db.videos.where('provider').equals(provider).toArray()
@@ -47,19 +52,20 @@ export async function getAllVideos(): Promise<Video[]> {
 
 export async function saveVideo(input: VideoInput): Promise<string> {
   const now = new Date().toISOString()
-  const id = generateVideoId(input.provider, input.vid)
+  const normalizedInput = ensureUserProvider(input)
+  const id = generateVideoId(normalizedInput.provider, normalizedInput.vid)
 
   const existing = await db.videos.get(id)
   if (existing) {
     await db.videos.update(id, {
-      ...input,
+      ...normalizedInput,
       updatedAt: now,
     })
     return id
   }
 
   const video: Video = {
-    ...input,
+    ...normalizedInput,
     id,
     createdAt: now,
     updatedAt: now,
@@ -69,22 +75,35 @@ export async function saveVideo(input: VideoInput): Promise<string> {
 }
 
 /**
- * Save local video file to database
- * vid is the hash of the blob, provider is 'user'
+ * Save local video file to database using fileHandle
+ * vid is the hash of the file, provider is 'user'
+ *
+ * @param fileHandle - FileSystemFileHandle for the video file
+ * @param input - Video metadata (without vid and provider)
+ * @param source - Optional original URL if downloaded from web
  */
 export async function saveLocalVideo(
-  blob: Blob,
-  input: Omit<VideoInput, 'vid' | 'provider'>
+  fileHandle: FileSystemFileHandle,
+  input: Omit<VideoInput, 'vid' | 'provider' | 'fileHandle' | 'md5' | 'size'>,
+  source?: string
 ): Promise<string> {
   const now = new Date().toISOString()
-  const vid = await generateLocalVideoVid(blob)
+
+  // Get file to calculate hash and size
+  const file = await fileHandle.getFile()
+  const vid = await generateLocalVideoVid(file)
+  const md5 = vid // md5 is same as vid (both are SHA-256 hash)
+  const size = file.size
   const id = generateVideoId('user', vid)
 
   const existing = await db.videos.get(id)
   if (existing) {
     await db.videos.update(id, {
       ...input,
-      blob,
+      fileHandle,
+      md5,
+      size,
+      source: source || input.source,
       updatedAt: now,
     })
     return id
@@ -95,7 +114,10 @@ export async function saveLocalVideo(
     id,
     vid,
     provider: 'user',
-    blob,
+    fileHandle,
+    md5,
+    size,
+    source: source || input.source,
     createdAt: now,
     updatedAt: now,
   }
@@ -127,7 +149,6 @@ export const videoRepository = {
   getById: getVideoById,
   getByProviderAndVid: getVideoByProviderAndVid,
   getBySyncStatus: getVideosBySyncStatus,
-  getStarred: getStarredVideos,
   getByProvider: getVideosByProvider,
   getByLanguage: getVideosByLanguage,
   getAll: getAllVideos,

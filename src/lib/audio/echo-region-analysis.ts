@@ -35,13 +35,25 @@ export async function loadMediaBlobForSession(session: {
 
   if (session.mediaType === 'audio') {
     const audio = await db.audios.get(session.mediaId)
-    if (!audio?.blob) throw new Error('Audio blob not found in local storage')
-    return audio.blob
+    if (!audio) throw new Error('Audio not found')
+    // Get blob from audio (for TTS) or fileHandle
+    if (audio.blob) {
+      return audio.blob
+    } else if (audio.fileHandle) {
+      return await audio.fileHandle.getFile()
+    } else {
+      throw new Error('Audio file not available')
+    }
   }
 
   const video = await db.videos.get(session.mediaId)
-  if (!video?.blob) throw new Error('Video blob not found in local storage')
-  return video.blob
+  if (!video) throw new Error('Video not found')
+  // Get file from fileHandle
+  if (video.fileHandle) {
+    return await video.fileHandle.getFile()
+  } else {
+    throw new Error('Video file not available')
+  }
 }
 
 export async function analyzeEchoRegionFromBlob(opts: {

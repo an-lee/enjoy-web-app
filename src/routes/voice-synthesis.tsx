@@ -24,7 +24,7 @@ import {
 } from '@/components/voice-synthesis'
 import {
   useAudioHistory,
-  useCreateAudio,
+  useCreateTTSAudio,
   useAudio,
   useCreateTranscript,
 } from '@/hooks/queries'
@@ -86,7 +86,7 @@ function VoiceSynthesis() {
     refetch: refetchHistory,
   } = useAudioHistory(showHistory, searchQuery)
 
-  const createAudioMutation = useCreateAudio()
+  const createAudioMutation = useCreateTTSAudio()
   const createTranscriptMutation = useCreateTranscript()
 
   // Use audio hook to check for existing audio by translationKey

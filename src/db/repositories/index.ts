@@ -8,7 +8,6 @@ export {
   getVideoById,
   getVideoByProviderAndVid,
   getVideosBySyncStatus,
-  getStarredVideos,
   getVideosByProvider,
   getVideosByLanguage,
   getAllVideos,
@@ -24,7 +23,6 @@ export {
   getAudioById,
   getAudioByProviderAndAid,
   getAudiosBySyncStatus,
-  getStarredAudios,
   getAudioByTranslationKey,
   getAudiosByTranslationKey,
   getAudiosByProvider,
@@ -36,8 +34,7 @@ export {
   updateAudio,
   deleteAudio,
   type TTSAudioInput,
-  type PlatformAudioInput,
-  type AudioInput,
+  type UserAudioInput,
 } from './audio-repository'
 
 // Transcript Repository

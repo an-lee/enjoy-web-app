@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
-import { useCreateAudio, useCreateTranscript } from './queries'
+import { useCreateTTSAudio, useCreateTranscript } from './queries'
 import { createLogger } from '@/lib/utils'
 import type { Audio, TTSAudioInput, TranscriptInput } from '@/types/db'
 
@@ -38,7 +38,7 @@ export function useTTS(options: UseTTSOptions): UseTTSReturn {
   const [isSynthesizing, setIsSynthesizing] = useState(false)
 
   // React Query mutations
-  const createAudioMutation = useCreateAudio()
+  const createAudioMutation = useCreateTTSAudio()
   const createTranscriptMutation = useCreateTranscript()
 
   const synthesize = useCallback(

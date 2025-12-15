@@ -47,7 +47,6 @@ export interface MediaMetadata {
   title: string
   description?: string
   language: string
-  level?: 'beginner' | 'intermediate' | 'advanced'
 }
 
 // ============================================================================
@@ -189,7 +188,6 @@ export function ImportMediaDialog({
         title: title.trim(),
         description: description.trim() || undefined,
         language,
-        level: level ? (level as MediaMetadata['level']) : undefined,
       })
       handleOpenChange(false)
     } catch (err) {

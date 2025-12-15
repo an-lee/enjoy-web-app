@@ -29,12 +29,12 @@ import {
 import {
   useLibrary,
   useLibraryStats,
-  useToggleStarred,
   useDeleteLibraryItem,
   type MediaType,
   type LibraryMedia,
 } from '@/hooks/queries'
 import { saveLocalAudio, saveLocalVideo } from '@/db'
+import { getFileHandleFromFile } from '@/lib/file-helpers'
 import { usePlayerStore } from '@/stores'
 
 // ============================================================================
@@ -108,7 +108,6 @@ function Library() {
   const { data: stats } = useLibraryStats()
 
   // Mutations
-  const toggleStarredMutation = useToggleStarred()
   const deleteItemMutation = useDeleteLibraryItem()
 
   // Handlers
@@ -137,25 +136,6 @@ function Library() {
     [loadMedia, t]
   )
 
-  const handleToggleStar = useCallback(
-    async (item: LibraryMedia) => {
-      try {
-        await toggleStarredMutation.mutateAsync({
-          id: item.id,
-          type: item.type,
-          starred: !item.starred,
-        })
-        toast.success(
-          item.starred ? t('library.unstarred') : t('library.starred')
-        )
-      } catch (err) {
-        log.error('Failed to toggle star:', err)
-        toast.error(t('library.starFailed'))
-      }
-    },
-    [toggleStarredMutation, t]
-  )
-
   const handleDelete = useCallback(
     async (item: LibraryMedia) => {
       try {
@@ -174,32 +154,43 @@ function Library() {
 
   const handleImport = useCallback(
     async (file: File, metadata: MediaMetadata) => {
-      const isVideo = file.type.startsWith('video/')
-      const duration = await getMediaDuration(file)
+      try {
+        const isVideo = file.type.startsWith('video/')
+        const duration = await getMediaDuration(file)
 
-      if (isVideo) {
-        await saveLocalVideo(file, {
-          title: metadata.title,
-          description: metadata.description,
-          language: metadata.language,
-          level: metadata.level,
-          duration,
-        })
-      } else {
-        await saveLocalAudio(file, {
-          title: metadata.title,
-          description: metadata.description,
-          language: metadata.language,
-          level: metadata.level,
-          duration,
-        })
+        // Convert File to FileSystemFileHandle
+        // Note: This requires user interaction to save the file
+        const fileHandle = await getFileHandleFromFile(file)
+        if (!fileHandle) {
+          toast.error(t('library.import.cancelled'))
+          return
+        }
+
+        if (isVideo) {
+          await saveLocalVideo(fileHandle, {
+            title: metadata.title,
+            description: metadata.description,
+            language: metadata.language,
+            duration,
+          })
+        } else {
+          await saveLocalAudio(fileHandle, {
+            title: metadata.title,
+            description: metadata.description,
+            language: metadata.language,
+            duration,
+          })
+        }
+
+        toast.success(t('library.import.success'))
+        // Reset to first page to see the new item
+        setCurrentPage(1)
+        setSearchQuery('')
+        setMediaType('all')
+      } catch (err) {
+        log.error('Failed to import media:', err)
+        toast.error(err instanceof Error ? err.message : t('library.import.failed'))
       }
-
-      toast.success(t('library.import.success'))
-      // Reset to first page to see the new item
-      setCurrentPage(1)
-      setSearchQuery('')
-      setMediaType('all')
     },
     [t]
   )
@@ -286,7 +277,6 @@ function Library() {
                 key={item.id}
                 item={item}
                 onPlay={handlePlay}
-                onToggleStar={handleToggleStar}
                 onDelete={handleDelete}
                 isDeleting={deleteItemMutation.isPending}
               />

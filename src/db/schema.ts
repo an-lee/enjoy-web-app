@@ -84,6 +84,33 @@ export class EnjoyDatabase extends Dexie {
       echoSessions:
         'id, [targetType+targetId], targetType, targetId, language, syncStatus, startedAt, lastActiveAt, createdAt, updatedAt',
     })
+
+    // Version 8: Refactor media storage - remove level/starred, use fileHandle
+    this.version(8).stores({
+      // Video: removed level, starred indexes
+      videos:
+        'id, [vid+provider], provider, language, syncStatus, createdAt, updatedAt',
+
+      // Audio: removed level, starred indexes
+      audios:
+        'id, [aid+provider], provider, language, translationKey, voice, syncStatus, createdAt, updatedAt',
+
+      // Other tables unchanged
+      transcripts:
+        'id, [targetType+targetId], [targetType+targetId+language+source], language, source, syncStatus, createdAt, updatedAt',
+      recordings:
+        'id, [targetType+targetId], targetType, targetId, language, syncStatus, createdAt, updatedAt',
+      dictations:
+        'id, [targetType+targetId], targetType, targetId, language, syncStatus, createdAt, updatedAt',
+      translations:
+        'id, sourceText, sourceLanguage, targetLanguage, style, [sourceText+targetLanguage+style], syncStatus, createdAt, updatedAt',
+      cachedDefinitions:
+        '[word+languagePair], id, syncStatus, expiresAt, createdAt, updatedAt',
+      syncQueue:
+        '++id, entityType, entityId, action, retryCount, createdAt',
+      echoSessions:
+        'id, [targetType+targetId], targetType, targetId, language, syncStatus, startedAt, lastActiveAt, createdAt, updatedAt',
+    })
   }
 }
 

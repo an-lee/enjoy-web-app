@@ -57,7 +57,7 @@ export type {
   // Input types
   VideoInput,
   TTSAudioInput,
-  PlatformAudioInput,
+  UserAudioInput,
   AudioInput,
   TranscriptInput,
   RecordingInput,
@@ -76,7 +76,6 @@ export {
   getVideoById,
   getVideoByProviderAndVid,
   getVideosBySyncStatus,
-  getStarredVideos,
   getVideosByProvider,
   getVideosByLanguage,
   getAllVideos,
@@ -92,7 +91,6 @@ export {
   getAudioById,
   getAudioByProviderAndAid,
   getAudiosBySyncStatus,
-  getStarredAudios,
   getAudioByTranslationKey,
   getAudiosByTranslationKey,
   getAudiosByProvider,
@@ -101,6 +99,7 @@ export {
   getAllAudios,
   saveAudio,
   saveLocalAudio,
+  saveTTSAudio,
   updateAudio,
   deleteAudio,
 } from './repositories/audio-repository'

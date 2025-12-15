@@ -23,6 +23,7 @@ export {
   useAudiosByTranslationKey,
   // Mutation hooks (Create/Delete)
   useCreateAudio,
+  useCreateTTSAudio,
   useDeleteAudio,
   // Types
   type AudioLoader,

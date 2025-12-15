@@ -20,6 +20,7 @@ export {
   useAudioHistory,
   useAudiosByTranslationKey,
   useCreateAudio,
+  useCreateTTSAudio,
   useDeleteAudio,
   type AudioLoader,
   type UseAudioOptions,
