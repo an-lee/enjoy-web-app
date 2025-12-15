@@ -211,31 +211,6 @@ export function useLibraryStats(enabled: boolean = true) {
 }
 
 /**
- * Hook to toggle starred status for a media item
- * @deprecated starred field has been removed from the schema
- */
-/**
- * @deprecated starred field has been removed from the schema
- */
-export function useToggleStarred() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (_params: {
-      id: string
-      type: MediaType
-      starred: boolean
-    }): Promise<void> => {
-      // No-op: starred field has been removed
-      // This function is kept for backward compatibility but does nothing
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: libraryQueryKeys.all })
-    },
-  })
-}
-
-/**
  * Hook to delete a media item
  */
 export function useDeleteLibraryItem() {

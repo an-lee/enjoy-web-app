@@ -75,10 +75,3 @@ export type UserAudioInput = Omit<Audio, 'id' | 'createdAt' | 'updatedAt'> & {
   aid?: string // Optional, will be calculated from fileHandle if not provided
   source?: string // Optional URL if downloaded from web
 }
-
-/**
- * Union type for audio input (for backward compatibility, prefer specific types)
- * @deprecated Use TTSAudioInput or UserAudioInput directly
- */
-export type AudioInput = TTSAudioInput | UserAudioInput
-

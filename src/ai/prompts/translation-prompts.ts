@@ -72,27 +72,6 @@ export function buildSmartTranslationPrompt(
 }
 
 /**
- * Build combined prompt (for backward compatibility or models that don't support system prompts)
- * @deprecated Use buildSmartTranslationPrompt instead for better control
- */
-export function buildSmartTranslationPromptLegacy(
-  text: string,
-  sourceLanguage: string,
-  targetLanguage: string,
-  style: TranslationStyle = 'natural',
-  customPrompt?: string
-): string {
-  const { systemPrompt, userPrompt } = buildSmartTranslationPrompt(
-    text,
-    sourceLanguage,
-    targetLanguage,
-    style,
-    customPrompt
-  )
-  return `${systemPrompt}\n\n${userPrompt}`
-}
-
-/**
  * Get translation style description
  */
 export function getTranslationStyleDescription(style: TranslationStyle): string {

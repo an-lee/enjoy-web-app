@@ -62,7 +62,6 @@ export {
   useLibrary,
   useLibraryStats,
   // Mutation hooks
-  useToggleStarred,
   useDeleteLibraryItem,
   // Types
   type MediaType,

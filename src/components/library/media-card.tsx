@@ -139,9 +139,6 @@ export function MediaCard({
             {isAudio ? t('library.audio') : t('library.video')}
           </Badge>
         </div>
-
-        {/* Star button */}
-        {/* Star button removed - starred field deprecated */}
       </div>
 
       {/* Content */}
@@ -174,7 +171,6 @@ export function MediaCard({
                 <Icon icon="lucide:play" className="w-4 h-4 mr-2" />
                 {t('library.play')}
               </DropdownMenuItem>
-              {/* Star menu item removed - starred field deprecated */}
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="text-destructive focus:text-destructive"

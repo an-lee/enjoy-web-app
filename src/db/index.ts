@@ -58,7 +58,6 @@ export type {
   VideoInput,
   TTSAudioInput,
   UserAudioInput,
-  AudioInput,
   TranscriptInput,
   RecordingInput,
   DictationInput,
