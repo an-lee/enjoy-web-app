@@ -870,6 +870,43 @@ describe('convertToTranscriptFormat', () => {
         console.error('This suggests meaning group detection or break logic needs improvement')
       }
     })
+
+    it('should not split inside a tight meaning unit like "wasn\'t bad enough."', () => {
+      // Regression: user reported a bad split that produced a standalone "enough." segment
+      // after hitting maxWordsPerSegment.
+      const text =
+        "If pushing questionably safe products on children and teens nationwide wasn't bad enough."
+
+      const timings: RawWordTiming[] = [
+        { text: 'If', startTime: 0.26, endTime: 0.5 },
+        { text: 'pushing', startTime: 0.5, endTime: 0.84 },
+        { text: 'questionably', startTime: 0.84, endTime: 1.56 },
+        { text: 'safe', startTime: 1.56, endTime: 1.88 },
+        { text: 'products', startTime: 1.88, endTime: 2.2 },
+        { text: 'on', startTime: 2.2, endTime: 2.44 },
+        { text: 'children', startTime: 2.44, endTime: 2.76 },
+        { text: 'and', startTime: 2.76, endTime: 3.02 },
+        { text: 'teens', startTime: 3.02, endTime: 3.5 },
+        { text: 'nationwide', startTime: 3.5, endTime: 4.26 },
+        { text: "wasn't", startTime: 4.26, endTime: 4.82 },
+        { text: 'bad', startTime: 4.82, endTime: 5.1 },
+        { text: 'enough.', startTime: 5.1, endTime: 5.62 },
+      ]
+
+      const result = convertToTranscriptFormat(text, timings, 'en')
+      const segmentTexts = result.timeline.map((seg) => seg.text.trim().replace(/\s+/g, ' '))
+
+      // Never allow "enough." to be a standalone segment
+      expect(segmentTexts).not.toContain('enough.')
+
+      // Ensure the phrase stays contiguous within some segment
+      const combined = segmentTexts.join(' ')
+      expect(combined).toContain("wasn't bad enough.")
+
+      // Sanity: all words must be present
+      expect(combined).toContain('If')
+      expect(combined).toContain('nationwide')
+    })
   })
 })
 

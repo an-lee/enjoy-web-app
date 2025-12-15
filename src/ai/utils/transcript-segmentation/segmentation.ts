@@ -44,10 +44,17 @@ export function segmentWords(words: WordWithMetadata[]): WordSegment[] {
       currentWordCount >= SEGMENTATION_CONFIG.maxWordsPerSegment &&
       i < words.length - 1
     ) {
+      // If we're just over the soft max, prefer slightly overflowing to reach
+      // a nearby strong boundary (sentence end / meaning-group boundary).
+      // This avoids splitting fixed semantic units like "wasn't bad enough."
+      if (shouldDelayForceBreak(words, i, currentWordCount)) {
+        continue
+      }
+
       // Force break if segment is too long
       // Try to find the best break point in the last few words
       const breakIndex = findBestBreakPointInSegment(currentSegment)
-      if (breakIndex > 0 && breakIndex < currentSegment.length) {
+      if (breakIndex >= 0 && breakIndex < currentSegment.length - 1) {
         // Split at the best break point
         const firstPart = currentSegment.slice(0, breakIndex + 1)
         const secondPart = currentSegment.slice(breakIndex + 1)
@@ -78,6 +85,46 @@ export function segmentWords(words: WordWithMetadata[]): WordSegment[] {
   }
 
   return segments
+}
+
+/**
+ * Decide whether we should postpone a force-break slightly, to reach a nearby strong boundary.
+ * This is especially important for English where Compromise meaning groups represent "意群".
+ */
+function shouldDelayForceBreak(
+  words: WordWithMetadata[],
+  currentIndex: number,
+  currentWordCount: number
+): boolean {
+  // Allow a small overflow window to reach a better breakpoint.
+  // Keep this generic (not word-list based): driven by sentence ends / meaning-group boundaries.
+  const overflowLookahead = 4
+  const hardMaxWords = SEGMENTATION_CONFIG.maxWordsPerSegment + overflowLookahead
+
+  if (currentWordCount >= hardMaxWords) {
+    return false
+  }
+
+  // Look ahead for a strong boundary.
+  // If we can hit one within a few words, postpone breaking now.
+  for (let offset = 1; offset <= overflowLookahead; offset++) {
+    const idx = currentIndex + offset
+    if (idx >= words.length) {
+      break
+    }
+
+    const w = words[idx]
+    if (w.isSentenceEnd) {
+      return true
+    }
+
+    // Meaning-group boundary is a safe semantic breakpoint (意群边界)
+    if (w.isAtMeaningGroupBoundary) {
+      return true
+    }
+  }
+
+  return false
 }
 
 /**

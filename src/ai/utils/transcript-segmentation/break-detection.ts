@@ -332,14 +332,21 @@ function shouldBreakAtComma(
  * @returns Index of the best break point within the segment
  */
 export function findBestBreakPointInSegment(segment: WordWithMetadata[]): number {
-  // Look at the last few words for a good break point
-  const lookback = Math.min(5, segment.length - 1)
-  const startIndex = Math.max(0, segment.length - lookback - 1)
+  // Look back through the segment for a good break point.
+  // Important: never return the last word as a breakpoint, otherwise we create
+  // pathological "one-word tail" segments (e.g. "... bad" / "enough.").
+  if (segment.length < 2) {
+    return -1
+  }
+
+  const lastBreakCandidateIndex = segment.length - 2
+  const lookback = Math.min(12, lastBreakCandidateIndex + 1) // scan up to 12 words back (or full segment if shorter)
+  const startIndex = Math.max(0, lastBreakCandidateIndex - lookback + 1)
 
   let bestIndex = -1
   let bestScore = 0
 
-  for (let i = startIndex; i < segment.length - 1; i++) {
+  for (let i = startIndex; i <= lastBreakCandidateIndex; i++) {
     const word = segment[i]
 
     // Skip abbreviations - don't break after them
@@ -386,12 +393,18 @@ export function findBestBreakPointInSegment(segment: WordWithMetadata[]): number
       score += 2
     }
 
+    // Penalize breakpoints that would leave a 1-word tail in the forced-split remainder
+    const wordsAfter = segment.length - (i + 1)
+    if (wordsAfter === 1) {
+      score -= 6
+    }
+
     if (score > bestScore) {
       bestScore = score
       bestIndex = i
     }
   }
 
-  return bestIndex >= 0 ? bestIndex : segment.length - 1
+  return bestIndex
 }
 
