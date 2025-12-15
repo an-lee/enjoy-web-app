@@ -225,7 +225,6 @@
           "enjoy": "O serviço em nuvem tem limites de tamanho de arquivo e duração",
           "longDuration": "Esta mídia tem {{minutes}} minutos de duração, o que pode levar muito tempo para processar"
         },
-        "localNote": "Nota: A transcrição do modelo local mostrará o progresso e pode levar vários minutos para arquivos de áudio longos.",
         "confirm": "Iniciar Transcrição"
       },
       "activateEchoMode": "Ativar Modo Eco",

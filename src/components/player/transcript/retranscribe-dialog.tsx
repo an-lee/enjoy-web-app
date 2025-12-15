@@ -19,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 
 interface RetranscribeDialogProps {
   open: boolean
@@ -46,44 +47,62 @@ export function RetranscribeDialog({
 
   const durationMinutes = Math.ceil(mediaDuration / 60)
 
+  const hasLimitations =
+    asrConfig.provider === AIProvider.LOCAL ||
+    asrConfig.provider === AIProvider.ENJOY ||
+    durationMinutes > 30
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('player.transcript.confirmRetranscribe.title')}</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3">
-            <div>
-              <p className="font-medium mb-1">{t('player.transcript.confirmRetranscribe.currentProvider')}</p>
-              <p className="text-sm">{providerName}</p>
-              <Link
-                to="/settings"
-                search={{ tab: 'ai' }}
-                className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
-                onClick={() => onOpenChange(false)}
-              >
-                {t('player.transcript.confirmRetranscribe.changeSettings')}
-                <Icon icon="lucide:external-link" className="w-3 h-3" />
-              </Link>
+          <AlertDialogDescription className="space-y-4">
+            {/* Provider Info */}
+            <div className="flex items-center justify-between gap-3 py-2 border-b">
+              <div className="flex items-center gap-2">
+                <Icon icon="lucide:settings-2" className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {t('player.transcript.confirmRetranscribe.currentProvider')}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{providerName}</Badge>
+                <Link
+                  to="/settings"
+                  search={{ tab: 'ai' }}
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  onClick={() => onOpenChange(false)}
+                >
+                  <Icon icon="lucide:external-link" className="w-3 h-3" />
+                </Link>
+              </div>
             </div>
 
-            <div>
-              <p className="font-medium mb-1">{t('player.transcript.confirmRetranscribe.limitations')}</p>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                {asrConfig.provider === AIProvider.LOCAL && (
-                  <li>{t('player.transcript.confirmRetranscribe.limitation.local')}</li>
-                )}
-                {asrConfig.provider === AIProvider.ENJOY && (
-                  <li>{t('player.transcript.confirmRetranscribe.limitation.enjoy')}</li>
-                )}
-                {durationMinutes > 30 && (
-                  <li>{t('player.transcript.confirmRetranscribe.limitation.longDuration', { minutes: durationMinutes })}</li>
-                )}
-              </ul>
-            </div>
-
-            {asrConfig.provider === AIProvider.LOCAL && (
-              <div className="bg-muted p-2 rounded text-xs">
-                <p>{t('player.transcript.confirmRetranscribe.localNote')}</p>
+            {/* Limitations */}
+            {hasLimitations && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Icon icon="lucide:info" className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">
+                    {t('player.transcript.confirmRetranscribe.limitations')}
+                  </span>
+                </div>
+                <ul className="text-sm space-y-1.5 ml-6 list-disc text-muted-foreground">
+                  {asrConfig.provider === AIProvider.LOCAL && (
+                    <li>{t('player.transcript.confirmRetranscribe.limitation.local')}</li>
+                  )}
+                  {asrConfig.provider === AIProvider.ENJOY && (
+                    <li>{t('player.transcript.confirmRetranscribe.limitation.enjoy')}</li>
+                  )}
+                  {durationMinutes > 30 && (
+                    <li>
+                      {t('player.transcript.confirmRetranscribe.limitation.longDuration', {
+                        minutes: durationMinutes,
+                      })}
+                    </li>
+                  )}
+                </ul>
               </div>
             )}
           </AlertDialogDescription>

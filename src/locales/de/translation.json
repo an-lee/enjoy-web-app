@@ -225,7 +225,6 @@
           "enjoy": "Cloud-Dienst hat Dateigrößen- und Dauerlimits",
           "longDuration": "Dieses Medium ist {{minutes}} Minuten lang und kann erhebliche Zeit in Anspruch nehmen"
         },
-        "localNote": "Hinweis: Die Transkription des lokalen Modells zeigt den Fortschritt an und kann bei langen Audiodateien mehrere Minuten dauern.",
         "confirm": "Transkription starten"
       },
       "activateEchoMode": "Echo-Modus aktivieren",

@@ -225,7 +225,6 @@
           "enjoy": "Cloud service has file size and duration limits",
           "longDuration": "This media is {{minutes}} minutes long, which may take significant time to process"
         },
-        "localNote": "Note: Local model transcription will show progress and may take several minutes for long audio files.",
         "confirm": "Start Transcription"
       },
       "activateEchoMode": "Activate Echo Mode",

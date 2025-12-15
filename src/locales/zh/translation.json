@@ -225,7 +225,6 @@
           "enjoy": "云服务有文件大小和时长限制",
           "longDuration": "此媒体时长为 {{minutes}} 分钟，处理可能需要较长时间"
         },
-        "localNote": "注意：本地模型识别将显示进度，长音频文件可能需要几分钟时间。",
         "confirm": "开始识别"
       },
       "activateEchoMode": "激活跟读模式",
