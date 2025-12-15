@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import type { EchoSession, TargetType, EchoSessionInput } from '@/types/db'
+import type { EchoSession, EchoSessionInput } from '@/types/db'
 
 // Create in-memory data store
 const echoSessionData = new Map<string, EchoSession>()
@@ -76,7 +76,6 @@ import {
   getOrCreateActiveEchoSession,
   updateEchoSessionProgress,
   saveEchoSession,
-  updateEchoSession,
   completeEchoSession,
   deleteEchoSession,
   echoSessionRepository,
@@ -350,7 +349,6 @@ describe('EchoSession Repository', () => {
       it('should ensure only one active session per media', async () => {
         // Create first active session
         const firstId = await getOrCreateActiveEchoSession('Audio', 'audio-1', 'en')
-        const firstSession = echoSessionData.get(firstId)!
 
         // Try to create another for same media
         const secondId = await getOrCreateActiveEchoSession('Audio', 'audio-1', 'en')
@@ -370,6 +368,7 @@ describe('EchoSession Repository', () => {
   describe('Mutation Operations', () => {
     describe('saveEchoSession', () => {
       it('should create new session with generated ID', async () => {
+        const now = new Date().toISOString()
         const input: EchoSessionInput = {
           targetType: 'Audio',
           targetId: 'audio-1',
@@ -377,6 +376,8 @@ describe('EchoSession Repository', () => {
           currentTime: 30,
           playbackRate: 1.5,
           volume: 0.8,
+          startedAt: now,
+          lastActiveAt: now,
         }
 
         const id = await saveEchoSession(input)
@@ -395,12 +396,18 @@ describe('EchoSession Repository', () => {
       })
 
       it('should use provided recordingsCount and recordingsDuration', async () => {
+        const now = new Date().toISOString()
         const input: EchoSessionInput = {
           targetType: 'Audio',
           targetId: 'audio-1',
           language: 'en',
+          currentTime: 0,
+          playbackRate: 1,
+          volume: 1,
           recordingsCount: 5,
           recordingsDuration: 10000,
+          startedAt: now,
+          lastActiveAt: now,
         }
 
         const id = await saveEchoSession(input)

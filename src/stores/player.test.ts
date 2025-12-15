@@ -106,7 +106,7 @@ vi.mock('@/db', () => ({
 
 // Import store after mocking
 import { usePlayerStore } from './player'
-import { getOrCreateActiveEchoSession, updateEchoSessionProgress, getEchoSessionById } from '@/db'
+import { getOrCreateActiveEchoSession, updateEchoSessionProgress } from '@/db'
 
 // ============================================================================
 // Test Utilities
