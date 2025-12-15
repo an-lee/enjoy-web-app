@@ -9,6 +9,7 @@ import { Icon } from '@iconify/react'
 import { Link } from '@tanstack/react-router'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { AIProvider } from '@/ai/types'
+import { usePlayerStore } from '@/stores/player'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,7 @@ export function RetranscribeDialog({
   mediaDuration,
 }: RetranscribeDialogProps) {
   const { t } = useTranslation()
+  const collapse = usePlayerStore((state) => state.collapse)
 
   // Get current ASR provider info
   const asrConfig = getAIServiceConfig('asr')
@@ -72,7 +74,10 @@ export function RetranscribeDialog({
                   to="/settings"
                   search={{ tab: 'ai' }}
                   className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => {
+                    onOpenChange(false)
+                    collapse()
+                  }}
                 >
                   <Icon icon="lucide:external-link" className="w-3 h-3" />
                 </Link>
