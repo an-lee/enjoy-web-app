@@ -14,6 +14,9 @@ declare namespace Cloudflare {
 		// Rate limiting KV namespace (optional but recommended)
 		RATE_LIMIT_KV?: KVNamespace
 
+		// Translation cache KV namespace (optional but recommended)
+		TRANSLATION_CACHE_KV?: KVNamespace
+
 		// Rails API base URL (for authentication)
 		API_BASE_URL?: string
 	}

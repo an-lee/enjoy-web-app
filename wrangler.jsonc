@@ -16,7 +16,9 @@
 	"assets": {
 		"directory": "./dist/client",
 		"binding": "ASSETS",
-		"run_worker_first": ["/api/*"]
+		"run_worker_first": [
+			"/api/*"
+		]
 	},
 	/**
 	 * KV Namespace Bindings
@@ -26,12 +28,22 @@
 	 * 1. Run: wrangler kv:namespace create "RATE_LIMIT_KV"
 	 * 2. This will output a namespace ID, add it to the "id" field below
 	 * 3. For preview environments, also create: wrangler kv:namespace create "RATE_LIMIT_KV" --preview
+	 *
+	 * For translation cache:
+	 * 1. Run: wrangler kv:namespace create "TRANSLATION_CACHE_KV"
+	 * 2. This will output a namespace ID, add it to the "id" field below
+	 * 3. For preview environments, also create: wrangler kv:namespace create "TRANSLATION_CACHE_KV" --preview
 	 */
 	"kv_namespaces": [
 		{
 			"binding": "RATE_LIMIT_KV",
 			"id": "950d90c909264f40a6fbad68469eea91",
 			"preview_id": "299e6a5c12fd4ea5888a4cf23b96ab4a"
+		},
+		{
+			"binding": "TRANSLATION_CACHE_KV",
+			"id": "c98f68336b8c47de91699ec88e79eb6f",
+			"preview_id": "389491b5871e43e78d1257bd5cf31350"
 		}
 	],
 	/**
