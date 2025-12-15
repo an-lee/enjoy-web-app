@@ -51,7 +51,8 @@
 		"AZURE_SPEECH_REGION": "southeastasia",
 		"API_BASE_URL": "https://enjoy.bot",
 		"WORKERS_AI_TEXT_MODEL": "@cf/meta/llama-3-8b-instruct-awq",
-		"WORKERS_AI_TTS_MODEL": "@cf/myshell-ai/melotts"
+		"WORKERS_AI_TTS_MODEL": "@cf/myshell-ai/melotts",
+		"WORKERS_AI_ASR_MODEL": "@cf/openai/whisper-large-v3-turbo"
 	},
 	/**
 	 * Secrets (Sensitive Data)

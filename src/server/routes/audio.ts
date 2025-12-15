@@ -125,7 +125,7 @@ audio.post('/transcriptions', async (c) => {
 		}
 
 		// Extract optional parameters
-		const model = (formData.get('model') as string) || '@cf/openai/whisper-large-v3-turbo'
+		const model = (formData.get('model') as string) || env.WORKERS_AI_ASR_MODEL || '@cf/openai/whisper-large-v3-turbo'
 		const language = formData.get('language') as string | null
 		const prompt = formData.get('prompt') as string | null
 		const responseFormat = (formData.get('response_format') as string) || 'json'
