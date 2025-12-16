@@ -282,4 +282,4 @@ export type { SyncManagerOptions } from './services/sync-manager'
 // Sync Stats Exports
 // ============================================================================
 
-export { getUploadStats } from './repositories/sync-stats-repository'
+export { getUploadStats, queueLocalEntitiesForSync } from './repositories/sync-stats-repository'

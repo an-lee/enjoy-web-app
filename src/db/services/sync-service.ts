@@ -32,6 +32,7 @@ import {
   getLastSyncAt,
   updateLastSyncAt,
 } from '../repositories/sync-state-repository'
+import { queueLocalEntitiesForSync } from '../repositories/sync-stats-repository'
 import { processBatch } from '../utils/async-batch'
 import type { Audio, Video, SyncStatus } from '@/types/db'
 
@@ -293,9 +294,22 @@ async function processSyncQueueItem(item: {
 
 /**
  * Process pending sync queue items
+ * If not in background mode, will also queue local entities that are not yet in queue
  */
 export async function processSyncQueue(options: SyncOptions = {}): Promise<SyncResult> {
   const { background = true } = options
+
+  // If not in background mode, queue local entities first
+  if (!background) {
+    log.debug('Queueing local entities not yet in sync queue...')
+    const queueResult = await queueLocalEntitiesForSync()
+    if (queueResult.queued > 0) {
+      log.info(`Queued ${queueResult.queued} local entities for sync`)
+    }
+    if (queueResult.skipped > 0) {
+      log.warn(`Skipped ${queueResult.skipped} entities (already in queue or failed)`)
+    }
+  }
 
   if (background) {
     // Process in background (non-blocking)
