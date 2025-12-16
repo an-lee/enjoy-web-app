@@ -6,7 +6,7 @@
  */
 
 import { memo } from 'react'
-import { cn } from '@/lib/utils'
+import { cn, formatTime } from '@/lib/utils'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLineItemProps {
@@ -16,6 +16,8 @@ interface TranscriptLineItemProps {
   isInEchoRegion: boolean
   isEchoStart?: boolean
   isEchoEnd?: boolean
+  /** Optional action area content (rendered on the right side of the header) */
+  actionArea?: React.ReactNode
 }
 
 export const TranscriptLineItem = memo(function TranscriptLineItem({
@@ -25,6 +27,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   isInEchoRegion,
   isEchoStart,
   isEchoEnd,
+  actionArea,
 }: TranscriptLineItemProps) {
   const isInteractive = typeof onClick === 'function'
 
@@ -68,41 +71,30 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
     ]
   )
 
-  return (
-    isInteractive ? (
-      <button
-        type="button"
-        onClick={onClick}
-        className={containerClassName}
-      >
-        {/* Primary text */}
-        <p
+  const content = (
+    <>
+      {/* Header row with timestamp and action area */}
+      <div className="flex items-center justify-between mb-1.5">
+        {/* Timestamp on the left */}
+        <span
           className={cn(
-            'text-base md:text-lg leading-relaxed transition-all duration-300',
-            isInEchoRegion && 'text-echo-region-foreground',
-            !isInEchoRegion && line.isActive && 'text-primary font-medium text-lg md:text-xl',
-            !isInEchoRegion && !line.isActive && 'text-foreground'
+            'text-xs font-mono tabular-nums transition-colors duration-300',
+            isInEchoRegion && 'text-(--echo-region-foreground)/70',
+            !isInEchoRegion && line.isActive && 'text-primary/80',
+            !isInEchoRegion && !line.isActive && 'text-muted-foreground/70'
           )}
         >
-          {line.primary.text}
-        </p>
+          {formatTime(line.startTimeSeconds)}
+        </span>
 
-        {/* Secondary text (translation) */}
-        {showSecondary && line.secondary && (
-          <p
-            className={cn(
-              'mt-1.5 text-sm leading-relaxed transition-all duration-300',
-              isInEchoRegion && 'text-(--echo-region-foreground)/80',
-              !isInEchoRegion && line.isActive && 'text-primary/70',
-              !isInEchoRegion && !line.isActive && 'text-muted-foreground'
-            )}
-          >
-            {line.secondary.text}
-          </p>
+        {/* Action area on the right */}
+        {actionArea && (
+          <div className="flex items-center gap-1">
+            {actionArea}
+          </div>
         )}
-      </button>
-    ) : (
-      <div className={containerClassName}>
+      </div>
+
       {/* Primary text */}
       <p
         className={cn(
@@ -128,6 +120,20 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
           {line.secondary.text}
         </p>
       )}
+    </>
+  )
+
+  return (
+    isInteractive ? (
+      <div
+        onClick={onClick}
+        className={containerClassName}
+      >
+        {content}
+      </div>
+    ) : (
+      <div className={containerClassName}>
+        {content}
       </div>
     )
   )
