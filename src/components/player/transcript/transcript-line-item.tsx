@@ -5,32 +5,23 @@
  * Handles click-to-seek, active state highlighting, and echo region styling.
  */
 
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { cn, formatTime } from '@/lib/utils'
 import { useDisplayTime } from '@/hooks/use-display-time'
+import { usePlayerStore } from '@/stores/player'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLineItemProps {
   line: TranscriptLineState
-  showSecondary: boolean
-  onClick?: () => void
-  isInEchoRegion: boolean
-  isEchoStart?: boolean
-  isEchoEnd?: boolean
-  /** Currently active line index (for computing isActive) */
-  activeLineIndex: number
+  /** Click handler - will be disabled automatically when in echo region or active */
+  onLineClick?: (line: TranscriptLineState) => void
   /** Optional action area content (rendered on the right side of the header) */
   actionArea?: React.ReactNode
 }
 
 export const TranscriptLineItem = memo(function TranscriptLineItem({
   line,
-  showSecondary,
-  onClick,
-  isInEchoRegion,
-  isEchoStart,
-  isEchoEnd,
-  activeLineIndex,
+  onLineClick,
   actionArea,
 }: TranscriptLineItemProps) {
   // Get current time directly from hook (no prop drilling needed)
@@ -38,12 +29,39 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
 
   // Compute time-dependent state locally for better performance
   // This avoids recreating the entire lines array on every time update
-  const isActive = line.index === activeLineIndex
+  const isActive = useMemo(() => {
+    return (
+      currentTimeSeconds >= line.startTimeSeconds &&
+      currentTimeSeconds < line.endTimeSeconds
+    )
+  }, [currentTimeSeconds, line.startTimeSeconds, line.endTimeSeconds])
   const isPast = currentTimeSeconds >= line.endTimeSeconds
+
+  // Get echo region state directly from store (no prop drilling needed)
+  const echoModeActive = usePlayerStore((state) => state.echoModeActive)
+  const echoStartLineIndex = usePlayerStore((state) => state.echoStartLineIndex)
+  const echoEndLineIndex = usePlayerStore((state) => state.echoEndLineIndex)
+
+  // Compute echo region state locally
+  const isInEchoRegion = useMemo(() => {
+    return (
+      echoModeActive &&
+      line.index >= echoStartLineIndex &&
+      line.index <= echoEndLineIndex
+    )
+  }, [echoModeActive, line.index, echoStartLineIndex, echoEndLineIndex])
+  const isEchoStart = echoModeActive && line.index === echoStartLineIndex
+  const isEchoEnd = echoModeActive && line.index === echoEndLineIndex
+
+  // Determine if secondary text should be shown (if secondary line exists)
+  const showSecondary = !!line.secondary
 
   // Disable click interaction when active or in echo region to allow text selection
   const shouldAllowTextSelection = isActive || isInEchoRegion
-  const isInteractive = typeof onClick === 'function' && !shouldAllowTextSelection
+  const onClick = onLineClick && !shouldAllowTextSelection
+    ? () => onLineClick(line)
+    : undefined
+  const isInteractive = typeof onClick === 'function'
 
   const containerClassName = cn(
     'group w-full text-left px-4 py-2.5 transition-all duration-300',

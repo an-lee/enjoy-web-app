@@ -75,12 +75,8 @@ export function TranscriptDisplay({
     transcripts,
     availableTranscripts,
     primaryLanguage,
-    secondaryLanguage,
     syncState,
   } = useTranscriptDisplay(currentTime)
-
-  // Calculate showSecondary based on config and secondary language
-  const showSecondary = config.showSecondary && !!secondaryLanguage
 
   // Track previous activeLineIndex to only log when it changes
   const prevActiveLineIndexRef = useRef<number>(activeLineIndex)
@@ -319,9 +315,7 @@ export function TranscriptDisplay({
       <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
         <TranscriptLines
           lines={lines}
-          showSecondary={showSecondary}
           onLineClick={handleLineClick}
-          activeLineIndex={activeLineIndex}
         />
       </ScrollArea>
     </div>
