@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VoiceSynthesisRouteImport } from './routes/voice-synthesis'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
+import { Route as SyncRouteImport } from './routes/sync'
 import { Route as SmartTranslationRouteImport } from './routes/smart-translation'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
@@ -25,6 +26,11 @@ const VoiceSynthesisRoute = VoiceSynthesisRouteImport.update({
 const VocabularyRoute = VocabularyRouteImport.update({
   id: '/vocabulary',
   path: '/vocabulary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SyncRoute = SyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SmartTranslationRoute = SmartTranslationRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
+  '/sync': typeof SyncRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
+  '/sync': typeof SyncRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
+  '/sync': typeof SyncRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/smart-translation'
+    | '/sync'
     | '/vocabulary'
     | '/voice-synthesis'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/smart-translation'
+    | '/sync'
     | '/vocabulary'
     | '/voice-synthesis'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/smart-translation'
+    | '/sync'
     | '/vocabulary'
     | '/voice-synthesis'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SettingsRoute: typeof SettingsRoute
   SmartTranslationRoute: typeof SmartTranslationRoute
+  SyncRoute: typeof SyncRoute
   VocabularyRoute: typeof VocabularyRoute
   VoiceSynthesisRoute: typeof VoiceSynthesisRoute
 }
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/vocabulary'
       fullPath: '/vocabulary'
       preLoaderRoute: typeof VocabularyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sync': {
+      id: '/sync'
+      path: '/sync'
+      fullPath: '/sync'
+      preLoaderRoute: typeof SyncRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/smart-translation': {
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SettingsRoute: SettingsRoute,
   SmartTranslationRoute: SmartTranslationRoute,
+  SyncRoute: SyncRoute,
   VocabularyRoute: VocabularyRoute,
   VoiceSynthesisRoute: VoiceSynthesisRoute,
 }

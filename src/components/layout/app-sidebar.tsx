@@ -10,6 +10,7 @@ import {
   IconMicrophone,
   IconBrandYoutube,
   IconCast,
+  IconCloud,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/layout/nav-main"
@@ -53,6 +54,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ]
 
   const navSecondary = [
+    {
+      title: t("common.sync"),
+      url: "/sync",
+      icon: IconCloud,
+    },
     {
       title: t("common.settings"),
       url: "/settings",

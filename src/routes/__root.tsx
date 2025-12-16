@@ -28,6 +28,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { PlayerContainer } from '@/components/player'
 import { AppHotkeysProvider, HotkeysHelpModal, useAppHotkey } from '@/components/hotkeys'
 import { useAuthStore, usePlayerStore } from '@/stores'
+import { initDatabaseWithCleanup, initSyncManager } from '@/db'
 
 // ============================================================================
 // Global Hotkeys Handler
@@ -180,6 +181,35 @@ function RootComponent() {
     }, 150)
     return () => clearTimeout(timer)
   }, [])
+
+  // Initialize database and sync manager after hydration
+  useEffect(() => {
+    // Only run on client side after hydration
+    if (!isHydrated || isLoginPage) {
+      return
+    }
+
+    // Initialize database and sync manager
+    const initializeApp = async () => {
+      try {
+        // Initialize database first
+        await initDatabaseWithCleanup()
+        log.info('Database initialized')
+
+        // Then initialize sync manager
+        await initSyncManager({
+          autoSyncOnStartup: true,
+          autoSyncOnNetworkRecovery: true,
+          periodicSyncInterval: 5 * 60 * 1000, // 5 minutes
+        })
+        log.info('Sync manager initialized')
+      } catch (error) {
+        log.error('Failed to initialize app:', error)
+      }
+    }
+
+    initializeApp()
+  }, [isHydrated, isLoginPage])
 
   // Client-side auth check after hydration
   useEffect(() => {

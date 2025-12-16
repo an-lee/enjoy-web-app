@@ -10,7 +10,7 @@
 
 import { createLogger } from '@/lib/utils'
 import { fullSync, processSyncQueue, queueUploadSync } from './sync-service'
-import type { SyncOptions } from './sync-service'
+import type { SyncOptions, SyncResult } from './sync-service'
 
 // ============================================================================
 // Logger
@@ -172,14 +172,19 @@ export function shutdownSyncManager(): void {
 /**
  * Manual sync trigger
  */
-export async function triggerSync(options: SyncOptions = {}): Promise<void> {
+export async function triggerSync(options: SyncOptions = {}): Promise<SyncResult> {
   if (!isOnline()) {
     log.warn('Cannot sync: network is offline')
-    return
+    return {
+      success: false,
+      synced: 0,
+      failed: 0,
+      errors: ['Network is offline'],
+    }
   }
 
   log.info('Manual sync triggered')
-  await fullSync(options)
+  return await fullSync(options)
 }
 
 /**

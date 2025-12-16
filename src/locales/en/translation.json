@@ -24,6 +24,7 @@
     "generateContent": "Generate Content",
     "smartTranslation": "Smart Translation",
     "voiceSynthesis": "Voice Synthesis",
+    "sync": "Sync",
     "plugins": "Plugins",
     "youtube": "YouTube",
     "podcast": "Podcast",
@@ -380,5 +381,89 @@
     "shrinkEchoForward": "Shrink Echo region forward",
     "librarySearch": "Focus search",
     "closeModal": "Close modal"
+  },
+  "sync": {
+    "title": "Sync",
+    "description": "Manage synchronization between local and remote data",
+    "status": {
+      "title": "Sync Status",
+      "description": "Current synchronization status",
+      "initialized": "Initialized",
+      "active": "Active",
+      "inactive": "Inactive",
+      "network": "Network",
+      "online": "Online",
+      "offline": "Offline",
+      "periodicSync": "Periodic Sync",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "actions": {
+      "title": "Sync Actions",
+      "description": "Manually trigger synchronization",
+      "syncNow": "Sync Now",
+      "forceSync": "Force Sync",
+      "syncing": "Syncing...",
+      "syncSuccess": "Sync completed: {{synced}} synced, {{failed}} failed",
+      "syncError": "Sync completed with {{failed}} errors",
+      "syncFailed": "Sync failed: {{error}}",
+      "forceSyncHint": "Force sync will download all records, ignoring incremental sync"
+    },
+    "lastSync": {
+      "title": "Last Sync",
+      "description": "Last synchronization times",
+      "audio": "Audio",
+      "video": "Video",
+      "never": "Never"
+    },
+    "queue": {
+      "title": "Sync Queue",
+      "description": "Pending and failed sync operations",
+      "pending": "Pending",
+      "failed": "Failed",
+      "empty": "No items in sync queue"
+    },
+    "upload": {
+      "status": {
+        "title": "Upload Status",
+        "description": "Local changes waiting to be uploaded",
+        "pending": "Pending",
+        "failed": "Failed",
+        "upToDate": "All changes are synced"
+      },
+      "actions": {
+        "title": "Upload",
+        "description": "Upload local changes to server",
+        "uploadNow": "Upload Now",
+        "uploading": "Uploading...",
+        "success": "Upload completed: {{synced}} synced, {{failed}} failed",
+        "error": "Upload completed with {{failed}} errors",
+        "failed": "Upload failed"
+      }
+    },
+    "download": {
+      "status": {
+        "title": "Download Status",
+        "description": "Last download from server",
+        "audio": "Audio",
+        "video": "Video",
+        "never": "Never",
+        "justNow": "Just now",
+        "minutesAgo": "{{minutes}} minutes ago",
+        "hoursAgo": "{{hours}} hours ago",
+        "daysAgo": "{{days}} days ago"
+      },
+      "actions": {
+        "title": "Download",
+        "description": "Download updates from server",
+        "downloadNow": "Download Now",
+        "forceDownload": "Force Download",
+        "downloading": "Downloading...",
+        "success": "Download completed: {{synced}} synced, {{failed}} failed",
+        "error": "Download completed with {{failed}} errors",
+        "failed": "Download failed",
+        "forceHint": "Force download will fetch all records, ignoring incremental sync"
+      }
+    }
   }
 }

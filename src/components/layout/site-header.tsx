@@ -21,6 +21,8 @@ export function SiteHeader() {
       return t("plugins.youtube.title")
     } else if (pathname.startsWith("/plugins/podcast")) {
       return t("plugins.podcast.title")
+    } else if (pathname.startsWith("/sync")) {
+      return t("sync.title", { defaultValue: "Sync" })
     } else if (pathname.startsWith("/settings")) {
       return t("settings.title")
     } else if (pathname.startsWith("/smart-translation")) {
