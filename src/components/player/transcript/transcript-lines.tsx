@@ -5,7 +5,6 @@
  */
 
 import { memo, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
 import { EchoRegionControls } from './echo-region-controls'
@@ -24,18 +23,12 @@ function TranscriptLinesComponent({
   showSecondary,
   onLineClick,
 }: TranscriptLinesProps) {
-  const { t } = useTranslation()
-
   // Echo region management
   const {
     echoModeActive,
     echoStartLineIndex,
     echoEndLineIndex,
     echoRegionTimeRange,
-    handleExpandEchoForward,
-    handleExpandEchoBackward,
-    handleShrinkEchoForward,
-    handleShrinkEchoBackward,
   } = useEchoRegion(lines)
 
   // Get reference text from echo region lines
@@ -87,15 +80,7 @@ function TranscriptLinesComponent({
           >
             {/* Echo region top controls - shown above the first line of echo region */}
             {isEchoStart && echoModeActive && (
-              <EchoRegionControls
-                position="top"
-                onExpand={handleExpandEchoBackward}
-                onShrink={handleShrinkEchoBackward}
-                expandDisabled={echoStartLineIndex === 0}
-                shrinkDisabled={echoStartLineIndex >= echoEndLineIndex}
-                expandLabel={t('player.transcript.expandEchoBackward')}
-                shrinkLabel={t('player.transcript.shrinkEchoBackward')}
-              />
+              <EchoRegionControls position="top" lines={lines} />
             )}
 
             <TranscriptLineItem
@@ -114,15 +99,7 @@ function TranscriptLinesComponent({
             {/* Echo region bottom controls - shown below the last line of echo region */}
             {isEchoEnd && echoModeActive && (
               <>
-                <EchoRegionControls
-                  position="bottom"
-                  onExpand={handleExpandEchoForward}
-                  onShrink={handleShrinkEchoForward}
-                  expandDisabled={echoEndLineIndex >= lines.length - 1}
-                  shrinkDisabled={echoEndLineIndex <= echoStartLineIndex}
-                  expandLabel={t('player.transcript.expandEchoForward')}
-                  shrinkLabel={t('player.transcript.shrinkEchoForward')}
-                />
+                <EchoRegionControls position="bottom" lines={lines} />
                 {/* Shadow Reading Panel - shown below echo region controls */}
                 {echoRegionTimeRange?.startTime !== undefined && echoRegionTimeRange?.endTime !== undefined && (
                   <ShadowReadingPanel

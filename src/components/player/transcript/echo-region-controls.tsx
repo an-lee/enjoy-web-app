@@ -4,10 +4,14 @@
  * Control buttons for expanding/shrinking echo region boundaries.
  */
 
+import { useTranslation } from 'react-i18next'
+import { useMemo } from 'react'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { formatHotkeyAsKbd } from '@/lib/format-hotkey'
 import { useHotkeyBinding } from '@/stores/hotkeys'
+import { useEchoRegion } from './use-echo-region'
+import type { TranscriptLineState } from './types'
 import {
   Tooltip,
   TooltipContent,
@@ -16,23 +20,52 @@ import {
 
 interface EchoRegionControlsProps {
   position: 'top' | 'bottom'
-  onExpand: () => void
-  onShrink: () => void
-  expandDisabled: boolean
-  shrinkDisabled: boolean
-  expandLabel: string
-  shrinkLabel: string
+  lines: TranscriptLineState[]
 }
 
 export function EchoRegionControls({
   position,
-  onExpand,
-  onShrink,
-  expandDisabled,
-  shrinkDisabled,
-  expandLabel,
-  shrinkLabel,
+  lines,
 }: EchoRegionControlsProps) {
+  const { t } = useTranslation()
+
+  // Get echo region data and handlers from hook
+  const {
+    echoStartLineIndex,
+    echoEndLineIndex,
+    handleExpandEchoForward,
+    handleExpandEchoBackward,
+    handleShrinkEchoForward,
+    handleShrinkEchoBackward,
+  } = useEchoRegion(lines)
+
+  // Determine handlers and disabled states based on position
+  const onExpand = position === 'top' ? handleExpandEchoBackward : handleExpandEchoForward
+  const onShrink = position === 'top' ? handleShrinkEchoBackward : handleShrinkEchoForward
+
+  const expandDisabled = useMemo(() => {
+    if (position === 'top') {
+      return echoStartLineIndex === 0
+    } else {
+      return echoEndLineIndex >= lines.length - 1
+    }
+  }, [position, echoStartLineIndex, echoEndLineIndex, lines.length])
+
+  const shrinkDisabled = useMemo(() => {
+    if (position === 'top') {
+      return echoStartLineIndex >= echoEndLineIndex
+    } else {
+      return echoEndLineIndex <= echoStartLineIndex
+    }
+  }, [position, echoStartLineIndex, echoEndLineIndex])
+
+  const expandLabel = position === 'top'
+    ? t('player.transcript.expandEchoBackward')
+    : t('player.transcript.expandEchoForward')
+  const shrinkLabel = position === 'top'
+    ? t('player.transcript.shrinkEchoBackward')
+    : t('player.transcript.shrinkEchoForward')
+
   // Get hotkey bindings based on position
   const expandKey = useHotkeyBinding(
     position === 'top' ? 'player.expandEchoBackward' : 'player.expandEchoForward'
