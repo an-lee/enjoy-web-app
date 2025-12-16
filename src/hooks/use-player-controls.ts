@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
 import { usePlayerStore } from '@/stores/player'
-import { useDisplayTime } from '@/hooks/use-display-time'
 import { setDisplayTime } from '@/hooks/use-display-time'
 import { useTranscriptDisplay } from '@/components/player/transcript/use-transcript-display'
 import {
@@ -35,7 +34,6 @@ function findMediaElement(): HTMLAudioElement | HTMLVideoElement | null {
  * consistent behavior across mini and expanded player modes.
  */
 export function usePlayerControls() {
-  const displayTime = useDisplayTime()
   const {
     currentSession,
     setPlaying,
@@ -46,7 +44,7 @@ export function usePlayerControls() {
     activateEchoMode,
     deactivateEchoMode,
   } = usePlayerStore()
-  const { lines, activeLineIndex } = useTranscriptDisplay(displayTime)
+  const { lines, activeLineIndex } = useTranscriptDisplay()
 
   // Calculate echo window
   const echoWindow = normalizeEchoWindow({

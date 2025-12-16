@@ -10,6 +10,8 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useShadowRecording } from '@/hooks/use-shadow-recording'
 import { usePlayerStore } from '@/stores/player'
+import { useTranscriptDisplay } from './use-transcript-display'
+import { useEchoRegion } from './use-echo-region'
 import { RecordButton } from './record-button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
@@ -18,26 +20,51 @@ import { RecordingPlayer } from './recording-player'
 import { useRecordingsByEchoRegion } from '@/hooks/queries'
 import type { TargetType } from '@/types/db'
 
-interface ShadowRecordingProps {
-  startTime: number // seconds
-  endTime: number // seconds
-  referenceText: string
-  language: string
-  targetType: TargetType
-  targetId: string
-}
-
-export function ShadowRecording({
-  startTime,
-  endTime,
-  referenceText,
-  language,
-  targetType,
-  targetId,
-}: ShadowRecordingProps) {
+export function ShadowRecording() {
   const { t } = useTranslation()
-  const duration = (endTime - startTime) * 1000 // Convert to milliseconds
   const canvasRef = useRef<HTMLDivElement>(null)
+
+  // Get echo region data from player store
+  const echoStartTime = usePlayerStore((state) => state.echoStartTime)
+  const echoEndTime = usePlayerStore((state) => state.echoEndTime)
+  const echoModeActive = usePlayerStore((state) => state.echoModeActive)
+  const currentSession = usePlayerStore((state) => state.currentSession)
+
+  // Get transcript lines for reference text calculation
+  const { lines } = useTranscriptDisplay()
+  const { echoStartLineIndex, echoEndLineIndex } = useEchoRegion()
+
+  // Calculate reference text from echo region lines
+  const referenceText = useMemo(() => {
+    if (!echoModeActive || echoStartLineIndex < 0 || echoEndLineIndex < 0) {
+      return ''
+    }
+    return lines
+      .filter(
+        (line) => line.index >= echoStartLineIndex && line.index <= echoEndLineIndex
+      )
+      .map((line) => line.primary.text)
+      .join(' ')
+  }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, lines])
+
+  // Get target info from current session
+  const targetType: TargetType | null = useMemo(() => {
+    if (!currentSession) return null
+    return currentSession.mediaType === 'audio' ? 'Audio' : 'Video'
+  }, [currentSession])
+
+  const targetId = currentSession?.mediaId || ''
+  const language = currentSession?.language || 'en'
+
+  // Use echo region times (already in seconds)
+  const startTime = echoStartTime >= 0 ? echoStartTime : 0
+  const endTime = echoEndTime >= 0 ? echoEndTime : 0
+  const duration = (endTime - startTime) * 1000 // Convert to milliseconds
+
+  // Early return if echo mode is not active or data is invalid
+  if (!echoModeActive || startTime < 0 || endTime < 0 || !targetType || !targetId) {
+    return null
+  }
 
   // Initialize recording hook
   const {

@@ -16,7 +16,6 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer'
 import { usePlayerStore } from '@/stores/player'
-import { useDisplayTime } from '@/hooks/use-display-time'
 import { useRetranscribe } from '@/hooks/use-retranscribe'
 import { useTranscriptDisplay } from '../transcript/use-transcript-display'
 import { LANGUAGE_NAMES } from '../transcript/constants'
@@ -29,7 +28,6 @@ interface ExpandedPlayerHeaderProps {
 
 export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps) {
   const { t } = useTranslation()
-  const displayTime = useDisplayTime()
 
   // Get player state from store
   const {
@@ -45,7 +43,7 @@ export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps) {
     setSecondaryLanguage,
     primaryLanguage,
     secondaryLanguage,
-  } = useTranscriptDisplay(displayTime)
+  } = useTranscriptDisplay()
 
   // Retranscribe functionality
   const { retranscribe, isTranscribing, progress: retranscribeProgress } = useRetranscribe()

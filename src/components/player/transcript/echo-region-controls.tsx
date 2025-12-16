@@ -37,7 +37,7 @@ export function EchoRegionControls({
     handleExpandEchoBackward,
     handleShrinkEchoForward,
     handleShrinkEchoBackward,
-  } = useEchoRegion(lines)
+  } = useEchoRegion()
 
   // Determine handlers and disabled states based on position
   const onExpand = position === 'top' ? handleExpandEchoBackward : handleExpandEchoForward

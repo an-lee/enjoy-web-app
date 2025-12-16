@@ -6,17 +6,12 @@
  * Styled with soft purple tone to distinguish from Echo Region.
  */
 
-import { useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDisplayTime } from '@/hooks/use-display-time'
-import { usePlayerStore } from '@/stores/player'
 import { ShadowReadingPanelHeader } from './shadow-reading-panel-header'
 import { PitchContourSection } from './pitch-contour-section'
 import { ShadowRecording } from './shadow-recording'
-import type { TargetType } from '@/types/db'
-import { createLogger } from '@/lib/utils'
-
-const logger = createLogger({ name: 'ShadowReadingPanel' })
 
 interface ShadowReadingPanelProps {
   startTime: number // seconds
@@ -27,21 +22,10 @@ interface ShadowReadingPanelProps {
 export function ShadowReadingPanel({
   startTime,
   endTime,
-  referenceText,
 }: ShadowReadingPanelProps) {
   const { t } = useTranslation()
   const duration = (endTime - startTime) * 1000 // Convert to milliseconds
   const displayTime = useDisplayTime()
-  const currentSession = usePlayerStore((state) => state.currentSession)
-
-  // Get targetType and targetId from current session
-  const targetType: TargetType | null = useMemo(() => {
-    if (!currentSession) return null
-    return currentSession.mediaType === 'audio' ? 'Audio' : 'Video'
-  }, [currentSession])
-
-  const targetId = currentSession?.mediaId || ''
-  const language = currentSession?.language || 'en'
 
   // Calculate relative time for progress indicator (0 to duration)
   const currentTimeRelative = useMemo(() => {
@@ -67,16 +51,7 @@ export function ShadowReadingPanel({
           currentTimeRelative={currentTimeRelative}
         />
 
-        {/* {targetType && (
-          <ShadowRecording
-            startTime={startTime}
-            endTime={endTime}
-            referenceText={referenceText}
-            language={language}
-            targetType={targetType}
-            targetId={targetId}
-          />
-        )} */}
+        <ShadowRecording />
       </div>
     </div>
   )

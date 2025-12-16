@@ -27,7 +27,7 @@ function TranscriptLinesComponent({
     echoStartLineIndex,
     echoEndLineIndex,
     echoRegionTimeRange,
-  } = useEchoRegion(lines)
+  } = useEchoRegion()
 
   // Get reference text from echo region lines
   const referenceText = useMemo(() => {
