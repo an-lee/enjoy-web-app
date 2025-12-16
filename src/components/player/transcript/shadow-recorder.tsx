@@ -8,7 +8,7 @@
 import { useMemo, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { useShadowRecording } from '@/hooks/use-shadow-recording'
+import { useRecorder } from '@/hooks/use-recorder'
 import { usePlayerStore } from '@/stores/player'
 import { useTranscriptDisplay } from './use-transcript-display'
 import { useEchoRegion } from './use-echo-region'
@@ -78,7 +78,7 @@ export function ShadowRecorder() {
     stopRecording,
     cancelRecording,
     error: recordingError,
-  } = useShadowRecording({
+  } = useRecorder({
     referenceStart: startTime * 1000, // Convert to milliseconds
     referenceDuration: (endTime - startTime) * 1000, // Convert to milliseconds
     referenceText,

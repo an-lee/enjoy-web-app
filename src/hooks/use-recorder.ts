@@ -27,7 +27,7 @@ import 'recorder-core/src/extensions/frequency.histogram.view'
 
 const log = createLogger({ name: 'useShadowRecording' })
 
-interface UseShadowRecordingOptions {
+interface UseRecorderOptions {
   referenceStart: number // milliseconds
   referenceDuration: number // milliseconds
   referenceText: string
@@ -37,7 +37,7 @@ interface UseShadowRecordingOptions {
   canvasRef?: React.RefObject<HTMLElement | null> // Container element for frequency visualization (div or canvas)
 }
 
-interface UseShadowRecordingReturn {
+interface UseRecorderReturn {
   isRecording: boolean
   recordingDuration: number // milliseconds
   volume: number // 0-100, for visualization
@@ -47,7 +47,7 @@ interface UseShadowRecordingReturn {
   error: string | null
 }
 
-export function useShadowRecording({
+export function useRecorder({
   referenceStart,
   referenceDuration,
   referenceText,
@@ -55,7 +55,7 @@ export function useShadowRecording({
   targetType,
   targetId,
   canvasRef,
-}: UseShadowRecordingOptions): UseShadowRecordingReturn {
+}: UseRecorderOptions): UseRecorderReturn {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
   const [volume, setVolume] = useState(0)
