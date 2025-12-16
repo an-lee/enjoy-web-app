@@ -23,11 +23,18 @@ function formatSecondsShort(value: number) {
   return `${Math.round(value)}s`
 }
 
+export interface PitchContourVisibility {
+  showWaveform: boolean
+  showReference: boolean
+  showUser: boolean
+}
+
 export function PitchContourChart({
   data,
   className,
   labels,
   currentTimeRelative,
+  visibility,
 }: {
   data: EchoRegionSeriesPoint[]
   className?: string
@@ -39,7 +46,16 @@ export function PitchContourChart({
   }
   /** Current playback time relative to region start (in seconds), undefined to hide progress */
   currentTimeRelative?: number
+  /** Visibility controls for different chart elements */
+  visibility?: PitchContourVisibility
 }) {
+  const defaultVisibility: PitchContourVisibility = {
+    showWaveform: true,
+    showReference: true,
+    showUser: true,
+  }
+  const vis = visibility ?? defaultVisibility
+
   const chartConfig: ChartConfig = React.useMemo(
     () => ({
       // Colors are defined in styles.css as CSS variables
@@ -187,48 +203,54 @@ export function PitchContourChart({
         />
 
         {/* Waveform envelope (reference) - background layer, subtle */}
-        <Line
-          yAxisId="amp"
-          type="monotone"
-          dataKey="ampRef"
-          stroke="var(--color-pitch-reference-amplitude)"
-          strokeWidth={0.5}
-          strokeOpacity={0.25}
-          isAnimationActive={false}
-          dot={false}
-          name="ampRef"
-        />
+        {vis.showWaveform && vis.showReference && (
+          <Line
+            yAxisId="amp"
+            type="monotone"
+            dataKey="ampRef"
+            stroke="var(--color-pitch-reference-amplitude)"
+            strokeWidth={0.5}
+            strokeOpacity={0.25}
+            isAnimationActive={false}
+            dot={false}
+            name="ampRef"
+          />
+        )}
 
         {/* Pitch contour (reference) - foreground layer, prominent */}
-        <Area
-          yAxisId="pitch"
-          type="monotone"
-          dataKey="pitchRefHz"
-          baseValue={0}
-          stroke="var(--color-pitch-reference)"
-          fill="var(--color-pitch-reference)"
-          fillOpacity={0.35}
-          strokeWidth={2.5}
-          isAnimationActive={false}
-          dot={false}
-          connectNulls={false}
-          name="pitchRefHz"
-        />
+        {vis.showReference && (
+          <Area
+            yAxisId="pitch"
+            type="monotone"
+            dataKey="pitchRefHz"
+            baseValue={0}
+            stroke="var(--color-pitch-reference)"
+            fill="var(--color-pitch-reference)"
+            fillOpacity={0.35}
+            strokeWidth={2.5}
+            isAnimationActive={false}
+            dot={false}
+            connectNulls={false}
+            name="pitchRefHz"
+          />
+        )}
 
-        {hasUser && (
+        {hasUser && vis.showUser && (
           <>
             {/* User waveform - background layer */}
-            <Line
-              yAxisId="amp"
-              type="monotone"
-              dataKey="ampUser"
-              stroke="var(--color-pitch-recording-amplitude)"
-              strokeWidth={0.5}
-              strokeOpacity={0.2}
-              isAnimationActive={false}
-              dot={false}
-              name="ampUser"
-            />
+            {vis.showWaveform && (
+              <Line
+                yAxisId="amp"
+                type="monotone"
+                dataKey="ampUser"
+                stroke="var(--color-pitch-recording-amplitude)"
+                strokeWidth={0.5}
+                strokeOpacity={0.2}
+                isAnimationActive={false}
+                dot={false}
+                name="ampUser"
+              />
+            )}
             {/* User pitch - foreground layer */}
             <Area
               yAxisId="pitch"

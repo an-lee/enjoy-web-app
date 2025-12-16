@@ -247,6 +247,11 @@
       "pitchContourPitch": "Pitch (Hz)",
       "pitchContourYourWaveform": "Your waveform",
       "pitchContourYourPitch": "Your pitch (Hz)",
+      "pitchContourToggleWaveform": "Toggle waveform",
+      "pitchContourShowWaveform": "Show waveform",
+      "pitchContourHideWaveform": "Hide waveform",
+      "pitchContourToggleReference": "Toggle reference",
+      "pitchContourToggleUser": "Toggle user recording",
       "pitchContourMeta": "Sample rate: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Record",
       "stopRecording": "Stop"

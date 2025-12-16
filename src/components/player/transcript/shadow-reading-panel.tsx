@@ -13,12 +13,13 @@ import { cn, formatTime } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/player'
 import { useDisplayTime } from '@/hooks/use-display-time'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { EchoRegionAnalysisResult } from '@/lib/audio/echo-region-analysis'
 import {
   analyzeEchoRegionFromBlob,
   loadMediaBlobForSession,
 } from '@/lib/audio/echo-region-analysis'
-import { PitchContourChart } from './pitch-contour-chart'
+import { PitchContourChart, type PitchContourVisibility } from './pitch-contour-chart'
 
 interface ShadowReadingPanelProps {
   startTime: number
@@ -51,6 +52,11 @@ export function ShadowReadingPanel({
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [analysis, setAnalysis] = useState<EchoRegionAnalysisResult | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [visibility, setVisibility] = useState<PitchContourVisibility>({
+    showWaveform: true,
+    showReference: true,
+    showUser: true,
+  })
   const cacheRef = useRef<Map<string, EchoRegionAnalysisResult>>(new Map())
 
   const cacheKey = useMemo(() => {
@@ -121,7 +127,7 @@ export function ShadowReadingPanel({
   }, [isPitchExpanded, cacheKey])
 
   return (
-    <div className="bg-highlight-active text-highlight-active-foreground border-t border-highlight-active-border/30 rounded-b-lg shadow-sm px-4 py-4 -mt-1">
+    <div className="bg-highlight-active/30 text-highlight-active-foreground rounded-lg shadow-sm px-4 py-4 -mt-1">
       {/* Header row */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -201,6 +207,7 @@ export function ShadowReadingPanel({
                     data={analysis.points}
                     className="w-full h-[200px]"
                     currentTimeRelative={currentTimeRelative}
+                    visibility={visibility}
                     labels={{
                       waveform: t('player.transcript.pitchContourWaveform'),
                       pitch: t('player.transcript.pitchContourPitch'),
@@ -208,6 +215,98 @@ export function ShadowReadingPanel({
                       yourPitch: t('player.transcript.pitchContourYourPitch'),
                     }}
                   />
+                  {/* Chart controls - positioned at bottom center */}
+                  <div className="flex items-center justify-center gap-1.5">
+                      {/* Reference toggle */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setVisibility((v) => ({ ...v, showReference: !v.showReference }))
+                            }
+                            className={cn(
+                              'size-6 rounded border transition-colors',
+                              visibility.showReference
+                                ? ''
+                                : 'bg-transparent border-(--highlight-active-foreground)/30 hover:border-(--highlight-active-foreground)/50'
+                            )}
+                            style={
+                              visibility.showReference
+                                ? {
+                                    backgroundColor: 'var(--color-pitch-reference)',
+                                    borderColor: 'var(--color-pitch-reference)',
+                                  }
+                                : undefined
+                            }
+                            aria-label={t('player.transcript.pitchContourToggleReference')}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t('player.transcript.pitchContourToggleReference')}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {/* User recording toggle */}
+                      {analysis.points.some(
+                        (p) => p.ampUser !== undefined || p.pitchUserHz !== undefined
+                      ) && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setVisibility((v) => ({ ...v, showUser: !v.showUser }))
+                              }
+                              className={cn(
+                                'size-6 rounded border transition-colors',
+                                visibility.showUser
+                                  ? ''
+                                  : 'bg-transparent border-(--highlight-active-foreground)/30 hover:border-(--highlight-active-foreground)/50'
+                              )}
+                              style={
+                                visibility.showUser
+                                  ? {
+                                      backgroundColor: 'var(--color-pitch-recording)',
+                                      borderColor: 'var(--color-pitch-recording)',
+                                    }
+                                  : undefined
+                              }
+                              aria-label={t('player.transcript.pitchContourToggleUser')}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {t('player.transcript.pitchContourToggleUser')}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+
+                      {/* Waveform toggle */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setVisibility((v) => ({ ...v, showWaveform: !v.showWaveform }))
+                            }
+                            className={cn(
+                              'p-1 rounded transition-colors',
+                              visibility.showWaveform
+                                ? 'text-highlight-active-foreground bg-(--highlight-active-foreground)/10'
+                                : 'text-(--highlight-active-foreground)/50 hover:text-(--highlight-active-foreground)/70 hover:bg-(--highlight-active-foreground)/5'
+                            )}
+                            aria-label={t('player.transcript.pitchContourToggleWaveform')}
+                          >
+                            <Icon icon="lucide:waveform" className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {visibility.showWaveform
+                            ? t('player.transcript.pitchContourHideWaveform')
+                            : t('player.transcript.pitchContourShowWaveform')}
+                        </TooltipContent>
+                      </Tooltip>
+                  </div>
                   <div className="text-xs text-(--highlight-active-foreground)/60 text-center">
                     {t('player.transcript.pitchContourMeta', {
                       sampleRate: Math.round(analysis.meta.sampleRate),

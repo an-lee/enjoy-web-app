@@ -247,6 +247,11 @@
       "pitchContourPitch": "Tom (Hz)",
       "pitchContourYourWaveform": "Sua forma de onda",
       "pitchContourYourPitch": "Seu tom (Hz)",
+      "pitchContourToggleWaveform": "Alternar forma de onda",
+      "pitchContourShowWaveform": "Mostrar forma de onda",
+      "pitchContourHideWaveform": "Ocultar forma de onda",
+      "pitchContourToggleReference": "Alternar referência",
+      "pitchContourToggleUser": "Alternar gravação do usuário",
       "pitchContourMeta": "Taxa de amostragem: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Gravar",
       "stopRecording": "Parar"

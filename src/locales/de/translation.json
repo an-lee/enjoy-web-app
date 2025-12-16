@@ -247,6 +247,11 @@
       "pitchContourPitch": "Tonhöhe (Hz)",
       "pitchContourYourWaveform": "Ihre Wellenform",
       "pitchContourYourPitch": "Ihre Tonhöhe (Hz)",
+      "pitchContourToggleWaveform": "Wellenform umschalten",
+      "pitchContourShowWaveform": "Wellenform anzeigen",
+      "pitchContourHideWaveform": "Wellenform ausblenden",
+      "pitchContourToggleReference": "Referenz umschalten",
+      "pitchContourToggleUser": "Benutzeraufnahme umschalten",
       "pitchContourMeta": "Abtastrate: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Aufnehmen",
       "stopRecording": "Stoppen"

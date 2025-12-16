@@ -247,6 +247,11 @@
       "pitchContourPitch": "음높이 (Hz)",
       "pitchContourYourWaveform": "내 파형",
       "pitchContourYourPitch": "내 음높이 (Hz)",
+      "pitchContourToggleWaveform": "파형 토글",
+      "pitchContourShowWaveform": "파형 표시",
+      "pitchContourHideWaveform": "파형 숨기기",
+      "pitchContourToggleReference": "원음 토글",
+      "pitchContourToggleUser": "사용자 녹음 토글",
       "pitchContourMeta": "샘플 레이트: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "녹음",
       "stopRecording": "중지"

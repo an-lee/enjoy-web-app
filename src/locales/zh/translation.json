@@ -247,6 +247,11 @@
       "pitchContourPitch": "音高 (Hz)",
       "pitchContourYourWaveform": "你的波形",
       "pitchContourYourPitch": "你的音高 (Hz)",
+      "pitchContourToggleWaveform": "切换波形",
+      "pitchContourShowWaveform": "显示波形",
+      "pitchContourHideWaveform": "隐藏波形",
+      "pitchContourToggleReference": "切换原音",
+      "pitchContourToggleUser": "切换用户录音",
       "pitchContourMeta": "采样率：{{sampleRate}} Hz · Essentia：{{essentiaVersion}}",
       "record": "录音",
       "stopRecording": "停止"

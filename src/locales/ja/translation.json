@@ -247,6 +247,11 @@
       "pitchContourPitch": "ピッチ (Hz)",
       "pitchContourYourWaveform": "あなたの波形",
       "pitchContourYourPitch": "あなたのピッチ (Hz)",
+      "pitchContourToggleWaveform": "波形を切り替え",
+      "pitchContourShowWaveform": "波形を表示",
+      "pitchContourHideWaveform": "波形を非表示",
+      "pitchContourToggleReference": "原音を切り替え",
+      "pitchContourToggleUser": "ユーザー録音を切り替え",
       "pitchContourMeta": "サンプルレート: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "録音",
       "stopRecording": "停止"

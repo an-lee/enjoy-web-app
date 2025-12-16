@@ -245,9 +245,14 @@
       "pitchContourNoMedia": "Aucun média chargé.",
       "pitchContourWaveform": "Forme d’onde",
       "pitchContourPitch": "Hauteur (Hz)",
-      "pitchContourYourWaveform": "Votre forme d’onde",
+      "pitchContourYourWaveform": "Votre forme d'onde",
       "pitchContourYourPitch": "Votre hauteur (Hz)",
-      "pitchContourMeta": "Fréquence d’échantillonnage : {{sampleRate}} Hz · Essentia : {{essentiaVersion}}",
+      "pitchContourToggleWaveform": "Basculer la forme d'onde",
+      "pitchContourShowWaveform": "Afficher la forme d'onde",
+      "pitchContourHideWaveform": "Masquer la forme d'onde",
+      "pitchContourToggleReference": "Basculer la référence",
+      "pitchContourToggleUser": "Basculer l'enregistrement utilisateur",
+      "pitchContourMeta": "Fréquence d'échantillonnage : {{sampleRate}} Hz · Essentia : {{essentiaVersion}}",
       "record": "Enregistrer",
       "stopRecording": "Arrêter"
     }
