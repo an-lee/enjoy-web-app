@@ -4,48 +4,52 @@
  * Renders the list of transcript lines with echo region controls.
  */
 
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
 import { EchoRegionControls } from './echo-region-controls'
 import { ShadowReadingPanel } from './shadow-reading-panel'
+import { useEchoRegion } from './use-echo-region'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLinesProps {
   lines: TranscriptLineState[]
   showSecondary: boolean
   onLineClick: (line: TranscriptLineState) => void
-  echoModeActive: boolean
-  echoStartLineIndex: number
-  echoEndLineIndex: number
-  onExpandEchoForward: () => void
-  onExpandEchoBackward: () => void
-  onShrinkEchoForward: () => void
-  onShrinkEchoBackward: () => void
-  echoStartTime?: number
-  echoEndTime?: number
-  referenceText?: string
-  onRecord?: () => void
 }
 
 function TranscriptLinesComponent({
   lines,
   showSecondary,
   onLineClick,
-  echoModeActive,
-  echoStartLineIndex,
-  echoEndLineIndex,
-  onExpandEchoForward,
-  onExpandEchoBackward,
-  onShrinkEchoForward,
-  onShrinkEchoBackward,
-  echoStartTime,
-  echoEndTime,
-  referenceText,
-  onRecord,
 }: TranscriptLinesProps) {
   const { t } = useTranslation()
+
+  // Echo region management
+  const {
+    echoModeActive,
+    echoStartLineIndex,
+    echoEndLineIndex,
+    echoRegionTimeRange,
+    handleExpandEchoForward,
+    handleExpandEchoBackward,
+    handleShrinkEchoForward,
+    handleShrinkEchoBackward,
+  } = useEchoRegion(lines)
+
+  // Get reference text from echo region lines
+  const referenceText = useMemo(() => {
+    if (!echoModeActive || echoStartLineIndex < 0 || echoEndLineIndex < 0) {
+      return ''
+    }
+    return lines
+      .filter(
+        (line) => line.index >= echoStartLineIndex && line.index <= echoEndLineIndex
+      )
+      .map((line) => line.primary.text)
+      .join(' ')
+  }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, lines])
 
   return (
     <div className="py-4 px-3 space-y-1.5">
@@ -85,8 +89,8 @@ function TranscriptLinesComponent({
             {isEchoStart && echoModeActive && (
               <EchoRegionControls
                 position="top"
-                onExpand={onExpandEchoBackward}
-                onShrink={onShrinkEchoBackward}
+                onExpand={handleExpandEchoBackward}
+                onShrink={handleShrinkEchoBackward}
                 expandDisabled={echoStartLineIndex === 0}
                 shrinkDisabled={echoStartLineIndex >= echoEndLineIndex}
                 expandLabel={t('player.transcript.expandEchoBackward')}
@@ -112,20 +116,19 @@ function TranscriptLinesComponent({
               <>
                 <EchoRegionControls
                   position="bottom"
-                  onExpand={onExpandEchoForward}
-                  onShrink={onShrinkEchoForward}
+                  onExpand={handleExpandEchoForward}
+                  onShrink={handleShrinkEchoForward}
                   expandDisabled={echoEndLineIndex >= lines.length - 1}
                   shrinkDisabled={echoEndLineIndex <= echoStartLineIndex}
                   expandLabel={t('player.transcript.expandEchoForward')}
                   shrinkLabel={t('player.transcript.shrinkEchoForward')}
                 />
                 {/* Shadow Reading Panel - shown below echo region controls */}
-                {echoStartTime !== undefined && echoEndTime !== undefined && onRecord && (
+                {echoRegionTimeRange?.startTime !== undefined && echoRegionTimeRange?.endTime !== undefined && (
                   <ShadowReadingPanel
-                    startTime={echoStartTime}
-                    endTime={echoEndTime}
+                    startTime={echoRegionTimeRange.startTime}
+                    endTime={echoRegionTimeRange.endTime}
                     referenceText={referenceText || ''}
-                    onRecord={onRecord}
                   />
                 )}
               </>

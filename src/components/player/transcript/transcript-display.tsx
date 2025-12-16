@@ -118,11 +118,6 @@ export function TranscriptDisplay({
     echoModeActive,
     echoStartLineIndex,
     echoEndLineIndex,
-    echoRegionTimeRange,
-    handleExpandEchoForward,
-    handleExpandEchoBackward,
-    handleShrinkEchoForward,
-    handleShrinkEchoBackward,
   } = useEchoRegion(lines)
 
   // Auto-scroll to active line
@@ -141,23 +136,6 @@ export function TranscriptDisplay({
 
   useAutoScroll(scrollTargetIndex, isPlaying, config, scrollAreaRef)
 
-  // Get reference text from echo region lines
-  const referenceText = useMemo(() => {
-    if (!echoModeActive || echoStartLineIndex < 0 || echoEndLineIndex < 0) {
-      return ''
-    }
-    return lines
-      .filter(
-        (line) => line.index >= echoStartLineIndex && line.index <= echoEndLineIndex
-      )
-      .map((line) => line.primary.text)
-      .join(' ')
-  }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, lines])
-
-  // Recording state - managed by ShadowRecording component
-  const handleRecord = useCallback(() => {
-    // Recording state is now managed internally by ShadowRecording component
-  }, [])
 
   // Retranscribe functionality - only used if managing state internally
   const { retranscribe, isTranscribing, progress, progressPercent } = useRetranscribe()
@@ -362,17 +340,6 @@ export function TranscriptDisplay({
           lines={lines}
           showSecondary={showSecondary}
           onLineClick={handleLineClick}
-          echoModeActive={echoModeActive}
-          echoStartLineIndex={echoStartLineIndex}
-          echoEndLineIndex={echoEndLineIndex}
-          onExpandEchoForward={handleExpandEchoForward}
-          onExpandEchoBackward={handleExpandEchoBackward}
-          onShrinkEchoForward={handleShrinkEchoForward}
-          onShrinkEchoBackward={handleShrinkEchoBackward}
-          echoStartTime={echoRegionTimeRange?.startTime}
-          echoEndTime={echoRegionTimeRange?.endTime}
-          referenceText={referenceText}
-          onRecord={echoModeActive ? handleRecord : undefined}
         />
       </ScrollArea>
     </div>

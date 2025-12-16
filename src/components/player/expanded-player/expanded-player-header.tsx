@@ -1,3 +1,4 @@
+import { useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
@@ -14,59 +15,92 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer'
+import { usePlayerStore } from '@/stores/player'
+import { useDisplayTime } from '@/hooks/use-display-time'
+import { useRetranscribe } from '@/hooks/use-retranscribe'
+import { useTranscriptDisplay } from '../transcript/use-transcript-display'
+import { LANGUAGE_NAMES } from '../transcript/constants'
 import { LanguageSelector } from '../transcript/language-selector'
 import { RetranscribeDialog } from '../transcript/retranscribe-dialog'
 
 interface ExpandedPlayerHeaderProps {
-  mediaTitle: string
-  language: string
-  collapse: () => void
-  hide: () => void
-  availableTranscripts: Array<{ language: string }>
-  languageOptions: Array<{ value: string; label: string }>
-  secondaryLanguageOptions: Array<{ value: string; label: string }>
-  primaryLanguage: string | null
-  secondaryLanguage: string | null
-  setPrimaryLanguage: (lang: string) => void
-  handleSecondaryChange: (value: string) => void
-  handleClearSecondaryLanguage: () => void
-  drawerOpen: boolean
-  setDrawerOpen: (open: boolean) => void
-  handleRetranscribeClick: () => void
-  isTranscribing: boolean
-  retranscribeProgress: string | null
-  showConfirmDialog: boolean
-  setShowConfirmDialog: (open: boolean) => void
-  handleConfirmRetranscribe: () => void
-  mediaDuration: number
-  currentSession: { duration: number } | null
+  // No props needed - component gets all data from hooks
 }
 
-export function ExpandedPlayerHeader({
-  mediaTitle,
-  language,
-  collapse,
-  hide,
-  availableTranscripts,
-  languageOptions,
-  secondaryLanguageOptions,
-  primaryLanguage,
-  secondaryLanguage,
-  setPrimaryLanguage,
-  handleSecondaryChange,
-  handleClearSecondaryLanguage,
-  drawerOpen,
-  setDrawerOpen,
-  handleRetranscribeClick,
-  isTranscribing,
-  retranscribeProgress,
-  showConfirmDialog,
-  setShowConfirmDialog,
-  handleConfirmRetranscribe,
-  mediaDuration,
-  currentSession,
-}: ExpandedPlayerHeaderProps) {
+export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps) {
   const { t } = useTranslation()
+  const displayTime = useDisplayTime()
+
+  // Get player state from store
+  const {
+    currentSession,
+    collapse,
+    hide,
+  } = usePlayerStore()
+
+  // Get transcript data and state management
+  const {
+    availableTranscripts,
+    setPrimaryLanguage,
+    setSecondaryLanguage,
+    primaryLanguage,
+    secondaryLanguage,
+  } = useTranscriptDisplay(displayTime)
+
+  // Retranscribe functionality
+  const { retranscribe, isTranscribing, progress: retranscribeProgress } = useRetranscribe()
+
+  // Local state for dialogs
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+
+  // Build language options
+  const languageOptions = useMemo(
+    () =>
+      availableTranscripts.map((t) => ({
+        value: t.language,
+        label: LANGUAGE_NAMES[t.language] || t.language.toUpperCase(),
+      })),
+    [availableTranscripts]
+  )
+
+  // Secondary language options - filtered to exclude primary
+  const secondaryLanguageOptions = useMemo(
+    () => languageOptions.filter((o) => o.value !== primaryLanguage),
+    [languageOptions, primaryLanguage]
+  )
+
+  // Handle retranscribe with confirmation
+  const handleRetranscribeClick = useCallback(() => {
+    setShowConfirmDialog(true)
+  }, [])
+
+  const handleConfirmRetranscribe = useCallback(() => {
+    setShowConfirmDialog(false)
+    retranscribe(primaryLanguage || undefined)
+  }, [retranscribe, primaryLanguage])
+
+  // Handle secondary language change
+  const handleSecondaryChange = useCallback(
+    (value: string) => {
+      if (value === 'none') {
+        setSecondaryLanguage(null)
+      } else {
+        setSecondaryLanguage(value)
+      }
+    },
+    [setSecondaryLanguage]
+  )
+
+  // Handle clear secondary language
+  const handleClearSecondaryLanguage = useCallback(() => {
+    setSecondaryLanguage(null)
+  }, [setSecondaryLanguage])
+
+  // Get media info
+  const mediaTitle = currentSession?.mediaTitle || ''
+  const language = currentSession?.language || ''
+  const mediaDuration = currentSession?.duration || 0
 
   return (
     <header

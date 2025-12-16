@@ -25,7 +25,6 @@ interface ShadowRecordingProps {
   language: string
   targetType: TargetType
   targetId: string
-  onRecordingStateChange?: (isRecording: boolean) => void
 }
 
 export function ShadowRecording({
@@ -35,7 +34,6 @@ export function ShadowRecording({
   language,
   targetType,
   targetId,
-  onRecordingStateChange,
 }: ShadowRecordingProps) {
   const { t } = useTranslation()
   const duration = (endTime - startTime) * 1000 // Convert to milliseconds
@@ -103,11 +101,6 @@ export function ShadowRecording({
       }
     }
   }, []) // Empty deps - only run on mount/unmount
-
-  // Notify parent of recording state changes
-  useEffect(() => {
-    onRecordingStateChange?.(isRecording)
-  }, [isRecording, onRecordingStateChange])
 
   // ESC key shortcut to cancel recording
   useEffect(() => {

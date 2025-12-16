@@ -14,19 +14,20 @@ import { ShadowReadingPanelHeader } from './shadow-reading-panel-header'
 import { PitchContourSection } from './pitch-contour-section'
 import { ShadowRecording } from './shadow-recording'
 import type { TargetType } from '@/types/db'
+import { createLogger } from '@/lib/utils'
+
+const logger = createLogger({ name: 'ShadowReadingPanel' })
 
 interface ShadowReadingPanelProps {
   startTime: number // seconds
   endTime: number // seconds
   referenceText: string
-  onRecord: () => void
 }
 
 export function ShadowReadingPanel({
   startTime,
   endTime,
   referenceText,
-  onRecord,
 }: ShadowReadingPanelProps) {
   const { t } = useTranslation()
   const duration = (endTime - startTime) * 1000 // Convert to milliseconds
@@ -41,11 +42,6 @@ export function ShadowReadingPanel({
 
   const targetId = currentSession?.mediaId || ''
   const language = currentSession?.language || 'en'
-
-  // Handle recording state changes
-  const handleRecordingStateChange = useCallback(() => {
-    onRecord() // Update parent state
-  }, [onRecord])
 
   // Calculate relative time for progress indicator (0 to duration)
   const currentTimeRelative = useMemo(() => {
@@ -71,7 +67,7 @@ export function ShadowReadingPanel({
           currentTimeRelative={currentTimeRelative}
         />
 
-        {targetType && (
+        {/* {targetType && (
           <ShadowRecording
             startTime={startTime}
             endTime={endTime}
@@ -79,9 +75,8 @@ export function ShadowReadingPanel({
             language={language}
             targetType={targetType}
             targetId={targetId}
-            onRecordingStateChange={handleRecordingStateChange}
           />
-        )}
+        )} */}
       </div>
     </div>
   )

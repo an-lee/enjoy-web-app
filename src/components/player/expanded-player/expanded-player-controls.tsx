@@ -1,8 +1,12 @@
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn, formatTime } from '@/lib/utils'
 import { formatHotkeyAsKbd } from '@/lib/format-hotkey'
 import { useHotkeyBinding } from '@/stores/hotkeys'
+import { usePlayerStore } from '@/stores/player'
+import { useDisplayTime } from '@/hooks/use-display-time'
+import { usePlayerControls } from '@/hooks/use-player-controls'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import {
@@ -14,43 +18,42 @@ import { VolumePopover } from './volume-popover'
 import { SpeedPopover } from './speed-popover'
 
 interface ExpandedPlayerControlsProps {
-  displayTime: number
-  duration: number
-  progress: number
-  isPlaying: boolean
-  volume: number
-  playbackRate: number
-  echoModeActive: boolean
-  onSeek: (values: number[]) => void
-  onTogglePlay: () => void
-  onDictationMode: () => void
-  onEchoMode: () => void
-  onVolumeChange: (volume: number) => void
-  onPlaybackRateChange: (rate: number) => void
-  onPrevLine: () => void
-  onNextLine: () => void
-  onReplayLine: () => void
+  /** Callback to seek to a position */
+  onSeek?: (time: number) => void
+  /** Callback to toggle play/pause */
+  onTogglePlay?: () => void
 }
 
 export function ExpandedPlayerControls({
-  displayTime,
-  duration,
-  progress,
-  isPlaying,
-  volume,
-  playbackRate,
-  echoModeActive,
   onSeek,
   onTogglePlay,
-  onDictationMode,
-  onEchoMode,
-  onVolumeChange,
-  onPlaybackRateChange,
-  onPrevLine,
-  onNextLine,
-  onReplayLine,
 }: ExpandedPlayerControlsProps) {
   const { t } = useTranslation()
+  const displayTime = useDisplayTime()
+
+  // Get player state from store
+  const {
+    currentSession,
+    isPlaying,
+    volume,
+    playbackRate,
+    echoModeActive,
+    setVolume,
+    setPlaybackRate,
+  } = usePlayerStore()
+
+  // Get all player controls from unified hook
+  const controls = usePlayerControls(
+    onSeek || (() => {}),
+    onTogglePlay || (() => {})
+  )
+
+  // Calculate progress and duration
+  const duration = currentSession?.duration || 0
+  const progress = useMemo(
+    () => (duration > 0 ? (displayTime / duration) * 100 : 0),
+    [displayTime, duration]
+  )
 
   // Get hotkey bindings
   const togglePlayKey = useHotkeyBinding('player.togglePlay')
@@ -73,7 +76,7 @@ export function ExpandedPlayerControls({
             min={0}
             max={100}
             step={0.1}
-            onValueChange={onSeek}
+            onValueChange={controls.handleSeek}
             className="flex-1"
           />
           <span className="text-xs text-muted-foreground tabular-nums w-12 shrink-0">
@@ -92,7 +95,7 @@ export function ExpandedPlayerControls({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9"
-                  onClick={onPrevLine}
+                  onClick={controls.handlePrevLine}
                 >
                   <Icon icon="lucide:skip-back" className="w-4 h-4" />
                 </Button>
@@ -110,7 +113,7 @@ export function ExpandedPlayerControls({
                   variant="default"
                   size="icon"
                   className="h-12 w-11 rounded-full shadow-md"
-                  onClick={onTogglePlay}
+                  onClick={controls.onTogglePlay}
                 >
                   <Icon
                     icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
@@ -131,7 +134,7 @@ export function ExpandedPlayerControls({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9"
-                  onClick={onNextLine}
+                  onClick={controls.handleNextLine}
                 >
                   <Icon icon="lucide:skip-forward" className="w-4 h-4" />
                 </Button>
@@ -149,7 +152,7 @@ export function ExpandedPlayerControls({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9"
-                  onClick={onReplayLine}
+                  onClick={controls.handleReplayLine}
                 >
                   <Icon icon="lucide:rotate-ccw" className="w-4 h-4" />
                 </Button>
@@ -170,7 +173,7 @@ export function ExpandedPlayerControls({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9"
-                  onClick={onDictationMode}
+                  onClick={controls.handleDictationMode}
                 >
                   <Icon icon="lucide:pencil-line" className="w-4 h-4" />
                 </Button>
@@ -192,7 +195,7 @@ export function ExpandedPlayerControls({
                     echoModeActive &&
                       'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600 dark:text-orange-400'
                   )}
-                  onClick={onEchoMode}
+                  onClick={controls.handleEchoMode}
                 >
                   <Icon icon="lucide:mic" className="w-4 h-4" />
                 </Button>
@@ -207,10 +210,10 @@ export function ExpandedPlayerControls({
             <div className="w-px h-5 bg-border mx-1" />
 
             {/* Playback speed */}
-            <SpeedPopover playbackRate={playbackRate} onPlaybackRateChange={onPlaybackRateChange} />
+            <SpeedPopover playbackRate={playbackRate} onPlaybackRateChange={setPlaybackRate} />
 
             {/* Volume */}
-            <VolumePopover volume={volume} onVolumeChange={onVolumeChange} />
+            <VolumePopover volume={volume} onVolumeChange={setVolume} />
           </div>
         </div>
       </div>

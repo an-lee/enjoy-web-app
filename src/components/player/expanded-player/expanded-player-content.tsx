@@ -1,34 +1,38 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
+import { usePlayerStore } from '@/stores/player'
+import { useDisplayTime } from '@/hooks/use-display-time'
+import { useTranscriptDisplay } from '../transcript/use-transcript-display'
 import { TranscriptDisplay } from '../transcript'
-import type { TranscriptLineState } from '../transcript/types'
 
 interface ExpandedPlayerContentProps {
+  /** Whether media is loading */
   isLoading?: boolean
+  /** Error message if loading failed */
   error?: string | null
+  /** Whether it's a video */
   isVideo?: boolean
-  displayTime: number
-  isPlaying: boolean
+  /** Callback to seek to a position */
   onSeek?: (time: number) => void
-  lines: TranscriptLineState[]
-  activeLineIndex: number
-  primaryLanguage: string | null
-  secondaryLanguage: string | null
 }
 
 export function ExpandedPlayerContent({
   isLoading,
   error,
   isVideo,
-  displayTime,
-  isPlaying,
   onSeek,
-  lines,
-  activeLineIndex,
-  primaryLanguage,
-  secondaryLanguage,
 }: ExpandedPlayerContentProps) {
   const { t } = useTranslation()
+  const displayTime = useDisplayTime()
+  const { isPlaying } = usePlayerStore()
+
+  // Get transcript data
+  const {
+    lines,
+    activeLineIndex,
+    primaryLanguage,
+    secondaryLanguage,
+  } = useTranscriptDisplay(displayTime)
 
   return (
     <main className="flex-1 flex min-h-0 overflow-hidden bg-muted/30">
