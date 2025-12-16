@@ -75,8 +75,8 @@ export function ShadowRecording() {
     cancelRecording,
     error: recordingError,
   } = useShadowRecording({
-    startTime: startTime * 1000, // Convert to milliseconds
-    endTime: endTime * 1000, // Convert to milliseconds
+    referenceStart: startTime * 1000, // Convert to milliseconds
+    referenceDuration: (endTime - startTime) * 1000, // Convert to milliseconds
     referenceText,
     language,
     targetType,

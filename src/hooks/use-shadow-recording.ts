@@ -28,8 +28,8 @@ import 'recorder-core/src/extensions/frequency.histogram.view'
 const log = createLogger({ name: 'useShadowRecording' })
 
 interface UseShadowRecordingOptions {
-  startTime: number // milliseconds
-  endTime: number // milliseconds
+  referenceStart: number // milliseconds
+  referenceDuration: number // milliseconds
   referenceText: string
   language: string
   targetType: TargetType
@@ -48,8 +48,8 @@ interface UseShadowRecordingReturn {
 }
 
 export function useShadowRecording({
-  startTime,
-  endTime,
+  referenceStart,
+  referenceDuration,
   referenceText,
   language,
   targetType,
@@ -260,8 +260,8 @@ export function useShadowRecording({
             const recordingInput: RecordingInput = {
               targetType,
               targetId,
-              referenceStart: startTime,
-              referenceDuration: endTime - startTime,
+              referenceStart,
+              referenceDuration,
               referenceText,
               language,
               duration: Math.round(duration), // Convert to milliseconds
@@ -301,7 +301,7 @@ export function useShadowRecording({
       log.error('Failed to stop recording', { error: err })
       setIsRecording(false)
     }
-  }, [isRecording, startTime, endTime, referenceText, language, targetType, targetId])
+  }, [isRecording, referenceStart, referenceDuration, referenceText, language, targetType, targetId])
 
   const cancelRecording = useCallback(() => {
     if (!isRecording) {
