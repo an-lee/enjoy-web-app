@@ -4,7 +4,6 @@
  * Minimal design with essential controls only.
  */
 
-import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn, formatTime } from '@/lib/utils'
@@ -13,6 +12,7 @@ import { Slider } from '@/components/ui/slider'
 import { usePlayerStore } from '@/stores/player'
 import { GenerativeCover } from '@/components/library/generative-cover'
 import { useDisplayTime } from '@/hooks/use-display-time'
+import { usePlayerControls } from '@/hooks/use-player-controls'
 import { useSidebar } from '@/components/ui/sidebar'
 import { useIsMobile } from '@/hooks/use-mobile'
 
@@ -41,14 +41,10 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
   // Player state
   const { currentSession, isPlaying, expand, hide } = usePlayerStore()
 
-  // Handle seek via slider
-  const handleSeek = useCallback(
-    (values: number[]) => {
-      if (!currentSession) return
-      const newTime = (values[0] / 100) * currentSession.duration
-      onSeek?.(newTime)
-    },
-    [currentSession, onSeek]
+  // Get all player controls from unified hook
+  const controls = usePlayerControls(
+    onSeek || (() => {}),
+    onTogglePlay || (() => {})
   )
 
   if (!currentSession) return null
@@ -87,7 +83,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
           min={0}
           max={100}
           step={0.1}
-          onValueChange={handleSeek}
+          onValueChange={controls.handleSeek}
           className="h-1"
         />
       </div>
@@ -134,7 +130,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
             variant="ghost"
             size="icon"
             className="h-9 w-9"
-            onClick={onTogglePlay}
+            onClick={controls.onTogglePlay}
           >
             <Icon
               icon={isPlaying ? 'lucide:pause' : 'lucide:play'}

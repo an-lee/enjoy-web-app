@@ -10,6 +10,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useDisplayTime } from '@/hooks/use-display-time'
 import { useTranscriptDisplay } from './transcript/use-transcript-display'
 import { useEchoRegion } from './transcript/use-echo-region'
+import { usePlayerControls } from '@/hooks/use-player-controls'
 
 interface PlayerHotkeysProps {
   onTogglePlay: () => void
@@ -23,14 +24,15 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     expand,
     mode,
     echoModeActive,
-    activateEchoMode,
-    deactivateEchoMode,
     playbackRate,
     setPlaybackRate,
   } = usePlayerStore()
 
-  // Get transcript data for line navigation
-  const { lines, activeLineIndex } = useTranscriptDisplay(displayTime)
+  // Get transcript data for echo region handlers
+  const { lines } = useTranscriptDisplay(displayTime)
+
+  // Get all player controls from unified hook
+  const controls = usePlayerControls(onSeek, onTogglePlay)
 
   // Get echo region handlers
   const {
@@ -45,9 +47,9 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     'player.togglePlay',
     (e) => {
       e.preventDefault()
-      onTogglePlay()
+      controls.onTogglePlay()
     },
-    { deps: [onTogglePlay], preventDefault: true }
+    { deps: [controls.onTogglePlay], preventDefault: true }
   )
 
   // Toggle player expand/collapse
@@ -69,24 +71,9 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     'player.prevLine',
     (e) => {
       e.preventDefault()
-      if (lines.length === 0 || activeLineIndex < 0) return
-
-      // Find previous line
-      const prevIndex = activeLineIndex > 0 ? activeLineIndex - 1 : 0
-      const prevLine = lines[prevIndex]
-      if (prevLine) {
-        if (echoModeActive) {
-          activateEchoMode(
-            prevIndex,
-            prevIndex,
-            prevLine.startTimeSeconds,
-            prevLine.endTimeSeconds
-          )
-        }
-        onSeek(prevLine.startTimeSeconds)
-      }
+      controls.handlePrevLine()
     },
-    { deps: [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode], preventDefault: true }
+    { deps: [controls.handlePrevLine], preventDefault: true }
   )
 
   // Play next line (D)
@@ -94,24 +81,9 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     'player.nextLine',
     (e) => {
       e.preventDefault()
-      if (lines.length === 0) return
-
-      // Find next line
-      const nextIndex = activeLineIndex < lines.length - 1 ? activeLineIndex + 1 : lines.length - 1
-      const nextLine = lines[nextIndex]
-      if (nextLine) {
-        if (echoModeActive) {
-          activateEchoMode(
-            nextIndex,
-            nextIndex,
-            nextLine.startTimeSeconds,
-            nextLine.endTimeSeconds
-          )
-        }
-        onSeek(nextLine.startTimeSeconds)
-      }
+      controls.handleNextLine()
     },
-    { deps: [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode], preventDefault: true }
+    { deps: [controls.handleNextLine], preventDefault: true }
   )
 
   // Replay current line (S)
@@ -119,22 +91,9 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     'player.replayLine',
     (e) => {
       e.preventDefault()
-      if (lines.length === 0 || activeLineIndex < 0) return
-
-      const currentLine = lines[activeLineIndex]
-      if (currentLine) {
-        if (echoModeActive) {
-          activateEchoMode(
-            activeLineIndex,
-            activeLineIndex,
-            currentLine.startTimeSeconds,
-            currentLine.endTimeSeconds
-          )
-        }
-        onSeek(currentLine.startTimeSeconds)
-      }
+      controls.handleReplayLine()
     },
-    { deps: [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode], preventDefault: true }
+    { deps: [controls.handleReplayLine], preventDefault: true }
   )
 
   // Toggle Echo mode (E)
@@ -142,22 +101,9 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     'player.toggleEchoMode',
     (e) => {
       e.preventDefault()
-      if (echoModeActive) {
-        deactivateEchoMode()
-      } else {
-        // Activate echo mode based on current active line
-        if (activeLineIndex >= 0 && activeLineIndex < lines.length) {
-          const line = lines[activeLineIndex]
-          activateEchoMode(
-            activeLineIndex,
-            activeLineIndex,
-            line.startTimeSeconds,
-            line.endTimeSeconds
-          )
-        }
-      }
+      controls.handleEchoMode()
     },
-    { deps: [echoModeActive, activeLineIndex, lines, activateEchoMode, deactivateEchoMode], preventDefault: true }
+    { deps: [controls.handleEchoMode], preventDefault: true }
   )
 
   // Toggle dictation mode (H) - placeholder for future implementation

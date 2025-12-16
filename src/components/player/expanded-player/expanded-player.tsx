@@ -8,22 +8,17 @@
 
 import { useCallback, useState, useMemo } from 'react'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { cn, createLogger } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { usePlayerStore } from '@/stores/player'
 import { useDisplayTime } from '@/hooks/use-display-time'
 import { useRetranscribe } from '@/hooks/use-retranscribe'
+import { usePlayerControls } from '@/hooks/use-player-controls'
 import { useTranscriptDisplay } from '../transcript/use-transcript-display'
 import { LANGUAGE_NAMES } from '../transcript/constants'
 import { ExpandedPlayerHeader } from './expanded-player-header'
 import { ExpandedPlayerContent } from './expanded-player-content'
 import { ExpandedPlayerControls } from './expanded-player-controls'
 import type { ExpandedPlayerProps } from './types'
-
-// ============================================================================
-// Logger
-// ============================================================================
-
-const log = createLogger({ name: 'ExpandedPlayer' })
 
 // ============================================================================
 // Component
@@ -50,8 +45,6 @@ export function ExpandedPlayer({
     setVolume,
     setPlaybackRate,
     echoModeActive,
-    activateEchoMode,
-    deactivateEchoMode,
   } = usePlayerStore()
 
   // Get transcript data and state management
@@ -116,108 +109,11 @@ export function ExpandedPlayer({
     setSecondaryLanguage(null)
   }, [setSecondaryLanguage])
 
-  // Handle seek via slider
-  const handleSeek = useCallback(
-    (values: number[]) => {
-      if (!currentSession) return
-      const newTime = (values[0] / 100) * currentSession.duration
-      onSeek?.(newTime)
-    },
-    [currentSession, onSeek]
+  // Get all player controls from unified hook
+  const controls = usePlayerControls(
+    onSeek || (() => {}),
+    onTogglePlay || (() => {})
   )
-
-  // Placeholder handlers for future features
-  const handleDictationMode = () => {
-    // TODO: Implement dictation mode
-    log.info('Dictation mode')
-  }
-
-  // Echo mode handler - toggle echo mode based on current state
-  const handleEchoMode = useCallback(() => {
-    if (echoModeActive) {
-      log.debug('Deactivating echo mode from expanded player')
-      deactivateEchoMode()
-    } else {
-      // Activate echo mode based on current active line
-      if (activeLineIndex >= 0 && activeLineIndex < lines.length) {
-        const line = lines[activeLineIndex]
-        log.debug('Activating echo mode from expanded player', {
-          activeLineIndex,
-          startTime: line.startTimeSeconds,
-          endTime: line.endTimeSeconds,
-        })
-        activateEchoMode(
-          activeLineIndex,
-          activeLineIndex,
-          line.startTimeSeconds,
-          line.endTimeSeconds
-        )
-      } else {
-        log.warn('Cannot activate echo mode: no active line found', {
-          activeLineIndex,
-          linesCount: lines.length,
-        })
-      }
-    }
-  }, [echoModeActive, activeLineIndex, lines, activateEchoMode, deactivateEchoMode])
-
-  // Previous line handler
-  const handlePrevLine = useCallback(() => {
-    if (lines.length === 0 || activeLineIndex < 0) return
-
-    // Find previous line
-    const prevIndex = activeLineIndex > 0 ? activeLineIndex - 1 : 0
-    const prevLine = lines[prevIndex]
-    if (prevLine) {
-      if (echoModeActive) {
-        activateEchoMode(
-          prevIndex,
-          prevIndex,
-          prevLine.startTimeSeconds,
-          prevLine.endTimeSeconds
-        )
-      }
-      onSeek?.(prevLine.startTimeSeconds)
-    }
-  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
-
-  // Next line handler
-  const handleNextLine = useCallback(() => {
-    if (lines.length === 0) return
-
-    // Find next line
-    const nextIndex = activeLineIndex < lines.length - 1 ? activeLineIndex + 1 : lines.length - 1
-    const nextLine = lines[nextIndex]
-    if (nextLine) {
-      if (echoModeActive) {
-        activateEchoMode(
-          nextIndex,
-          nextIndex,
-          nextLine.startTimeSeconds,
-          nextLine.endTimeSeconds
-        )
-      }
-      onSeek?.(nextLine.startTimeSeconds)
-    }
-  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
-
-  // Replay current line handler
-  const handleReplayLine = useCallback(() => {
-    if (lines.length === 0 || activeLineIndex < 0) return
-
-    const currentLine = lines[activeLineIndex]
-    if (currentLine) {
-      if (echoModeActive) {
-        activateEchoMode(
-          activeLineIndex,
-          activeLineIndex,
-          currentLine.startTimeSeconds,
-          currentLine.endTimeSeconds
-        )
-      }
-      onSeek?.(currentLine.startTimeSeconds)
-    }
-  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
 
   if (!currentSession) return null
 
@@ -283,15 +179,15 @@ export function ExpandedPlayer({
           volume={volume}
           playbackRate={playbackRate}
           echoModeActive={echoModeActive}
-          onSeek={handleSeek}
-          onTogglePlay={onTogglePlay || (() => {})}
-          onDictationMode={handleDictationMode}
-          onEchoMode={handleEchoMode}
+          onSeek={controls.handleSeek}
+          onTogglePlay={controls.onTogglePlay}
+          onDictationMode={controls.handleDictationMode}
+          onEchoMode={controls.handleEchoMode}
           onVolumeChange={setVolume}
           onPlaybackRateChange={setPlaybackRate}
-          onPrevLine={handlePrevLine}
-          onNextLine={handleNextLine}
-          onReplayLine={handleReplayLine}
+          onPrevLine={controls.handlePrevLine}
+          onNextLine={controls.handleNextLine}
+          onReplayLine={controls.handleReplayLine}
         />
       </div>
     </TooltipProvider>
