@@ -10,20 +10,16 @@
  * - expanded: Full-screen player
  */
 
-import { useRef, useCallback, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { usePlayerStore } from '@/stores/player'
 import { db } from '@/db'
 import { createLogger } from '@/lib/utils'
 import { setDisplayTime } from '@/hooks/use-display-time'
 import { getMediaUrl } from '@/lib/file-access'
+import { useMediaElement } from '@/hooks/use-media-element'
 import { MiniPlayerBar } from './mini-player-bar'
 import { ExpandedPlayer } from './expanded-player'
 import { PlayerHotkeys } from './player-hotkeys'
-import {
-  clampSeekTimeToEchoWindow,
-  decideEchoPlaybackTime,
-  normalizeEchoWindow,
-} from './echo/echo-constraints'
 
 // ============================================================================
 // Logger
@@ -42,28 +38,13 @@ export function PlayerContainer() {
   const volume = usePlayerStore((state) => state.volume)
   const playbackRate = usePlayerStore((state) => state.playbackRate)
   const setPlaying = usePlayerStore((state) => state.setPlaying)
-  const updateProgress = usePlayerStore((state) => state.updateProgress)
-  const echoModeActive = usePlayerStore((state) => state.echoModeActive)
-  const echoStartTime = usePlayerStore((state) => state.echoStartTime)
-  const echoEndTime = usePlayerStore((state) => state.echoEndTime)
 
   const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null)
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isReady, setIsReady] = useState(false)
-  const lastStoreUpdateRef = useRef(0)
   const renderCountRef = useRef(0)
-  const hasRestoredPositionRef = useRef(false)
-
-  const echoWindow = useMemo(() => {
-    return normalizeEchoWindow({
-      active: echoModeActive,
-      startTimeSeconds: echoStartTime,
-      endTimeSeconds: echoEndTime,
-      durationSeconds: currentSession?.duration,
-    })
-  }, [echoModeActive, echoStartTime, echoEndTime, currentSession?.duration])
 
   // Log render
   renderCountRef.current++
@@ -72,9 +53,6 @@ export function PlayerContainer() {
   // Load media blob from IndexedDB
   useEffect(() => {
     log.debug('Effect: Load media', { sessionId: currentSession?.mediaId })
-
-    // Reset position restoration flag for new media
-    hasRestoredPositionRef.current = false
 
     if (!currentSession) {
       setMediaUrl(null)
@@ -151,6 +129,18 @@ export function PlayerContainer() {
     }
   }, [playbackRate])
 
+  // Get media element handlers from hook
+  const {
+    handleTimeUpdate,
+    handleEnded,
+    handleCanPlay,
+    handleLoadError,
+  } = useMediaElement({
+    mediaRef,
+    onReady: setIsReady,
+    onError: setError,
+  })
+
   // Sync play state with media element
   useEffect(() => {
     const el = mediaRef.current
@@ -163,182 +153,21 @@ export function PlayerContainer() {
 
     if (isPlaying) {
       log.debug('Calling el.play()...')
-      el.play().then(() => {
-        log.debug('el.play() succeeded')
-      }).catch((err) => {
-        log.warn('el.play() blocked:', err)
-        // Auto-play was prevented
-        setPlaying(false)
-      })
+      el.play()
+        .then(() => {
+          log.debug('el.play() succeeded')
+        })
+        .catch((err) => {
+          log.warn('el.play() blocked:', err)
+          // Auto-play was prevented
+          setPlaying(false)
+        })
     } else {
       log.debug('Calling el.pause()')
       el.pause()
     }
   }, [isPlaying, isReady, setPlaying])
 
-  // Handle media element events - use stable refs
-  const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
-    const el = e.currentTarget
-    const time = el.currentTime
-
-    // Echo mode guard: keep playback strictly inside window.
-    // This is applied before throttled store updates so looping/clamping is immediate.
-    if (echoWindow) {
-      const decision = decideEchoPlaybackTime(time, echoWindow)
-      if (decision.kind !== 'ok') {
-        const nextTime = decision.timeSeconds
-        el.currentTime = nextTime
-        setDisplayTime(nextTime)
-        updateProgress(nextTime)
-        lastStoreUpdateRef.current = Date.now()
-        // Echo mode should not auto-loop infinitely.
-        // When reaching the end, rewind to start and pause.
-        el.pause()
-        setPlaying(false)
-        return
-      }
-    }
-
-    // Update display time (external store, doesn't cause re-render of this component)
-    setDisplayTime(time)
-
-    // Throttle store updates to every 2 seconds
-    const now = Date.now()
-    if (now - lastStoreUpdateRef.current >= 2000) {
-      lastStoreUpdateRef.current = now
-      log.debug('TimeUpdate (throttled):', time.toFixed(2))
-      updateProgress(time)
-    }
-  }, [updateProgress, echoWindow, setPlaying])
-
-  const handleEnded = useCallback(() => {
-    log.debug('Media ended')
-    const el = mediaRef.current
-    if (el && echoWindow) {
-      // If echo window reaches the end of the media, the browser may emit "ended".
-      // In echo mode, we rewind to the start of the echo window and pause.
-      el.currentTime = echoWindow.start
-      setDisplayTime(echoWindow.start)
-      updateProgress(echoWindow.start)
-      el.pause()
-      setPlaying(false)
-      return
-    }
-
-    setPlaying(false)
-    // Save final progress
-    if (el) {
-      updateProgress(el.currentTime)
-    }
-  }, [setPlaying, updateProgress, echoWindow])
-
-  const handleCanPlay = useCallback((e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
-    const el = e.currentTarget
-    log.debug('canplay event', {
-      readyState: el.readyState,
-      duration: el.duration,
-      hasRestoredPosition: hasRestoredPositionRef.current,
-    })
-
-    // Only restore position once per media load
-    if (!hasRestoredPositionRef.current) {
-      hasRestoredPositionRef.current = true
-      setIsReady(true)
-
-      // Restore playback position if needed
-      const session = usePlayerStore.getState().currentSession
-      if (session && session.currentTime > 0) {
-        log.debug('Restoring position to:', session.currentTime)
-        const state = usePlayerStore.getState()
-        const maybeWindow = normalizeEchoWindow({
-          active: state.echoModeActive,
-          startTimeSeconds: state.echoStartTime,
-          endTimeSeconds: state.echoEndTime,
-          durationSeconds: session.duration,
-        })
-        const restoredTime = maybeWindow
-          ? clampSeekTimeToEchoWindow(session.currentTime, maybeWindow)
-          : session.currentTime
-        el.currentTime = restoredTime
-        setDisplayTime(restoredTime)
-      }
-
-      // Sync volume and playback rate
-      const state = usePlayerStore.getState()
-      el.volume = state.volume
-      el.playbackRate = state.playbackRate
-    }
-  }, [])
-
-  const handleLoadError = useCallback((e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
-    const el = e.currentTarget
-    log.error('Media load error:', {
-      error: el.error,
-      networkState: el.networkState,
-      readyState: el.readyState,
-    })
-    setError('Failed to load media')
-    setIsReady(false)
-  }, [])
-
-  // Handle seek from progress bar
-  const handleSeek = useCallback((time: number) => {
-    if (mediaRef.current) {
-      const nextTime = echoWindow
-        ? clampSeekTimeToEchoWindow(time, echoWindow)
-        : time
-      mediaRef.current.currentTime = nextTime
-      setDisplayTime(nextTime)
-      updateProgress(nextTime)
-    }
-  }, [updateProgress, echoWindow])
-
-  // Handle toggle play
-  const handleTogglePlay = useCallback(() => {
-    const el = mediaRef.current
-    log.debug('handleTogglePlay', { hasElement: !!el, paused: el?.paused })
-
-    if (!el) {
-      log.warn('No media element!')
-      return
-    }
-
-    if (el.paused) {
-      el.play().then(() => {
-        log.debug('play() resolved')
-        setPlaying(true)
-      }).catch((err) => {
-        log.warn('play() blocked:', err)
-      })
-    } else {
-      el.pause()
-      setPlaying(false)
-      updateProgress(el.currentTime)
-    }
-  }, [setPlaying, updateProgress])
-
-  // Save progress when component unmounts or session changes
-  useEffect(() => {
-    return () => {
-      if (mediaRef.current) {
-        updateProgress(mediaRef.current.currentTime)
-      }
-    }
-  }, [updateProgress, currentSession?.mediaId])
-
-  // When echo mode becomes active / window changes, ensure current time is inside the window.
-  useEffect(() => {
-    const el = mediaRef.current
-    if (!el || !isReady || !echoWindow) return
-
-    const decision = decideEchoPlaybackTime(el.currentTime, echoWindow)
-    if (decision.kind === 'ok') return
-
-    el.currentTime = decision.timeSeconds
-    setDisplayTime(decision.timeSeconds)
-    updateProgress(decision.timeSeconds)
-    lastStoreUpdateRef.current = Date.now()
-  }, [echoWindow, isReady, updateProgress])
 
   // Don't render anything if no session and mode is hidden
   if (mode === 'hidden' && !currentSession) {
@@ -351,15 +180,12 @@ export function PlayerContainer() {
     <>
       {/* Player hotkeys - active when player is visible (mini or expanded) */}
       {(mode === 'mini' || mode === 'expanded') && currentSession && (
-        <PlayerHotkeys onTogglePlay={handleTogglePlay} onSeek={handleSeek} />
+        <PlayerHotkeys />
       )}
 
       {/* Mini player bar - shown in mini mode */}
       {mode === 'mini' && currentSession && (
-        <MiniPlayerBar
-          onSeek={handleSeek}
-          onTogglePlay={handleTogglePlay}
-        />
+        <MiniPlayerBar />
       )}
 
       {/* Full player - shown in expanded mode */}
@@ -368,8 +194,6 @@ export function PlayerContainer() {
           isLoading={isLoading}
           error={error}
           isVideo={isVideo}
-          onSeek={handleSeek}
-          onTogglePlay={handleTogglePlay}
         />
       )}
 

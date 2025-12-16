@@ -1,10 +1,25 @@
 import { useCallback } from 'react'
 import { usePlayerStore } from '@/stores/player'
 import { useDisplayTime } from '@/hooks/use-display-time'
+import { setDisplayTime } from '@/hooks/use-display-time'
 import { useTranscriptDisplay } from '@/components/player/transcript/use-transcript-display'
+import {
+  clampSeekTimeToEchoWindow,
+  normalizeEchoWindow,
+} from '@/components/player/echo/echo-constraints'
 import { createLogger } from '@/lib/utils'
 
 const log = createLogger({ name: 'usePlayerControls' })
+
+/**
+ * Find the media element in the DOM
+ * This is a fallback when mediaRef is not available
+ */
+function findMediaElement(): HTMLAudioElement | HTMLVideoElement | null {
+  // The media element is hidden in a div with class "hidden"
+  const hiddenDiv = document.querySelector('.hidden audio, .hidden video')
+  return hiddenDiv as HTMLAudioElement | HTMLVideoElement | null
+}
 
 /**
  * Unified hook for all player controls
@@ -19,26 +34,70 @@ const log = createLogger({ name: 'usePlayerControls' })
  * This hook should be used by all player UI components to ensure
  * consistent behavior across mini and expanded player modes.
  */
-export function usePlayerControls(
-  onSeek: (time: number) => void,
-  onTogglePlay: () => void
-) {
+export function usePlayerControls() {
   const displayTime = useDisplayTime()
-  const { currentSession } = usePlayerStore()
-  const { lines, activeLineIndex } = useTranscriptDisplay(displayTime)
   const {
+    currentSession,
+    setPlaying,
+    updateProgress,
     echoModeActive,
+    echoStartTime,
+    echoEndTime,
     activateEchoMode,
     deactivateEchoMode,
   } = usePlayerStore()
+  const { lines, activeLineIndex } = useTranscriptDisplay(displayTime)
 
-  // Handle seek for line navigation (takes time in seconds)
-  const handleSeekTime = useCallback(
+  // Calculate echo window
+  const echoWindow = normalizeEchoWindow({
+    active: echoModeActive,
+    startTimeSeconds: echoStartTime,
+    endTimeSeconds: echoEndTime,
+    durationSeconds: currentSession?.duration,
+  })
+
+  // Seek to a specific time (basic action)
+  const seek = useCallback(
     (time: number) => {
-      onSeek(time)
+      const el = findMediaElement()
+      if (!el) {
+        log.warn('Media element not found, cannot seek')
+        return
+      }
+
+      const nextTime = echoWindow ? clampSeekTimeToEchoWindow(time, echoWindow) : time
+      el.currentTime = nextTime
+      setDisplayTime(nextTime)
+      updateProgress(nextTime)
     },
-    [onSeek]
+    [echoWindow, updateProgress]
   )
+
+  // Toggle play/pause (basic action)
+  const togglePlay = useCallback(() => {
+    const el = findMediaElement()
+    if (!el) {
+      log.warn('Media element not found, cannot toggle play')
+      return
+    }
+
+    log.debug('togglePlay', { paused: el.paused })
+
+    if (el.paused) {
+      el.play()
+        .then(() => {
+          log.debug('play() resolved')
+          setPlaying(true)
+        })
+        .catch((err) => {
+          log.warn('play() blocked:', err)
+        })
+    } else {
+      el.pause()
+      setPlaying(false)
+      updateProgress(el.currentTime)
+    }
+  }, [setPlaying, updateProgress])
 
   // Previous line handler
   const handlePrevLine = useCallback(() => {
@@ -56,9 +115,9 @@ export function usePlayerControls(
           prevLine.endTimeSeconds
         )
       }
-      onSeek(prevLine.startTimeSeconds)
+      seek(prevLine.startTimeSeconds)
     }
-  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
+  }, [lines, activeLineIndex, seek, echoModeActive, activateEchoMode])
 
   // Next line handler
   const handleNextLine = useCallback(() => {
@@ -76,9 +135,9 @@ export function usePlayerControls(
           nextLine.endTimeSeconds
         )
       }
-      onSeek(nextLine.startTimeSeconds)
+      seek(nextLine.startTimeSeconds)
     }
-  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
+  }, [lines, activeLineIndex, seek, echoModeActive, activateEchoMode])
 
   // Replay current line handler
   const handleReplayLine = useCallback(() => {
@@ -94,9 +153,9 @@ export function usePlayerControls(
           currentLine.endTimeSeconds
         )
       }
-      onSeek(currentLine.startTimeSeconds)
+      seek(currentLine.startTimeSeconds)
     }
-  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
+  }, [lines, activeLineIndex, seek, echoModeActive, activateEchoMode])
 
   // Echo mode toggle handler
   const handleEchoMode = useCallback(() => {
@@ -132,9 +191,9 @@ export function usePlayerControls(
     (values: number[]) => {
       if (!currentSession) return
       const newTime = (values[0] / 100) * currentSession.duration
-      onSeek(newTime)
+      seek(newTime)
     },
-    [currentSession, onSeek]
+    [currentSession, seek]
   )
 
   // Placeholder handler for dictation mode
@@ -145,8 +204,8 @@ export function usePlayerControls(
 
   return {
     // Basic controls
-    onTogglePlay,
-    onSeek: handleSeekTime,
+    onTogglePlay: togglePlay,
+    onSeek: seek,
 
     // Progress bar control (for sliders)
     handleSeek,

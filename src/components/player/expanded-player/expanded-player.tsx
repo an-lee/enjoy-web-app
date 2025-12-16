@@ -23,8 +23,6 @@ export function ExpandedPlayer({
   isLoading,
   error,
   isVideo,
-  onSeek,
-  onTogglePlay,
 }: ExpandedPlayerProps) {
   const { currentSession } = usePlayerStore()
 
@@ -47,13 +45,9 @@ export function ExpandedPlayer({
           isLoading={isLoading}
           error={error}
           isVideo={isVideo}
-          onSeek={onSeek}
         />
 
-        <ExpandedPlayerControls
-          onSeek={onSeek}
-          onTogglePlay={onTogglePlay}
-        />
+        <ExpandedPlayerControls />
       </div>
     </TooltipProvider>
   )

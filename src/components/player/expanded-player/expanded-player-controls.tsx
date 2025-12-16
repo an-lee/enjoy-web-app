@@ -18,16 +18,10 @@ import { VolumePopover } from './volume-popover'
 import { SpeedPopover } from './speed-popover'
 
 interface ExpandedPlayerControlsProps {
-  /** Callback to seek to a position */
-  onSeek?: (time: number) => void
-  /** Callback to toggle play/pause */
-  onTogglePlay?: () => void
+  // No props needed - component gets all data from hooks
 }
 
-export function ExpandedPlayerControls({
-  onSeek,
-  onTogglePlay,
-}: ExpandedPlayerControlsProps) {
+export function ExpandedPlayerControls({}: ExpandedPlayerControlsProps) {
   const { t } = useTranslation()
   const displayTime = useDisplayTime()
 
@@ -43,10 +37,7 @@ export function ExpandedPlayerControls({
   } = usePlayerStore()
 
   // Get all player controls from unified hook
-  const controls = usePlayerControls(
-    onSeek || (() => {}),
-    onTogglePlay || (() => {})
-  )
+  const controls = usePlayerControls()
 
   // Calculate progress and duration
   const duration = currentSession?.duration || 0

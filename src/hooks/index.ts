@@ -52,6 +52,7 @@ export {
 export { useTTS, type UseTTSOptions, type UseTTSReturn } from './use-tts'
 export { useRetranscribe } from './use-retranscribe'
 export { useTranscriptSync, type TranscriptSyncState } from './use-transcript-sync'
+export { useMediaElement, type UseMediaElementOptions, type UseMediaElementReturn } from './use-media-element'
 
 // ============================================================================
 // Utility Hooks

@@ -6,9 +6,5 @@ export interface ExpandedPlayerProps {
   error?: string | null
   /** Whether it's a video */
   isVideo?: boolean
-  /** Callback to seek to a position */
-  onSeek?: (time: number) => void
-  /** Callback to toggle play/pause */
-  onTogglePlay?: () => void
 }
 

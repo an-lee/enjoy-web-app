@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { usePlayerStore } from '@/stores/player'
 import { useDisplayTime } from '@/hooks/use-display-time'
+import { usePlayerControls } from '@/hooks/use-player-controls'
 import { useTranscriptDisplay } from '../transcript/use-transcript-display'
 import { TranscriptDisplay } from '../transcript'
 
@@ -12,19 +13,17 @@ interface ExpandedPlayerContentProps {
   error?: string | null
   /** Whether it's a video */
   isVideo?: boolean
-  /** Callback to seek to a position */
-  onSeek?: (time: number) => void
 }
 
 export function ExpandedPlayerContent({
   isLoading,
   error,
   isVideo,
-  onSeek,
 }: ExpandedPlayerContentProps) {
   const { t } = useTranslation()
   const displayTime = useDisplayTime()
   const { isPlaying } = usePlayerStore()
+  const { onSeek } = usePlayerControls()
 
   // Get transcript data
   const {

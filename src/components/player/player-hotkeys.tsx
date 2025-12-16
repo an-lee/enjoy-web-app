@@ -13,11 +13,10 @@ import { useEchoRegion } from './transcript/use-echo-region'
 import { usePlayerControls } from '@/hooks/use-player-controls'
 
 interface PlayerHotkeysProps {
-  onTogglePlay: () => void
-  onSeek: (time: number) => void
+  // No props needed - component gets all data from hooks
 }
 
-export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
+export function PlayerHotkeys({}: PlayerHotkeysProps) {
   const displayTime = useDisplayTime()
   const {
     collapse,
@@ -32,7 +31,7 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
   const { lines } = useTranscriptDisplay(displayTime)
 
   // Get all player controls from unified hook
-  const controls = usePlayerControls(onSeek, onTogglePlay)
+  const controls = usePlayerControls()
 
   // Get echo region handlers
   const {

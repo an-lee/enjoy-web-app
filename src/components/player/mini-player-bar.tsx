@@ -22,17 +22,13 @@ import { useIsMobile } from '@/hooks/use-mobile'
 
 interface MiniPlayerBarProps {
   className?: string
-  /** Callback to seek to a position */
-  onSeek?: (time: number) => void
-  /** Callback to toggle play/pause */
-  onTogglePlay?: () => void
 }
 
 // ============================================================================
 // Component
 // ============================================================================
 
-export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBarProps) {
+export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
   const { t } = useTranslation()
   const displayTime = useDisplayTime()
   const isMobile = useIsMobile()
@@ -42,10 +38,7 @@ export function MiniPlayerBar({ className, onSeek, onTogglePlay }: MiniPlayerBar
   const { currentSession, isPlaying, expand, hide } = usePlayerStore()
 
   // Get all player controls from unified hook
-  const controls = usePlayerControls(
-    onSeek || (() => {}),
-    onTogglePlay || (() => {})
-  )
+  const controls = usePlayerControls()
 
   if (!currentSession) return null
 
