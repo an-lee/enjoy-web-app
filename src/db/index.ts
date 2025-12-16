@@ -217,3 +217,63 @@ export {
   generateCachedDefinitionId,
   generateEchoSessionId,
 } from './id-generator'
+
+// ============================================================================
+// Sync Queue Repository Exports
+// ============================================================================
+
+export {
+  syncQueueRepository,
+  getSyncQueueItemById,
+  getSyncQueueItemsByEntityType,
+  getSyncQueueItemsByEntityId,
+  getPendingSyncQueueItems,
+  getFailedSyncQueueItems,
+  getAllSyncQueueItems,
+  addSyncQueueItem,
+  updateSyncQueueItem,
+  removeSyncQueueItem,
+  removeSyncQueueItemsByEntityId,
+  clearSyncQueue,
+} from './repositories/sync-queue-repository'
+
+// ============================================================================
+// Sync State Repository Exports
+// ============================================================================
+
+export {
+  syncStateRepository,
+  getLastSyncAt,
+  getAllSyncStates,
+  updateLastSyncAt,
+  clearSyncState,
+  clearAllSyncStates,
+} from './repositories/sync-state-repository'
+
+// ============================================================================
+// Sync Service Exports
+// ============================================================================
+
+export {
+  queueUploadSync,
+  processSyncQueue,
+  downloadAudios,
+  downloadVideos,
+  fullSync,
+} from './services/sync-service'
+
+export type { SyncOptions, SyncResult } from './services/sync-service'
+
+// ============================================================================
+// Sync Manager Exports
+// ============================================================================
+
+export {
+  initSyncManager,
+  shutdownSyncManager,
+  triggerSync,
+  queueForSync,
+  getSyncManagerStatus,
+} from './services/sync-manager'
+
+export type { SyncManagerOptions } from './services/sync-manager'

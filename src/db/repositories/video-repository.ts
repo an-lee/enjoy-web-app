@@ -4,6 +4,7 @@
 
 import { db } from '../schema'
 import { generateVideoId, generateLocalVideoVid } from '../id-generator'
+import { queueVideoSync } from '../utils/auto-sync'
 import type { Video, VideoProvider, SyncStatus, VideoInput } from '@/types/db'
 
 // Ensure provider defaults to 'user'
@@ -61,16 +62,21 @@ export async function saveVideo(input: VideoInput): Promise<string> {
       ...normalizedInput,
       updatedAt: now,
     })
+    // Queue for sync if not already synced
+    await queueVideoSync(id, 'update', existing.syncStatus)
     return id
   }
 
   const video: Video = {
     ...normalizedInput,
     id,
+    syncStatus: 'local', // New local entity
     createdAt: now,
     updatedAt: now,
   }
   await db.videos.put(video)
+  // Queue for sync
+  await queueVideoSync(id, 'create', 'local')
   return id
 }
 
@@ -106,6 +112,8 @@ export async function saveLocalVideo(
       source: source || input.source,
       updatedAt: now,
     })
+    // Queue for sync if not already synced
+    await queueVideoSync(id, 'update', existing.syncStatus)
     return id
   }
 
@@ -118,10 +126,13 @@ export async function saveLocalVideo(
     md5,
     size,
     source: source || input.source,
+    syncStatus: 'local', // New local entity
     createdAt: now,
     updatedAt: now,
   }
   await db.videos.put(video)
+  // Queue for sync
+  await queueVideoSync(id, 'create', 'local')
   return id
 }
 
@@ -130,14 +141,24 @@ export async function updateVideo(
   updates: Partial<Omit<Video, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
+  const existing = await db.videos.get(id)
   await db.videos.update(id, {
     ...updates,
     updatedAt: now,
   })
+  // Queue for sync if not already synced (unless syncStatus is being explicitly set)
+  if (!updates.syncStatus && existing) {
+    await queueVideoSync(id, 'update', existing.syncStatus)
+  }
 }
 
 export async function deleteVideo(id: string): Promise<void> {
+  const existing = await db.videos.get(id)
   await db.videos.delete(id)
+  // Queue for sync if was synced
+  if (existing?.syncStatus === 'synced') {
+    await queueVideoSync(id, 'delete', existing.syncStatus)
+  }
 }
 
 // ============================================================================

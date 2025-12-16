@@ -11,12 +11,13 @@ import type { Audio, AudioProvider } from "@/types/db"
 // ============================================================================
 
 /**
- * Parameters for fetching videos list
+ * Parameters for fetching audios list
  */
 export interface AudiosListParams {
   provider?: AudioProvider
   page?: number
   limit?: number
+  updatedAfter?: string // ISO 8601 timestamp for incremental sync
 }
 
 // ============================================================================

@@ -4,6 +4,7 @@
 
 import { db } from '../schema'
 import { generateAudioId, generateLocalAudioAid, generateTTSAudioAid } from '../id-generator'
+import { queueAudioSync } from '../utils/auto-sync'
 import type {
   Audio,
   AudioProvider,
@@ -119,6 +120,8 @@ export async function saveAudio(input: UserAudioInput): Promise<string> {
       aid,
       updatedAt: now,
     })
+    // Queue for sync if not already synced
+    await queueAudioSync(id, 'update', existing.syncStatus)
     return id
   }
 
@@ -127,10 +130,13 @@ export async function saveAudio(input: UserAudioInput): Promise<string> {
     id,
     aid,
     provider: 'user',
+    syncStatus: 'local', // New local entity
     createdAt: now,
     updatedAt: now,
   } as Audio
   await db.audios.put(audio)
+  // Queue for sync
+  await queueAudioSync(id, 'create', 'local')
   return id
 }
 
@@ -168,6 +174,8 @@ export async function saveTTSAudio(input: TTSAudioInput): Promise<string> {
       size,
       updatedAt: now,
     })
+    // Queue for sync if not already synced
+    await queueAudioSync(id, 'update', existing.syncStatus)
     return id
   }
 
@@ -179,10 +187,13 @@ export async function saveTTSAudio(input: TTSAudioInput): Promise<string> {
     blob, // Store blob directly in IndexedDB for TTS audio
     md5,
     size,
+    syncStatus: 'local', // New local entity
     createdAt: now,
     updatedAt: now,
   }
   await db.audios.put(audio)
+  // Queue for sync
+  await queueAudioSync(id, 'create', 'local')
   return id
 }
 
@@ -218,6 +229,8 @@ export async function saveLocalAudio(
       source: source || input.source,
       updatedAt: now,
     })
+    // Queue for sync if not already synced
+    await queueAudioSync(id, 'update', existing.syncStatus)
     return id
   }
 
@@ -230,10 +243,13 @@ export async function saveLocalAudio(
     md5,
     size,
     source: source || input.source,
+    syncStatus: 'local', // New local entity
     createdAt: now,
     updatedAt: now,
   }
   await db.audios.put(audio)
+  // Queue for sync
+  await queueAudioSync(id, 'create', 'local')
   return id
 }
 
@@ -242,14 +258,24 @@ export async function updateAudio(
   updates: Partial<Omit<Audio, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
+  const existing = await db.audios.get(id)
   await db.audios.update(id, {
     ...updates,
     updatedAt: now,
   })
+  // Queue for sync if not already synced (unless syncStatus is being explicitly set)
+  if (!updates.syncStatus && existing) {
+    await queueAudioSync(id, 'update', existing.syncStatus)
+  }
 }
 
 export async function deleteAudio(id: string): Promise<void> {
+  const existing = await db.audios.get(id)
   await db.audios.delete(id)
+  // Queue for sync if was synced
+  if (existing?.syncStatus === 'synced') {
+    await queueAudioSync(id, 'delete', existing.syncStatus)
+  }
 }
 
 // ============================================================================

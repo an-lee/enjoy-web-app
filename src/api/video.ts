@@ -17,6 +17,7 @@ export interface VideosListParams {
   provider?: VideoProvider
   page?: number
   limit?: number
+  updatedAfter?: string // ISO 8601 timestamp for incremental sync
 }
 
 // ============================================================================

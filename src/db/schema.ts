@@ -111,6 +111,12 @@ export class EnjoyDatabase extends Dexie {
       echoSessions:
         'id, [targetType+targetId], targetType, targetId, language, syncStatus, startedAt, lastActiveAt, createdAt, updatedAt',
     })
+
+    // Version 9: Add composite index for sync queue to support deduplication
+    this.version(9).stores({
+      syncQueue:
+        '++id, entityType, entityId, action, [entityType+entityId+action], retryCount, createdAt',
+    })
   }
 }
 
