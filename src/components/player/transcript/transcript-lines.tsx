@@ -25,6 +25,7 @@ interface TranscriptLinesProps {
   onShrinkEchoBackward: () => void
   echoStartTime?: number
   echoEndTime?: number
+  referenceText?: string
   onRecord?: () => void
   isRecording?: boolean
 }
@@ -42,6 +43,7 @@ function TranscriptLinesComponent({
   onShrinkEchoBackward,
   echoStartTime,
   echoEndTime,
+  referenceText,
   onRecord,
   isRecording,
 }: TranscriptLinesProps) {
@@ -124,6 +126,7 @@ function TranscriptLinesComponent({
                   <ShadowReadingPanel
                     startTime={echoStartTime}
                     endTime={echoEndTime}
+                    referenceText={referenceText || ''}
                     onRecord={onRecord}
                     isRecording={isRecording ?? false}
                   />

@@ -80,6 +80,7 @@
 		"react-hotkeys-hook": "^5.2.1",
 		"react-i18next": "^16.5.0",
 		"recharts": "3.5.1",
+		"recorder-core": "^1.3.25011100",
 		"sonner": "^2.0.7",
 		"tailwind-merge": "^3.4.0",
 		"tailwindcss": "^4.1.18",

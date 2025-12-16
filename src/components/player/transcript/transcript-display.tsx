@@ -141,10 +141,22 @@ export function TranscriptDisplay({
 
   useAutoScroll(scrollTargetIndex, isPlaying, config, scrollAreaRef)
 
-  // Placeholder for recording (not implemented yet)
+  // Get reference text from echo region lines
+  const referenceText = useMemo(() => {
+    if (!echoModeActive || echoStartLineIndex < 0 || echoEndLineIndex < 0) {
+      return ''
+    }
+    return lines
+      .filter(
+        (line) => line.index >= echoStartLineIndex && line.index <= echoEndLineIndex
+      )
+      .map((line) => line.primary.text)
+      .join(' ')
+  }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, lines])
+
+  // Recording state - will be managed by ShadowReadingPanel
   const [isRecording, setIsRecording] = useState(false)
   const handleRecord = useCallback(() => {
-    // TODO: Implement recording
     setIsRecording((prev) => !prev)
   }, [])
 
@@ -360,6 +372,7 @@ export function TranscriptDisplay({
           onShrinkEchoBackward={handleShrinkEchoBackward}
           echoStartTime={echoRegionTimeRange?.startTime}
           echoEndTime={echoRegionTimeRange?.endTime}
+          referenceText={referenceText}
           onRecord={echoModeActive ? handleRecord : undefined}
           isRecording={isRecording}
         />
