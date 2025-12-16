@@ -1,13 +1,12 @@
 /**
- * useShadowRecording Hook
+ * useRecorder Hook
  *
- * Manages shadow reading recording functionality using Recorder library.
+ * Manages audio recording functionality using Recorder library.
+ * Returns the recorded blob for external handling.
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { createLogger } from '@/lib/utils'
-import { recordingRepository } from '@/db/repositories/recording-repository'
-import type { RecordingInput, TargetType } from '@/types/db'
 
 // Import Recorder library
 // @ts-ignore - recorder-core doesn't have TypeScript definitions
@@ -25,16 +24,15 @@ import 'recorder-core/src/extensions/lib.fft'
 // @ts-ignore - recorder-core doesn't have TypeScript definitions
 import 'recorder-core/src/extensions/frequency.histogram.view'
 
-const log = createLogger({ name: 'useShadowRecording' })
+const log = createLogger({ name: 'useRecorder' })
 
 interface UseRecorderOptions {
-  referenceStart: number // milliseconds
-  referenceDuration: number // milliseconds
-  referenceText: string
-  language: string
-  targetType: TargetType
-  targetId: string
   canvasRef?: React.RefObject<HTMLElement | null> // Container element for frequency visualization (div or canvas)
+}
+
+interface RecordingResult {
+  blob: Blob
+  duration: number // milliseconds
 }
 
 interface UseRecorderReturn {
@@ -42,20 +40,14 @@ interface UseRecorderReturn {
   recordingDuration: number // milliseconds
   volume: number // 0-100, for visualization
   startRecording: () => Promise<void>
-  stopRecording: () => Promise<void>
+  stopRecording: () => Promise<RecordingResult | null>
   cancelRecording: () => void
   error: string | null
 }
 
 export function useRecorder({
-  referenceStart,
-  referenceDuration,
-  referenceText,
-  language,
-  targetType,
-  targetId,
   canvasRef,
-}: UseRecorderOptions): UseRecorderReturn {
+}: UseRecorderOptions = {}): UseRecorderReturn {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
   const [volume, setVolume] = useState(0)
@@ -65,7 +57,6 @@ export function useRecorder({
   const streamRef = useRef<MediaStream | null>(null)
   const startTimeRef = useRef<number>(0)
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const volumeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const frequencyViewRef = useRef<any>(null) // FrequencyHistogramView instance
 
   // Cleanup on unmount
@@ -73,9 +64,6 @@ export function useRecorder({
     return () => {
       if (durationTimerRef.current) {
         clearInterval(durationTimerRef.current)
-      }
-      if (volumeTimerRef.current) {
-        clearInterval(volumeTimerRef.current)
       }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop())
@@ -113,7 +101,12 @@ export function useRecorder({
         type: 'mp3', // Use MP3 format for smaller file size
         sampleRate: 16000, // 16kHz is sufficient for speech
         bitRate: 16, // 16kbps for smaller files
-        onProcess: (buffers: any, powerLevel: number, _bufferDuration: number, bufferSampleRate: number) => {
+        onProcess: (
+          buffers: any,
+          powerLevel: number,
+          _bufferDuration: number,
+          bufferSampleRate: number
+        ) => {
           // Update volume for visualization (powerLevel is 0-100)
           setVolume(powerLevel)
 
@@ -129,7 +122,9 @@ export function useRecorder({
               }
             } catch (err) {
               // Ignore errors in visualization
-              log.debug('Error feeding data to FrequencyHistogramView', { error: err })
+              log.debug('Error feeding data to FrequencyHistogramView', {
+                error: err,
+              })
             }
           }
         },
@@ -150,12 +145,21 @@ export function useRecorder({
                   lineCount: 30, // Number of frequency bars
                   position: -1, // Draw from bottom
                   stripeEnable: true, // Enable peak indicators
-                  linear: [0, 'rgba(0,187,17,1)', 0.5, 'rgba(255,215,0,1)', 1, 'rgba(255,102,0,1)'], // Green to yellow to orange gradient
+                  linear: [
+                    0,
+                    'rgba(0,187,17,1)',
+                    0.5,
+                    'rgba(255,215,0,1)',
+                    1,
+                    'rgba(255,102,0,1)',
+                  ], // Green to yellow to orange gradient
                 })
                 frequencyViewRef.current = frequencyView
                 log.debug('FrequencyHistogramView initialized with elem')
               } catch (err) {
-                log.warn('Failed to initialize FrequencyHistogramView', { error: err })
+                log.warn('Failed to initialize FrequencyHistogramView', {
+                  error: err,
+                })
               }
             }
           }, 50)
@@ -185,7 +189,7 @@ export function useRecorder({
       setError(errorMsg)
       log.error('Failed to start recording', { error: err })
     }
-  }, [])
+  }, [canvasRef])
 
   // Helper function to cleanup recording resources
   const cleanupRecording = useCallback(() => {
@@ -193,10 +197,6 @@ export function useRecorder({
     if (durationTimerRef.current) {
       clearInterval(durationTimerRef.current)
       durationTimerRef.current = null
-    }
-    if (volumeTimerRef.current) {
-      clearInterval(volumeTimerRef.current)
-      volumeTimerRef.current = null
     }
 
     // Stop media stream
@@ -226,65 +226,39 @@ export function useRecorder({
     setRecordingDuration(0)
   }, [])
 
-  const stopRecording = useCallback(async () => {
+  const stopRecording = useCallback(async (): Promise<RecordingResult | null> => {
     if (!recorderRef.current || !isRecording) {
-      return
+      return null
     }
 
-    try {
+    return new Promise((resolve) => {
       // Stop timers
       if (durationTimerRef.current) {
         clearInterval(durationTimerRef.current)
         durationTimerRef.current = null
       }
-      if (volumeTimerRef.current) {
-        clearInterval(volumeTimerRef.current)
-        volumeTimerRef.current = null
-      }
 
       // Stop recording
       recorderRef.current.stop(
-        async (blob: Blob, duration: number) => {
-          try {
-            setIsRecording(false)
-            setVolume(0)
+        (blob: Blob, duration: number) => {
+          setIsRecording(false)
+          setVolume(0)
 
-            // Calculate SHA-256 hash of the blob (MD5 is not supported in browser crypto API)
-            // We'll use SHA-256 and store it in md5 field for compatibility
-            const arrayBuffer = await blob.arrayBuffer()
-            const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
-            const hashArray = Array.from(new Uint8Array(hashBuffer))
-            const md5 = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-
-            // Create recording input
-            const recordingInput: RecordingInput = {
-              targetType,
-              targetId,
-              referenceStart,
-              referenceDuration,
-              referenceText,
-              language,
-              duration: Math.round(duration), // Convert to milliseconds
-              md5,
-              blob,
-              syncStatus: 'pending',
-            }
-
-            // Save to database
-            const recordingId = await recordingRepository.save(recordingInput)
-            log.debug('Recording saved', { recordingId, duration })
-
-            // Cleanup
-            if (streamRef.current) {
-              streamRef.current.getTracks().forEach((track) => track.stop())
-              streamRef.current = null
-            }
+          // Cleanup
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop())
+            streamRef.current = null
+          }
+          if (recorderRef.current) {
             recorderRef.current.close()
             recorderRef.current = null
-          } catch (err: any) {
-            setError(`Failed to save recording: ${err?.message || 'Unknown error'}`)
-            log.error('Failed to save recording', { error: err })
           }
+          if (frequencyViewRef.current) {
+            frequencyViewRef.current = null
+          }
+
+          log.debug('Recording stopped', { duration })
+          resolve({ blob, duration: Math.round(duration) })
         },
         (msg: string) => {
           setError(`Failed to stop recording: ${msg}`)
@@ -294,14 +268,11 @@ export function useRecorder({
             streamRef.current.getTracks().forEach((track) => track.stop())
             streamRef.current = null
           }
+          resolve(null)
         }
       )
-    } catch (err: any) {
-      setError(`Failed to stop recording: ${err?.message || 'Unknown error'}`)
-      log.error('Failed to stop recording', { error: err })
-      setIsRecording(false)
-    }
-  }, [isRecording, referenceStart, referenceDuration, referenceText, language, targetType, targetId])
+    })
+  }, [isRecording])
 
   const cancelRecording = useCallback(() => {
     if (!isRecording) {
@@ -310,7 +281,7 @@ export function useRecorder({
 
     log.debug('Recording cancelled by user')
 
-    // Directly cleanup without calling stop() to avoid saving
+    // Directly cleanup without calling stop() to avoid returning data
     // We just close the recorder and stop the stream
     cleanupRecording()
   }, [isRecording, cleanupRecording])
@@ -325,4 +296,3 @@ export function useRecorder({
     error,
   }
 }
-

@@ -5,7 +5,7 @@
  * Handles recording UI, visualization, and controls.
  */
 
-import { useMemo, useCallback, useEffect, useRef } from 'react'
+import { useMemo, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useRecorder } from '@/hooks/use-recorder'
@@ -15,11 +15,16 @@ import { useEchoRegion } from './use-echo-region'
 import { RecordButton } from './record-button'
 import { Button } from '@/components/ui/button'
 import { ShadowRecordingProgress } from './shadow-recording-progress'
-import type { TargetType } from '@/types/db'
+import { recordingRepository } from '@/db/repositories/recording-repository'
+import { createLogger } from '@/lib/utils'
+import type { TargetType, RecordingInput } from '@/types/db'
+
+const log = createLogger({ name: 'ShadowRecorder' })
 
 export function ShadowRecorder() {
   const { t } = useTranslation()
   const canvasRef = useRef<HTMLDivElement>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // Get echo region data from player store
   const echoStartTime = usePlayerStore((state) => state.echoStartTime)
@@ -59,18 +64,7 @@ export function ShadowRecorder() {
   const endTime = echoEndTime >= 0 ? echoEndTime : 0
   const echoRegionDuration = (endTime - startTime) * 1000 // Convert to milliseconds
 
-  // Early return if echo mode is not active or data is invalid
-  if (
-    !echoModeActive ||
-    startTime < 0 ||
-    endTime < 0 ||
-    !targetType ||
-    !targetId
-  ) {
-    return null
-  }
-
-  // Initialize recording hook
+  // Initialize recording hook - only pass canvasRef
   const {
     isRecording,
     recordingDuration,
@@ -78,15 +72,10 @@ export function ShadowRecorder() {
     stopRecording,
     cancelRecording,
     error: recordingError,
-  } = useRecorder({
-    referenceStart: startTime * 1000, // Convert to milliseconds
-    referenceDuration: (endTime - startTime) * 1000, // Convert to milliseconds
-    referenceText,
-    language,
-    targetType,
-    targetId,
-    canvasRef,
-  })
+  } = useRecorder({ canvasRef })
+
+  // Combined error display
+  const displayError = recordingError || saveError
 
   // Use refs to store latest values for cleanup
   const isRecordingRef = useRef(isRecording)
@@ -104,7 +93,9 @@ export function ShadowRecorder() {
   useEffect(() => {
     registerRecordingControls({
       startRecording,
-      stopRecording,
+      stopRecording: async () => {
+        await handleStopRecording()
+      },
       isRecording: () => isRecording,
     })
 
@@ -114,7 +105,6 @@ export function ShadowRecorder() {
   }, [
     isRecording,
     startRecording,
-    stopRecording,
     registerRecordingControls,
     unregisterRecordingControls,
   ])
@@ -147,14 +137,82 @@ export function ShadowRecorder() {
     }
   }, [isRecording, cancelRecording])
 
+  // Handle stop recording and save to database
+  const handleStopRecording = useCallback(async () => {
+    if (!targetType || !targetId) {
+      log.error('Cannot save recording: missing target info')
+      return
+    }
+
+    setSaveError(null)
+
+    const result = await stopRecording()
+    if (!result) {
+      return
+    }
+
+    const { blob, duration } = result
+
+    try {
+      // Calculate SHA-256 hash of the blob (MD5 is not supported in browser crypto API)
+      // We'll use SHA-256 and store it in md5 field for compatibility
+      const arrayBuffer = await blob.arrayBuffer()
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const md5 = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+
+      // Create recording input
+      const recordingInput: RecordingInput = {
+        targetType,
+        targetId,
+        referenceStart: startTime * 1000, // Convert to milliseconds
+        referenceDuration: (endTime - startTime) * 1000, // Convert to milliseconds
+        referenceText,
+        language,
+        duration,
+        md5,
+        blob,
+        syncStatus: 'pending',
+      }
+
+      // Save to database
+      const recordingId = await recordingRepository.save(recordingInput)
+      log.debug('Recording saved', { recordingId, duration })
+    } catch (err: any) {
+      const errorMsg = `Failed to save recording: ${err?.message || 'Unknown error'}`
+      setSaveError(errorMsg)
+      log.error('Failed to save recording', { error: err })
+    }
+  }, [
+    stopRecording,
+    targetType,
+    targetId,
+    startTime,
+    endTime,
+    referenceText,
+    language,
+  ])
+
   // Handle record button click
   const handleRecordClick = useCallback(async () => {
     if (isRecording) {
-      await stopRecording()
+      await handleStopRecording()
     } else {
+      setSaveError(null)
       await startRecording()
     }
-  }, [isRecording, startRecording, stopRecording])
+  }, [isRecording, startRecording, handleStopRecording])
+
+  // Early return if echo mode is not active or data is invalid
+  if (
+    !echoModeActive ||
+    startTime < 0 ||
+    endTime < 0 ||
+    !targetType ||
+    !targetId
+  ) {
+    return null
+  }
 
   return (
     <div className="space-y-3">
@@ -167,9 +225,9 @@ export function ShadowRecorder() {
       />
 
       {/* Error message */}
-      {recordingError && (
+      {displayError && (
         <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
-          {recordingError}
+          {displayError}
         </div>
       )}
 
