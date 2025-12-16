@@ -9,8 +9,6 @@ import {
 } from 'recharts'
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -149,7 +147,7 @@ export function PitchContourChart({
               dataKey="progressBg"
               baseValue={0}
               fill="var(--color-pitch-progress)"
-              fillOpacity={1}
+              fillOpacity={0.15}
               stroke="none"
               isAnimationActive={false}
               dot={false}
@@ -164,6 +162,10 @@ export function PitchContourChart({
           content={
             <ChartTooltipContent
               formatter={(value, name) => {
+                // Hide progress in tooltip
+                if (name === 'progress') {
+                  return null
+                }
                 if (name === 'ampRef' || name === 'ampUser') {
                   const num = typeof value === 'number' ? value : Number(value)
                   return [
@@ -183,8 +185,6 @@ export function PitchContourChart({
             />
           }
         />
-
-        <ChartLegend content={<ChartLegendContent />} />
 
         {/* Waveform envelope (reference) - background layer, subtle */}
         <Line
