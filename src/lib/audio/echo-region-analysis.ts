@@ -24,6 +24,12 @@ export type EchoRegionAnalysisResult = {
   }
 }
 
+/**
+ * Load media blob for analysis, supporting all media source types:
+ * - blob: Direct blob storage (for TTS-generated audio)
+ * - fileHandle: Local file handle (for user-uploaded files)
+ * - mediaUrl: Server URL (for synced media files)
+ */
 export async function loadMediaBlobForSession(session: {
   mediaId: string
   mediaType: 'audio' | 'video'
@@ -36,24 +42,48 @@ export async function loadMediaBlobForSession(session: {
   if (session.mediaType === 'audio') {
     const audio = await db.audios.get(session.mediaId)
     if (!audio) throw new Error('Audio not found')
-    // Get blob from audio (for TTS) or fileHandle
+
+    // Priority 1: Direct blob (for TTS-generated audio)
     if (audio.blob) {
       return audio.blob
-    } else if (audio.fileHandle) {
-      return await audio.fileHandle.getFile()
-    } else {
-      throw new Error('Audio file not available')
     }
+
+    // Priority 2: Server URL (for synced media)
+    if (audio.mediaUrl) {
+      const response = await fetch(audio.mediaUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio from server: ${response.statusText}`)
+      }
+      return await response.blob()
+    }
+
+    // Priority 3: Local file handle (for user-uploaded files)
+    if (audio.fileHandle) {
+      return await audio.fileHandle.getFile()
+    }
+
+    throw new Error('Audio file not available (no blob, mediaUrl, or fileHandle)')
   }
 
+  // Video handling
   const video = await db.videos.get(session.mediaId)
   if (!video) throw new Error('Video not found')
-  // Get file from fileHandle
+
+  // Priority 1: Server URL (for synced media)
+  if (video.mediaUrl) {
+    const response = await fetch(video.mediaUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch video from server: ${response.statusText}`)
+    }
+    return await response.blob()
+  }
+
+  // Priority 2: Local file handle (for user-uploaded files)
   if (video.fileHandle) {
     return await video.fileHandle.getFile()
-  } else {
-    throw new Error('Video file not available')
   }
+
+  throw new Error('Video file not available (no mediaUrl or fileHandle)')
 }
 
 export async function analyzeEchoRegionFromBlob(opts: {

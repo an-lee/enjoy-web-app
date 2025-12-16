@@ -134,24 +134,44 @@ export function useRetranscribe() {
         if (currentSession.mediaType === 'audio') {
           const audio = await db.audios.get(currentSession.mediaId)
           if (!audio) throw new Error('Audio not found')
-          // Get blob from audio (for TTS) or fileHandle
+
+          // Priority 1: Direct blob (for TTS-generated audio)
           if (audio.blob) {
             blob = audio.blob
-          } else if (audio.fileHandle) {
+          }
+          // Priority 2: Server URL (for synced media)
+          else if (audio.mediaUrl) {
+            const response = await fetch(audio.mediaUrl)
+            if (!response.ok) {
+              throw new Error(`Failed to fetch audio from server: ${response.statusText}`)
+            }
+            blob = await response.blob()
+          }
+          // Priority 3: Local file handle (for user-uploaded files)
+          else if (audio.fileHandle) {
             blob = await audio.fileHandle.getFile()
           } else {
-            throw new Error('Audio file not available')
+            throw new Error('Audio file not available (no blob, mediaUrl, or fileHandle)')
           }
           targetType = 'Audio'
           targetId = currentSession.mediaId
         } else {
           const video = await db.videos.get(currentSession.mediaId)
           if (!video) throw new Error('Video not found')
-          // Get file from fileHandle
-          if (video.fileHandle) {
+
+          // Priority 1: Server URL (for synced media)
+          if (video.mediaUrl) {
+            const response = await fetch(video.mediaUrl)
+            if (!response.ok) {
+              throw new Error(`Failed to fetch video from server: ${response.statusText}`)
+            }
+            blob = await response.blob()
+          }
+          // Priority 2: Local file handle (for user-uploaded files)
+          else if (video.fileHandle) {
             blob = await video.fileHandle.getFile()
           } else {
-            throw new Error('Video file not available')
+            throw new Error('Video file not available (no mediaUrl or fileHandle)')
           }
           targetType = 'Video'
           targetId = currentSession.mediaId
