@@ -53,10 +53,6 @@ code {
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --color-echo-region: var(--echo-region);
-  --color-echo-region-foreground: var(--echo-region-foreground);
-  --color-shadow-panel: var(--shadow-panel);
-  --color-shadow-panel-foreground: var(--shadow-panel-foreground);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -65,11 +61,36 @@ code {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* Echo Region - warm orange tone (subtle) */
+  --color-echo-region: var(--echo-region);
+  --color-echo-region-foreground: var(--echo-region-foreground);
+  /* Shadow Reading Panel - soft purple tone (subtle) */
+  --color-shadow-panel: var(--shadow-panel);
+  --color-shadow-panel-foreground: var(--shadow-panel-foreground);
   /* Pitch contour chart colors */
   --color-ampRef: var(--chart-5);
   --color-pitchRefHz: var(--chart-1);
   --color-ampUser: var(--chart-3);
   --color-pitchUserHz: var(--chart-2);
+    /* Pitch contour chart colors */
+  --color-pitch-reference: var(--pitch-reference);
+  --color-pitch-recording: var(--pitch-recording);
+  --color-pitch-reference-amplitude: var(--pitch-reference-amplitude);
+  --color-pitch-recording-amplitude: var(--pitch-recording-amplitude);
+  --color-pitch-progress: var(--pitch-progress);
+  /* Assessment score colors - 4-tier system */
+  --color-score-excellent: var(--score-excellent);
+  --color-score-excellent-foreground: var(--score-excellent-foreground);
+  --color-score-good: var(--score-good);
+  --color-score-good-foreground: var(--score-good-foreground);
+  --color-score-fair: var(--score-fair);
+  --color-score-fair-foreground: var(--score-fair-foreground);
+  --color-score-poor: var(--score-poor);
+  --color-score-poor-foreground: var(--score-poor-foreground);
+  /* Transcript highlight colors */
+  --color-highlight-active: var(--highlight-active);
+  --color-highlight-active-foreground: var(--highlight-active-foreground);
+  --color-highlight-active-border: var(--highlight-active-border);
 }
 
 :root {
@@ -97,12 +118,7 @@ code {
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  /* Echo Region - warm orange tone (subtle) */
-  --echo-region: oklch(0.98 0.02 50);
-  --echo-region-foreground: oklch(0.35 0.1 50);
-  /* Shadow Reading Panel - soft purple tone (subtle) */
-  --shadow-panel: oklch(0.98 0.02 280);
-  --shadow-panel-foreground: oklch(0.35 0.1 280);
+
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -111,6 +127,36 @@ code {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Echo Region - warm orange tone (subtle) */
+  --echo-region: oklch(0.98 0.02 50);
+  --echo-region-foreground: oklch(0.35 0.1 50);
+
+  /* Shadow Reading Panel - soft purple tone (subtle) */
+  --shadow-panel: oklch(0.98 0.02 280);
+  --shadow-panel-foreground: oklch(0.35 0.1 280);
+
+  /* Pitch contour chart colors - high-contrast colors for visibility */
+  --pitch-reference: oklch(0.75 0.15 180); /* Bright cyan/teal for reference pitch */
+  --pitch-recording: oklch(0.75 0.18 45); /* Bright orange/coral for recording pitch */
+  --pitch-reference-amplitude: oklch(0.65 0.12 180); /* Muted cyan for reference amplitude */
+  --pitch-recording-amplitude: oklch(0.65 0.14 45); /* Muted orange for recording amplitude */
+  --pitch-progress: var(--primary); /* Use primary color for playback progress */
+
+  /* Assessment score colors - 4-tier system (91-100, 81-90, 61-80, <60) */
+  --score-excellent: oklch(0.55 0.18 145); /* Green for 91-100 */
+  --score-excellent-foreground: oklch(0.98 0 0);
+  --score-good: oklch(0.55 0.15 250); /* Blue for 81-90 */
+  --score-good-foreground: oklch(0.98 0 0);
+  --score-fair: oklch(0.70 0.18 75); /* Orange/Yellow for 61-80 */
+  --score-fair-foreground: oklch(0.15 0 0);
+  --score-poor: oklch(0.577 0.245 27.325); /* Red for <60 */
+  --score-poor-foreground: oklch(0.98 0 0);
+
+  /* Transcript highlight colors - for active line and echo segment */
+  --highlight-active: oklch(0.92 0.08 85); /* Warm amber background for active line */
+  --highlight-active-foreground: oklch(0.35 0.12 60); /* Deep amber text */
+  --highlight-active-border: oklch(0.75 0.15 70); /* Amber border accent */
 }
 
 .dark {
@@ -137,12 +183,7 @@ code {
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  /* Echo Region - warm orange tone (darker for dark mode) */
-  --echo-region: oklch(0.22 0.08 50);
-  --echo-region-foreground: oklch(0.88 0.05 50);
-  /* Shadow Reading Panel - soft purple tone (darker for dark mode) */
-  --shadow-panel: oklch(0.22 0.08 280);
-  --shadow-panel-foreground: oklch(0.88 0.05 280);
+
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -151,6 +192,36 @@ code {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Echo Region - warm orange tone (darker for dark mode) */
+  --echo-region: oklch(0.22 0.08 50);
+  --echo-region-foreground: oklch(0.88 0.05 50);
+
+  /* Shadow Reading Panel - soft purple tone (darker for dark mode) */
+  --shadow-panel: oklch(0.22 0.08 280);
+  --shadow-panel-foreground: oklch(0.88 0.05 280);
+
+  /* Pitch contour chart colors - dark mode (same colors work well on dark backgrounds) */
+  --pitch-reference: oklch(0.75 0.15 180); /* Bright cyan/teal for reference pitch */
+  --pitch-recording: oklch(0.75 0.18 45); /* Bright orange/coral for recording pitch */
+  --pitch-reference-amplitude: oklch(0.65 0.12 180); /* Muted cyan for reference amplitude */
+  --pitch-recording-amplitude: oklch(0.65 0.14 45); /* Muted orange for recording amplitude */
+  --pitch-progress: var(--primary); /* Use primary color for playback progress */
+
+  /* Assessment score colors - dark mode (91-100, 81-90, 61-80, <60) */
+  --score-excellent: oklch(0.65 0.20 145); /* Brighter green for dark mode */
+  --score-excellent-foreground: oklch(0.15 0 0);
+  --score-good: oklch(0.65 0.18 250); /* Brighter blue for dark mode */
+  --score-good-foreground: oklch(0.15 0 0);
+  --score-fair: oklch(0.75 0.20 75); /* Brighter orange for dark mode */
+  --score-fair-foreground: oklch(0.15 0 0);
+  --score-poor: oklch(0.704 0.191 22.216); /* Red for dark mode */
+  --score-poor-foreground: oklch(0.98 0 0);
+
+  /* Transcript highlight colors - dark mode */
+  --highlight-active: oklch(0.35 0.10 70); /* Warm amber background for dark mode */
+  --highlight-active-foreground: oklch(0.88 0.12 75); /* Bright amber text */
+  --highlight-active-border: oklch(0.70 0.18 70); /* Amber border accent */
 }
 
 @layer base {
