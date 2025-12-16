@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { PitchContourVisibility } from './pitch-contour-chart'
 import type { EchoRegionAnalysisResult } from '@/lib/audio/echo-region-analysis'
+import { Separator } from '@/components/ui/separator'
 
 interface PitchContourControlsProps {
   visibility: PitchContourVisibility
@@ -39,19 +40,11 @@ export function PitchContourControls({
               onVisibilityChange({ ...visibility, showReference: !visibility.showReference })
             }
             className={cn(
-              'size-6 rounded border transition-colors',
+              'size-4 rounded-full transition-colors cursor-pointer',
               visibility.showReference
-                ? ''
-                : 'bg-transparent border-(--highlight-active-foreground)/30 hover:border-(--highlight-active-foreground)/50'
+                ? 'bg-pitch-reference'
+                : 'bg-pitch-reference/30'
             )}
-            style={
-              visibility.showReference
-                ? {
-                    backgroundColor: 'var(--color-pitch-reference)',
-                    borderColor: 'var(--color-pitch-reference)',
-                  }
-                : undefined
-            }
             aria-label={t('player.transcript.pitchContourToggleReference')}
           />
         </TooltipTrigger>
@@ -66,25 +59,19 @@ export function PitchContourControls({
               type="button"
               onClick={() => onVisibilityChange({ ...visibility, showUser: !visibility.showUser })}
               className={cn(
-                'size-6 rounded border transition-colors',
+                'size-4 rounded-full transition-colors cursor-pointer',
                 visibility.showUser
-                  ? ''
-                  : 'bg-transparent border-(--highlight-active-foreground)/30 hover:border-(--highlight-active-foreground)/50'
+                  ? 'bg-pitch-recording'
+                  : 'bg-pitch-recording/30'
               )}
-              style={
-                visibility.showUser
-                  ? {
-                      backgroundColor: 'var(--color-pitch-recording)',
-                      borderColor: 'var(--color-pitch-recording)',
-                    }
-                  : undefined
-              }
               aria-label={t('player.transcript.pitchContourToggleUser')}
             />
           </TooltipTrigger>
           <TooltipContent>{t('player.transcript.pitchContourToggleUser')}</TooltipContent>
         </Tooltip>
       )}
+
+      <Separator orientation="vertical" />
 
       {/* Waveform toggle */}
       <Tooltip>
@@ -102,7 +89,7 @@ export function PitchContourControls({
             )}
             aria-label={t('player.transcript.pitchContourToggleWaveform')}
           >
-            <Icon icon="lucide:waveform" className="w-4 h-4" />
+            <Icon icon="lucide:audio-waveform" className="size-4" />
           </button>
         </TooltipTrigger>
         <TooltipContent>
