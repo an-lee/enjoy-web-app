@@ -51,6 +51,44 @@ export async function getAllVideos(): Promise<Video[]> {
 // Mutation Operations
 // ============================================================================
 
+/**
+ * Save video from server (download sync)
+ * Uses the id from server directly, no generation needed
+ */
+export async function saveVideoFromServer(input: Video): Promise<string> {
+  const now = new Date().toISOString()
+
+  // Server video should have id, vid, and syncStatus
+  if (!input.id) {
+    throw new Error('Server video must have id')
+  }
+  if (!input.vid) {
+    throw new Error('Server video must have vid')
+  }
+
+  const existing = await db.videos.get(input.id)
+  if (existing) {
+    // Update existing video
+    await db.videos.update(input.id, {
+      ...input,
+      updatedAt: now,
+      // Don't overwrite local-only fields
+      fileHandle: existing.fileHandle,
+    })
+    return input.id
+  }
+
+  // Create new video from server
+  const video: Video = {
+    ...input,
+    syncStatus: input.syncStatus || 'synced',
+    createdAt: input.createdAt || now,
+    updatedAt: input.updatedAt || now,
+  }
+  await db.videos.put(video)
+  return input.id
+}
+
 export async function saveVideo(input: VideoInput): Promise<string> {
   const now = new Date().toISOString()
   const normalizedInput = ensureUserProvider(input)
@@ -175,6 +213,7 @@ export const videoRepository = {
   getAll: getAllVideos,
   // Mutations
   save: saveVideo,
+  saveFromServer: saveVideoFromServer,
   saveLocal: saveLocalVideo,
   update: updateVideo,
   delete: deleteVideo,

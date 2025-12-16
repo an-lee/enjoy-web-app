@@ -82,6 +82,45 @@ export async function getAllAudios(): Promise<Audio[]> {
  * Note: TTS audio should use saveTTSAudio() instead, which handles
  * the conversion from blob to fileHandle.
  */
+/**
+ * Save audio from server (download sync)
+ * Uses the id from server directly, no generation needed
+ */
+export async function saveAudioFromServer(input: Audio): Promise<string> {
+  const now = new Date().toISOString()
+
+  // Server audio should have id, aid, and syncStatus
+  if (!input.id) {
+    throw new Error('Server audio must have id')
+  }
+  if (!input.aid) {
+    throw new Error('Server audio must have aid')
+  }
+
+  const existing = await db.audios.get(input.id)
+  if (existing) {
+    // Update existing audio
+    await db.audios.update(input.id, {
+      ...input,
+      updatedAt: now,
+      // Don't overwrite local-only fields
+      fileHandle: existing.fileHandle,
+      blob: existing.blob,
+    })
+    return input.id
+  }
+
+  // Create new audio from server
+  const audio: Audio = {
+    ...input,
+    syncStatus: input.syncStatus || 'synced',
+    createdAt: input.createdAt || now,
+    updatedAt: input.updatedAt || now,
+  }
+  await db.audios.put(audio)
+  return input.id
+}
+
 export async function saveAudio(input: UserAudioInput): Promise<string> {
   const now = new Date().toISOString()
   const normalizedInput = ensureUserProvider(input) as UserAudioInput
@@ -90,7 +129,7 @@ export async function saveAudio(input: UserAudioInput): Promise<string> {
   let aid: string
   let audioData: Partial<Audio>
 
-  // User-uploaded audio: should have fileHandle or aid (from sync)
+  // User-uploaded audio: should have fileHandle or aid
   if (!normalizedInput.fileHandle && !normalizedInput.aid) {
     throw new Error('User audio must have either fileHandle or aid')
   }
@@ -107,7 +146,7 @@ export async function saveAudio(input: UserAudioInput): Promise<string> {
       size: file.size,
     }
   } else {
-    // aid provided (e.g., from sync) - metadata only
+    // aid provided - metadata only
     id = generateAudioId('user', normalizedInput.aid)
     aid = normalizedInput.aid
     audioData = normalizedInput
@@ -295,6 +334,7 @@ export const audioRepository = {
   getAll: getAllAudios,
   // Mutations
   save: saveAudio,
+  saveFromServer: saveAudioFromServer,
   saveLocal: saveLocalAudio,
   saveTTS: saveTTSAudio,
   update: updateAudio,

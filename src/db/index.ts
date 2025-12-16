@@ -79,6 +79,7 @@ export {
   getVideosByLanguage,
   getAllVideos,
   saveVideo,
+  saveVideoFromServer,
   saveLocalVideo,
   updateVideo,
   deleteVideo,

@@ -14,12 +14,12 @@ import { audioApi } from '@/api/audio'
 import { videoApi } from '@/api/video'
 import {
   getAudioById,
-  saveAudio,
+  saveAudioFromServer,
   updateAudio,
 } from '../repositories/audio-repository'
 import {
   getVideoById,
-  saveVideo,
+  saveVideoFromServer,
   updateVideo,
 } from '../repositories/video-repository'
 import {
@@ -410,13 +410,9 @@ export async function downloadAudios(options: SyncOptions = {}): Promise<SyncRes
             const localAudio = await getAudioById(serverAudio.id)
 
             if (!localAudio) {
-              // New audio from server: save locally
-              // Note: saveAudio expects UserAudioInput, but server audio may not have fileHandle
-              // We'll save it as metadata-only for now
-              await saveAudio({
+              // New audio from server: save locally using server id directly
+              await saveAudioFromServer({
                 ...serverAudio,
-                provider: (serverAudio.provider === 'user' ? 'user' : 'user') as 'user',
-                aid: serverAudio.aid,
                 syncStatus: 'synced',
                 serverUpdatedAt: serverAudio.updatedAt,
               })
@@ -528,12 +524,12 @@ export async function downloadVideos(options: SyncOptions = {}): Promise<SyncRes
             const localVideo = await getVideoById(serverVideo.id)
 
             if (!localVideo) {
-              // New video from server: save locally
-              await saveVideo({
+              // New video from server: save locally using server id directly
+              await saveVideoFromServer({
                 ...serverVideo,
                 syncStatus: 'synced',
                 serverUpdatedAt: serverVideo.updatedAt,
-              } as Video)
+              })
               return { success: true }
             } else {
               // Existing video: resolve conflict
