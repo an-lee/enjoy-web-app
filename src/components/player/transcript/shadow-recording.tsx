@@ -5,7 +5,7 @@
  * Handles recording UI, visualization, and controls.
  */
 
-import { useMemo, useCallback, useEffect } from 'react'
+import { useMemo, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useDisplayTime } from '@/hooks/use-display-time'
@@ -58,6 +58,16 @@ export function ShadowRecording({
     targetId,
   })
 
+  // Use refs to store latest values for cleanup
+  const isRecordingRef = useRef(isRecording)
+  const cancelRecordingRef = useRef(cancelRecording)
+
+  // Update refs when values change
+  useEffect(() => {
+    isRecordingRef.current = isRecording
+    cancelRecordingRef.current = cancelRecording
+  }, [isRecording, cancelRecording])
+
   // Register recording controls with player store for keyboard shortcuts
   const { registerRecordingControls, unregisterRecordingControls } = usePlayerStore()
   useEffect(() => {
@@ -71,6 +81,17 @@ export function ShadowRecording({
       unregisterRecordingControls()
     }
   }, [isRecording, startRecording, stopRecording, registerRecordingControls, unregisterRecordingControls])
+
+  // Cancel recording when component unmounts if still recording
+  useEffect(() => {
+    return () => {
+      // Check if recording is still active when component unmounts
+      // Use refs to access latest values in cleanup
+      if (isRecordingRef.current) {
+        cancelRecordingRef.current()
+      }
+    }
+  }, []) // Empty deps - only run on mount/unmount
 
   // Notify parent of recording state changes
   useEffect(() => {
