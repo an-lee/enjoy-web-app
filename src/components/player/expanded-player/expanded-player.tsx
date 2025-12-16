@@ -161,7 +161,63 @@ export function ExpandedPlayer({
     }
   }, [echoModeActive, activeLineIndex, lines, activateEchoMode, deactivateEchoMode])
 
-  // Note: Keyboard shortcuts are handled by PlayerHotkeys component in PlayerContainer
+  // Previous line handler
+  const handlePrevLine = useCallback(() => {
+    if (lines.length === 0 || activeLineIndex < 0) return
+
+    // Find previous line
+    const prevIndex = activeLineIndex > 0 ? activeLineIndex - 1 : 0
+    const prevLine = lines[prevIndex]
+    if (prevLine) {
+      if (echoModeActive) {
+        activateEchoMode(
+          prevIndex,
+          prevIndex,
+          prevLine.startTimeSeconds,
+          prevLine.endTimeSeconds
+        )
+      }
+      onSeek?.(prevLine.startTimeSeconds)
+    }
+  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
+
+  // Next line handler
+  const handleNextLine = useCallback(() => {
+    if (lines.length === 0) return
+
+    // Find next line
+    const nextIndex = activeLineIndex < lines.length - 1 ? activeLineIndex + 1 : lines.length - 1
+    const nextLine = lines[nextIndex]
+    if (nextLine) {
+      if (echoModeActive) {
+        activateEchoMode(
+          nextIndex,
+          nextIndex,
+          nextLine.startTimeSeconds,
+          nextLine.endTimeSeconds
+        )
+      }
+      onSeek?.(nextLine.startTimeSeconds)
+    }
+  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
+
+  // Replay current line handler
+  const handleReplayLine = useCallback(() => {
+    if (lines.length === 0 || activeLineIndex < 0) return
+
+    const currentLine = lines[activeLineIndex]
+    if (currentLine) {
+      if (echoModeActive) {
+        activateEchoMode(
+          activeLineIndex,
+          activeLineIndex,
+          currentLine.startTimeSeconds,
+          currentLine.endTimeSeconds
+        )
+      }
+      onSeek?.(currentLine.startTimeSeconds)
+    }
+  }, [lines, activeLineIndex, onSeek, echoModeActive, activateEchoMode])
 
   if (!currentSession) return null
 
@@ -233,6 +289,9 @@ export function ExpandedPlayer({
           onEchoMode={handleEchoMode}
           onVolumeChange={setVolume}
           onPlaybackRateChange={setPlaybackRate}
+          onPrevLine={handlePrevLine}
+          onNextLine={handleNextLine}
+          onReplayLine={handleReplayLine}
         />
       </div>
     </TooltipProvider>

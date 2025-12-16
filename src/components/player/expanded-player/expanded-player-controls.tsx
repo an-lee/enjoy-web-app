@@ -27,6 +27,9 @@ interface ExpandedPlayerControlsProps {
   onEchoMode: () => void
   onVolumeChange: (volume: number) => void
   onPlaybackRateChange: (rate: number) => void
+  onPrevLine: () => void
+  onNextLine: () => void
+  onReplayLine: () => void
 }
 
 export function ExpandedPlayerControls({
@@ -43,6 +46,9 @@ export function ExpandedPlayerControls({
   onEchoMode,
   onVolumeChange,
   onPlaybackRateChange,
+  onPrevLine,
+  onNextLine,
+  onReplayLine,
 }: ExpandedPlayerControlsProps) {
   const { t } = useTranslation()
 
@@ -50,6 +56,9 @@ export function ExpandedPlayerControls({
   const togglePlayKey = useHotkeyBinding('player.togglePlay')
   const echoModeKey = useHotkeyBinding('player.toggleEchoMode')
   const dictationKey = useHotkeyBinding('player.toggleDictationMode')
+  const prevLineKey = useHotkeyBinding('player.prevLine')
+  const nextLineKey = useHotkeyBinding('player.nextLine')
+  const replayLineKey = useHotkeyBinding('player.replayLine')
 
   return (
     <footer className="shrink-0 bg-background border-t">
@@ -76,6 +85,24 @@ export function ExpandedPlayerControls({
         <div className="flex items-center justify-between">
           {/* Main controls - Left side */}
           <div className="flex items-center gap-1">
+            {/* Previous line */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={onPrevLine}
+                >
+                  <Icon icon="lucide:skip-back" className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="flex items-center gap-2">
+                <span>{t('hotkeys.prevLine')}</span>
+                {prevLineKey && formatHotkeyAsKbd(prevLineKey)}
+              </TooltipContent>
+            </Tooltip>
+
             {/* Play/Pause */}
             <Tooltip>
               <TooltipTrigger asChild>
@@ -94,6 +121,42 @@ export function ExpandedPlayerControls({
               <TooltipContent side="top" className="flex items-center gap-2">
                 <span>{t('hotkeys.togglePlay')}</span>
                 {togglePlayKey && formatHotkeyAsKbd(togglePlayKey)}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Next line */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={onNextLine}
+                >
+                  <Icon icon="lucide:skip-forward" className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="flex items-center gap-2">
+                <span>{t('hotkeys.nextLine')}</span>
+                {nextLineKey && formatHotkeyAsKbd(nextLineKey)}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Replay current line */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={onReplayLine}
+                >
+                  <Icon icon="lucide:rotate-ccw" className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="flex items-center gap-2">
+                <span>{t('hotkeys.replayLine')}</span>
+                {replayLineKey && formatHotkeyAsKbd(replayLineKey)}
               </TooltipContent>
             </Tooltip>
           </div>
