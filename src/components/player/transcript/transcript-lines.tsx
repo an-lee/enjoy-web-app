@@ -4,6 +4,7 @@
  * Renders the list of transcript lines with echo region controls.
  */
 
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
@@ -28,7 +29,7 @@ interface TranscriptLinesProps {
   isRecording?: boolean
 }
 
-export function TranscriptLines({
+function TranscriptLinesComponent({
   lines,
   showSecondary,
   onLineClick,
@@ -135,4 +136,7 @@ export function TranscriptLines({
     </div>
   )
 }
+
+// Memoize component to prevent unnecessary re-renders when props haven't changed
+export const TranscriptLines = memo(TranscriptLinesComponent)
 

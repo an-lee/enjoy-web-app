@@ -9,7 +9,7 @@
  * - Smooth transitions and elegant styling
  */
 
-import { useRef, useCallback, useState, useMemo } from 'react'
+import { useRef, useCallback, useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn, createLogger } from '@/lib/utils'
@@ -56,14 +56,6 @@ export function TranscriptDisplay({
   secondaryLanguage: externalSecondaryLanguage,
   showSecondary: externalShowSecondary,
 }: TranscriptDisplayProps) {
-  const renderCountRef = useRef(0)
-  renderCountRef.current++
-  log.debug('TranscriptDisplay render', {
-    renderCount: renderCountRef.current,
-    isPlaying,
-    currentTime: _currentTimeProp,
-  })
-
   const { t } = useTranslation()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const currentSession = usePlayerStore((state) => state.currentSession)
@@ -74,7 +66,6 @@ export function TranscriptDisplay({
 
   // Merge config with defaults - memoized to prevent unnecessary re-renders
   const config: TranscriptDisplayConfig = useMemo(() => {
-    log.debug('Config recalculated', { configOverrides })
     return {
       ...DEFAULT_TRANSCRIPT_CONFIG,
       ...configOverrides,
@@ -89,6 +80,20 @@ export function TranscriptDisplay({
   const activeLineIndex = useExternalState
     ? externalActiveLineIndex ?? -1
     : internalTranscriptState.activeLineIndex
+
+  // Track previous activeLineIndex to only log when it changes
+  const prevActiveLineIndexRef = useRef<number>(activeLineIndex)
+  useEffect(() => {
+    if (prevActiveLineIndexRef.current !== activeLineIndex) {
+      log.debug('Active line changed', {
+        previousIndex: prevActiveLineIndexRef.current,
+        currentIndex: activeLineIndex,
+        isPlaying,
+        currentTime,
+      })
+      prevActiveLineIndexRef.current = activeLineIndex
+    }
+  }, [activeLineIndex, isPlaying, currentTime])
   const transcripts = useExternalState
     ? { primary: null, secondary: null, isLoading: false, error: null }
     : internalTranscriptState.transcripts
