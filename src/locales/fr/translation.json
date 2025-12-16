@@ -24,6 +24,7 @@
     "generateContent": "Générer du Contenu",
     "smartTranslation": "Traduction Intelligente",
     "voiceSynthesis": "Synthèse Vocale",
+    "sync": "Synchroniser",
     "plugins": "Plugins",
     "youtube": "YouTube",
     "podcast": "Podcast",
@@ -206,6 +207,8 @@
       "noTranscript": "Aucune transcription disponible",
       "noTranscriptHint": "Les transcriptions seront générées automatiquement ou peuvent être importées",
       "retranscribe": "Re-transcrire",
+      "syncing": "Synchronisation des transcriptions depuis le serveur...",
+      "generateTranscript": "Générer la Transcription",
       "retranscribing": "Transcription en cours...",
       "provider": {
         "enjoy": "Enjoy AI",
@@ -251,7 +254,14 @@
       "pitchContourToggleUser": "Basculer l'enregistrement utilisateur",
       "pitchContourMeta": "Fréquence d'échantillonnage : {{sampleRate}} Hz · Essentia : {{essentiaVersion}}",
       "record": "Enregistrer",
-      "stopRecording": "Arrêter"
+      "stopRecording": "Arrêter",
+      "recordingProgress": "Progression de l'Enregistrement",
+      "recordingCompleted": "Enregistrement terminé",
+      "recordingNearlyDone": "Presque terminé",
+      "recordingApproaching": "Limite de temps approchante",
+      "recordingInProgress": "Enregistrement en cours",
+      "cancelRecording": "Annuler l'Enregistrement (ESC)",
+      "cancel": "Annuler"
     }
   },
   "vocabulary": {
@@ -369,5 +379,95 @@
     "shrinkEchoForward": "Rétrécir la région Echo vers l'avant",
     "librarySearch": "Focuser la recherche",
     "closeModal": "Fermer le modal"
+  },
+  "sync": {
+    "title": "Synchroniser",
+    "description": "Gérer la synchronisation entre les données locales et distantes",
+    "status": {
+      "title": "État de Synchronisation",
+      "description": "État de synchronisation actuel",
+      "initialized": "Initialisé",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "network": "Réseau",
+      "online": "En ligne",
+      "offline": "Hors ligne",
+      "periodicSync": "Synchronisation Périodique",
+      "enabled": "Activé",
+      "disabled": "Désactivé"
+    },
+    "actions": {
+      "title": "Actions de Synchronisation",
+      "description": "Déclencher la synchronisation manuellement",
+      "syncNow": "Synchroniser Maintenant",
+      "forceSync": "Forcer la Synchronisation",
+      "syncing": "Synchronisation...",
+      "syncSuccess": "Synchronisation terminée : {{synced}} synchronisés, {{failed}} échoués",
+      "syncError": "Synchronisation terminée avec {{failed}} erreurs",
+      "syncFailed": "Synchronisation échouée : {{error}}",
+      "forceSyncHint": "La synchronisation forcée téléchargera tous les enregistrements, en ignorant la synchronisation incrémentale"
+    },
+    "lastSync": {
+      "title": "Dernière Synchronisation",
+      "description": "Derniers temps de synchronisation",
+      "audio": "Audio",
+      "video": "Vidéo",
+      "never": "Jamais",
+      "justNow": "À l'instant",
+      "minutesAgo": "il y a {{minutes}} minutes",
+      "hoursAgo": "il y a {{hours}} heures",
+      "daysAgo": "il y a {{days}} jours"
+    },
+    "queue": {
+      "title": "File d'Attente de Synchronisation",
+      "description": "Opérations de synchronisation en attente et échouées",
+      "pending": "En attente",
+      "failed": "Échoué",
+      "empty": "Aucun élément dans la file d'attente de synchronisation"
+    },
+    "upload": {
+      "status": {
+        "title": "État de Téléversement",
+        "description": "Modifications locales en attente de téléversement",
+        "pendingInQueue": "En attente dans la file",
+        "failedInQueue": "Échoué dans la file",
+        "localNotInQueue": "Local (Pas dans la file)",
+        "total": "Total",
+        "upToDate": "Toutes les modifications sont synchronisées"
+      },
+      "actions": {
+        "title": "Téléverser",
+        "description": "Téléverser les modifications locales sur le serveur",
+        "uploadNow": "Téléverser Maintenant",
+        "uploading": "Téléversement...",
+        "success": "Téléversement terminé : {{synced}} synchronisés, {{failed}} échoués",
+        "error": "Téléversement terminé avec {{failed}} erreurs",
+        "failed": "Téléversement échoué"
+      }
+    },
+    "download": {
+      "status": {
+        "title": "État de Téléchargement",
+        "description": "Dernier téléchargement depuis le serveur",
+        "audio": "Audio",
+        "video": "Vidéo",
+        "never": "Jamais",
+        "justNow": "À l'instant",
+        "minutesAgo": "il y a {{minutes}} minutes",
+        "hoursAgo": "il y a {{hours}} heures",
+        "daysAgo": "il y a {{days}} jours"
+      },
+      "actions": {
+        "title": "Télécharger",
+        "description": "Télécharger les mises à jour depuis le serveur",
+        "downloadNow": "Télécharger Maintenant",
+        "forceDownload": "Forcer le Téléchargement",
+        "downloading": "Téléchargement...",
+        "success": "Téléchargement terminé : {{synced}} synchronisés, {{failed}} échoués",
+        "error": "Téléchargement terminé avec {{failed}} erreurs",
+        "failed": "Téléchargement échoué",
+        "forceHint": "Le téléchargement forcé récupérera tous les enregistrements, en ignorant la synchronisation incrémentale"
+      }
+    }
   }
 }

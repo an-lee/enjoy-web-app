@@ -24,6 +24,7 @@
     "generateContent": "コンテンツ生成",
     "smartTranslation": "スマート翻訳",
     "voiceSynthesis": "音声合成",
+    "sync": "同期",
     "plugins": "プラグイン",
     "youtube": "YouTube",
     "podcast": "ポッドキャスト",
@@ -206,6 +207,8 @@
       "noTranscript": "字幕がありません",
       "noTranscriptHint": "字幕は自動生成またはインポート可能です",
       "retranscribe": "再認識",
+      "syncing": "サーバーから字幕を同期中...",
+      "generateTranscript": "字幕を生成",
       "retranscribing": "認識中...",
       "provider": {
         "enjoy": "Enjoy AI",
@@ -251,7 +254,14 @@
       "pitchContourToggleUser": "ユーザー録音を切り替え",
       "pitchContourMeta": "サンプルレート: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "録音",
-      "stopRecording": "停止"
+      "stopRecording": "停止",
+      "recordingProgress": "録音の進捗",
+      "recordingCompleted": "録音完了",
+      "recordingNearlyDone": "ほぼ完了",
+      "recordingApproaching": "時間制限に近づいています",
+      "recordingInProgress": "録音中",
+      "cancelRecording": "録音をキャンセル (ESC)",
+      "cancel": "キャンセル"
     }
   },
   "vocabulary": {
@@ -369,5 +379,95 @@
     "shrinkEchoForward": "Echo領域を前方に縮小",
     "librarySearch": "検索にフォーカス",
     "closeModal": "モーダルを閉じる"
+  },
+  "sync": {
+    "title": "同期",
+    "description": "ローカルとリモートデータ間の同期を管理",
+    "status": {
+      "title": "同期ステータス",
+      "description": "現在の同期ステータス",
+      "initialized": "初期化済み",
+      "active": "アクティブ",
+      "inactive": "非アクティブ",
+      "network": "ネットワーク",
+      "online": "オンライン",
+      "offline": "オフライン",
+      "periodicSync": "定期同期",
+      "enabled": "有効",
+      "disabled": "無効"
+    },
+    "actions": {
+      "title": "同期アクション",
+      "description": "手動で同期をトリガー",
+      "syncNow": "今すぐ同期",
+      "forceSync": "強制同期",
+      "syncing": "同期中...",
+      "syncSuccess": "同期完了: {{synced}} 同期済み、{{failed}} 失敗",
+      "syncError": "{{failed}} 個のエラーで同期完了",
+      "syncFailed": "同期失敗: {{error}}",
+      "forceSyncHint": "強制同期は増分同期を無視してすべてのレコードをダウンロードします"
+    },
+    "lastSync": {
+      "title": "最終同期",
+      "description": "最終同期時刻",
+      "audio": "音声",
+      "video": "動画",
+      "never": "なし",
+      "justNow": "たった今",
+      "minutesAgo": "{{minutes}} 分前",
+      "hoursAgo": "{{hours}} 時間前",
+      "daysAgo": "{{days}} 日前"
+    },
+    "queue": {
+      "title": "同期キュー",
+      "description": "保留中および失敗した同期操作",
+      "pending": "保留中",
+      "failed": "失敗",
+      "empty": "同期キューにアイテムがありません"
+    },
+    "upload": {
+      "status": {
+        "title": "アップロードステータス",
+        "description": "アップロード待ちのローカル変更",
+        "pendingInQueue": "キューで保留中",
+        "failedInQueue": "キューで失敗",
+        "localNotInQueue": "ローカル（キューにない）",
+        "total": "合計",
+        "upToDate": "すべての変更が同期されています"
+      },
+      "actions": {
+        "title": "アップロード",
+        "description": "ローカル変更をサーバーにアップロード",
+        "uploadNow": "今すぐアップロード",
+        "uploading": "アップロード中...",
+        "success": "アップロード完了: {{synced}} 同期済み、{{failed}} 失敗",
+        "error": "{{failed}} 個のエラーでアップロード完了",
+        "failed": "アップロード失敗"
+      }
+    },
+    "download": {
+      "status": {
+        "title": "ダウンロードステータス",
+        "description": "サーバーからの最終ダウンロード",
+        "audio": "音声",
+        "video": "動画",
+        "never": "なし",
+        "justNow": "たった今",
+        "minutesAgo": "{{minutes}} 分前",
+        "hoursAgo": "{{hours}} 時間前",
+        "daysAgo": "{{days}} 日前"
+      },
+      "actions": {
+        "title": "ダウンロード",
+        "description": "サーバーから更新をダウンロード",
+        "downloadNow": "今すぐダウンロード",
+        "forceDownload": "強制ダウンロード",
+        "downloading": "ダウンロード中...",
+        "success": "ダウンロード完了: {{synced}} 同期済み、{{failed}} 失敗",
+        "error": "{{failed}} 個のエラーでダウンロード完了",
+        "failed": "ダウンロード失敗",
+        "forceHint": "強制ダウンロードは増分同期を無視してすべてのレコードを取得します"
+      }
+    }
   }
 }

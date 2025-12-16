@@ -24,6 +24,7 @@
     "generateContent": "Generar Contenido",
     "smartTranslation": "Traducción Inteligente",
     "voiceSynthesis": "Síntesis de Voz",
+    "sync": "Sincronizar",
     "plugins": "Complementos",
     "youtube": "YouTube",
     "podcast": "Podcast",
@@ -206,6 +207,8 @@
       "noTranscript": "No hay transcripción disponible",
       "noTranscriptHint": "Las transcripciones se generarán automáticamente o se pueden importar",
       "retranscribe": "Re-transcribir",
+      "syncing": "Sincronizando transcripciones del servidor...",
+      "generateTranscript": "Generar Transcripción",
       "retranscribing": "Transcribiendo...",
       "provider": {
         "enjoy": "Enjoy AI",
@@ -251,7 +254,14 @@
       "pitchContourToggleUser": "Alternar grabación del usuario",
       "pitchContourMeta": "Frecuencia de muestreo: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Grabar",
-      "stopRecording": "Detener"
+      "stopRecording": "Detener",
+      "recordingProgress": "Progreso de Grabación",
+      "recordingCompleted": "Grabación completada",
+      "recordingNearlyDone": "Casi terminado",
+      "recordingApproaching": "Acercándose al límite de tiempo",
+      "recordingInProgress": "Grabación en progreso",
+      "cancelRecording": "Cancelar Grabación (ESC)",
+      "cancel": "Cancelar"
     }
   },
   "vocabulary": {
@@ -369,5 +379,95 @@
     "shrinkEchoForward": "Reducir región Echo hacia adelante",
     "librarySearch": "Enfocar búsqueda",
     "closeModal": "Cerrar modal"
+  },
+  "sync": {
+    "title": "Sincronizar",
+    "description": "Gestionar la sincronización entre datos locales y remotos",
+    "status": {
+      "title": "Estado de Sincronización",
+      "description": "Estado de sincronización actual",
+      "initialized": "Inicializado",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "network": "Red",
+      "online": "En línea",
+      "offline": "Sin conexión",
+      "periodicSync": "Sincronización Periódica",
+      "enabled": "Habilitado",
+      "disabled": "Deshabilitado"
+    },
+    "actions": {
+      "title": "Acciones de Sincronización",
+      "description": "Activar sincronización manualmente",
+      "syncNow": "Sincronizar Ahora",
+      "forceSync": "Forzar Sincronización",
+      "syncing": "Sincronizando...",
+      "syncSuccess": "Sincronización completada: {{synced}} sincronizados, {{failed}} fallidos",
+      "syncError": "Sincronización completada con {{failed}} errores",
+      "syncFailed": "Sincronización fallida: {{error}}",
+      "forceSyncHint": "La sincronización forzada descargará todos los registros, ignorando la sincronización incremental"
+    },
+    "lastSync": {
+      "title": "Última Sincronización",
+      "description": "Tiempos de última sincronización",
+      "audio": "Audio",
+      "video": "Video",
+      "never": "Nunca",
+      "justNow": "Justo ahora",
+      "minutesAgo": "hace {{minutes}} minutos",
+      "hoursAgo": "hace {{hours}} horas",
+      "daysAgo": "hace {{days}} días"
+    },
+    "queue": {
+      "title": "Cola de Sincronización",
+      "description": "Operaciones de sincronización pendientes y fallidas",
+      "pending": "Pendiente",
+      "failed": "Fallido",
+      "empty": "No hay elementos en la cola de sincronización"
+    },
+    "upload": {
+      "status": {
+        "title": "Estado de Carga",
+        "description": "Cambios locales esperando ser cargados",
+        "pendingInQueue": "Pendiente en Cola",
+        "failedInQueue": "Fallido en Cola",
+        "localNotInQueue": "Local (No en Cola)",
+        "total": "Total",
+        "upToDate": "Todos los cambios están sincronizados"
+      },
+      "actions": {
+        "title": "Cargar",
+        "description": "Cargar cambios locales al servidor",
+        "uploadNow": "Cargar Ahora",
+        "uploading": "Cargando...",
+        "success": "Carga completada: {{synced}} sincronizados, {{failed}} fallidos",
+        "error": "Carga completada con {{failed}} errores",
+        "failed": "Carga fallida"
+      }
+    },
+    "download": {
+      "status": {
+        "title": "Estado de Descarga",
+        "description": "Última descarga del servidor",
+        "audio": "Audio",
+        "video": "Video",
+        "never": "Nunca",
+        "justNow": "Justo ahora",
+        "minutesAgo": "hace {{minutes}} minutos",
+        "hoursAgo": "hace {{hours}} horas",
+        "daysAgo": "hace {{days}} días"
+      },
+      "actions": {
+        "title": "Descargar",
+        "description": "Descargar actualizaciones del servidor",
+        "downloadNow": "Descargar Ahora",
+        "forceDownload": "Forzar Descarga",
+        "downloading": "Descargando...",
+        "success": "Descarga completada: {{synced}} sincronizados, {{failed}} fallidos",
+        "error": "Descarga completada con {{failed}} errores",
+        "failed": "Descarga fallida",
+        "forceHint": "La descarga forzada obtendrá todos los registros, ignorando la sincronización incremental"
+      }
+    }
   }
 }

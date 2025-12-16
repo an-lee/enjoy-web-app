@@ -24,6 +24,7 @@
     "generateContent": "Gerar Conteúdo",
     "smartTranslation": "Tradução Inteligente",
     "voiceSynthesis": "Síntese de Voz",
+    "sync": "Sincronizar",
     "plugins": "Plugins",
     "youtube": "YouTube",
     "podcast": "Podcast",
@@ -206,6 +207,8 @@
       "noTranscript": "Nenhuma transcrição disponível",
       "noTranscriptHint": "As transcrições serão geradas automaticamente ou podem ser importadas",
       "retranscribe": "Re-transcrever",
+      "syncing": "Sincronizando transcrições do servidor...",
+      "generateTranscript": "Gerar Transcrição",
       "retranscribing": "Transcrevendo...",
       "provider": {
         "enjoy": "Enjoy AI",
@@ -251,7 +254,14 @@
       "pitchContourToggleUser": "Alternar gravação do usuário",
       "pitchContourMeta": "Taxa de amostragem: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Gravar",
-      "stopRecording": "Parar"
+      "stopRecording": "Parar",
+      "recordingProgress": "Progresso da Gravação",
+      "recordingCompleted": "Gravação concluída",
+      "recordingNearlyDone": "Quase concluído",
+      "recordingApproaching": "Aproximando-se do limite de tempo",
+      "recordingInProgress": "Gravação em andamento",
+      "cancelRecording": "Cancelar Gravação (ESC)",
+      "cancel": "Cancelar"
     }
   },
   "vocabulary": {
@@ -369,5 +379,95 @@
     "shrinkEchoForward": "Reduzir região Echo para frente",
     "librarySearch": "Focar pesquisa",
     "closeModal": "Fechar modal"
+  },
+  "sync": {
+    "title": "Sincronizar",
+    "description": "Gerenciar sincronização entre dados locais e remotos",
+    "status": {
+      "title": "Status de Sincronização",
+      "description": "Status de sincronização atual",
+      "initialized": "Inicializado",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "network": "Rede",
+      "online": "Online",
+      "offline": "Offline",
+      "periodicSync": "Sincronização Periódica",
+      "enabled": "Habilitado",
+      "disabled": "Desabilitado"
+    },
+    "actions": {
+      "title": "Ações de Sincronização",
+      "description": "Disparar sincronização manualmente",
+      "syncNow": "Sincronizar Agora",
+      "forceSync": "Forçar Sincronização",
+      "syncing": "Sincronizando...",
+      "syncSuccess": "Sincronização concluída: {{synced}} sincronizados, {{failed}} falharam",
+      "syncError": "Sincronização concluída com {{failed}} erros",
+      "syncFailed": "Sincronização falhou: {{error}}",
+      "forceSyncHint": "A sincronização forçada baixará todos os registros, ignorando a sincronização incremental"
+    },
+    "lastSync": {
+      "title": "Última Sincronização",
+      "description": "Tempos da última sincronização",
+      "audio": "Áudio",
+      "video": "Vídeo",
+      "never": "Nunca",
+      "justNow": "Agora mesmo",
+      "minutesAgo": "há {{minutes}} minutos",
+      "hoursAgo": "há {{hours}} horas",
+      "daysAgo": "há {{days}} dias"
+    },
+    "queue": {
+      "title": "Fila de Sincronização",
+      "description": "Operações de sincronização pendentes e falhadas",
+      "pending": "Pendente",
+      "failed": "Falhou",
+      "empty": "Nenhum item na fila de sincronização"
+    },
+    "upload": {
+      "status": {
+        "title": "Status de Upload",
+        "description": "Alterações locais aguardando upload",
+        "pendingInQueue": "Pendente na Fila",
+        "failedInQueue": "Falhou na Fila",
+        "localNotInQueue": "Local (Não na Fila)",
+        "total": "Total",
+        "upToDate": "Todas as alterações estão sincronizadas"
+      },
+      "actions": {
+        "title": "Upload",
+        "description": "Fazer upload de alterações locais para o servidor",
+        "uploadNow": "Fazer Upload Agora",
+        "uploading": "Fazendo upload...",
+        "success": "Upload concluído: {{synced}} sincronizados, {{failed}} falharam",
+        "error": "Upload concluído com {{failed}} erros",
+        "failed": "Upload falhou"
+      }
+    },
+    "download": {
+      "status": {
+        "title": "Status de Download",
+        "description": "Último download do servidor",
+        "audio": "Áudio",
+        "video": "Vídeo",
+        "never": "Nunca",
+        "justNow": "Agora mesmo",
+        "minutesAgo": "há {{minutes}} minutos",
+        "hoursAgo": "há {{hours}} horas",
+        "daysAgo": "há {{days}} dias"
+      },
+      "actions": {
+        "title": "Download",
+        "description": "Baixar atualizações do servidor",
+        "downloadNow": "Baixar Agora",
+        "forceDownload": "Forçar Download",
+        "downloading": "Baixando...",
+        "success": "Download concluído: {{synced}} sincronizados, {{failed}} falharam",
+        "error": "Download concluído com {{failed}} erros",
+        "failed": "Download falhou",
+        "forceHint": "O download forçado buscará todos os registros, ignorando a sincronização incremental"
+      }
+    }
   }
 }

@@ -24,6 +24,7 @@
     "generateContent": "콘텐츠 생성",
     "smartTranslation": "스마트 번역",
     "voiceSynthesis": "음성 합성",
+    "sync": "동기화",
     "plugins": "플러그인",
     "youtube": "YouTube",
     "podcast": "팟캐스트",
@@ -206,6 +207,8 @@
       "noTranscript": "자막 없음",
       "noTranscriptHint": "자막은 자동 생성되거나 가져올 수 있습니다",
       "retranscribe": "다시 인식",
+      "syncing": "서버에서 자막 동기화 중...",
+      "generateTranscript": "자막 생성",
       "retranscribing": "인식 중...",
       "provider": {
         "enjoy": "Enjoy AI",
@@ -251,7 +254,14 @@
       "pitchContourToggleUser": "사용자 녹음 토글",
       "pitchContourMeta": "샘플 레이트: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "녹음",
-      "stopRecording": "중지"
+      "stopRecording": "중지",
+      "recordingProgress": "녹음 진행 상황",
+      "recordingCompleted": "녹음 완료",
+      "recordingNearlyDone": "거의 완료",
+      "recordingApproaching": "시간 제한에 근접",
+      "recordingInProgress": "녹음 진행 중",
+      "cancelRecording": "녹음 취소 (ESC)",
+      "cancel": "취소"
     }
   },
   "vocabulary": {
@@ -369,5 +379,95 @@
     "shrinkEchoForward": "Echo 영역 앞으로 축소",
     "librarySearch": "검색에 포커스",
     "closeModal": "모달 닫기"
+  },
+  "sync": {
+    "title": "동기화",
+    "description": "로컬 및 원격 데이터 간 동기화 관리",
+    "status": {
+      "title": "동기화 상태",
+      "description": "현재 동기화 상태",
+      "initialized": "초기화됨",
+      "active": "활성",
+      "inactive": "비활성",
+      "network": "네트워크",
+      "online": "온라인",
+      "offline": "오프라인",
+      "periodicSync": "주기적 동기화",
+      "enabled": "활성화됨",
+      "disabled": "비활성화됨"
+    },
+    "actions": {
+      "title": "동기화 작업",
+      "description": "수동으로 동기화 트리거",
+      "syncNow": "지금 동기화",
+      "forceSync": "강제 동기화",
+      "syncing": "동기화 중...",
+      "syncSuccess": "동기화 완료: {{synced}} 동기화됨, {{failed}} 실패",
+      "syncError": "{{failed}} 개의 오류로 동기화 완료",
+      "syncFailed": "동기화 실패: {{error}}",
+      "forceSyncHint": "강제 동기화는 증분 동기화를 무시하고 모든 레코드를 다운로드합니다"
+    },
+    "lastSync": {
+      "title": "마지막 동기화",
+      "description": "마지막 동기화 시간",
+      "audio": "오디오",
+      "video": "비디오",
+      "never": "없음",
+      "justNow": "방금",
+      "minutesAgo": "{{minutes}} 분 전",
+      "hoursAgo": "{{hours}} 시간 전",
+      "daysAgo": "{{days}} 일 전"
+    },
+    "queue": {
+      "title": "동기화 대기열",
+      "description": "대기 중 및 실패한 동기화 작업",
+      "pending": "대기 중",
+      "failed": "실패",
+      "empty": "동기화 대기열에 항목이 없습니다"
+    },
+    "upload": {
+      "status": {
+        "title": "업로드 상태",
+        "description": "업로드 대기 중인 로컬 변경 사항",
+        "pendingInQueue": "대기열에서 대기 중",
+        "failedInQueue": "대기열에서 실패",
+        "localNotInQueue": "로컬 (대기열에 없음)",
+        "total": "총",
+        "upToDate": "모든 변경 사항이 동기화되었습니다"
+      },
+      "actions": {
+        "title": "업로드",
+        "description": "로컬 변경 사항을 서버에 업로드",
+        "uploadNow": "지금 업로드",
+        "uploading": "업로드 중...",
+        "success": "업로드 완료: {{synced}} 동기화됨, {{failed}} 실패",
+        "error": "{{failed}} 개의 오류로 업로드 완료",
+        "failed": "업로드 실패"
+      }
+    },
+    "download": {
+      "status": {
+        "title": "다운로드 상태",
+        "description": "서버에서 마지막 다운로드",
+        "audio": "오디오",
+        "video": "비디오",
+        "never": "없음",
+        "justNow": "방금",
+        "minutesAgo": "{{minutes}} 분 전",
+        "hoursAgo": "{{hours}} 시간 전",
+        "daysAgo": "{{days}} 일 전"
+      },
+      "actions": {
+        "title": "다운로드",
+        "description": "서버에서 업데이트 다운로드",
+        "downloadNow": "지금 다운로드",
+        "forceDownload": "강제 다운로드",
+        "downloading": "다운로드 중...",
+        "success": "다운로드 완료: {{synced}} 동기화됨, {{failed}} 실패",
+        "error": "{{failed}} 개의 오류로 다운로드 완료",
+        "failed": "다운로드 실패",
+        "forceHint": "강제 다운로드는 증분 동기화를 무시하고 모든 레코드를 가져옵니다"
+      }
+    }
   }
 }

@@ -252,7 +252,16 @@
       "pitchContourToggleUser": "切换用户录音",
       "pitchContourMeta": "采样率：{{sampleRate}} Hz · Essentia：{{essentiaVersion}}",
       "record": "录音",
-      "stopRecording": "停止"
+      "stopRecording": "停止",
+      "recordingProgress": "录音进度",
+      "recordingCompleted": "录音完成",
+      "recordingNearlyDone": "即将完成",
+      "recordingApproaching": "接近时间限制",
+      "recordingInProgress": "录音进行中",
+      "cancelRecording": "取消录音 (ESC)",
+      "cancel": "取消",
+      "syncing": "正在从服务器同步字幕...",
+      "generateTranscript": "生成字幕"
     }
   },
   "vocabulary": {

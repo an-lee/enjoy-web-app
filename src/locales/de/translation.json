@@ -24,6 +24,7 @@
     "generateContent": "Inhalt Generieren",
     "smartTranslation": "Intelligente Übersetzung",
     "voiceSynthesis": "Sprachsynthese",
+    "sync": "Synchronisieren",
     "plugins": "Plugins",
     "youtube": "YouTube",
     "podcast": "Podcast",
@@ -206,6 +207,8 @@
       "noTranscript": "Kein Transkript verfügbar",
       "noTranscriptHint": "Transkripte werden automatisch generiert oder können importiert werden",
       "retranscribe": "Neu transkribieren",
+      "syncing": "Transkripte werden vom Server synchronisiert...",
+      "generateTranscript": "Transkript generieren",
       "retranscribing": "Transkribiere...",
       "provider": {
         "enjoy": "Enjoy AI",
@@ -251,7 +254,14 @@
       "pitchContourToggleUser": "Benutzeraufnahme umschalten",
       "pitchContourMeta": "Abtastrate: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Aufnehmen",
-      "stopRecording": "Stoppen"
+      "stopRecording": "Stoppen",
+      "recordingProgress": "Aufnahmefortschritt",
+      "recordingCompleted": "Aufnahme abgeschlossen",
+      "recordingNearlyDone": "Fast fertig",
+      "recordingApproaching": "Zeitlimit nähert sich",
+      "recordingInProgress": "Aufnahme läuft",
+      "cancelRecording": "Aufnahme abbrechen (ESC)",
+      "cancel": "Abbrechen"
     }
   },
   "vocabulary": {
@@ -369,5 +379,95 @@
     "shrinkEchoForward": "Echo-Bereich vorwärts verkleinern",
     "librarySearch": "Suche fokussieren",
     "closeModal": "Modal schließen"
+  },
+  "sync": {
+    "title": "Synchronisieren",
+    "description": "Synchronisierung zwischen lokalen und Remote-Daten verwalten",
+    "status": {
+      "title": "Synchronisierungsstatus",
+      "description": "Aktueller Synchronisierungsstatus",
+      "initialized": "Initialisiert",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "network": "Netzwerk",
+      "online": "Online",
+      "offline": "Offline",
+      "periodicSync": "Periodische Synchronisierung",
+      "enabled": "Aktiviert",
+      "disabled": "Deaktiviert"
+    },
+    "actions": {
+      "title": "Synchronisierungsaktionen",
+      "description": "Synchronisierung manuell auslösen",
+      "syncNow": "Jetzt synchronisieren",
+      "forceSync": "Erzwinge Synchronisierung",
+      "syncing": "Synchronisiere...",
+      "syncSuccess": "Synchronisierung abgeschlossen: {{synced}} synchronisiert, {{failed}} fehlgeschlagen",
+      "syncError": "Synchronisierung mit {{failed}} Fehlern abgeschlossen",
+      "syncFailed": "Synchronisierung fehlgeschlagen: {{error}}",
+      "forceSyncHint": "Erzwungene Synchronisierung lädt alle Datensätze herunter und ignoriert inkrementelle Synchronisierung"
+    },
+    "lastSync": {
+      "title": "Letzte Synchronisierung",
+      "description": "Letzte Synchronisierungszeiten",
+      "audio": "Audio",
+      "video": "Video",
+      "never": "Nie",
+      "justNow": "Gerade eben",
+      "minutesAgo": "vor {{minutes}} Minuten",
+      "hoursAgo": "vor {{hours}} Stunden",
+      "daysAgo": "vor {{days}} Tagen"
+    },
+    "queue": {
+      "title": "Synchronisierungswarteschlange",
+      "description": "Ausstehende und fehlgeschlagene Synchronisierungsvorgänge",
+      "pending": "Ausstehend",
+      "failed": "Fehlgeschlagen",
+      "empty": "Keine Elemente in der Synchronisierungswarteschlange"
+    },
+    "upload": {
+      "status": {
+        "title": "Upload-Status",
+        "description": "Lokale Änderungen, die hochgeladen werden sollen",
+        "pendingInQueue": "Ausstehend in Warteschlange",
+        "failedInQueue": "Fehlgeschlagen in Warteschlange",
+        "localNotInQueue": "Lokal (Nicht in Warteschlange)",
+        "total": "Gesamt",
+        "upToDate": "Alle Änderungen sind synchronisiert"
+      },
+      "actions": {
+        "title": "Hochladen",
+        "description": "Lokale Änderungen auf Server hochladen",
+        "uploadNow": "Jetzt hochladen",
+        "uploading": "Lade hoch...",
+        "success": "Upload abgeschlossen: {{synced}} synchronisiert, {{failed}} fehlgeschlagen",
+        "error": "Upload mit {{failed}} Fehlern abgeschlossen",
+        "failed": "Upload fehlgeschlagen"
+      }
+    },
+    "download": {
+      "status": {
+        "title": "Download-Status",
+        "description": "Letzter Download vom Server",
+        "audio": "Audio",
+        "video": "Video",
+        "never": "Nie",
+        "justNow": "Gerade eben",
+        "minutesAgo": "vor {{minutes}} Minuten",
+        "hoursAgo": "vor {{hours}} Stunden",
+        "daysAgo": "vor {{days}} Tagen"
+      },
+      "actions": {
+        "title": "Herunterladen",
+        "description": "Updates vom Server herunterladen",
+        "downloadNow": "Jetzt herunterladen",
+        "forceDownload": "Erzwinge Download",
+        "downloading": "Lade herunter...",
+        "success": "Download abgeschlossen: {{synced}} synchronisiert, {{failed}} fehlgeschlagen",
+        "error": "Download mit {{failed}} Fehlern abgeschlossen",
+        "failed": "Download fehlgeschlagen",
+        "forceHint": "Erzwungener Download lädt alle Datensätze herunter und ignoriert inkrementelle Synchronisierung"
+      }
+    }
   }
 }

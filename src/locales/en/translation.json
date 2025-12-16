@@ -412,7 +412,11 @@
       "description": "Last synchronization times",
       "audio": "Audio",
       "video": "Video",
-      "never": "Never"
+      "never": "Never",
+      "justNow": "Just now",
+      "minutesAgo": "{{minutes}} minutes ago",
+      "hoursAgo": "{{hours}} hours ago",
+      "daysAgo": "{{days}} days ago"
     },
     "queue": {
       "title": "Sync Queue",
