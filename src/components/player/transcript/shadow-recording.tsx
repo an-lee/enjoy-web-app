@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useDisplayTime } from '@/hooks/use-display-time'
 import { useShadowRecording } from '@/hooks/use-shadow-recording'
+import { usePlayerStore } from '@/stores/player'
 import { RecordButton } from './record-button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
@@ -56,6 +57,20 @@ export function ShadowRecording({
     targetType,
     targetId,
   })
+
+  // Register recording controls with player store for keyboard shortcuts
+  const { registerRecordingControls, unregisterRecordingControls } = usePlayerStore()
+  useEffect(() => {
+    registerRecordingControls({
+      startRecording,
+      stopRecording,
+      isRecording: () => isRecording,
+    })
+
+    return () => {
+      unregisterRecordingControls()
+    }
+  }, [isRecording, startRecording, stopRecording, registerRecordingControls, unregisterRecordingControls])
 
   // Notify parent of recording state changes
   useEffect(() => {

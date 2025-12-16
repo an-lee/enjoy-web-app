@@ -112,6 +112,17 @@ interface PlayerState {
   echoEndTime: number
 
   // ============================================================================
+  // Recording Controls (internal - registered by ShadowRecording component)
+  // ============================================================================
+
+  /** Recording control functions (internal use only) */
+  _recordingControls: {
+    startRecording: () => Promise<void>
+    stopRecording: () => Promise<void>
+    isRecording: () => boolean
+  } | null
+
+  // ============================================================================
   // Actions
   // ============================================================================
 
@@ -173,6 +184,23 @@ interface PlayerState {
     startTime: number,
     endTime: number
   ) => void
+
+  // ============================================================================
+  // Recording Actions
+  // ============================================================================
+
+  /** Register recording control functions */
+  registerRecordingControls: (controls: {
+    startRecording: () => Promise<void>
+    stopRecording: () => Promise<void>
+    isRecording: () => boolean
+  }) => void
+
+  /** Unregister recording control functions */
+  unregisterRecordingControls: () => void
+
+  /** Toggle recording (start/stop) */
+  toggleRecording: () => Promise<void>
 }
 
 // ============================================================================
@@ -233,6 +261,13 @@ export const usePlayerStore = create<PlayerState>()(
       echoEndLineIndex: -1,
       echoStartTime: -1,
       echoEndTime: -1,
+
+      // Recording controls (registered by ShadowRecording component)
+      _recordingControls: null as {
+        startRecording: () => Promise<void>
+        stopRecording: () => Promise<void>
+        isRecording: () => boolean
+      } | null,
 
       // Actions
       loadMedia: async (media: LibraryMedia) => {
@@ -592,6 +627,34 @@ export const usePlayerStore = create<PlayerState>()(
           } catch (error) {
             log.error('Failed to save echo region update to EchoSession:', error)
           }
+        }
+      },
+
+      // Recording Actions
+      registerRecordingControls: (controls) => {
+        set({ _recordingControls: controls })
+        log.debug('Recording controls registered')
+      },
+
+      unregisterRecordingControls: () => {
+        set({ _recordingControls: null })
+        log.debug('Recording controls unregistered')
+      },
+
+      toggleRecording: async () => {
+        const { _recordingControls, echoModeActive } = get()
+        if (!_recordingControls || !echoModeActive) {
+          log.debug('Cannot toggle recording: no controls registered or echo mode not active')
+          return
+        }
+
+        const isRecording = _recordingControls.isRecording()
+        if (isRecording) {
+          await _recordingControls.stopRecording()
+          log.debug('Recording stopped via shortcut')
+        } else {
+          await _recordingControls.startRecording()
+          log.debug('Recording started via shortcut')
         }
       },
     }),

@@ -171,15 +171,15 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     { deps: [], preventDefault: true }
   )
 
-  // Toggle recording (R) - placeholder for future implementation
+  // Toggle recording (R)
+  const { toggleRecording } = usePlayerStore()
   useAppHotkey(
     'player.toggleRecording',
-    (e) => {
+    async (e) => {
       e.preventDefault()
-      // TODO: Implement recording toggle
-      console.log('Toggle recording - not yet implemented')
+      await toggleRecording()
     },
-    { deps: [], preventDefault: true }
+    { deps: [toggleRecording], preventDefault: true }
   )
 
   // Toggle pronunciation assessment (V) - placeholder for future implementation
