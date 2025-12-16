@@ -19,6 +19,11 @@ import 'recorder-core/src/engine/wav'
 import 'recorder-core/src/engine/mp3-engine'
 // @ts-ignore - recorder-core doesn't have TypeScript definitions
 import 'recorder-core/src/engine/mp3'
+// Import FrequencyHistogramView plugin and its dependencies
+// @ts-ignore - recorder-core doesn't have TypeScript definitions
+import 'recorder-core/src/extensions/lib.fft'
+// @ts-ignore - recorder-core doesn't have TypeScript definitions
+import 'recorder-core/src/extensions/frequency.histogram.view'
 
 const log = createLogger({ name: 'useShadowRecording' })
 
@@ -29,6 +34,7 @@ interface UseShadowRecordingOptions {
   language: string
   targetType: TargetType
   targetId: string
+  canvasRef?: React.RefObject<HTMLElement | null> // Container element for frequency visualization (div or canvas)
 }
 
 interface UseShadowRecordingReturn {
@@ -48,6 +54,7 @@ export function useShadowRecording({
   language,
   targetType,
   targetId,
+  canvasRef,
 }: UseShadowRecordingOptions): UseShadowRecordingReturn {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
@@ -59,6 +66,7 @@ export function useShadowRecording({
   const startTimeRef = useRef<number>(0)
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const volumeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const frequencyViewRef = useRef<any>(null) // FrequencyHistogramView instance
 
   // Cleanup on unmount
   useEffect(() => {
@@ -82,6 +90,10 @@ export function useShadowRecording({
         }
         recorderRef.current = null
       }
+      // Cleanup frequency view
+      if (frequencyViewRef.current) {
+        frequencyViewRef.current = null
+      }
     }
   }, [])
 
@@ -101,15 +113,53 @@ export function useShadowRecording({
         type: 'mp3', // Use MP3 format for smaller file size
         sampleRate: 16000, // 16kHz is sufficient for speech
         bitRate: 16, // 16kbps for smaller files
-        onProcess: (_buffers: any, powerLevel: number) => {
+        onProcess: (buffers: any, powerLevel: number, _bufferDuration: number, bufferSampleRate: number) => {
           // Update volume for visualization (powerLevel is 0-100)
           setVolume(powerLevel)
+
+          // Feed data to FrequencyHistogramView
+          // According to the documentation, buffers is an array of Int16Array
+          // We should pass the latest buffer: buffers[buffers.length-1]
+          const view = frequencyViewRef.current
+          if (view && buffers && Array.isArray(buffers) && buffers.length > 0) {
+            try {
+              const latestBuffer = buffers[buffers.length - 1]
+              if (latestBuffer && latestBuffer.length > 0) {
+                view.input(latestBuffer, powerLevel, bufferSampleRate || 16000)
+              }
+            } catch (err) {
+              // Ignore errors in visualization
+              log.debug('Error feeding data to FrequencyHistogramView', { error: err })
+            }
+          }
         },
       })
 
       recorder.open(
         () => {
-          // Successfully opened
+          // Successfully opened - initialize FrequencyHistogramView now that DOM should be ready
+          // Use a small delay to ensure the container div is rendered
+          setTimeout(() => {
+            if (canvasRef?.current && !frequencyViewRef.current) {
+              try {
+                // @ts-ignore - FrequencyHistogramView doesn't have TypeScript definitions
+                const frequencyView = Recorder.FrequencyHistogramView({
+                  elem: canvasRef.current, // Plugin will create canvas inside this element
+                  scale: 2, // Use 2x scale for better quality on high-DPI displays
+                  fps: 20, // 20 FPS for smooth visualization
+                  lineCount: 30, // Number of frequency bars
+                  position: -1, // Draw from bottom
+                  stripeEnable: true, // Enable peak indicators
+                  linear: [0, 'rgba(0,187,17,1)', 0.5, 'rgba(255,215,0,1)', 1, 'rgba(255,102,0,1)'], // Green to yellow to orange gradient
+                })
+                frequencyViewRef.current = frequencyView
+                log.debug('FrequencyHistogramView initialized with elem')
+              } catch (err) {
+                log.warn('Failed to initialize FrequencyHistogramView', { error: err })
+              }
+            }
+          }, 50)
+
           recorder.start()
           recorderRef.current = recorder
           setIsRecording(true)
@@ -163,6 +213,11 @@ export function useShadowRecording({
         // Ignore errors during cleanup
       }
       recorderRef.current = null
+    }
+
+    // Cleanup frequency view
+    if (frequencyViewRef.current) {
+      frequencyViewRef.current = null
     }
 
     // Reset state

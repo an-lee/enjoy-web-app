@@ -37,12 +37,12 @@ export function ShadowRecording({
 }: ShadowRecordingProps) {
   const { t } = useTranslation()
   const duration = (endTime - startTime) * 1000 // Convert to milliseconds
+  const canvasRef = useRef<HTMLDivElement>(null)
 
   // Initialize recording hook
   const {
     isRecording,
     recordingDuration,
-    volume,
     startRecording,
     stopRecording,
     cancelRecording,
@@ -54,6 +54,7 @@ export function ShadowRecording({
     language,
     targetType,
     targetId,
+    canvasRef,
   })
 
   // Use refs to store latest values for cleanup
@@ -140,16 +141,6 @@ export function ShadowRecording({
     return 'bg-green-500' // Normal progress
   }, [isRecording, recordingProgress])
 
-  // Volume visualization bars (0-100)
-  const volumeBars = useMemo(() => {
-    const barCount = 20
-    const bars: number[] = []
-    for (let i = 0; i < barCount; i++) {
-      const threshold = (i / barCount) * 100
-      bars.push(volume > threshold ? 1 : 0)
-    }
-    return bars
-  }, [volume])
 
   return (
     <div className="space-y-3">
@@ -199,25 +190,13 @@ export function ShadowRecording({
         </div>
       )}
 
-      {/* Volume visualization */}
+      {/* Frequency histogram visualization */}
       {isRecording && (
-        <div className="flex items-center justify-center gap-1 h-8">
-          {volumeBars.map((bar, index) => (
-            <div
-              key={index}
-              className={cn(
-                'w-1 rounded-full transition-all duration-75',
-                bar > 0
-                  ? 'bg-highlight-active-foreground'
-                  : 'bg-highlight-active-foreground/20'
-              )}
-              style={{
-                height: `${bar * 100}%`,
-                minHeight: '4px',
-              }}
-            />
-          ))}
-        </div>
+        <div
+          ref={canvasRef}
+          className="flex items-center justify-center h-8 w-full"
+          style={{ minHeight: '32px' }}
+        />
       )}
 
       {/* Error message */}
