@@ -113,13 +113,19 @@ export function useTranscriptDisplay(
     null
   )
 
-  // Determine target type and ID from current session
-  const targetType: TargetType | null = currentSession
-    ? currentSession.mediaType === 'video'
-      ? 'Video'
-      : 'Audio'
-    : null
-  const targetId = currentSession?.mediaId ?? null
+  // Determine target type and ID from current session (memoized to prevent unnecessary re-renders)
+  const { targetType, targetId } = useMemo<{
+    targetType: TargetType | null
+    targetId: string | null
+  }>(() => {
+    if (!currentSession) {
+      return { targetType: null, targetId: null }
+    }
+    return {
+      targetType: (currentSession.mediaType === 'video' ? 'Video' : 'Audio') as TargetType,
+      targetId: currentSession.mediaId,
+    }
+  }, [currentSession?.mediaType, currentSession?.mediaId])
 
   // Track transcript sync status
   const syncState = useTranscriptSync(targetType, targetId)

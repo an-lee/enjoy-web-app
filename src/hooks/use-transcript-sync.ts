@@ -32,61 +32,64 @@ export function useTranscriptSync(
   const queryClient = useQueryClient()
   const syncAttemptedRef = useRef<string | null>(null)
   const isSyncingRef = useRef(false)
-  const queryClientRef = useRef(queryClient)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
-  // Keep queryClient ref up to date
-  useEffect(() => {
-    queryClientRef.current = queryClient
-  }, [queryClient])
+  // Shared sync logic
+  const performSync = useCallback(
+    async (targetType: TargetType, targetId: string, targetKey: string) => {
+      // Create abort controller for cancellation
+      const abortController = new AbortController()
+      abortControllerRef.current = abortController
 
-  const syncTranscripts = useCallback(async () => {
-    if (!targetType || !targetId) {
-      return
-    }
-
-    // Prevent multiple simultaneous syncs using ref instead of state
-    if (isSyncingRef.current) {
-      return
-    }
-
-    isSyncingRef.current = true
-    setState((prev) => ({
-      ...prev,
-      isSyncing: true,
-      error: null,
-    }))
-
-    try {
-      const result = await syncTranscriptsForTarget(targetType, targetId, {
-        background: false,
-      })
-
-      isSyncingRef.current = false
-      setState({
-        isSyncing: false,
-        hasSynced: true,
-        error: result.success ? null : result.errors?.[0] || 'Sync failed',
-        lastSyncResult: result,
-      })
-
-      // Invalidate and refetch transcripts if sync was successful
-      if (result.success && result.synced > 0) {
-        queryClient.invalidateQueries({
-          queryKey: transcriptQueryKeys.byTarget(targetType, targetId),
+      try {
+        const result = await syncTranscriptsForTarget(targetType, targetId, {
+          background: false,
         })
+
+        // Check if operation was aborted
+        if (abortController.signal.aborted) {
+          return
+        }
+
+        isSyncingRef.current = false
+        syncAttemptedRef.current = targetKey
+
+        setState({
+          isSyncing: false,
+          hasSynced: true,
+          error: result.success ? null : result.errors?.[0] || 'Sync failed',
+          lastSyncResult: result,
+        })
+
+        // Invalidate and refetch transcripts if sync was successful
+        if (result.success && result.synced > 0) {
+          queryClient.invalidateQueries({
+            queryKey: transcriptQueryKeys.byTarget(targetType, targetId),
+          })
+        }
+      } catch (error) {
+        // Ignore abort errors
+        if (abortController.signal.aborted) {
+          return
+        }
+
+        isSyncingRef.current = false
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to sync transcripts'
+        setState({
+          isSyncing: false,
+          hasSynced: true,
+          error: errorMessage,
+          lastSyncResult: null,
+        })
+      } finally {
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null
+        }
       }
-    } catch (error) {
-      isSyncingRef.current = false
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to sync transcripts'
-      setState({
-        isSyncing: false,
-        hasSynced: true,
-        error: errorMessage,
-        lastSyncResult: null,
-      })
-    }
-  }, [targetType, targetId, queryClient])
+    },
+    [queryClient]
+  )
 
   // Auto-sync when target changes (only once per target)
   useEffect(() => {
@@ -124,46 +127,52 @@ export function useTranscriptSync(
 
     // Use a small delay to avoid race condition with player store sync
     const timer = setTimeout(() => {
-      syncTranscriptsForTarget(targetType, targetId, {
-        background: false,
-      })
-        .then((result) => {
-          isSyncingRef.current = false
-          setState({
-            isSyncing: false,
-            hasSynced: true,
-            error: result.success ? null : result.errors?.[0] || 'Sync failed',
-            lastSyncResult: result,
-          })
-
-          // Invalidate and refetch transcripts if sync was successful
-          if (result.success && result.synced > 0) {
-            queryClientRef.current.invalidateQueries({
-              queryKey: transcriptQueryKeys.byTarget(targetType, targetId),
-            })
-          }
-        })
-        .catch((error) => {
-          isSyncingRef.current = false
-          const errorMessage =
-            error instanceof Error ? error.message : 'Failed to sync transcripts'
-          setState({
-            isSyncing: false,
-            hasSynced: true,
-            error: errorMessage,
-            lastSyncResult: null,
-          })
-        })
+      performSync(targetType, targetId, targetKey)
     }, 100)
 
     return () => {
       clearTimeout(timer)
+      // Abort ongoing sync if target changed
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+        abortControllerRef.current = null
+      }
       // Only reset if target actually changed (not just component unmount)
       if (syncAttemptedRef.current !== targetKey) {
         isSyncingRef.current = false
       }
     }
-  }, [targetType, targetId])
+  }, [targetType, targetId, performSync])
+
+  // Manual sync function (for retry or manual trigger)
+  const syncTranscripts = useCallback(async () => {
+    if (!targetType || !targetId) {
+      return
+    }
+
+    // Prevent multiple simultaneous syncs
+    if (isSyncingRef.current) {
+      return
+    }
+
+    const targetKey = `${targetType}:${targetId}`
+
+    // Reset attempt flag to allow retry
+    if (syncAttemptedRef.current === targetKey) {
+      syncAttemptedRef.current = null
+    }
+
+    // Update state and perform sync
+    isSyncingRef.current = true
+    setState({
+      isSyncing: true,
+      hasSynced: false,
+      error: null,
+      lastSyncResult: null,
+    })
+
+    await performSync(targetType, targetId, targetKey)
+  }, [targetType, targetId, performSync])
 
   return {
     ...state,
