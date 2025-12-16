@@ -60,4 +60,32 @@ export const videoApi = {
   video: async (id: string) => {
     return apiClient.get<Video>(`${VIDEOS_API_PATH}/${id}`)
   },
+
+  /**
+   * Upload a video
+   *
+   * Client-side only. Response is automatically converted from snake_case to camelCase
+   * by the API client interceptor.
+   *
+   * @param video - Video to upload
+   * @returns Video details in camelCase format
+   */
+  uploadVideo: async (video: Video) => {
+    return apiClient.post<Video>(VIDEOS_API_PATH, {
+      video,
+    })
+  },
+
+  /**
+   * Delete a video
+   *
+   * Client-side only. Response is automatically converted from snake_case to camelCase
+   * by the API client interceptor.
+   *
+   * @param id - Video ID (UUID v5)
+   * @returns Video details in camelCase format
+   */
+  deleteVideo: async (id: string) => {
+    return apiClient.delete<Video>(`${VIDEOS_API_PATH}/${id}`)
+  },
 }

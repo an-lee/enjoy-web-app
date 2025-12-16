@@ -75,4 +75,17 @@ export const audioApi = {
       audio,
     })
   },
+
+  /**
+   * Delete an audio
+   *
+   * Client-side only. Response is automatically converted from snake_case to camelCase
+   * by the API client interceptor.
+   *
+   * @param id - Audio ID (UUID v5)
+   * @returns Audio details in camelCase format
+   */
+  deleteAudio: async (id: string) => {
+    return apiClient.delete<Audio>(`${AUDIOS_API_PATH}/${id}`)
+  },
 }
