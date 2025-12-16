@@ -12,6 +12,8 @@ import { createLogger } from '@/lib/utils'
 import { fullSync, processSyncQueue, queueUploadSync, downloadTranscriptsByTarget } from './sync-service'
 import type { SyncOptions, SyncResult } from './sync-service'
 import type { TargetType } from '@/types/db'
+import { queryClient } from '@/router'
+import { transcriptQueryKeys } from '@/hooks/queries/use-transcript-queries'
 
 // ============================================================================
 // Logger
@@ -227,7 +229,26 @@ export async function syncTranscriptsForTarget(
   }
 
   log.debug(`Syncing transcripts for ${targetType}:${targetId}`)
-  return await downloadTranscriptsByTarget(targetType, targetId, options)
+  const result = await downloadTranscriptsByTarget(targetType, targetId, options)
+
+  // Invalidate React Query cache if sync was successful to trigger UI update
+  // This ensures the UI reflects the latest transcript state, even if no new transcripts were synced
+  // Only invalidate cache in browser environment (client-side only)
+  if (result.success && typeof window !== 'undefined') {
+    try {
+      queryClient.invalidateQueries({
+        queryKey: transcriptQueryKeys.byTarget(targetType, targetId),
+      })
+      log.debug(
+        `Invalidated transcript cache for ${targetType}:${targetId} (synced: ${result.synced})`
+      )
+    } catch (error) {
+      // Don't fail the sync if cache invalidation fails
+      log.warn('Failed to invalidate transcript cache:', error)
+    }
+  }
+
+  return result
 }
 
 /**

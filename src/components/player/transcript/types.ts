@@ -147,5 +147,12 @@ export interface UseTranscriptDisplayReturn {
   primaryLanguage: string | null
   /** Current secondary language */
   secondaryLanguage: string | null
+  /** Transcript sync state */
+  syncState: {
+    isSyncing: boolean
+    hasSynced: boolean
+    error: string | null
+    syncTranscripts: () => Promise<void>
+  }
 }
 

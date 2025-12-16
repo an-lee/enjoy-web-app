@@ -7,6 +7,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranscriptsByTarget } from '@/hooks/queries'
+import { useTranscriptSync } from '@/hooks/use-transcript-sync'
 import { usePlayerStore } from '@/stores/player'
 import type { Transcript, TargetType } from '@/types/db'
 import type {
@@ -120,6 +121,9 @@ export function useTranscriptDisplay(
     : null
   const targetId = currentSession?.mediaId ?? null
 
+  // Track transcript sync status
+  const syncState = useTranscriptSync(targetType, targetId)
+
   // Fetch all transcripts for the current media
   const {
     data: availableTranscripts = [],
@@ -225,6 +229,12 @@ export function useTranscriptDisplay(
     setSecondaryLanguage,
     primaryLanguage,
     secondaryLanguage,
+    syncState: {
+      isSyncing: syncState.isSyncing,
+      hasSynced: syncState.hasSynced,
+      error: syncState.error,
+      syncTranscripts: syncState.syncTranscripts,
+    },
   }
 }
 

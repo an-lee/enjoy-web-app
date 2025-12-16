@@ -104,6 +104,9 @@ export function TranscriptDisplay({
   const showSecondary = useExternalState
     ? externalShowSecondary ?? false
     : config.showSecondary && !!secondaryLanguage
+  const syncState = useExternalState
+    ? { isSyncing: false, hasSynced: false, error: null, syncTranscripts: async () => {} }
+    : internalTranscriptState.syncState
 
   // Echo region management
   const {
@@ -227,12 +230,65 @@ export function TranscriptDisplay({
           icon="lucide:subtitles"
           className="w-12 h-12 text-muted-foreground/40 mb-3"
         />
-        <p className="text-sm text-muted-foreground">
-          {t('player.transcript.noTranscript')}
-        </p>
-        <p className="text-xs text-muted-foreground/60 mt-1">
-          {t('player.transcript.noTranscriptHint')}
-        </p>
+
+        {/* Show sync status if syncing */}
+        {syncState.isSyncing && (
+          <>
+            <Icon
+              icon="lucide:loader-2"
+              className="w-6 h-6 animate-spin text-primary mb-2"
+            />
+            <p className="text-sm text-muted-foreground mb-1">
+              {t('player.transcript.syncing', { defaultValue: 'Syncing transcripts from server...' })}
+            </p>
+          </>
+        )}
+
+        {/* Show error if sync failed */}
+        {syncState.hasSynced && syncState.error && !syncState.isSyncing && (
+          <p className="text-sm text-destructive mb-3">
+            {syncState.error}
+          </p>
+        )}
+
+        {/* Show no transcript message */}
+        {!syncState.isSyncing && (
+          <>
+            <p className="text-sm text-muted-foreground">
+              {t('player.transcript.noTranscript')}
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              {t('player.transcript.noTranscriptHint')}
+            </p>
+          </>
+        )}
+
+        {/* Show generate transcript button if sync completed and still no transcripts */}
+        {syncState.hasSynced && !syncState.isSyncing && availableTranscripts.length === 0 && (
+          <button
+            type="button"
+            onClick={handleConfirmRetranscribe}
+            disabled={isTranscribing}
+            className={cn(
+              'mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              'bg-primary text-primary-foreground hover:bg-primary/90',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            )}
+          >
+            {isTranscribing ? (
+              <>
+                <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin" />
+                <span>{progress || t('player.transcript.retranscribing')}</span>
+              </>
+            ) : (
+              <>
+                <Icon icon="lucide:mic" className="w-4 h-4" />
+                <span>{t('player.transcript.generateTranscript', { defaultValue: 'Generate Transcript' })}</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     )
   }

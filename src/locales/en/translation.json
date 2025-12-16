@@ -210,6 +210,8 @@
       "noTranscript": "No transcript available",
       "noTranscriptHint": "Transcripts will be generated automatically or can be imported",
       "retranscribe": "Retranscribe",
+      "syncing": "Syncing transcripts from server...",
+      "generateTranscript": "Generate Transcript",
       "retranscribing": "Transcribing...",
       "provider": {
         "enjoy": "Enjoy AI",

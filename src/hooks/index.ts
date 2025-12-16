@@ -51,6 +51,7 @@ export {
 
 export { useTTS, type UseTTSOptions, type UseTTSReturn } from './use-tts'
 export { useRetranscribe } from './use-retranscribe'
+export { useTranscriptSync, type TranscriptSyncState } from './use-transcript-sync'
 
 // ============================================================================
 // Utility Hooks
