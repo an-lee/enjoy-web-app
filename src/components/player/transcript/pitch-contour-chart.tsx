@@ -148,7 +148,7 @@ export function PitchContourChart({
               type="stepAfter"
               dataKey="progressBg"
               baseValue={0}
-              fill="oklch(0.35 0.1 280 / 0.12)"
+              fill="var(--color-pitch-progress)"
               fillOpacity={1}
               stroke="none"
               isAnimationActive={false}
@@ -191,7 +191,7 @@ export function PitchContourChart({
           yAxisId="amp"
           type="monotone"
           dataKey="ampRef"
-          stroke="var(--color-ampRef)"
+          stroke="var(--color-pitch-reference-amplitude)"
           strokeWidth={0.5}
           strokeOpacity={0.25}
           isAnimationActive={false}
@@ -205,8 +205,8 @@ export function PitchContourChart({
           type="monotone"
           dataKey="pitchRefHz"
           baseValue={0}
-          stroke="var(--color-pitchRefHz)"
-          fill="var(--color-pitchRefHz)"
+          stroke="var(--color-pitch-reference)"
+          fill="var(--color-pitch-reference)"
           fillOpacity={0.35}
           strokeWidth={2.5}
           isAnimationActive={false}
@@ -222,7 +222,7 @@ export function PitchContourChart({
               yAxisId="amp"
               type="monotone"
               dataKey="ampUser"
-              stroke="var(--color-ampUser)"
+              stroke="var(--color-pitch-recording-amplitude)"
               strokeWidth={0.5}
               strokeOpacity={0.2}
               isAnimationActive={false}
@@ -235,8 +235,8 @@ export function PitchContourChart({
               type="monotone"
               dataKey="pitchUserHz"
               baseValue={0}
-              stroke="var(--color-pitchUserHz)"
-              fill="var(--color-pitchUserHz)"
+              stroke="var(--color-pitch-recording)"
+              fill="var(--color-pitch-recording)"
               fillOpacity={0.25}
               strokeWidth={2}
               isAnimationActive={false}

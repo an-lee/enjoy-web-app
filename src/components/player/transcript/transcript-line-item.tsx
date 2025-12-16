@@ -39,11 +39,11 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
     (!isInteractive || shouldAllowTextSelection) && 'cursor-text select-text',
     isInteractive &&
       'focus-visible:outline-none focus-visible:ring-none',
-    // Echo region - warm orange tone with subtle styling
+    // Echo region - using standardized highlight styles
     // Only apply rounded corners to first and last lines
     isInEchoRegion && [
-      'bg-[var(--echo-region)] text-[var(--echo-region-foreground)]',
-      'border-l-4 border-[var(--echo-region-foreground)]/50',
+      'bg-highlight-active text-highlight-active-foreground',
+      'border-l-4 border-highlight-active-border',
       isEchoStart && 'rounded-t-lg',
       isEchoEnd && 'rounded-b-lg',
       // If it's both start and end (single line), apply both corners
@@ -52,7 +52,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
       'shadow-sm',
       // Active line inside echo region should stand out from other echo lines
       line.isActive && [
-        'border-l-[var(--echo-region-foreground)]/70',
+        'border-l-highlight-active-border',
         'font-bold',
         'shadow-md',
       ],
@@ -81,7 +81,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
         <span
           className={cn(
             'text-xs font-mono tabular-nums transition-colors duration-300',
-            isInEchoRegion && 'text-(--echo-region-foreground)/70',
+            isInEchoRegion && 'text-(--highlight-active-foreground)/70',
             !isInEchoRegion && line.isActive && 'text-primary/80',
             !isInEchoRegion && !line.isActive && 'text-muted-foreground/70'
           )}
@@ -101,7 +101,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
       <p
         className={cn(
           'text-base md:text-lg leading-relaxed transition-all duration-300',
-          isInEchoRegion && 'text-echo-region-foreground',
+          isInEchoRegion && 'text-highlight-active-foreground',
           !isInEchoRegion && line.isActive && 'text-primary font-medium text-lg md:text-xl',
           !isInEchoRegion && !line.isActive && 'text-foreground'
         )}
@@ -114,7 +114,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
         <p
           className={cn(
             'mt-1.5 text-sm leading-relaxed transition-all duration-300',
-            isInEchoRegion && 'text-(--echo-region-foreground)/80',
+            isInEchoRegion && 'text-(--highlight-active-foreground)/80',
             !isInEchoRegion && line.isActive && 'text-primary/70',
             !isInEchoRegion && !line.isActive && 'text-muted-foreground'
           )}
