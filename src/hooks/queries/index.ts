@@ -98,6 +98,18 @@ export {
   useDeleteTranscript,
 } from './use-transcript-queries'
 
+// Recording Queries
+export {
+  // Query keys
+  recordingQueryKeys,
+  // Query hooks (Read)
+  useRecordingsByEchoRegion,
+  // Types
+  type RecordingWithUrl,
+  type UseRecordingsByEchoRegionOptions,
+  type UseRecordingsByEchoRegionReturn,
+} from './use-recording-queries'
+
 // Sync Queries
 export {
   // Query keys

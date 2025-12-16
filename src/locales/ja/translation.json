@@ -261,7 +261,10 @@
       "recordingApproaching": "時間制限に近づいています",
       "recordingInProgress": "録音中",
       "cancelRecording": "録音をキャンセル (ESC)",
-      "cancel": "キャンセル"
+      "cancel": "キャンセル",
+      "existingRecordings": "既存の録音",
+      "recordingNumber": "録音 {{number}}",
+      "selectRecording": "録音を選択"
     }
   },
   "vocabulary": {

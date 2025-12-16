@@ -260,6 +260,9 @@
       "recordingInProgress": "录音进行中",
       "cancelRecording": "取消录音 (ESC)",
       "cancel": "取消",
+      "existingRecordings": "已有录音",
+      "recordingNumber": "录音 {{number}}",
+      "selectRecording": "选择录音",
       "syncing": "正在从服务器同步字幕...",
       "generateTranscript": "生成字幕"
     }

@@ -38,6 +38,43 @@ export async function getAllRecordings(): Promise<Recording[]> {
   return db.recordings.toArray()
 }
 
+/**
+ * Get recordings that match the echo region (same target, language, and time range)
+ * A recording matches if its referenceStart and referenceDuration overlap with the echo region
+ */
+export async function getRecordingsByEchoRegion(
+  targetType: TargetType,
+  targetId: string,
+  language: string,
+  startTime: number, // milliseconds
+  endTime: number // milliseconds
+): Promise<Recording[]> {
+  // Get all recordings for this target
+  const allRecordings = await db.recordings
+    .where('[targetType+targetId]')
+    .equals([targetType, targetId])
+    .toArray()
+
+  // Filter by language and time range overlap
+  return allRecordings.filter((recording) => {
+    // Must match language
+    if (recording.language !== language) return false
+
+    // Check time range overlap
+    // Recording range: [referenceStart, referenceStart + referenceDuration]
+    // Echo region range: [startTime, endTime]
+    const recordingStart = recording.referenceStart
+    const recordingEnd = recording.referenceStart + recording.referenceDuration
+
+    // Check if ranges overlap
+    // Two ranges overlap if: max(start1, start2) < min(end1, end2)
+    const overlapStart = Math.max(recordingStart, startTime)
+    const overlapEnd = Math.min(recordingEnd, endTime)
+
+    return overlapStart < overlapEnd
+  })
+}
+
 // ============================================================================
 // Mutation Operations
 // ============================================================================
@@ -82,6 +119,7 @@ export const recordingRepository = {
   getBySyncStatus: getRecordingsBySyncStatus,
   getByLanguage: getRecordingsByLanguage,
   getAll: getAllRecordings,
+  getByEchoRegion: getRecordingsByEchoRegion,
   // Mutations
   save: saveRecording,
   update: updateRecording,

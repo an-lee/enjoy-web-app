@@ -261,7 +261,10 @@
       "recordingApproaching": "시간 제한에 근접",
       "recordingInProgress": "녹음 진행 중",
       "cancelRecording": "녹음 취소 (ESC)",
-      "cancel": "취소"
+      "cancel": "취소",
+      "existingRecordings": "기존 녹음",
+      "recordingNumber": "녹음 {{number}}",
+      "selectRecording": "녹음 선택"
     }
   },
   "vocabulary": {

@@ -14,6 +14,8 @@ import { RecordButton } from './record-button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { RecordingPlayer } from './recording-player'
+import { useRecordingsByEchoRegion } from '@/hooks/queries'
 import type { TargetType } from '@/types/db'
 
 interface ShadowRecordingProps {
@@ -55,6 +57,16 @@ export function ShadowRecording({
     targetType,
     targetId,
     canvasRef,
+  })
+
+  // Query recordings for this echo region (only when not recording)
+  const { recordings: existingRecordings } = useRecordingsByEchoRegion({
+    targetType,
+    targetId,
+    language,
+    startTime: startTime * 1000, // Convert to milliseconds
+    endTime: endTime * 1000, // Convert to milliseconds
+    enabled: !isRecording, // Only query when not recording
   })
 
   // Use refs to store latest values for cleanup
@@ -144,6 +156,18 @@ export function ShadowRecording({
 
   return (
     <div className="space-y-3">
+      {/* Existing recordings player - show when not recording and recordings exist */}
+      {!isRecording && existingRecordings.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs text-muted-foreground">
+            {t('player.transcript.existingRecordings', {
+              defaultValue: 'Existing Recordings',
+            })}
+          </div>
+          <RecordingPlayer recordings={existingRecordings} />
+        </div>
+      )}
+
       {/* Recording progress bar - shows recording duration as percentage of echo region total duration */}
       {isRecording && (
         <div className="space-y-2">

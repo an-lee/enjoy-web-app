@@ -261,7 +261,10 @@
       "recordingApproaching": "Aproximando-se do limite de tempo",
       "recordingInProgress": "Gravação em andamento",
       "cancelRecording": "Cancelar Gravação (ESC)",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "existingRecordings": "Gravações Existentes",
+      "recordingNumber": "Gravação {{number}}",
+      "selectRecording": "Selecionar Gravação"
     }
   },
   "vocabulary": {

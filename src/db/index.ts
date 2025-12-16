@@ -129,6 +129,7 @@ export {
   getRecordingsBySyncStatus,
   getRecordingsByLanguage,
   getAllRecordings,
+  getRecordingsByEchoRegion,
   saveRecording,
   updateRecording,
   deleteRecording,

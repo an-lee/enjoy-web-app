@@ -261,7 +261,10 @@
       "recordingApproaching": "Zeitlimit nähert sich",
       "recordingInProgress": "Aufnahme läuft",
       "cancelRecording": "Aufnahme abbrechen (ESC)",
-      "cancel": "Abbrechen"
+      "cancel": "Abbrechen",
+      "existingRecordings": "Vorhandene Aufnahmen",
+      "recordingNumber": "Aufnahme {{number}}",
+      "selectRecording": "Aufnahme auswählen"
     }
   },
   "vocabulary": {
