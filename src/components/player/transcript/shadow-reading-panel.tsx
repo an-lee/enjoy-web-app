@@ -11,7 +11,10 @@ import { useTranslation } from 'react-i18next'
 import { useDisplayTime } from '@/hooks/use-display-time'
 import { ShadowReadingPanelHeader } from './shadow-reading-panel-header'
 import { PitchContourSection } from './pitch-contour-section'
-import { ShadowRecording } from './shadow-recording'
+import { ShadowRecorder } from './shadow-recorder'
+import { ShadowRecordingList } from './shadow-recording-list'
+import { usePlayerStore } from '@/stores/player'
+import { TargetType } from '@/types/db'
 
 interface ShadowReadingPanelProps {
   startTime: number // seconds
@@ -26,6 +29,13 @@ export function ShadowReadingPanel({
   const { t } = useTranslation()
   const duration = (endTime - startTime) * 1000 // Convert to milliseconds
   const displayTime = useDisplayTime()
+  const currentSession = usePlayerStore((state) => state.currentSession)
+  const targetType: TargetType | null = useMemo(() => {
+    if (!currentSession) return null
+    return currentSession.mediaType === 'audio' ? 'Audio' : 'Video'
+  }, [currentSession])
+  const targetId = currentSession?.mediaId || ''
+  const language = currentSession?.language || 'en'
 
   // Calculate relative time for progress indicator (0 to duration)
   const currentTimeRelative = useMemo(() => {
@@ -51,7 +61,15 @@ export function ShadowReadingPanel({
           currentTimeRelative={currentTimeRelative}
         />
 
-        <ShadowRecording />
+        <ShadowRecordingList
+          targetType={targetType}
+          targetId={targetId}
+          language={language}
+          startTime={startTime * 1000}
+          endTime={endTime * 1000}
+        />
+
+        <ShadowRecorder />
       </div>
     </div>
   )

@@ -9,6 +9,10 @@ export { TranscriptDisplay } from './transcript-display'
 
 // Sub-components (exported for potential external use)
 export { ShadowReadingPanel } from './shadow-reading-panel'
+export { ShadowRecorder } from './shadow-recorder'
+export { ShadowRecordingProgress } from './shadow-recording-progress'
+export { ShadowRecordingList } from './shadow-recording-list'
+export { RecordingPlayer } from './recording-player'
 export { TranscriptLineItem } from './transcript-line-item'
 export { LanguageSelector } from './language-selector'
 export { TranscriptHeader } from './transcript-header'
