@@ -200,7 +200,7 @@ export function ContinueLearningCard({ className }: ContinueLearningCardProps) {
               {media.title}
             </h4>
             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-              <span>{media.language.toUpperCase()}</span>
+              <span>{media.language?.toUpperCase() || 'Unknown'}</span>
               <span>•</span>
               <span>{formatRelativeTime(recentSession.lastActiveAt)}</span>
             </div>

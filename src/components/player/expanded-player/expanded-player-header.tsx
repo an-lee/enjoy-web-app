@@ -93,7 +93,7 @@ export function ExpandedPlayerHeader({
         <div className="min-w-0 flex-1 overflow-hidden">
           <h2 className="text-sm font-medium truncate">{mediaTitle}</h2>
           <p className="text-xs text-muted-foreground truncate">
-            {language.toUpperCase()}
+            {language?.toUpperCase() || 'Unknown'}
           </p>
         </div>
       </div>

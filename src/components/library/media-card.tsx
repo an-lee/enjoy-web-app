@@ -185,7 +185,7 @@ export function MediaCard({
 
         {/* Meta info */}
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-          <span>{item.language.toUpperCase()}</span>
+          <span>{item.language?.toUpperCase() || 'Unknown'}</span>
           <span>•</span>
           <span>{formatDate(item.createdAt)}</span>
         </div>
