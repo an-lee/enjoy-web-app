@@ -321,6 +321,7 @@ export function TranscriptDisplay({
           lines={lines}
           showSecondary={showSecondary}
           onLineClick={handleLineClick}
+          activeLineIndex={activeLineIndex}
         />
       </ScrollArea>
     </div>
