@@ -15,6 +15,7 @@ import type {
   SelectedTranscripts,
   UseTranscriptDisplayReturn,
 } from './types'
+import { useDisplayTime } from '@/hooks/use-display-time'
 
 // ============================================================================
 // Helper Functions
@@ -101,8 +102,8 @@ function alignTranscripts(
 // ============================================================================
 
 export function useTranscriptDisplay(
-  currentTimeSeconds: number
 ): UseTranscriptDisplayReturn {
+  const currentTimeSeconds = useDisplayTime();
   const currentSession = usePlayerStore((state) => state.currentSession)
 
   // Selected languages

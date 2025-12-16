@@ -76,7 +76,7 @@ export function TranscriptDisplay({
     availableTranscripts,
     primaryLanguage,
     syncState,
-  } = useTranscriptDisplay(currentTime)
+  } = useTranscriptDisplay()
 
   // Track previous activeLineIndex to only log when it changes
   const prevActiveLineIndexRef = useRef<number>(activeLineIndex)
@@ -97,7 +97,7 @@ export function TranscriptDisplay({
     echoModeActive,
     echoStartLineIndex,
     echoEndLineIndex,
-  } = useEchoRegion(lines)
+  } = useEchoRegion()
 
   // Auto-scroll to active line
   const scrollTargetIndex = useMemo(() => {

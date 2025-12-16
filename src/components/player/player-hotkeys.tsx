@@ -5,10 +5,9 @@
  * (either mini or expanded mode) to enable keyboard controls.
  */
 
+import { useRef, useEffect } from 'react'
 import { useAppHotkey } from '@/components/hotkeys'
 import { usePlayerStore } from '@/stores/player'
-import { useDisplayTime } from '@/hooks/use-display-time'
-import { useTranscriptDisplay } from './transcript/use-transcript-display'
 import { useEchoRegion } from './transcript/use-echo-region'
 import { usePlayerControls } from '@/hooks/use-player-controls'
 
@@ -17,7 +16,6 @@ interface PlayerHotkeysProps {
 }
 
 export function PlayerHotkeys({}: PlayerHotkeysProps) {
-  const displayTime = useDisplayTime()
   const {
     collapse,
     expand,
@@ -26,9 +24,6 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     playbackRate,
     setPlaybackRate,
   } = usePlayerStore()
-
-  // Get transcript data for echo region handlers
-  const { lines } = useTranscriptDisplay(displayTime)
 
   // Get all player controls from unified hook
   const controls = usePlayerControls()
@@ -39,30 +34,70 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     handleExpandEchoBackward,
     handleShrinkEchoForward,
     handleShrinkEchoBackward,
-  } = useEchoRegion(lines)
+  } = useEchoRegion()
+
+  // Use refs to store all handlers to prevent infinite re-renders
+  // These functions may change when state changes, but we don't want
+  // to re-register hotkeys every time they change
+  const controlsRef = useRef(controls)
+  const echoHandlersRef = useRef({
+    handleExpandEchoForward,
+    handleExpandEchoBackward,
+    handleShrinkEchoForward,
+    handleShrinkEchoBackward,
+  })
+
+  // Update refs when handlers change
+  useEffect(() => {
+    controlsRef.current = controls
+  }, [controls])
+
+  useEffect(() => {
+    echoHandlersRef.current = {
+      handleExpandEchoForward,
+      handleExpandEchoBackward,
+      handleShrinkEchoForward,
+      handleShrinkEchoBackward,
+    }
+  }, [
+    handleExpandEchoForward,
+    handleExpandEchoBackward,
+    handleShrinkEchoForward,
+    handleShrinkEchoBackward,
+  ])
 
   // Play/Pause
   useAppHotkey(
     'player.togglePlay',
     (e) => {
       e.preventDefault()
-      controls.onTogglePlay()
+      controlsRef.current.onTogglePlay()
     },
-    { deps: [controls.onTogglePlay], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
+
+  // Store stable references to collapse/expand functions and mode
+  const collapseRef = useRef(collapse)
+  const expandRef = useRef(expand)
+  const modeRef = useRef(mode)
+  useEffect(() => {
+    collapseRef.current = collapse
+    expandRef.current = expand
+    modeRef.current = mode
+  }, [collapse, expand, mode])
 
   // Toggle player expand/collapse
   useAppHotkey(
     'player.toggleExpand',
     (e) => {
       e.preventDefault()
-      if (mode === 'expanded') {
-        collapse()
-      } else if (mode === 'mini') {
-        expand()
+      if (modeRef.current === 'expanded') {
+        collapseRef.current()
+      } else if (modeRef.current === 'mini') {
+        expandRef.current()
       }
     },
-    { deps: [mode, collapse, expand], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Play previous line (A)
@@ -70,9 +105,9 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     'player.prevLine',
     (e) => {
       e.preventDefault()
-      controls.handlePrevLine()
+      controlsRef.current.handlePrevLine()
     },
-    { deps: [controls.handlePrevLine], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Play next line (D)
@@ -80,9 +115,9 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     'player.nextLine',
     (e) => {
       e.preventDefault()
-      controls.handleNextLine()
+      controlsRef.current.handleNextLine()
     },
-    { deps: [controls.handleNextLine], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Replay current line (S)
@@ -90,9 +125,9 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     'player.replayLine',
     (e) => {
       e.preventDefault()
-      controls.handleReplayLine()
+      controlsRef.current.handleReplayLine()
     },
-    { deps: [controls.handleReplayLine], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Toggle Echo mode (E)
@@ -100,9 +135,9 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     'player.toggleEchoMode',
     (e) => {
       e.preventDefault()
-      controls.handleEchoMode()
+      controlsRef.current.handleEchoMode()
     },
-    { deps: [controls.handleEchoMode], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Toggle dictation mode (H) - placeholder for future implementation
@@ -118,13 +153,18 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
 
   // Toggle recording (R)
   const { toggleRecording } = usePlayerStore()
+  const toggleRecordingRef = useRef(toggleRecording)
+  useEffect(() => {
+    toggleRecordingRef.current = toggleRecording
+  }, [toggleRecording])
+
   useAppHotkey(
     'player.toggleRecording',
     async (e) => {
       e.preventDefault()
-      await toggleRecording()
+      await toggleRecordingRef.current()
     },
-    { deps: [toggleRecording], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Toggle pronunciation assessment (V) - placeholder for future implementation
@@ -138,15 +178,23 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     { deps: [], preventDefault: true }
   )
 
+  // Store stable references to setPlaybackRate
+  const setPlaybackRateRef = useRef(setPlaybackRate)
+  const playbackRateRef = useRef(playbackRate)
+  useEffect(() => {
+    setPlaybackRateRef.current = setPlaybackRate
+    playbackRateRef.current = playbackRate
+  }, [setPlaybackRate, playbackRate])
+
   // Slow down playback speed (<)
   useAppHotkey(
     'player.slowDown',
     (e) => {
       e.preventDefault()
-      const newRate = Math.max(0.25, playbackRate - 0.05)
-      setPlaybackRate(newRate)
+      const newRate = Math.max(0.25, playbackRateRef.current - 0.05)
+      setPlaybackRateRef.current(newRate)
     },
-    { deps: [playbackRate, setPlaybackRate], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Speed up playback speed (>)
@@ -154,22 +202,28 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     'player.speedUp',
     (e) => {
       e.preventDefault()
-      const newRate = Math.min(2, playbackRate + 0.05)
-      setPlaybackRate(newRate)
+      const newRate = Math.min(2, playbackRateRef.current + 0.05)
+      setPlaybackRateRef.current(newRate)
     },
-    { deps: [playbackRate, setPlaybackRate], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
+
+  // Store echoModeActive in ref to avoid re-registering hotkeys
+  const echoModeActiveRef = useRef(echoModeActive)
+  useEffect(() => {
+    echoModeActiveRef.current = echoModeActive
+  }, [echoModeActive])
 
   // Expand Echo region backward ([) - only when echo mode is active
   useAppHotkey(
     'player.expandEchoBackward',
     (e) => {
       e.preventDefault()
-      if (echoModeActive) {
-        handleExpandEchoBackward()
+      if (echoModeActiveRef.current) {
+        echoHandlersRef.current.handleExpandEchoBackward()
       }
     },
-    { deps: [echoModeActive, handleExpandEchoBackward], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Expand Echo region forward (]) - only when echo mode is active
@@ -177,11 +231,11 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     'player.expandEchoForward',
     (e) => {
       e.preventDefault()
-      if (echoModeActive) {
-        handleExpandEchoForward()
+      if (echoModeActiveRef.current) {
+        echoHandlersRef.current.handleExpandEchoForward()
       }
     },
-    { deps: [echoModeActive, handleExpandEchoForward], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Shrink Echo region backward ({) - only when echo mode is active
@@ -189,11 +243,11 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     'player.shrinkEchoBackward',
     (e) => {
       e.preventDefault()
-      if (echoModeActive) {
-        handleShrinkEchoBackward()
+      if (echoModeActiveRef.current) {
+        echoHandlersRef.current.handleShrinkEchoBackward()
       }
     },
-    { deps: [echoModeActive, handleShrinkEchoBackward], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   // Shrink Echo region forward (}) - only when echo mode is active
@@ -201,11 +255,11 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
     'player.shrinkEchoForward',
     (e) => {
       e.preventDefault()
-      if (echoModeActive) {
-        handleShrinkEchoForward()
+      if (echoModeActiveRef.current) {
+        echoHandlersRef.current.handleShrinkEchoForward()
       }
     },
-    { deps: [echoModeActive, handleShrinkEchoForward], preventDefault: true }
+    { deps: [], preventDefault: true }
   )
 
   return null

@@ -6,6 +6,7 @@
 
 import { useCallback, useMemo, useRef, useEffect } from 'react'
 import { usePlayerStore } from '@/stores/player'
+import { useTranscriptDisplay } from './use-transcript-display'
 import { createLogger } from '@/lib/utils'
 import type { TranscriptLineState } from './types'
 
@@ -60,7 +61,8 @@ function findLineIndexByTime(
   return diff1 < diff2 ? result : result + 1
 }
 
-export function useEchoRegion(lines: TranscriptLineState[]) {
+export function useEchoRegion() {
+  const { lines } = useTranscriptDisplay();
   const linesRef = useRef<TranscriptLineState[]>([])
 
   // Update lines ref
