@@ -15,9 +15,8 @@ import type { Video, VideoProvider } from "@/types/db"
  */
 export interface VideosListParams {
   provider?: VideoProvider
-  page?: number
   limit?: number
-  updatedAfter?: string // ISO 8601 timestamp for incremental sync
+  updatedAfter?: string // ISO 8601 timestamp for cursor-based pagination
 }
 
 // ============================================================================
@@ -39,8 +38,8 @@ export const videoApi = {
    *
    * @param params - Query parameters for filtering and pagination
    * @param params.provider - Filter by video provider (youtube, netflix)
-   * @param params.page - Page number for pagination
-   * @param params.limit - Number of items per page
+   * @param params.limit - Number of items per page (default: 50)
+   * @param params.updatedAfter - ISO 8601 timestamp for cursor-based pagination
    * @returns Array of videos in camelCase format
    */
   videos: async (params: VideosListParams = {}) => {

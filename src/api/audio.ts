@@ -15,9 +15,8 @@ import type { Audio, AudioProvider } from "@/types/db"
  */
 export interface AudiosListParams {
   provider?: AudioProvider
-  page?: number
   limit?: number
-  updatedAfter?: string // ISO 8601 timestamp for incremental sync
+  updatedAfter?: string // ISO 8601 timestamp for cursor-based pagination
 }
 
 // ============================================================================
@@ -39,8 +38,8 @@ export const audioApi = {
    *
    * @param params - Query parameters for filtering and pagination
    * @param params.provider - Filter by audio provider (user)
-   * @param params.page - Page number for pagination
-   * @param params.limit - Number of items per page
+   * @param params.limit - Number of items per page (default: 50)
+   * @param params.updatedAfter - ISO 8601 timestamp for cursor-based pagination
    * @returns Array of audios in camelCase format
    */
   audios: async (params: AudiosListParams = {}) => {

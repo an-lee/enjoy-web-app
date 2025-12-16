@@ -371,16 +371,15 @@ export async function downloadAudios(options: SyncOptions = {}): Promise<SyncRes
       errors: [],
     }
 
-    let page = 1
+    let currentUpdatedAfter = updatedAfter
     let hasMore = true
     const syncStartTime = new Date().toISOString()
 
-    // Download with pagination
+    // Download with cursor-based pagination (using updated_after)
     while (hasMore) {
       const response = await audioApi.audios({
-        page,
         limit: DOWNLOAD_PAGE_SIZE,
-        updatedAfter,
+        updatedAfter: currentUpdatedAfter,
       })
       const serverAudios = response.data || []
 
@@ -436,11 +435,20 @@ export async function downloadAudios(options: SyncOptions = {}): Promise<SyncRes
         results.errors?.push(...batchResult.errors.map((e) => e.message))
       }
 
-      // Check if there are more pages
+      // Check if there are more records: if we got a full page, there might be more
       if (serverAudios.length < DOWNLOAD_PAGE_SIZE) {
         hasMore = false
       } else {
-        page++
+        // Use the latest updated_at as the new cursor
+        // Find the latest updated_at from the current batch
+        const latestUpdatedAt = serverAudios.reduce((latest, audio) => {
+          const audioTime = new Date(audio.updatedAt).getTime()
+          const latestTime = new Date(latest).getTime()
+          return audioTime > latestTime ? audio.updatedAt : latest
+        }, serverAudios[0].updatedAt)
+
+        // Update cursor for next iteration
+        currentUpdatedAfter = latestUpdatedAt
       }
     }
 
@@ -481,16 +489,15 @@ export async function downloadVideos(options: SyncOptions = {}): Promise<SyncRes
       errors: [],
     }
 
-    let page = 1
+    let currentUpdatedAfter = updatedAfter
     let hasMore = true
     const syncStartTime = new Date().toISOString()
 
-    // Download with pagination
+    // Download with cursor-based pagination (using updated_after)
     while (hasMore) {
       const response = await videoApi.videos({
-        page,
         limit: DOWNLOAD_PAGE_SIZE,
-        updatedAfter,
+        updatedAfter: currentUpdatedAfter,
       })
       const serverVideos = response.data || []
 
@@ -542,11 +549,20 @@ export async function downloadVideos(options: SyncOptions = {}): Promise<SyncRes
         results.errors?.push(...batchResult.errors.map((e) => e.message))
       }
 
-      // Check if there are more pages
+      // Check if there are more records: if we got a full page, there might be more
       if (serverVideos.length < DOWNLOAD_PAGE_SIZE) {
         hasMore = false
       } else {
-        page++
+        // Use the latest updated_at as the new cursor
+        // Find the latest updated_at from the current batch
+        const latestUpdatedAt = serverVideos.reduce((latest, video) => {
+          const videoTime = new Date(video.updatedAt).getTime()
+          const latestTime = new Date(latest).getTime()
+          return videoTime > latestTime ? video.updatedAt : latest
+        }, serverVideos[0].updatedAt)
+
+        // Update cursor for next iteration
+        currentUpdatedAfter = latestUpdatedAt
       }
     }
 
