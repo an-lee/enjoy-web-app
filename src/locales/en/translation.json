@@ -254,7 +254,14 @@
       "pitchContourToggleUser": "Toggle user recording",
       "pitchContourMeta": "Sample rate: {{sampleRate}} Hz · Essentia: {{essentiaVersion}}",
       "record": "Record",
-      "stopRecording": "Stop"
+      "stopRecording": "Stop",
+      "recordingProgress": "Recording Progress",
+      "recordingCompleted": "Recording completed",
+      "recordingNearlyDone": "Nearly done",
+      "recordingApproaching": "Approaching time limit",
+      "recordingInProgress": "Recording in progress",
+      "cancelRecording": "Cancel Recording (ESC)",
+      "cancel": "Cancel"
     }
   },
   "vocabulary": {

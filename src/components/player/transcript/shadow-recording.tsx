@@ -8,7 +8,6 @@
 import { useMemo, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { useDisplayTime } from '@/hooks/use-display-time'
 import { useShadowRecording } from '@/hooks/use-shadow-recording'
 import { usePlayerStore } from '@/stores/player'
 import { RecordButton } from './record-button'
@@ -38,7 +37,6 @@ export function ShadowRecording({
 }: ShadowRecordingProps) {
   const { t } = useTranslation()
   const duration = (endTime - startTime) * 1000 // Convert to milliseconds
-  const displayTime = useDisplayTime()
 
   // Initialize recording hook
   const {
@@ -125,30 +123,22 @@ export function ShadowRecording({
   }, [isRecording, startRecording, stopRecording])
 
   // Calculate recording progress percentage (0-100)
+  // Progress = recording duration / echo region total duration
+  // When exceeds 100%, cap at 100%
   const recordingProgress = useMemo(() => {
     if (!isRecording || duration === 0) return 0
     return Math.min((recordingDuration / duration) * 100, 100)
   }, [isRecording, recordingDuration, duration])
 
-  // Calculate ideal progress percentage (based on echo region duration)
-  const idealProgress = useMemo(() => {
-    if (!Number.isFinite(displayTime) || duration === 0) return 0
-    if (displayTime < startTime) return 0
-    if (displayTime >= endTime) return 100
-    return ((displayTime - startTime) / (endTime - startTime)) * 100
-  }, [displayTime, startTime, endTime, duration])
-
-  // Progress bar color based on how well user is matching the pace
-  // Green: on track, Yellow: slightly off, Red: too slow
+  // Progress bar color based on how close to 100% (echo region duration)
+  // Green: 0-70% (normal), Yellow: 70-90% (approaching), Orange: 90-100% (nearly done), Red: 100% (completed/exceeded)
   const progressColor = useMemo(() => {
     if (!isRecording) return 'bg-highlight-active-foreground'
-    const diff = recordingProgress - idealProgress
-    if (diff < -20) return 'bg-destructive' // Too slow
-    if (diff < -10) return 'bg-yellow-500' // Slightly slow
-    if (diff < 10) return 'bg-green-500' // On track
-    if (diff < 20) return 'bg-yellow-500' // Slightly fast
-    return 'bg-orange-500' // Too fast
-  }, [isRecording, recordingProgress, idealProgress])
+    if (recordingProgress >= 100) return 'bg-destructive' // Completed/exceeded
+    if (recordingProgress >= 90) return 'bg-orange-500' // Nearly done
+    if (recordingProgress >= 70) return 'bg-yellow-500' // Approaching limit
+    return 'bg-green-500' // Normal progress
+  }, [isRecording, recordingProgress])
 
   // Volume visualization bars (0-100)
   const volumeBars = useMemo(() => {
@@ -163,7 +153,7 @@ export function ShadowRecording({
 
   return (
     <div className="space-y-3">
-      {/* Recording progress bar - shows ideal pace vs actual recording */}
+      {/* Recording progress bar - shows recording duration as percentage of echo region total duration */}
       {isRecording && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
@@ -171,13 +161,13 @@ export function ShadowRecording({
               {t('player.transcript.recordingProgress', { defaultValue: 'Recording Progress' })}
             </span>
             <span className="font-medium">
-              {Math.round(recordingProgress)}% / {Math.round(idealProgress)}%
+              {Math.round(recordingProgress)}%
             </span>
           </div>
           <div className="relative">
-            {/* Ideal progress (background, subtle) */}
+            {/* Background progress bar (100% = echo region total duration) */}
             <Progress
-              value={idealProgress}
+              value={100}
               className="h-2 bg-highlight-active-foreground/20"
             />
             {/* Actual recording progress (foreground, colored) */}
@@ -190,17 +180,21 @@ export function ShadowRecording({
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            {recordingProgress < idealProgress - 10
-              ? t('player.transcript.recordingTooSlow', {
-                  defaultValue: 'Try to match the pace',
+            {recordingProgress >= 100
+              ? t('player.transcript.recordingCompleted', {
+                  defaultValue: 'Recording completed',
                 })
-              : recordingProgress > idealProgress + 10
-                ? t('player.transcript.recordingTooFast', {
-                    defaultValue: 'Slow down a bit',
+              : recordingProgress >= 90
+                ? t('player.transcript.recordingNearlyDone', {
+                    defaultValue: 'Nearly done',
                   })
-                : t('player.transcript.recordingOnTrack', {
-                    defaultValue: 'Good pace!',
-                  })}
+                : recordingProgress >= 70
+                  ? t('player.transcript.recordingApproaching', {
+                      defaultValue: 'Approaching time limit',
+                    })
+                  : t('player.transcript.recordingInProgress', {
+                      defaultValue: 'Recording in progress',
+                    })}
           </p>
         </div>
       )}
