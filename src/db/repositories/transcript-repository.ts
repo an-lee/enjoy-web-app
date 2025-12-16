@@ -66,6 +66,42 @@ export async function getAllTranscripts(): Promise<Transcript[]> {
 // Mutation Operations
 // ============================================================================
 
+/**
+ * Save transcript from server (download sync)
+ * Uses the id from server directly, no generation needed
+ */
+export async function saveTranscriptFromServer(input: Transcript): Promise<string> {
+  const now = new Date().toISOString()
+
+  // Server transcript should have id
+  if (!input.id) {
+    throw new Error('Server transcript must have id')
+  }
+
+  const existing = await db.transcripts.get(input.id)
+  if (existing) {
+    // Update existing transcript
+    const updated: Transcript = {
+      ...existing,
+      ...input,
+      id: input.id,
+      updatedAt: now,
+    }
+    await db.transcripts.put(updated)
+    return input.id
+  }
+
+  // Create new transcript from server
+  const transcript: Transcript = {
+    ...input,
+    syncStatus: input.syncStatus || 'synced',
+    createdAt: input.createdAt || now,
+    updatedAt: input.updatedAt || now,
+  }
+  await db.transcripts.put(transcript)
+  return input.id
+}
+
 export async function saveTranscript(input: TranscriptInput): Promise<string> {
   const now = new Date().toISOString()
   const id = generateTranscriptId(
@@ -145,6 +181,7 @@ export const transcriptRepository = {
   getAll: getAllTranscripts,
   // Mutations
   save: saveTranscript,
+  saveFromServer: saveTranscriptFromServer,
   update: updateTranscript,
   delete: deleteTranscript,
   // Utilities

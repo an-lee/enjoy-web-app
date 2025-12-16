@@ -9,8 +9,9 @@
  */
 
 import { createLogger } from '@/lib/utils'
-import { fullSync, processSyncQueue, queueUploadSync } from './sync-service'
+import { fullSync, processSyncQueue, queueUploadSync, downloadTranscriptsByTarget } from './sync-service'
 import type { SyncOptions, SyncResult } from './sync-service'
+import type { TargetType } from '@/types/db'
 
 // ============================================================================
 // Logger
@@ -192,7 +193,7 @@ export async function triggerSync(options: SyncOptions = {}): Promise<SyncResult
  * This is the main entry point for queuing local changes
  */
 export async function queueForSync(
-  entityType: 'audio' | 'video',
+  entityType: 'audio' | 'video' | 'transcript',
   entityId: string,
   action: 'create' | 'update' | 'delete'
 ): Promise<void> {
@@ -204,6 +205,29 @@ export async function queueForSync(
       log.error('Background sync after queue failed:', error)
     })
   }
+}
+
+/**
+ * Sync transcripts for a specific target (audio/video)
+ * This is called on-demand when opening an audio/video
+ */
+export async function syncTranscriptsForTarget(
+  targetType: TargetType,
+  targetId: string,
+  options: SyncOptions = {}
+): Promise<SyncResult> {
+  if (!isOnline()) {
+    log.warn('Cannot sync transcripts: network is offline')
+    return {
+      success: false,
+      synced: 0,
+      failed: 0,
+      errors: ['Network is offline'],
+    }
+  }
+
+  log.debug(`Syncing transcripts for ${targetType}:${targetId}`)
+  return await downloadTranscriptsByTarget(targetType, targetId, options)
 }
 
 /**

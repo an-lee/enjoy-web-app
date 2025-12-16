@@ -16,6 +16,7 @@ import {
   updateEchoSessionProgress,
   getEchoSessionById,
 } from '@/db'
+import { syncTranscriptsForTarget } from '@/db/services/sync-manager'
 import type { TargetType } from '@/types/db'
 import { createLogger } from '@/lib/utils'
 
@@ -344,6 +345,12 @@ export const usePlayerStore = create<PlayerState>()(
             mediaId: media.id,
             echoSessionId,
             currentTime: echoSession.currentTime,
+          })
+
+          // Sync transcripts for this target in background (non-blocking)
+          syncTranscriptsForTarget(targetType, media.id, { background: true }).catch((error) => {
+            log.error('Failed to sync transcripts for target:', error)
+            // Don't block media loading if transcript sync fails
           })
         } catch (error) {
           log.error('Failed to load media:', error)

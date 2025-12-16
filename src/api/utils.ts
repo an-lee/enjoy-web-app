@@ -11,6 +11,13 @@ export function snakeToCamel(str: string): string {
 }
 
 /**
+ * Convert camelCase string to snake_case
+ */
+export function camelToSnake(str: string): string {
+	return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+}
+
+/**
  * Recursively convert object keys from snake_case to camelCase
  * Handles nested objects and arrays
  *
@@ -32,6 +39,36 @@ export function convertSnakeToCamel<T>(obj: unknown): T {
 		for (const [key, value] of Object.entries(obj)) {
 			const camelKey = snakeToCamel(key)
 			converted[camelKey] = convertSnakeToCamel(value)
+		}
+		return converted as T
+	}
+
+	// Return primitive values and special objects as-is
+	return obj as T
+}
+
+/**
+ * Recursively convert object keys from camelCase to snake_case
+ * Handles nested objects and arrays
+ *
+ * Note: This only converts plain objects. Special objects like Date, RegExp, etc. are preserved as-is.
+ */
+export function convertCamelToSnake<T>(obj: unknown): T {
+	if (obj === null || obj === undefined) {
+		return obj as T
+	}
+
+	// Handle arrays
+	if (Array.isArray(obj)) {
+		return obj.map((item) => convertCamelToSnake(item)) as T
+	}
+
+	// Handle plain objects only (not Date, RegExp, etc.)
+	if (typeof obj === 'object' && obj.constructor === Object) {
+		const converted: Record<string, unknown> = {}
+		for (const [key, value] of Object.entries(obj)) {
+			const snakeKey = camelToSnake(key)
+			converted[snakeKey] = convertCamelToSnake(value)
 		}
 		return converted as T
 	}

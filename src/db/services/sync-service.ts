@@ -12,6 +12,7 @@
 import { createLogger } from '@/lib/utils'
 import { audioApi } from '@/api/audio'
 import { videoApi } from '@/api/video'
+import { transcriptApi } from '@/api/transcript'
 import {
   getAudioById,
   saveAudioFromServer,
@@ -22,6 +23,11 @@ import {
   saveVideoFromServer,
   updateVideo,
 } from '../repositories/video-repository'
+import {
+  getTranscriptById,
+  saveTranscriptFromServer,
+  updateTranscript,
+} from '../repositories/transcript-repository'
 import {
   addSyncQueueItem,
   getPendingSyncQueueItems,
@@ -34,7 +40,7 @@ import {
 } from '../repositories/sync-state-repository'
 import { queueLocalEntitiesForSync } from '../repositories/sync-stats-repository'
 import { processBatch } from '../utils/async-batch'
-import type { Audio, Video, SyncStatus } from '@/types/db'
+import type { Audio, Video, Transcript, TargetType, SyncStatus } from '@/types/db'
 
 // ============================================================================
 // Logger
@@ -110,22 +116,26 @@ function shouldRetry(retryCount: number, lastAttempt?: string): boolean {
 }
 
 /**
- * Prepare audio/video for sync (remove local-only fields)
+ * Prepare audio/video/transcript for sync (remove local-only fields)
  */
-function prepareForSync(entity: Audio | Video): Omit<Audio | Video, 'fileHandle' | 'blob'> {
+function prepareForSync(entity: Audio | Video | Transcript): Omit<Audio | Video | Transcript, 'fileHandle' | 'blob'> {
   if ('blob' in entity) {
     const { fileHandle, blob, ...rest } = entity as Audio
     return rest
   }
-  const { fileHandle, ...rest } = entity as Video
-  return rest
+  if ('fileHandle' in entity) {
+    const { fileHandle, ...rest } = entity as Video
+    return rest
+  }
+  // Transcript has no local-only fields
+  return entity
 }
 
 /**
  * Resolve conflict between local and server version
  * Strategy: Last-write-wins based on serverUpdatedAt
  */
-function resolveConflict<T extends Audio | Video>(
+function resolveConflict<T extends Audio | Video | Transcript>(
   local: T,
   server: T
 ): T {
@@ -159,7 +169,7 @@ function resolveConflict<T extends Audio | Video>(
  * Queue an entity for upload sync
  */
 export async function queueUploadSync(
-  entityType: 'audio' | 'video',
+  entityType: 'audio' | 'video' | 'transcript',
   entityId: string,
   action: 'create' | 'update' | 'delete'
 ): Promise<void> {
@@ -173,8 +183,13 @@ export async function queueUploadSync(
       if (entity) {
         payload = prepareForSync(entity)
       }
-    } else {
+    } else if (entityType === 'video') {
       const entity = await getVideoById(entityId)
+      if (entity) {
+        payload = prepareForSync(entity)
+      }
+    } else {
+      const entity = await getTranscriptById(entityId)
       if (entity) {
         payload = prepareForSync(entity)
       }
@@ -187,8 +202,10 @@ export async function queueUploadSync(
   const syncStatus: SyncStatus = 'pending'
   if (entityType === 'audio') {
     await updateAudio(entityId, { syncStatus })
-  } else {
+  } else if (entityType === 'video') {
     await updateVideo(entityId, { syncStatus })
+  } else {
+    await updateTranscript(entityId, { syncStatus })
   }
 }
 
@@ -225,16 +242,38 @@ async function uploadVideo(video: Video): Promise<void> {
 }
 
 /**
+ * Upload a single transcript to server
+ */
+async function uploadTranscript(transcript: Transcript): Promise<void> {
+  // Prepare transcript for sync (remove local-only fields, if any)
+  const payload = prepareForSync(transcript) as Transcript
+
+  // API expects { transcript: Transcript } format (with id)
+  // id is deterministic UUID v5, same on client and server
+  await transcriptApi.uploadTranscript(payload)
+
+  // Update local entity with server timestamp
+  await updateTranscript(transcript.id, {
+    syncStatus: 'synced',
+    serverUpdatedAt: new Date().toISOString(),
+  })
+}
+
+/**
  * Delete entity from server
  */
 async function deleteEntityFromServer(
-  entityType: 'audio' | 'video',
+  entityType: 'audio' | 'video' | 'transcript',
   entityId: string
 ): Promise<void> {
   if (entityType === 'audio') {
     await audioApi.deleteAudio(entityId)
-  } else {
+  } else if (entityType === 'video') {
     await videoApi.deleteVideo(entityId)
+  } else {
+    // Transcript deletion - API endpoint may not exist yet, but prepare for it
+    // For now, we'll throw an error if it's called
+    throw new Error('Transcript deletion from server is not yet implemented')
   }
 }
 
@@ -243,7 +282,7 @@ async function deleteEntityFromServer(
  */
 async function processSyncQueueItem(item: {
   id: number
-  entityType: 'audio' | 'video'
+  entityType: 'audio' | 'video' | 'transcript'
   entityId: string
   action: 'create' | 'update' | 'delete'
   payload?: unknown
@@ -267,9 +306,12 @@ async function processSyncQueueItem(item: {
       if (entityType === 'audio') {
         const audio = payload as Audio
         await uploadAudio(audio)
-      } else {
+      } else if (entityType === 'video') {
         const video = payload as Video
         await uploadVideo(video)
+      } else {
+        const transcript = payload as Transcript
+        await uploadTranscript(transcript)
       }
     }
 
@@ -325,9 +367,9 @@ export async function processSyncQueue(options: SyncOptions = {}): Promise<SyncR
 
 async function processSyncQueueSync(): Promise<SyncResult> {
   const pending = await getPendingSyncQueueItems()
-  const audioVideoItems = pending.filter(
-    (item): item is typeof item & { entityType: 'audio' | 'video' } =>
-      item.entityType === 'audio' || item.entityType === 'video'
+  const syncableItems = pending.filter(
+    (item): item is typeof item & { entityType: 'audio' | 'video' | 'transcript' } =>
+      item.entityType === 'audio' || item.entityType === 'video' || item.entityType === 'transcript'
   )
 
   const results: SyncResult = {
@@ -338,8 +380,8 @@ async function processSyncQueueSync(): Promise<SyncResult> {
   }
 
   // Process in batches
-  for (let i = 0; i < audioVideoItems.length; i += SYNC_BATCH_SIZE) {
-    const batch = audioVideoItems.slice(i, i + SYNC_BATCH_SIZE)
+  for (let i = 0; i < syncableItems.length; i += SYNC_BATCH_SIZE) {
+    const batch = syncableItems.slice(i, i + SYNC_BATCH_SIZE)
     const promises = batch.map((item) => processSyncQueueItem(item))
     const batchResults = await Promise.allSettled(promises)
 
@@ -596,7 +638,96 @@ export async function downloadVideos(options: SyncOptions = {}): Promise<SyncRes
 }
 
 /**
+ * Download transcripts for a specific target (audio/video) from server
+ * This is called on-demand when opening an audio/video, not during full sync
+ */
+export async function downloadTranscriptsByTarget(
+  targetType: TargetType,
+  targetId: string,
+  options: SyncOptions = {}
+): Promise<SyncResult> {
+  try {
+    log.debug(`Downloading transcripts for ${targetType}:${targetId} from server...`)
+
+    const results: SyncResult = {
+      success: true,
+      synced: 0,
+      failed: 0,
+      errors: [],
+    }
+
+    // Fetch transcripts for this target from server
+    const response = await transcriptApi.transcripts({
+      targetType,
+      targetId,
+    })
+    const serverTranscripts = response.data || []
+
+    if (serverTranscripts.length === 0) {
+      log.debug(`No transcripts found for ${targetType}:${targetId}`)
+      return results
+    }
+
+    // Process transcripts with async batching to avoid blocking
+    const batchResult = await processBatch(
+      serverTranscripts,
+      async (serverTranscript) => {
+        try {
+          const localTranscript = await getTranscriptById(serverTranscript.id)
+
+          if (!localTranscript) {
+            // New transcript from server: save locally using server id directly
+            await saveTranscriptFromServer({
+              ...serverTranscript,
+              syncStatus: 'synced',
+              serverUpdatedAt: serverTranscript.updatedAt,
+            })
+            return { success: true }
+          } else {
+            // Existing transcript: resolve conflict
+            const resolved = resolveConflict(localTranscript, serverTranscript)
+            await updateTranscript(serverTranscript.id, {
+              ...resolved,
+              syncStatus: 'synced',
+              serverUpdatedAt: serverTranscript.updatedAt,
+            })
+            return { success: true }
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          log.error(`Failed to sync transcript ${serverTranscript.id}:`, error)
+          throw new Error(`Failed to sync transcript ${serverTranscript.id}: ${errorMessage}`)
+        }
+      },
+      {
+        batchSize: SYNC_BATCH_SIZE,
+        useIdleCallback: !options.useWorker, // Use idle callback if not using worker
+      }
+    )
+
+    results.synced = batchResult.processed - batchResult.errors.length
+    results.failed = batchResult.errors.length
+    if (batchResult.errors.length > 0) {
+      results.errors?.push(...batchResult.errors.map((e) => e.message))
+    }
+
+    results.success = results.failed === 0
+    log.debug(`Downloaded ${results.synced} transcripts for ${targetType}:${targetId}, ${results.failed} failed`)
+    return results
+  } catch (error) {
+    log.error(`Failed to download transcripts for ${targetType}:${targetId}:`, error)
+    return {
+      success: false,
+      synced: 0,
+      failed: 0,
+      errors: [error instanceof Error ? error.message : String(error)],
+    }
+  }
+}
+
+/**
  * Full sync: download from server, then upload pending changes
+ * Note: Transcripts are NOT included in full sync - they are synced on-demand when opening audio/video
  */
 export async function fullSync(options: SyncOptions = {}): Promise<SyncResult> {
   log.info('Starting full sync...')

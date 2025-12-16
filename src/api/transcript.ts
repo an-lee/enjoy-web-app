@@ -5,7 +5,7 @@
 
 import { Language } from "@/lib/constants"
 import { apiClient } from "./client"
-import type { TargetType, Transcript, TranscriptInput, TranscriptSource } from "@/types/db"
+import type { TargetType, Transcript, TranscriptSource } from "@/types/db"
 
 // ============================================================================
 // Types & Exports
@@ -70,11 +70,11 @@ export const transcriptApi = {
    * Client-side only. Response is automatically converted from snake_case to camelCase
    * by the API client interceptor.
    *
-   * @param transcript - Transcript to upload
+   * @param transcript - Transcript to upload (includes id for deterministic UUID v5)
    * @returns Transcript details in camelCase format
    */
-  uploadTranscript: async (transcript: TranscriptInput) => {
-    return apiClient.post<TranscriptInput>(TRANSCRIPTS_API_PATH, {
+  uploadTranscript: async (transcript: Transcript) => {
+    return apiClient.post<Transcript>(TRANSCRIPTS_API_PATH, {
       transcript,
     })
   },

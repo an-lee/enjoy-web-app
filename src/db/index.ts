@@ -115,6 +115,7 @@ export {
   getTranscriptsBySource,
   getAllTranscripts,
   saveTranscript,
+  saveTranscriptFromServer,
   updateTranscript,
   deleteTranscript,
   getTrackId,
@@ -260,6 +261,7 @@ export {
   processSyncQueue,
   downloadAudios,
   downloadVideos,
+  downloadTranscriptsByTarget,
   fullSync,
 } from './services/sync-service'
 
@@ -274,6 +276,7 @@ export {
   shutdownSyncManager,
   triggerSync,
   queueForSync,
+  syncTranscriptsForTarget,
   getSyncManagerStatus,
 } from './services/sync-manager'
 
