@@ -1,9 +1,5 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { usePlayerStore } from '@/stores/player'
-import { useDisplayTime } from '@/hooks/use-display-time'
-import { usePlayerControls } from '@/hooks/use-player-controls'
-import { useTranscriptDisplay } from '../transcript/use-transcript-display'
 import { TranscriptDisplay } from '../transcript'
 
 interface ExpandedPlayerContentProps {
@@ -21,17 +17,6 @@ export function ExpandedPlayerContent({
   isVideo,
 }: ExpandedPlayerContentProps) {
   const { t } = useTranslation()
-  const displayTime = useDisplayTime()
-  const { isPlaying } = usePlayerStore()
-  const { onSeek } = usePlayerControls()
-
-  // Get transcript data
-  const {
-    lines,
-    activeLineIndex,
-    primaryLanguage,
-    secondaryLanguage,
-  } = useTranscriptDisplay(displayTime)
 
   return (
     <main className="flex-1 flex min-h-0 overflow-hidden bg-muted/30">
@@ -56,17 +41,7 @@ export function ExpandedPlayerContent({
           {/* Transcript below video - centered with max width */}
           <div className="flex-1 min-h-0 border-t flex justify-center">
             <div className="w-full max-w-3xl">
-              <TranscriptDisplay
-                currentTime={displayTime}
-                isPlaying={isPlaying}
-                onLineClick={onSeek}
-                className="h-full"
-                lines={lines}
-                activeLineIndex={activeLineIndex}
-                primaryLanguage={primaryLanguage}
-                secondaryLanguage={secondaryLanguage}
-                showSecondary={!!secondaryLanguage}
-              />
+              <TranscriptDisplay className="h-full" />
             </div>
           </div>
         </div>
@@ -74,17 +49,7 @@ export function ExpandedPlayerContent({
         /* Audio mode: Centered transcript for optimal reading */
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-3xl">
-            <TranscriptDisplay
-              currentTime={displayTime}
-              isPlaying={isPlaying}
-              onLineClick={onSeek}
-              className="h-full"
-              lines={lines}
-              activeLineIndex={activeLineIndex}
-              primaryLanguage={primaryLanguage}
-              secondaryLanguage={secondaryLanguage}
-              showSecondary={!!secondaryLanguage}
-            />
+            <TranscriptDisplay className="h-full" />
           </div>
         </div>
       )}

@@ -89,12 +89,6 @@ export interface SelectedTranscripts {
 export interface TranscriptDisplayProps {
   /** CSS class name */
   className?: string
-  /** Current playback time in seconds */
-  currentTime: number
-  /** Whether media is currently playing */
-  isPlaying: boolean
-  /** Callback when a line is clicked */
-  onLineClick?: (startTimeSeconds: number) => void
   /** Display configuration */
   config?: Partial<TranscriptDisplayConfig>
   /** Transcript lines (if provided, component won't manage transcript state internally) */

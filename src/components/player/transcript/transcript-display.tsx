@@ -19,6 +19,7 @@ import { AIProvider } from '@/ai/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
 import { useDisplayTime } from '@/hooks/use-display-time'
+import { usePlayerControls } from '@/hooks/use-player-controls'
 import { useTranscriptDisplay } from './use-transcript-display'
 import { useRetranscribe } from '@/hooks/use-retranscribe'
 import { useEchoRegion } from './use-echo-region'
@@ -45,9 +46,6 @@ const log = createLogger({ name: 'TranscriptDisplay' })
 
 export function TranscriptDisplay({
   className,
-  currentTime: _currentTimeProp, // Use useDisplayTime instead for real-time updates
-  isPlaying,
-  onLineClick,
   config: configOverrides,
   // Optional props for external state management
   lines: externalLines,
@@ -60,9 +58,13 @@ export function TranscriptDisplay({
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const currentSession = usePlayerStore((state) => state.currentSession)
   const activateEchoMode = usePlayerStore((state) => state.activateEchoMode)
+  const isPlaying = usePlayerStore((state) => state.isPlaying)
 
   // Get real-time display time from the external store
   const currentTime = useDisplayTime()
+
+  // Get player controls for line click handling
+  const { onSeek } = usePlayerControls()
 
   // Merge config with defaults - memoized to prevent unnecessary re-renders
   const config: TranscriptDisplayConfig = useMemo(() => {
@@ -168,9 +170,9 @@ export function TranscriptDisplay({
         )
       }
 
-      onLineClick?.(line.startTimeSeconds)
+      onSeek(line.startTimeSeconds)
     },
-    [onLineClick, echoModeActive, activateEchoMode]
+    [onSeek, echoModeActive, activateEchoMode]
   )
 
   // Loading state - only show if managing state internally
