@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from "./client"
-import type { Video, VideoProvider } from "@/types/db"
+import type { Audio, AudioProvider } from "@/types/db"
 
 // ============================================================================
 // Types & Exports
@@ -13,8 +13,8 @@ import type { Video, VideoProvider } from "@/types/db"
 /**
  * Parameters for fetching videos list
  */
-export interface VideosListParams {
-  provider?: VideoProvider
+export interface AudiosListParams {
+  provider?: AudioProvider
   page?: number
   limit?: number
 }
@@ -23,41 +23,56 @@ export interface VideosListParams {
 // Constants
 // ============================================================================
 
-const VIDEOS_API_PATH = '/api/v1/mine/videos'
+const AUDIOS_API_PATH = '/api/v1/mine/audios'
 
 // ============================================================================
 // Client-side API Methods
 // ============================================================================
 
-export const videoApi = {
+export const audioApi = {
   /**
-   * Get list of videos
+   * Get list of audios
    *
    * Client-side only. Response is automatically converted from snake_case to camelCase
    * by the API client interceptor.
    *
    * @param params - Query parameters for filtering and pagination
-   * @param params.provider - Filter by video provider (youtube, netflix)
+   * @param params.provider - Filter by audio provider (user)
    * @param params.page - Page number for pagination
    * @param params.limit - Number of items per page
-   * @returns Array of videos in camelCase format
+   * @returns Array of audios in camelCase format
    */
-  videos: async (params: VideosListParams = {}) => {
-    return apiClient.get<Video[]>(VIDEOS_API_PATH, {
+  audios: async (params: AudiosListParams = {}) => {
+    return apiClient.get<Audio[]>(AUDIOS_API_PATH, {
       params,
     })
   },
 
   /**
-   * Get a single video by ID
+   * Get a single audio by ID
    *
    * Client-side only. Response is automatically converted from snake_case to camelCase
    * by the API client interceptor.
    *
-   * @param id - Video ID (UUID v5)
+   * @param id - Audio ID (UUID v5)
    * @returns Video details in camelCase format
    */
-  video: async (id: string) => {
-    return apiClient.get<Video>(`${VIDEOS_API_PATH}/${id}`)
+  audio: async (id: string) => {
+    return apiClient.get<Audio>(`${AUDIOS_API_PATH}/${id}`)
+  },
+
+  /**
+   * Upload an audio
+   *
+   * Client-side only. Response is automatically converted from snake_case to camelCase
+   * by the API client interceptor.
+   *
+   * @param audio - Audio to upload
+   * @returns Audio details in camelCase format
+   */
+  uploadAudio: async (audio: Audio) => {
+    return apiClient.post<Audio>(AUDIOS_API_PATH, {
+      audio,
+    })
   },
 }
