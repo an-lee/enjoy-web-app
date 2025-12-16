@@ -154,10 +154,9 @@ export function TranscriptDisplay({
       .join(' ')
   }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, lines])
 
-  // Recording state - will be managed by ShadowReadingPanel
-  const [isRecording, setIsRecording] = useState(false)
+  // Recording state - managed by ShadowRecording component
   const handleRecord = useCallback(() => {
-    setIsRecording((prev) => !prev)
+    // Recording state is now managed internally by ShadowRecording component
   }, [])
 
   // Retranscribe functionality - only used if managing state internally
@@ -374,7 +373,6 @@ export function TranscriptDisplay({
           echoEndTime={echoRegionTimeRange?.endTime}
           referenceText={referenceText}
           onRecord={echoModeActive ? handleRecord : undefined}
-          isRecording={isRecording}
         />
       </ScrollArea>
     </div>

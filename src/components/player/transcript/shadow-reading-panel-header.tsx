@@ -25,7 +25,7 @@ export function ShadowReadingPanelHeader({ duration }: ShadowReadingPanelHeaderP
       </div>
       <div className="flex items-center gap-1.5 text-sm text-(--highlight-active-foreground)/70">
         <Icon icon="lucide:clock" className="w-4 h-4" />
-        <span className="tabular-nums font-medium">{formatTime(duration)}</span>
+        <span className="tabular-nums font-medium">{formatTime(duration/1000)}</span>
       </div>
     </div>
   )

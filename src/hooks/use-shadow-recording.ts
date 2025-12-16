@@ -37,6 +37,7 @@ interface UseShadowRecordingReturn {
   volume: number // 0-100, for visualization
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
+  cancelRecording: () => void
   error: string | null
 }
 
@@ -136,6 +137,40 @@ export function useShadowRecording({
     }
   }, [])
 
+  // Helper function to cleanup recording resources
+  const cleanupRecording = useCallback(() => {
+    // Stop timers
+    if (durationTimerRef.current) {
+      clearInterval(durationTimerRef.current)
+      durationTimerRef.current = null
+    }
+    if (volumeTimerRef.current) {
+      clearInterval(volumeTimerRef.current)
+      volumeTimerRef.current = null
+    }
+
+    // Stop media stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+    }
+
+    // Close recorder
+    if (recorderRef.current) {
+      try {
+        recorderRef.current.close()
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
+      recorderRef.current = null
+    }
+
+    // Reset state
+    setIsRecording(false)
+    setVolume(0)
+    setRecordingDuration(0)
+  }, [])
+
   const stopRecording = useCallback(async () => {
     if (!recorderRef.current || !isRecording) {
       return
@@ -213,12 +248,25 @@ export function useShadowRecording({
     }
   }, [isRecording, startTime, endTime, referenceText, language, targetType, targetId])
 
+  const cancelRecording = useCallback(() => {
+    if (!isRecording) {
+      return
+    }
+
+    log.debug('Recording cancelled by user')
+
+    // Directly cleanup without calling stop() to avoid saving
+    // We just close the recorder and stop the stream
+    cleanupRecording()
+  }, [isRecording, cleanupRecording])
+
   return {
     isRecording,
     recordingDuration,
     volume,
     startRecording,
     stopRecording,
+    cancelRecording,
     error,
   }
 }

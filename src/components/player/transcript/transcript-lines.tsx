@@ -27,7 +27,6 @@ interface TranscriptLinesProps {
   echoEndTime?: number
   referenceText?: string
   onRecord?: () => void
-  isRecording?: boolean
 }
 
 function TranscriptLinesComponent({
@@ -45,7 +44,6 @@ function TranscriptLinesComponent({
   echoEndTime,
   referenceText,
   onRecord,
-  isRecording,
 }: TranscriptLinesProps) {
   const { t } = useTranslation()
 
@@ -128,7 +126,6 @@ function TranscriptLinesComponent({
                     endTime={echoEndTime}
                     referenceText={referenceText || ''}
                     onRecord={onRecord}
-                    isRecording={isRecording ?? false}
                   />
                 )}
               </>
