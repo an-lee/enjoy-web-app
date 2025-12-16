@@ -7,6 +7,7 @@
 
 import { memo } from 'react'
 import { cn, formatTime } from '@/lib/utils'
+import { useDisplayTime } from '@/hooks/use-display-time'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLineItemProps {
@@ -16,6 +17,8 @@ interface TranscriptLineItemProps {
   isInEchoRegion: boolean
   isEchoStart?: boolean
   isEchoEnd?: boolean
+  /** Currently active line index (for computing isActive) */
+  activeLineIndex: number
   /** Optional action area content (rendered on the right side of the header) */
   actionArea?: React.ReactNode
 }
@@ -27,10 +30,19 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   isInEchoRegion,
   isEchoStart,
   isEchoEnd,
+  activeLineIndex,
   actionArea,
 }: TranscriptLineItemProps) {
+  // Get current time directly from hook (no prop drilling needed)
+  const currentTimeSeconds = useDisplayTime()
+
+  // Compute time-dependent state locally for better performance
+  // This avoids recreating the entire lines array on every time update
+  const isActive = line.index === activeLineIndex
+  const isPast = currentTimeSeconds >= line.endTimeSeconds
+
   // Disable click interaction when active or in echo region to allow text selection
-  const shouldAllowTextSelection = line.isActive || isInEchoRegion
+  const shouldAllowTextSelection = isActive || isInEchoRegion
   const isInteractive = typeof onClick === 'function' && !shouldAllowTextSelection
 
   const containerClassName = cn(
@@ -51,7 +63,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
       // Remove hover effect for middle lines to maintain unified appearance
       'shadow-sm',
       // Active line inside echo region should stand out from other echo lines
-      line.isActive && [
+      isActive && [
         'border-l-highlight-active-border',
         'font-bold',
         'shadow-md',
@@ -62,14 +74,14 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
       'rounded-xl',
       'hover:bg-accent/50',
       // Active state - highlighted with scale and glow
-      line.isActive && [
+      isActive && [
         'bg-primary/10 scale-[1.02]',
         'shadow-[0_0_30px_rgba(var(--primary),0.12)]',
       ],
       // Past state - dimmed
-      line.isPast && !line.isActive && 'opacity-50',
+      isPast && !isActive && 'opacity-50',
       // Future state - slightly dimmed
-      !line.isPast && !line.isActive && 'opacity-70 hover:opacity-100',
+      !isPast && !isActive && 'opacity-70 hover:opacity-100',
     ]
   )
 
@@ -82,8 +94,8 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
           className={cn(
             'text-xs font-mono tabular-nums transition-colors duration-300',
             isInEchoRegion && 'text-(--highlight-active-foreground)/70',
-            !isInEchoRegion && line.isActive && 'text-primary/80',
-            !isInEchoRegion && !line.isActive && 'text-muted-foreground/70'
+            !isInEchoRegion && isActive && 'text-primary/80',
+            !isInEchoRegion && !isActive && 'text-muted-foreground/70'
           )}
         >
           {formatTime(line.startTimeSeconds)}
@@ -102,8 +114,8 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
         className={cn(
           'text-base md:text-lg leading-relaxed transition-all duration-300',
           isInEchoRegion && 'text-highlight-active-foreground',
-          !isInEchoRegion && line.isActive && 'text-primary font-medium text-lg md:text-xl',
-          !isInEchoRegion && !line.isActive && 'text-foreground'
+          !isInEchoRegion && isActive && 'text-primary font-medium text-lg md:text-xl',
+          !isInEchoRegion && !isActive && 'text-foreground'
         )}
       >
         {line.primary.text}
@@ -115,8 +127,8 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
           className={cn(
             'mt-1.5 text-sm leading-relaxed transition-all duration-300',
             isInEchoRegion && 'text-(--highlight-active-foreground)/80',
-            !isInEchoRegion && line.isActive && 'text-primary/70',
-            !isInEchoRegion && !line.isActive && 'text-muted-foreground'
+            !isInEchoRegion && isActive && 'text-primary/70',
+            !isInEchoRegion && !isActive && 'text-muted-foreground'
           )}
         >
           {line.secondary.text}

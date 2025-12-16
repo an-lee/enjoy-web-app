@@ -16,12 +16,15 @@ interface TranscriptLinesProps {
   lines: TranscriptLineState[]
   showSecondary: boolean
   onLineClick: (line: TranscriptLineState) => void
+  /** Currently active line index (for computing isActive) */
+  activeLineIndex: number
 }
 
 function TranscriptLinesComponent({
   lines,
   showSecondary,
   onLineClick,
+  activeLineIndex,
 }: TranscriptLinesProps) {
   // Echo region management
   const {
@@ -86,10 +89,11 @@ function TranscriptLinesComponent({
             <TranscriptLineItem
               line={line}
               showSecondary={showSecondary}
+              activeLineIndex={activeLineIndex}
               onClick={
-                // Disable click-to-seek when in echo region or when line is active
-                // to allow reliable text selection.
-                isInEchoRegion || line.isActive ? undefined : () => onLineClick(line)
+                // Disable click-to-seek when in echo region
+                // isActive check will be done inside TranscriptLineItem
+                isInEchoRegion ? undefined : () => onLineClick(line)
               }
               isInEchoRegion={isInEchoRegion}
               isEchoStart={isEchoStart}

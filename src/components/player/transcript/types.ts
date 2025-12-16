@@ -42,23 +42,31 @@ export const DEFAULT_TRANSCRIPT_CONFIG: TranscriptDisplayConfig = {
 // ============================================================================
 
 /**
- * State for a single transcript line
+ * Static data for a transcript line (does not depend on current time)
+ * This is the base data structure that doesn't change with playback time
  */
-export interface TranscriptLineState {
+export interface TranscriptLineData {
   /** Line index in the transcript */
   index: number
   /** Primary transcript line data */
   primary: TranscriptLine
   /** Secondary transcript line data (if available and aligned) */
   secondary?: TranscriptLine
-  /** Whether this line is currently active */
-  isActive: boolean
-  /** Whether this line has been played */
-  isPast: boolean
   /** Start time in seconds (converted from milliseconds) */
   startTimeSeconds: number
   /** End time in seconds (converted from milliseconds) */
   endTimeSeconds: number
+}
+
+/**
+ * State for a single transcript line (includes time-dependent state)
+ * Note: isActive and isPast are computed in components for better performance
+ */
+export interface TranscriptLineState extends TranscriptLineData {
+  /** Whether this line is currently active */
+  isActive: boolean
+  /** Whether this line has been played */
+  isPast: boolean
 }
 
 // ============================================================================

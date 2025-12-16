@@ -175,7 +175,9 @@ export function useTranscriptDisplay(
     return alignTranscripts(transcripts.primary, transcripts.secondary)
   }, [transcripts.primary, transcripts.secondary])
 
-  // Process lines with state
+  // Process lines with static data only (no time-dependent state)
+  // Time-dependent state (isActive, isPast) will be computed in components
+  // This avoids recreating the entire array on every time update (4-10 times per second)
   const lines: TranscriptLineState[] = useMemo(() => {
     if (!transcripts.primary) return []
 
@@ -196,26 +198,20 @@ export function useTranscriptDisplay(
         index,
         primary: primaryLine,
         secondary: secondaryLine,
-        isActive: false, // Will be updated below
-        isPast: currentTimeSeconds >= endTimeSeconds,
+        // Time-dependent state will be computed in components for better performance
+        // This prevents recreating the entire array on every time update
+        isActive: false,
+        isPast: false,
         startTimeSeconds,
         endTimeSeconds,
       }
     })
-  }, [transcripts.primary, transcripts.secondary, alignment, currentTimeSeconds])
+  }, [transcripts.primary, transcripts.secondary, alignment])
 
-  // Find active line index
+  // Find active line index (still needed for auto-scroll and other features)
   const activeLineIndex = useMemo(() => {
     return findActiveLineIndex(lines, currentTimeSeconds)
   }, [lines, currentTimeSeconds])
-
-  // Update isActive state
-  const linesWithActiveState = useMemo(() => {
-    return lines.map((line, index) => ({
-      ...line,
-      isActive: index === activeLineIndex,
-    }))
-  }, [lines, activeLineIndex])
 
   // Language setters
   const setPrimaryLanguage = useCallback((language: string) => {
@@ -227,7 +223,7 @@ export function useTranscriptDisplay(
   }, [])
 
   return {
-    lines: linesWithActiveState,
+    lines,
     activeLineIndex,
     transcripts,
     availableTranscripts,
