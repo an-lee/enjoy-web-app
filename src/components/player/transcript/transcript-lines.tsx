@@ -97,9 +97,9 @@ export function TranscriptLines({
               line={line}
               showSecondary={showSecondary}
               onClick={
-                // In echo mode, we disable click-to-seek inside the echo region
+                // Disable click-to-seek when in echo region or when line is active
                 // to allow reliable text selection.
-                isInEchoRegion ? undefined : () => onLineClick(line)
+                isInEchoRegion || line.isActive ? undefined : () => onLineClick(line)
               }
               isInEchoRegion={isInEchoRegion}
               isEchoStart={isEchoStart}

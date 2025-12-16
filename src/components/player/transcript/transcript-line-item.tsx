@@ -29,12 +29,14 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   isEchoEnd,
   actionArea,
 }: TranscriptLineItemProps) {
-  const isInteractive = typeof onClick === 'function'
+  // Disable click interaction when active or in echo region to allow text selection
+  const shouldAllowTextSelection = line.isActive || isInEchoRegion
+  const isInteractive = typeof onClick === 'function' && !shouldAllowTextSelection
 
   const containerClassName = cn(
     'group w-full text-left px-4 py-2.5 transition-all duration-300',
     isInteractive && 'cursor-pointer',
-    !isInteractive && 'cursor-text select-text',
+    (!isInteractive || shouldAllowTextSelection) && 'cursor-text select-text',
     isInteractive &&
       'focus-visible:outline-none focus-visible:ring-none',
     // Echo region - warm orange tone with subtle styling
