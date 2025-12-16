@@ -126,27 +126,6 @@ export function ExpandedPlayer({
     [currentSession, onSeek]
   )
 
-  // Handle previous segment (5 seconds back for now, will be sentence-based later)
-  const handlePrevSegment = useCallback(() => {
-    if (!currentSession) return
-    const newTime = Math.max(0, displayTime - 5)
-    onSeek?.(newTime)
-  }, [currentSession, displayTime, onSeek])
-
-  // Handle next segment (5 seconds forward for now, will be sentence-based later)
-  const handleNextSegment = useCallback(() => {
-    if (!currentSession) return
-    const newTime = Math.min(currentSession.duration, displayTime + 5)
-    onSeek?.(newTime)
-  }, [currentSession, displayTime, onSeek])
-
-  // Handle replay current segment (go back 3 seconds for now, will be sentence-based later)
-  const handleReplaySegment = useCallback(() => {
-    if (!currentSession) return
-    const newTime = Math.max(0, displayTime - 3)
-    onSeek?.(newTime)
-  }, [currentSession, displayTime, onSeek])
-
   // Placeholder handlers for future features
   const handleDictationMode = () => {
     // TODO: Implement dictation mode
@@ -250,9 +229,6 @@ export function ExpandedPlayer({
           echoModeActive={echoModeActive}
           onSeek={handleSeek}
           onTogglePlay={onTogglePlay || (() => {})}
-          onPrevSegment={handlePrevSegment}
-          onNextSegment={handleNextSegment}
-          onReplaySegment={handleReplaySegment}
           onDictationMode={handleDictationMode}
           onEchoMode={handleEchoMode}
           onVolumeChange={setVolume}

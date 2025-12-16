@@ -23,9 +23,6 @@ interface ExpandedPlayerControlsProps {
   echoModeActive: boolean
   onSeek: (values: number[]) => void
   onTogglePlay: () => void
-  onPrevSegment: () => void
-  onNextSegment: () => void
-  onReplaySegment: () => void
   onDictationMode: () => void
   onEchoMode: () => void
   onVolumeChange: (volume: number) => void
@@ -42,9 +39,6 @@ export function ExpandedPlayerControls({
   echoModeActive,
   onSeek,
   onTogglePlay,
-  onPrevSegment,
-  onNextSegment,
-  onReplaySegment,
   onDictationMode,
   onEchoMode,
   onVolumeChange,
@@ -54,9 +48,6 @@ export function ExpandedPlayerControls({
 
   // Get hotkey bindings
   const togglePlayKey = useHotkeyBinding('player.togglePlay')
-  const prevSegmentKey = useHotkeyBinding('player.prevSegment')
-  const nextSegmentKey = useHotkeyBinding('player.nextSegment')
-  const replaySegmentKey = useHotkeyBinding('player.replaySegment')
   const echoModeKey = useHotkeyBinding('player.toggleEchoMode')
   const dictationKey = useHotkeyBinding('player.toggleDictationMode')
 
@@ -103,60 +94,6 @@ export function ExpandedPlayerControls({
               <TooltipContent side="top" className="flex items-center gap-2">
                 <span>{t('hotkeys.togglePlay')}</span>
                 {togglePlayKey && formatHotkeyAsKbd(togglePlayKey)}
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Previous segment */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={onPrevSegment}
-                >
-                  <Icon icon="lucide:skip-back" className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="flex items-center gap-2">
-                <span>{t('player.prevSegment')}</span>
-                {prevSegmentKey && formatHotkeyAsKbd(prevSegmentKey)}
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Next segment */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={onNextSegment}
-                >
-                  <Icon icon="lucide:skip-forward" className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="flex items-center gap-2">
-                <span>{t('player.nextSegment')}</span>
-                {nextSegmentKey && formatHotkeyAsKbd(nextSegmentKey)}
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Replay current segment */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={onReplaySegment}
-                >
-                  <Icon icon="lucide:repeat-1" className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="flex items-center gap-2">
-                <span>{t('player.replaySegment')}</span>
-                {replaySegmentKey && formatHotkeyAsKbd(replaySegmentKey)}
               </TooltipContent>
             </Tooltip>
           </div>

@@ -19,9 +19,6 @@ interface PlayerHotkeysProps {
 export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
   const displayTime = useDisplayTime()
   const {
-    currentSession,
-    volume,
-    setVolume,
     collapse,
     expand,
     mode,
@@ -31,8 +28,6 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     playbackRate,
     setPlaybackRate,
   } = usePlayerStore()
-
-  const duration = currentSession?.duration ?? 0
 
   // Get transcript data for line navigation
   const { lines, activeLineIndex } = useTranscriptDisplay(displayTime)
@@ -55,58 +50,6 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
     { deps: [onTogglePlay], preventDefault: true }
   )
 
-  // Seek backward 5s
-  useAppHotkey(
-    'player.seekBackward',
-    (e) => {
-      e.preventDefault()
-      const newTime = Math.max(0, displayTime - 5)
-      onSeek(newTime)
-    },
-    { deps: [displayTime, onSeek], preventDefault: true }
-  )
-
-  // Seek forward 5s
-  useAppHotkey(
-    'player.seekForward',
-    (e) => {
-      e.preventDefault()
-      const newTime = Math.min(duration, displayTime + 5)
-      onSeek(newTime)
-    },
-    { deps: [displayTime, duration, onSeek], preventDefault: true }
-  )
-
-  // Volume up
-  useAppHotkey(
-    'player.volumeUp',
-    (e) => {
-      e.preventDefault()
-      setVolume(Math.min(1, volume + 0.1))
-    },
-    { deps: [volume, setVolume], preventDefault: true }
-  )
-
-  // Volume down
-  useAppHotkey(
-    'player.volumeDown',
-    (e) => {
-      e.preventDefault()
-      setVolume(Math.max(0, volume - 0.1))
-    },
-    { deps: [volume, setVolume], preventDefault: true }
-  )
-
-  // Toggle mute
-  useAppHotkey(
-    'player.toggleMute',
-    (e) => {
-      e.preventDefault()
-      setVolume(volume > 0 ? 0 : 1)
-    },
-    { deps: [volume, setVolume], preventDefault: true }
-  )
-
   // Toggle player expand/collapse
   useAppHotkey(
     'player.toggleExpand',
@@ -119,17 +62,6 @@ export function PlayerHotkeys({ onTogglePlay, onSeek }: PlayerHotkeysProps) {
       }
     },
     { deps: [mode, collapse, expand], preventDefault: true }
-  )
-
-  // Replay segment (go back 3 seconds)
-  useAppHotkey(
-    'player.replaySegment',
-    (e) => {
-      e.preventDefault()
-      const newTime = Math.max(0, displayTime - 3)
-      onSeek(newTime)
-    },
-    { deps: [displayTime, onSeek], preventDefault: true }
   )
 
   // Play previous line (A)
