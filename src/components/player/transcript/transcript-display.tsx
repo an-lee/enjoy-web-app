@@ -47,12 +47,6 @@ const log = createLogger({ name: 'TranscriptDisplay' })
 export function TranscriptDisplay({
   className,
   config: configOverrides,
-  // Optional props for external state management
-  lines: externalLines,
-  activeLineIndex: externalActiveLineIndex,
-  primaryLanguage: externalPrimaryLanguage,
-  secondaryLanguage: externalSecondaryLanguage,
-  showSecondary: externalShowSecondary,
 }: TranscriptDisplayProps) {
   const { t } = useTranslation()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -74,14 +68,19 @@ export function TranscriptDisplay({
     }
   }, [configOverrides])
 
-  // Use external props if provided, otherwise use internal state
-  const useExternalState = externalLines !== undefined
-  const internalTranscriptState = useTranscriptDisplay(currentTime)
+  // Get transcript data from hook
+  const {
+    lines,
+    activeLineIndex,
+    transcripts,
+    availableTranscripts,
+    primaryLanguage,
+    secondaryLanguage,
+    syncState,
+  } = useTranscriptDisplay(currentTime)
 
-  const lines = useExternalState ? externalLines! : internalTranscriptState.lines
-  const activeLineIndex = useExternalState
-    ? externalActiveLineIndex ?? -1
-    : internalTranscriptState.activeLineIndex
+  // Calculate showSecondary based on config and secondary language
+  const showSecondary = config.showSecondary && !!secondaryLanguage
 
   // Track previous activeLineIndex to only log when it changes
   const prevActiveLineIndexRef = useRef<number>(activeLineIndex)
@@ -96,24 +95,6 @@ export function TranscriptDisplay({
       prevActiveLineIndexRef.current = activeLineIndex
     }
   }, [activeLineIndex, isPlaying, currentTime])
-  const transcripts = useExternalState
-    ? { primary: null, secondary: null, isLoading: false, error: null }
-    : internalTranscriptState.transcripts
-  const availableTranscripts = useExternalState
-    ? []
-    : internalTranscriptState.availableTranscripts
-  const primaryLanguage = useExternalState
-    ? externalPrimaryLanguage ?? null
-    : internalTranscriptState.primaryLanguage
-  const secondaryLanguage = useExternalState
-    ? externalSecondaryLanguage ?? null
-    : internalTranscriptState.secondaryLanguage
-  const showSecondary = useExternalState
-    ? externalShowSecondary ?? false
-    : config.showSecondary && !!secondaryLanguage
-  const syncState = useExternalState
-    ? { isSyncing: false, hasSynced: false, error: null, syncTranscripts: async () => {} }
-    : internalTranscriptState.syncState
 
   // Echo region management
   const {
@@ -175,8 +156,8 @@ export function TranscriptDisplay({
     [onSeek, echoModeActive, activateEchoMode]
   )
 
-  // Loading state - only show if managing state internally
-  if (!useExternalState && transcripts.isLoading) {
+  // Loading state
+  if (transcripts.isLoading) {
     return (
       <div
         className={cn(
@@ -195,8 +176,8 @@ export function TranscriptDisplay({
     )
   }
 
-  // Error state - only show if managing state internally
-  if (!useExternalState && transcripts.error) {
+  // Error state
+  if (transcripts.error) {
     return (
       <div
         className={cn(
@@ -213,8 +194,8 @@ export function TranscriptDisplay({
     )
   }
 
-  // Empty state - only show if managing state internally
-  if (!useExternalState && availableTranscripts.length === 0) {
+  // Empty state
+  if (availableTranscripts.length === 0) {
     return (
       <div
         className={cn(
@@ -312,8 +293,8 @@ export function TranscriptDisplay({
   return (
     <div className={cn('flex flex-col h-full', className)}>
 
-      {/* Progress indicator for local model - only if managing state internally */}
-      {!useExternalState && isTranscribing && asrConfig.provider === AIProvider.LOCAL && progressPercent !== null && (
+      {/* Progress indicator for local model */}
+      {isTranscribing && asrConfig.provider === AIProvider.LOCAL && progressPercent !== null && (
         <div className="shrink-0 px-4 py-2 border-b bg-background/50">
           <div className="flex items-center gap-2 mb-1">
             <Icon icon="lucide:activity" className="w-3 h-3 text-primary" />
@@ -326,15 +307,13 @@ export function TranscriptDisplay({
         </div>
       )}
 
-      {/* Confirmation Dialog - only if managing state internally */}
-      {!useExternalState && (
-        <RetranscribeDialog
-          open={showConfirmDialog}
-          onOpenChange={setShowConfirmDialog}
-          onConfirm={handleConfirmRetranscribe}
-          mediaDuration={mediaDuration}
-        />
-      )}
+      {/* Confirmation Dialog */}
+      <RetranscribeDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        onConfirm={handleConfirmRetranscribe}
+        mediaDuration={mediaDuration}
+      />
 
       {/* Transcript lines */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
