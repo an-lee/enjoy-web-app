@@ -427,8 +427,10 @@
       "status": {
         "title": "Upload Status",
         "description": "Local changes waiting to be uploaded",
-        "pending": "Pending",
-        "failed": "Failed",
+        "pendingInQueue": "Pending in Queue",
+        "failedInQueue": "Failed in Queue",
+        "localNotInQueue": "Local (Not in Queue)",
+        "total": "Total",
         "upToDate": "All changes are synced"
       },
       "actions": {

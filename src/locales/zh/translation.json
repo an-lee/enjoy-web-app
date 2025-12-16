@@ -431,8 +431,10 @@
       "status": {
         "title": "上传状态",
         "description": "等待上传的本地更改",
-        "pending": "待处理",
-        "failed": "失败",
+        "pendingInQueue": "队列中待处理",
+        "failedInQueue": "队列中失败",
+        "localNotInQueue": "本地（未入队）",
+        "total": "总计",
         "upToDate": "所有更改已同步"
       },
       "actions": {

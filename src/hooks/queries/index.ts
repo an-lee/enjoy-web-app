@@ -108,6 +108,7 @@ export {
   useFailedSyncQueue,
   useLastSyncTimes,
   useSyncStates,
+  useUploadStats,
   // Mutation hooks
   useTriggerSync,
   useDownloadSync,

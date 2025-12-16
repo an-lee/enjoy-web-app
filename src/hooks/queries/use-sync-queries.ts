@@ -13,6 +13,7 @@ import {
   downloadAudios,
   downloadVideos,
   processSyncQueue,
+  getUploadStats,
   type SyncOptions,
   type SyncResult,
 } from '@/db'
@@ -29,6 +30,7 @@ export const syncQueryKeys = {
   failed: () => [...syncQueryKeys.queue(), 'failed'] as const,
   lastSync: () => [...syncQueryKeys.all, 'lastSync'] as const,
   states: () => [...syncQueryKeys.all, 'states'] as const,
+  uploadStats: () => [...syncQueryKeys.all, 'uploadStats'] as const,
 }
 
 // ============================================================================
@@ -101,6 +103,17 @@ export function useSyncStates() {
   return useQuery({
     queryKey: syncQueryKeys.states(),
     queryFn: () => getAllSyncStates(),
+  })
+}
+
+/**
+ * Get upload statistics (includes queue items and local entities)
+ */
+export function useUploadStats() {
+  return useQuery({
+    queryKey: syncQueryKeys.uploadStats(),
+    queryFn: () => getUploadStats(),
+    refetchInterval: 10000, // Refetch every 10 seconds
   })
 }
 

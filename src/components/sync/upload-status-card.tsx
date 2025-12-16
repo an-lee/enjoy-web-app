@@ -1,23 +1,17 @@
 /**
  * Upload Status Card - Shows upload sync status
+ * Includes items in sync queue and local entities not yet in queue
  */
 
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { usePendingSyncQueue, useFailedSyncQueue } from '@/hooks/queries/use-sync-queries'
-import { Loader2, Upload, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { useUploadStats } from '@/hooks/queries/use-sync-queries'
+import { Loader2, Upload, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
 
 export function UploadStatusCard() {
   const { t } = useTranslation()
-  const { data: pendingItems, isLoading: pendingLoading } = usePendingSyncQueue()
-  const { data: failedItems, isLoading: failedLoading } = useFailedSyncQueue()
-
-  const isLoading = pendingLoading || failedLoading
-  const pendingCount = pendingItems?.length || 0
-  const failedCount = failedItems?.filter(
-    (item) => item.entityType === 'audio' || item.entityType === 'video'
-  ).length || 0
+  const { data: stats, isLoading } = useUploadStats()
 
   if (isLoading) {
     return (
@@ -52,33 +46,58 @@ export function UploadStatusCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Pending Items */}
+        {/* Pending in Queue */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-blue-500" />
             <span className="text-sm font-medium">
-              {t('sync.upload.status.pending', { defaultValue: 'Pending' })}
+              {t('sync.upload.status.pendingInQueue', { defaultValue: 'Pending in Queue' })}
             </span>
           </div>
-          <Badge variant={pendingCount > 0 ? 'default' : 'secondary'}>
-            {pendingCount}
+          <Badge variant={(stats?.pendingInQueue || 0) > 0 ? 'default' : 'secondary'}>
+            {stats?.pendingInQueue || 0}
           </Badge>
         </div>
 
-        {/* Failed Items */}
+        {/* Failed in Queue */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-red-500" />
             <span className="text-sm font-medium">
-              {t('sync.upload.status.failed', { defaultValue: 'Failed' })}
+              {t('sync.upload.status.failedInQueue', { defaultValue: 'Failed in Queue' })}
             </span>
           </div>
-          <Badge variant={failedCount > 0 ? 'destructive' : 'secondary'}>
-            {failedCount}
+          <Badge variant={(stats?.failedInQueue || 0) > 0 ? 'destructive' : 'secondary'}>
+            {stats?.failedInQueue || 0}
           </Badge>
         </div>
 
-        {pendingCount === 0 && failedCount === 0 && (
+        {/* Local Not in Queue */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-medium">
+              {t('sync.upload.status.localNotInQueue', { defaultValue: 'Local (Not in Queue)' })}
+            </span>
+          </div>
+          <Badge variant={(stats?.localNotInQueue || 0) > 0 ? 'outline' : 'secondary'}>
+            {stats?.localNotInQueue || 0}
+          </Badge>
+        </div>
+
+        {/* Total */}
+        <div className="pt-2 border-t">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold">
+              {t('sync.upload.status.total', { defaultValue: 'Total' })}
+            </span>
+            <Badge variant={(stats?.total || 0) > 0 ? 'default' : 'secondary'}>
+              {stats?.total || 0}
+            </Badge>
+          </div>
+        </div>
+
+        {(stats?.total || 0) === 0 && (
           <p className="text-xs text-muted-foreground text-center pt-2">
             {t('sync.upload.status.upToDate', { defaultValue: 'All changes are synced' })}
           </p>
@@ -87,4 +106,5 @@ export function UploadStatusCard() {
     </Card>
   )
 }
+
 
