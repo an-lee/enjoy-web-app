@@ -60,6 +60,8 @@ export function useMediaElement({
     echoModeActive,
     echoStartTime,
     echoEndTime,
+    registerMediaControls,
+    unregisterMediaControls,
   } = usePlayerStore()
 
   const lastStoreUpdateRef = useRef(0)
@@ -260,6 +262,56 @@ export function useMediaElement({
     updateProgress(decision.timeSeconds)
     lastStoreUpdateRef.current = Date.now()
   }, [echoWindow, mediaRef, updateProgress])
+
+  // Store the latest echoWindow in a ref for use in registered controls
+  const echoWindowRef = useRef(echoWindow)
+  useEffect(() => {
+    echoWindowRef.current = echoWindow
+  }, [echoWindow])
+
+  // Register media controls to the store for use by other components (e.g., hotkeys)
+  useEffect(() => {
+    const controls = {
+      seek: (time: number) => {
+        const el = mediaRef.current
+        if (!el) return
+        const currentEchoWindow = echoWindowRef.current
+        const nextTime = currentEchoWindow
+          ? clampSeekTimeToEchoWindow(time, currentEchoWindow)
+          : time
+        el.currentTime = nextTime
+        setDisplayTime(nextTime)
+        updateProgress(nextTime)
+      },
+      play: async () => {
+        const el = mediaRef.current
+        if (!el) return
+        await el.play()
+        setPlaying(true)
+      },
+      pause: () => {
+        const el = mediaRef.current
+        if (!el) return
+        el.pause()
+        setPlaying(false)
+        updateProgress(el.currentTime)
+      },
+      getCurrentTime: () => {
+        return mediaRef.current?.currentTime ?? 0
+      },
+      isPaused: () => {
+        return mediaRef.current?.paused ?? true
+      },
+    }
+
+    registerMediaControls(controls)
+    log.debug('Media controls registered to store')
+
+    return () => {
+      unregisterMediaControls()
+      log.debug('Media controls unregistered from store')
+    }
+  }, [mediaRef, setPlaying, updateProgress, registerMediaControls, unregisterMediaControls])
 
   return {
     handleSeek,

@@ -112,6 +112,19 @@ interface PlayerState {
   echoEndTime: number
 
   // ============================================================================
+  // Media Controls (internal - registered by PlayerContainer)
+  // ============================================================================
+
+  /** Media control functions (internal use only) */
+  _mediaControls: {
+    seek: (time: number) => void
+    play: () => Promise<void>
+    pause: () => void
+    getCurrentTime: () => number
+    isPaused: () => boolean
+  } | null
+
+  // ============================================================================
   // Recording Controls (internal - registered by ShadowRecording component)
   // ============================================================================
 
@@ -190,6 +203,22 @@ interface PlayerState {
     startTime: number,
     endTime: number
   ) => void
+
+  // ============================================================================
+  // Media Controls Actions
+  // ============================================================================
+
+  /** Register media control functions */
+  registerMediaControls: (controls: {
+    seek: (time: number) => void
+    play: () => Promise<void>
+    pause: () => void
+    getCurrentTime: () => number
+    isPaused: () => boolean
+  }) => void
+
+  /** Unregister media control functions */
+  unregisterMediaControls: () => void
 
   // ============================================================================
   // Recording Actions
@@ -283,6 +312,15 @@ export const usePlayerStore = create<PlayerState>()(
       echoEndLineIndex: -1,
       echoStartTime: -1,
       echoEndTime: -1,
+
+      // Media controls (registered by PlayerContainer component)
+      _mediaControls: null as {
+        seek: (time: number) => void
+        play: () => Promise<void>
+        pause: () => void
+        getCurrentTime: () => number
+        isPaused: () => boolean
+      } | null,
 
       // Recording controls (registered by ShadowRecording component)
       _recordingControls: null as {
@@ -656,6 +694,17 @@ export const usePlayerStore = create<PlayerState>()(
             log.error('Failed to save echo region update to EchoSession:', error)
           }
         }
+      },
+
+      // Media Controls Actions
+      registerMediaControls: (controls) => {
+        set({ _mediaControls: controls })
+        log.debug('Media controls registered')
+      },
+
+      unregisterMediaControls: () => {
+        set({ _mediaControls: null })
+        log.debug('Media controls unregistered')
       },
 
       // Recording Actions

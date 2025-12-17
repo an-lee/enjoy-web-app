@@ -1,24 +1,9 @@
 import { useCallback } from 'react'
 import { usePlayerStore } from '@/stores/player'
-import { setDisplayTime } from '@/hooks/player/use-display-time'
 import { useTranscriptDisplay } from '@/hooks/player'
-import {
-  clampSeekTimeToEchoWindow,
-  normalizeEchoWindow,
-} from '@/components/player/echo/echo-utils'
 import { createLogger } from '@/lib/utils'
 
 const log = createLogger({ name: 'usePlayerControls' })
-
-/**
- * Find the media element in the DOM
- * This is a fallback when mediaRef is not available
- */
-function findMediaElement(): HTMLAudioElement | HTMLVideoElement | null {
-  // The media element is hidden in a div with class "hidden"
-  const hiddenDiv = document.querySelector('.hidden audio, .hidden video')
-  return hiddenDiv as HTMLAudioElement | HTMLVideoElement | null
-}
 
 /**
  * Unified hook for all player controls
@@ -30,72 +15,54 @@ function findMediaElement(): HTMLAudioElement | HTMLVideoElement | null {
  * - Echo mode toggle
  * - Dictation mode (placeholder)
  *
+ * This hook uses the registered media controls from the store,
+ * which are provided by the PlayerContainer component via useMediaElement.
+ *
  * This hook should be used by all player UI components to ensure
  * consistent behavior across mini and expanded player modes.
  */
 export function usePlayerControls() {
   const {
     currentSession,
-    setPlaying,
-    updateProgress,
     echoModeActive,
     echoStartTime,
-    echoEndTime,
     activateEchoMode,
     deactivateEchoMode,
+    _mediaControls,
   } = usePlayerStore()
   const { lines, activeLineIndex } = useTranscriptDisplay()
 
-  // Calculate echo window
-  const echoWindow = normalizeEchoWindow({
-    active: echoModeActive,
-    startTimeSeconds: echoStartTime,
-    endTimeSeconds: echoEndTime,
-    durationSeconds: currentSession?.duration,
-  })
-
   // Seek to a specific time (basic action)
+  // Uses registered media controls which handle echo window constraints
   const seek = useCallback(
     (time: number) => {
-      const el = findMediaElement()
-      if (!el) {
-        log.warn('Media element not found, cannot seek')
+      if (!_mediaControls) {
+        log.warn('Media controls not registered, cannot seek')
         return
       }
-
-      const nextTime = echoWindow ? clampSeekTimeToEchoWindow(time, echoWindow) : time
-      el.currentTime = nextTime
-      setDisplayTime(nextTime)
-      updateProgress(nextTime)
+      _mediaControls.seek(time)
     },
-    [echoWindow, updateProgress]
+    [_mediaControls]
   )
 
   // Toggle play/pause (basic action)
   const togglePlay = useCallback(() => {
-    const el = findMediaElement()
-    if (!el) {
-      log.warn('Media element not found, cannot toggle play')
+    if (!_mediaControls) {
+      log.warn('Media controls not registered, cannot toggle play')
       return
     }
 
-    log.debug('togglePlay', { paused: el.paused })
+    const isPaused = _mediaControls.isPaused()
+    log.debug('togglePlay', { isPaused })
 
-    if (el.paused) {
-      el.play()
-        .then(() => {
-          log.debug('play() resolved')
-          setPlaying(true)
-        })
-        .catch((err) => {
-          log.warn('play() blocked:', err)
-        })
+    if (isPaused) {
+      _mediaControls.play().catch((err) => {
+        log.warn('play() blocked:', err)
+      })
     } else {
-      el.pause()
-      setPlaying(false)
-      updateProgress(el.currentTime)
+      _mediaControls.pause()
     }
-  }, [setPlaying, updateProgress])
+  }, [_mediaControls])
 
   // Previous line handler
   const handlePrevLine = useCallback(() => {
@@ -139,21 +106,31 @@ export function usePlayerControls() {
 
   // Replay current line handler
   const handleReplayLine = useCallback(() => {
-    if (lines.length === 0 || activeLineIndex < 0) return
-
-    const currentLine = lines[activeLineIndex]
-    if (currentLine) {
-      if (echoModeActive) {
-        activateEchoMode(
-          activeLineIndex,
-          activeLineIndex,
-          currentLine.startTimeSeconds,
-          currentLine.endTimeSeconds
-        )
-      }
-      seek(currentLine.startTimeSeconds)
+    if (!_mediaControls) {
+      log.warn('Media controls not registered, cannot replay')
+      return
     }
-  }, [lines, activeLineIndex, seek, echoModeActive, activateEchoMode])
+
+    if (echoModeActive) {
+      // In echo mode: replay from the beginning of the current echo region
+      // Don't change the echo region
+      seek(echoStartTime)
+    } else {
+      // In non-echo mode: replay from the current line's start
+      if (lines.length === 0 || activeLineIndex < 0) return
+      const currentLine = lines[activeLineIndex]
+      if (currentLine) {
+        seek(currentLine.startTimeSeconds)
+      }
+    }
+
+    // Always start playing
+    if (_mediaControls.isPaused()) {
+      _mediaControls.play().catch((err) => {
+        log.warn('play() blocked:', err)
+      })
+    }
+  }, [lines, activeLineIndex, seek, echoModeActive, echoStartTime, _mediaControls])
 
   // Echo mode toggle handler
   const handleEchoMode = useCallback(() => {
