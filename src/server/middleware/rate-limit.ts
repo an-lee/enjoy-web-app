@@ -47,6 +47,7 @@ export function createRateLimitMiddleware(service: ServiceType) {
 		if (!rateLimit.allowed) {
 			throw new RateLimitError(
 				`You have reached your daily limit of ${rateLimit.limit} requests for ${service}. Please try again tomorrow.`,
+				service,
 				rateLimit.limit,
 				rateLimit.count,
 				rateLimit.resetAt

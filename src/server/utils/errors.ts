@@ -49,10 +49,14 @@ export function handleError(c: Context, error: unknown, defaultMessage = 'Intern
 	if (error instanceof RateLimitError) {
 		return c.json(
 			{
-				...createErrorResponse('Rate limit exceeded', error.message, 'RATE_LIMIT_EXCEEDED'),
-				limit: error.limit,
-				count: error.count,
-				resetAt: new Date(error.resetAt).toISOString(),
+				message: 'Rate limit exceeded',
+				limitInfo: {
+					label: error.label,
+					used: error.used,
+					limit: error.limit,
+					resetsAt: new Date(error.resetAt).toISOString(),
+					window: 'daily',
+				},
 			},
 			429
 		)
@@ -77,12 +81,33 @@ export function handleError(c: Context, error: unknown, defaultMessage = 'Intern
 }
 
 /**
+ * Service type to human-readable label mapping
+ */
+const SERVICE_LABELS: Record<string, string> = {
+	translation: 'Daily translations',
+	dictionary: 'Daily dictionary lookups',
+	asr: 'Daily speech recognitions',
+	tts: 'Daily text-to-speech',
+	assessment: 'Daily assessments',
+}
+
+/**
  * Custom error classes
  */
 export class RateLimitError extends Error {
-	constructor(message: string, public readonly limit: number, public readonly count: number, public readonly resetAt: number) {
+	constructor(
+		message: string,
+		public readonly service: string,
+		public readonly limit: number,
+		public readonly used: number,
+		public readonly resetAt: number
+	) {
 		super(message)
 		this.name = 'RateLimitError'
+	}
+
+	get label(): string {
+		return SERVICE_LABELS[this.service] || `Daily ${this.service}`
 	}
 }
 
