@@ -374,6 +374,7 @@
     "toggleDictationMode": "切换听写模式",
     "toggleRecording": "开始/完成录音",
     "toggleAssessment": "显示/隐藏发音评估",
+    "playRecording": "播放/暂停录音",
     "slowDown": "减慢播放速度",
     "speedUp": "加快播放速度",
     "expandEchoBackward": "向后扩展Echo区域",

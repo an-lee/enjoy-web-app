@@ -374,6 +374,7 @@
     "toggleDictationMode": "ディクテーションモードを切り替え",
     "toggleRecording": "録音を開始/終了",
     "toggleAssessment": "発音評価を表示/非表示",
+    "playRecording": "録音を再生/一時停止",
     "slowDown": "再生速度を遅くする",
     "speedUp": "再生速度を速くする",
     "expandEchoBackward": "Echo領域を後方に拡張",

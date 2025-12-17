@@ -122,6 +122,12 @@ interface PlayerState {
     isRecording: () => boolean
   } | null
 
+  /** Recording player control functions (internal use only) */
+  _recordingPlayerControls: {
+    togglePlayback: () => void
+    isPlaying: () => boolean
+  } | null
+
   // ============================================================================
   // Actions
   // ============================================================================
@@ -201,6 +207,22 @@ interface PlayerState {
 
   /** Toggle recording (start/stop) */
   toggleRecording: () => Promise<void>
+
+  // ============================================================================
+  // Recording Player Actions
+  // ============================================================================
+
+  /** Register recording player control functions */
+  registerRecordingPlayerControls: (controls: {
+    togglePlayback: () => void
+    isPlaying: () => boolean
+  }) => void
+
+  /** Unregister recording player control functions */
+  unregisterRecordingPlayerControls: () => void
+
+  /** Toggle recording playback (play/pause) */
+  toggleRecordingPlayback: () => void
 }
 
 // ============================================================================
@@ -267,6 +289,12 @@ export const usePlayerStore = create<PlayerState>()(
         startRecording: () => Promise<void>
         stopRecording: () => Promise<void>
         isRecording: () => boolean
+      } | null,
+
+      // Recording player controls (registered by RecordingPlayer component)
+      _recordingPlayerControls: null as {
+        togglePlayback: () => void
+        isPlaying: () => boolean
       } | null,
 
       // Actions
@@ -656,6 +684,27 @@ export const usePlayerStore = create<PlayerState>()(
           await _recordingControls.startRecording()
           log.debug('Recording started via shortcut')
         }
+      },
+
+      // Recording Player Actions
+      registerRecordingPlayerControls: (controls) => {
+        set({ _recordingPlayerControls: controls })
+        log.debug('Recording player controls registered')
+      },
+
+      unregisterRecordingPlayerControls: () => {
+        set({ _recordingPlayerControls: null })
+        log.debug('Recording player controls unregistered')
+      },
+
+      toggleRecordingPlayback: () => {
+        const { _recordingPlayerControls, echoModeActive } = get()
+        if (!_recordingPlayerControls || !echoModeActive) {
+          log.debug('Cannot toggle recording playback: no player controls or echo mode not active')
+          return
+        }
+        _recordingPlayerControls.togglePlayback()
+        log.debug('Recording playback toggled via shortcut')
       },
     }),
     {

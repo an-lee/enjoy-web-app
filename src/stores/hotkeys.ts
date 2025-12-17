@@ -157,6 +157,14 @@ export const HOTKEY_DEFINITIONS: HotkeyDefinition[] = [
     customizable: true,
   },
   {
+    id: 'player.playRecording',
+    defaultKeys: 'g',
+    description: 'Play/Pause recording',
+    descriptionKey: 'hotkeys.playRecording',
+    scope: 'player',
+    customizable: true,
+  },
+  {
     id: 'player.slowDown',
     defaultKeys: 'shift+comma',
     description: 'Slow down playback speed',

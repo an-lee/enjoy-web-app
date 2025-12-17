@@ -374,6 +374,7 @@
     "toggleDictationMode": "Toggle dictation mode",
     "toggleRecording": "Start/Stop recording",
     "toggleAssessment": "Show/Hide pronunciation assessment",
+    "playRecording": "Play/Pause recording",
     "slowDown": "Slow down playback speed",
     "speedUp": "Speed up playback speed",
     "expandEchoBackward": "Expand Echo region backward",

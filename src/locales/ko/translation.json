@@ -374,6 +374,7 @@
     "toggleDictationMode": "받아쓰기 모드 전환",
     "toggleRecording": "녹음 시작/중지",
     "toggleAssessment": "발음 평가 표시/숨기기",
+    "playRecording": "녹음 재생/일시정지",
     "slowDown": "재생 속도 느리게",
     "speedUp": "재생 속도 빠르게",
     "expandEchoBackward": "Echo 영역 뒤로 확장",

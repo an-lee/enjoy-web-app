@@ -154,17 +154,29 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
   )
 
   // Toggle recording (R)
-  const { toggleRecording } = usePlayerStore()
+  const { toggleRecording, toggleRecordingPlayback } = usePlayerStore()
   const toggleRecordingRef = useRef(toggleRecording)
+  const toggleRecordingPlaybackRef = useRef(toggleRecordingPlayback)
   useEffect(() => {
     toggleRecordingRef.current = toggleRecording
-  }, [toggleRecording])
+    toggleRecordingPlaybackRef.current = toggleRecordingPlayback
+  }, [toggleRecording, toggleRecordingPlayback])
 
   useAppHotkey(
     'player.toggleRecording',
     async (e) => {
       e.preventDefault()
       await toggleRecordingRef.current()
+    },
+    { deps: [], preventDefault: true }
+  )
+
+  // Play/Pause recording (G)
+  useAppHotkey(
+    'player.playRecording',
+    (e) => {
+      e.preventDefault()
+      toggleRecordingPlaybackRef.current()
     },
     { deps: [], preventDefault: true }
   )

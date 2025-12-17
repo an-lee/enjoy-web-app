@@ -374,6 +374,7 @@
     "toggleDictationMode": "Alternar modo ditado",
     "toggleRecording": "Iniciar/Parar gravação",
     "toggleAssessment": "Mostrar/Ocultar avaliação de pronúncia",
+    "playRecording": "Reproduzir/Pausar gravação",
     "slowDown": "Diminuir velocidade de reprodução",
     "speedUp": "Aumentar velocidade de reprodução",
     "expandEchoBackward": "Expandir região Echo para trás",

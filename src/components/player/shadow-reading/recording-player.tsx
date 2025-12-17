@@ -9,6 +9,7 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import { Icon } from '@iconify/react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import { usePlayerStore } from '@/stores/player'
 import { cn } from '@/lib/utils'
 import type { Recording } from '@/types/db'
 
@@ -152,6 +153,33 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
   )
 
   const progressPercentage = duration === 0 ? 0 : (currentTime / duration) * 100
+
+  // Use refs to store latest values for the controls callbacks
+  const isPlayingRef = useRef(isPlaying)
+  const handlePlayPauseRef = useRef(handlePlayPause)
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+    handlePlayPauseRef.current = handlePlayPause
+  }, [isPlaying, handlePlayPause])
+
+  // Register controls with player store for keyboard shortcuts
+  const registerRecordingPlayerControls = usePlayerStore(
+    (state) => state.registerRecordingPlayerControls
+  )
+  const unregisterRecordingPlayerControls = usePlayerStore(
+    (state) => state.unregisterRecordingPlayerControls
+  )
+
+  useEffect(() => {
+    registerRecordingPlayerControls({
+      togglePlayback: () => handlePlayPauseRef.current(),
+      isPlaying: () => isPlayingRef.current,
+    })
+
+    return () => {
+      unregisterRecordingPlayerControls()
+    }
+  }, [registerRecordingPlayerControls, unregisterRecordingPlayerControls])
 
   // Don't render if no audio URL (no blob data)
   if (!audioUrl) {
