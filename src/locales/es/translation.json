@@ -268,8 +268,10 @@
       "selectRecording": "Seleccionar Grabación",
       "deleteRecording": {
         "title": "Eliminar grabación",
-        "description": "¿Está seguro de que desea eliminar esta grabación? Esta acción no se puede deshacer."
-      }
+        "description": "¿Está seguro de que desea eliminar esta grabación? Esta acción no se puede deshacer.",
+        "error": "Error al eliminar la grabación"
+      },
+      "playbackError": "Error al reproducir la grabación"
     }
   },
   "vocabulary": {

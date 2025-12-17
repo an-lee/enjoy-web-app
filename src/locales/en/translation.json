@@ -268,8 +268,10 @@
       "selectRecording": "Select Recording",
       "deleteRecording": {
         "title": "Delete Recording",
-        "description": "Are you sure you want to delete this recording? This action cannot be undone."
-      }
+        "description": "Are you sure you want to delete this recording? This action cannot be undone.",
+        "error": "Failed to delete recording"
+      },
+      "playbackError": "Failed to play recording"
     }
   },
   "vocabulary": {

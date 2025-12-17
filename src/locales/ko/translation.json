@@ -268,8 +268,10 @@
       "selectRecording": "녹음 선택",
       "deleteRecording": {
         "title": "녹음 삭제",
-        "description": "이 녹음을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
-      }
+        "description": "이 녹음을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+        "error": "녹음 삭제에 실패했습니다"
+      },
+      "playbackError": "녹음 재생에 실패했습니다"
     }
   },
   "vocabulary": {

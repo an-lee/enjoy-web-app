@@ -268,8 +268,10 @@
       "selectRecording": "Aufnahme auswählen",
       "deleteRecording": {
         "title": "Aufnahme löschen",
-        "description": "Sind Sie sicher, dass Sie diese Aufnahme löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
-      }
+        "description": "Sind Sie sicher, dass Sie diese Aufnahme löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "error": "Aufnahme konnte nicht gelöscht werden"
+      },
+      "playbackError": "Aufnahme konnte nicht abgespielt werden"
     }
   },
   "vocabulary": {

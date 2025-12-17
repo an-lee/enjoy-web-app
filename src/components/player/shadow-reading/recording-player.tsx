@@ -27,11 +27,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 import { usePlayerStore } from '@/stores/player'
 import { deleteRecording } from '@/db'
 import { recordingQueryKeys } from '@/hooks/queries'
-import { cn } from '@/lib/utils'
+import { cn, createLogger } from '@/lib/utils'
 import type { Recording } from '@/types/db'
+
+const log = createLogger({ name: 'RecordingPlayer' })
 
 interface RecordingPlayerProps {
   /** The recording to play */
@@ -155,7 +158,8 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
       audio.pause()
     } else {
       audio.play().catch((error) => {
-        console.error('Failed to play audio:', error)
+        log.error('Failed to play audio:', error)
+        toast.error(t('player.transcript.playbackError'))
       })
     }
   }, [isPlaying, audioUrl])
@@ -224,7 +228,8 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
         ),
       })
     } catch (error) {
-      console.error('Failed to delete recording:', error)
+      log.error('Failed to delete recording:', error)
+      toast.error(t('player.transcript.deleteRecording.error'))
     } finally {
       setIsDeleting(false)
     }

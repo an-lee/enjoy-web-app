@@ -266,8 +266,10 @@
       "selectRecording": "选择录音",
       "deleteRecording": {
         "title": "删除录音",
-        "description": "确定要删除此录音吗？此操作无法撤消。"
+        "description": "确定要删除此录音吗？此操作无法撤消。",
+        "error": "删除录音失败"
       },
+      "playbackError": "播放录音失败",
       "syncing": "正在从服务器同步字幕...",
       "generateTranscript": "生成字幕"
     }

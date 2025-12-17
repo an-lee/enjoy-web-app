@@ -268,8 +268,10 @@
       "selectRecording": "Sélectionner un Enregistrement",
       "deleteRecording": {
         "title": "Supprimer l'enregistrement",
-        "description": "Êtes-vous sûr de vouloir supprimer cet enregistrement ? Cette action est irréversible."
-      }
+        "description": "Êtes-vous sûr de vouloir supprimer cet enregistrement ? Cette action est irréversible.",
+        "error": "Échec de la suppression de l'enregistrement"
+      },
+      "playbackError": "Échec de la lecture de l'enregistrement"
     }
   },
   "vocabulary": {

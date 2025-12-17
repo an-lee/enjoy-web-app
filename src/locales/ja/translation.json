@@ -268,8 +268,10 @@
       "selectRecording": "録音を選択",
       "deleteRecording": {
         "title": "録音を削除",
-        "description": "この録音を削除してもよろしいですか？この操作は元に戻せません。"
-      }
+        "description": "この録音を削除してもよろしいですか？この操作は元に戻せません。",
+        "error": "録音の削除に失敗しました"
+      },
+      "playbackError": "録音の再生に失敗しました"
     }
   },
   "vocabulary": {

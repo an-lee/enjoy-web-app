@@ -268,8 +268,10 @@
       "selectRecording": "Selecionar Gravação",
       "deleteRecording": {
         "title": "Excluir gravação",
-        "description": "Tem certeza de que deseja excluir esta gravação? Esta ação não pode ser desfeita."
-      }
+        "description": "Tem certeza de que deseja excluir esta gravação? Esta ação não pode ser desfeita.",
+        "error": "Falha ao excluir gravação"
+      },
+      "playbackError": "Falha ao reproduzir gravação"
     }
   },
   "vocabulary": {
