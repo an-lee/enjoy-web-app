@@ -105,7 +105,6 @@ export {
   // Query hooks (Read)
   useRecordingsByEchoRegion,
   // Types
-  type RecordingWithUrl,
   type UseRecordingsByEchoRegionOptions,
   type UseRecordingsByEchoRegionReturn,
 } from './use-recording-queries'

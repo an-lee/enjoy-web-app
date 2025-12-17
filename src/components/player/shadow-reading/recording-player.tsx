@@ -1,27 +1,20 @@
 /**
  * RecordingPlayer Component
  *
- * Audio player for shadow reading recordings.
- * Displays play/pause controls, progress bar, and recording selection dropdown.
+ * Simple audio player for a single shadow reading recording.
+ * Handles blob URL creation/cleanup and playback controls.
  */
 
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import type { RecordingWithUrl } from '@/hooks/queries'
+import type { Recording } from '@/types/db'
 
 interface RecordingPlayerProps {
-  recordings: RecordingWithUrl[]
+  /** The recording to play */
+  recording: Recording
   className?: string
 }
 
@@ -34,54 +27,44 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
-export function RecordingPlayer({
-  recordings,
-  className,
-}: RecordingPlayerProps) {
-  const { t } = useTranslation()
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  // Track which audio URL is currently loaded to prevent unnecessary reloads
-  const loadedUrlRef = useRef<string | null>(null)
+/**
+ * Create a blob URL from a recording's blob data
+ */
+function createRecordingUrl(recording: Recording): string | null {
+  if (!recording.blob) return null
+  try {
+    return URL.createObjectURL(recording.blob)
+  } catch {
+    return null
+  }
+}
 
-  const [selectedIndex, setSelectedIndex] = useState(0)
+export function RecordingPlayer({ recording, className }: RecordingPlayerProps) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  // Derive selected recording from index - simple and stable
-  const selectedRecording = recordings[selectedIndex] ?? recordings[0] ?? null
-  const selectedRecordingId = selectedRecording?.recording.id ?? null
-
-  // Reset selection when recordings array identity changes significantly
-  // Only check if the current selection is still valid
+  // Create and cleanup blob URL when recording changes
   useEffect(() => {
-    if (recordings.length === 0) {
-      setSelectedIndex(0)
-      return
-    }
+    const url = createRecordingUrl(recording)
+    setAudioUrl(url)
 
-    // Check if current selection is still valid by ID
-    const currentId = recordings[selectedIndex]?.recording.id
-    if (currentId !== selectedRecordingId && selectedRecordingId) {
-      // Try to find the previously selected recording in the new array
-      const newIndex = recordings.findIndex(
-        (r) => r.recording.id === selectedRecordingId
-      )
-      if (newIndex >= 0) {
-        setSelectedIndex(newIndex)
-      } else {
-        // Recording no longer exists, reset to first
-        setSelectedIndex(0)
+    // Reset playback state
+    setIsPlaying(false)
+    setCurrentTime(0)
+    setDuration(0)
+
+    return () => {
+      if (url) {
+        URL.revokeObjectURL(url)
       }
-    } else if (selectedIndex >= recordings.length) {
-      // Index out of bounds
-      setSelectedIndex(0)
     }
-  }, [recordings.length, selectedIndex, selectedRecordingId, recordings])
+  }, [recording.id, recording.blob]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Audio element lifecycle management - single unified effect
+  // Audio element lifecycle management
   useEffect(() => {
-    // Create audio element once
     if (!audioRef.current) {
       audioRef.current = new Audio()
     }
@@ -123,39 +106,25 @@ export function RecordingPlayer({
       audio.removeEventListener('pause', handlePause)
       audio.pause()
       audio.src = ''
-      loadedUrlRef.current = null
     }
   }, [])
 
-  // Load audio source when selection changes
+  // Load audio source when URL changes
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    const newUrl = selectedRecording?.audioUrl ?? null
-
-    // Skip if URL hasn't changed
-    if (newUrl === loadedUrlRef.current) return
-
-    // Reset playback state
-    audio.pause()
-    setIsPlaying(false)
-    setCurrentTime(0)
-    setDuration(0)
-
-    if (newUrl) {
-      audio.src = newUrl
-      loadedUrlRef.current = newUrl
+    if (audioUrl) {
+      audio.src = audioUrl
       audio.load()
     } else {
       audio.src = ''
-      loadedUrlRef.current = null
     }
-  }, [selectedRecording?.audioUrl])
+  }, [audioUrl])
 
   const handlePlayPause = useCallback(() => {
     const audio = audioRef.current
-    if (!audio || !selectedRecording) return
+    if (!audio || !audioUrl) return
 
     if (isPlaying) {
       audio.pause()
@@ -164,12 +133,12 @@ export function RecordingPlayer({
         console.error('Failed to play audio:', error)
       })
     }
-  }, [isPlaying, selectedRecording])
+  }, [isPlaying, audioUrl])
 
   const handleProgressClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const audio = audioRef.current
-      if (!audio || !selectedRecording || duration === 0) return
+      if (!audio || !audioUrl || duration === 0) return
 
       const rect = e.currentTarget.getBoundingClientRect()
       const x = e.clientX - rect.left
@@ -179,90 +148,45 @@ export function RecordingPlayer({
       audio.currentTime = newTime
       setCurrentTime(newTime)
     },
-    [selectedRecording, duration]
-  )
-
-  const handleSelectionChange = useCallback(
-    (recordingId: string) => {
-      const index = recordings.findIndex((r) => r.recording.id === recordingId)
-      if (index >= 0) {
-        setSelectedIndex(index)
-      }
-    },
-    [recordings]
+    [audioUrl, duration]
   )
 
   const progressPercentage = duration === 0 ? 0 : (currentTime / duration) * 100
 
-  if (recordings.length === 0) {
+  // Don't render if no audio URL (no blob data)
+  if (!audioUrl) {
     return null
   }
 
   return (
-    <div className={cn('space-y-2', className)}>
-      <div className="flex items-center gap-2">
-        {/* Play/Pause Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handlePlayPause}
-          disabled={!selectedRecording}
-          className="h-9 w-9 shrink-0"
+    <div className={cn('flex items-center gap-2', className)}>
+      {/* Play/Pause Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handlePlayPause}
+        className="h-8 w-8 shrink-0"
+      >
+        <Icon
+          icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
+          className="h-4 w-4"
+        />
+      </Button>
+
+      {/* Progress Bar */}
+      <div className="flex-1 flex items-center gap-1">
+        <span className="text-xs text-muted-foreground w-10 text-right">
+          {formatTime(currentTime)}
+        </span>
+        <div
+          className="relative h-2 w-full cursor-pointer flex-1"
+          onClick={handleProgressClick}
         >
-          <Icon
-            icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
-            className="h-4 w-4"
-          />
-        </Button>
-
-        {/* Progress Bar */}
-        <div className="flex-1 flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">
-            {formatTime(currentTime)}
-          </span>
-          <div
-            className="relative h-2 w-full cursor-pointer flex-1"
-            onClick={handleProgressClick}
-          >
-            <Progress value={progressPercentage} className="h-2" />
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {formatTime(duration)}
-          </span>
+          <Progress value={progressPercentage} className="h-2" />
         </div>
-
-        {/* Recording Selection Dropdown */}
-        {recordings.length > 1 && selectedRecordingId && (
-          <Select value={selectedRecordingId} onValueChange={handleSelectionChange}>
-            <SelectTrigger className="h-9 w-auto min-w-[120px] shrink-0">
-              <SelectValue>
-                {t('player.transcript.recordingNumber', {
-                  number: selectedIndex + 1,
-                  defaultValue: `Recording ${selectedIndex + 1}`,
-                })}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {recordings.map((recording, index) => {
-                const dateStr = recording.recording.createdAt
-                  ? new Date(recording.recording.createdAt).toLocaleDateString()
-                  : ''
-                return (
-                  <SelectItem
-                    key={recording.recording.id}
-                    value={recording.recording.id}
-                  >
-                    {t('player.transcript.recordingNumber', {
-                      number: index + 1,
-                      defaultValue: `Recording ${index + 1}`,
-                    })}
-                    {dateStr && ` (${dateStr})`}
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
-        )}
+        <span className="text-xs text-muted-foreground w-10">
+          {formatTime(duration)}
+        </span>
       </div>
     </div>
   )

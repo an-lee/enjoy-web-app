@@ -2,11 +2,19 @@
  * ShadowRecordingList Component
  *
  * Displays a list of existing shadow reading recordings for a specific echo region.
- * Handles data fetching and integrates with RecordingPlayer for playback.
+ * Handles data fetching, selection, and integrates with RecordingPlayer for playback.
  */
 
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { RecordingPlayer } from './recording-player'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useRecordingsByEchoRegion } from '@/hooks/queries'
 import type { TargetType } from '@/types/db'
 
@@ -37,6 +45,7 @@ export function ShadowRecordingList({
   className,
 }: ShadowRecordingListProps) {
   const { t } = useTranslation()
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
   // Check if all required props are available
   const hasRequiredProps =
@@ -54,6 +63,22 @@ export function ShadowRecordingList({
     enabled: enabled && hasRequiredProps,
   })
 
+  // Get selected recording
+  const selectedRecording = useMemo(() => {
+    if (recordings.length === 0) return null
+    // Ensure index is valid
+    const index = selectedIndex >= recordings.length ? 0 : selectedIndex
+    return recordings[index]
+  }, [recordings, selectedIndex])
+
+  // Handle selection change
+  const handleSelectionChange = (recordingId: string) => {
+    const index = recordings.findIndex((r) => r.id === recordingId)
+    if (index >= 0) {
+      setSelectedIndex(index)
+    }
+  }
+
   // Don't render if required props missing, loading, or no recordings
   if (!hasRequiredProps || isLoading || recordings.length === 0) {
     return null
@@ -62,14 +87,50 @@ export function ShadowRecordingList({
   return (
     <div className={className}>
       <div className="space-y-2">
-        <div className="text-xs text-muted-foreground">
-          {t('player.transcript.existingRecordings', {
-            defaultValue: 'Existing Recordings',
-          })}
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs text-muted-foreground">
+            {t('player.transcript.existingRecordings', {
+              defaultValue: 'Existing Recordings',
+            })}
+          </span>
+
+          {/* Recording Selection Dropdown - only show if multiple recordings */}
+          {recordings.length > 1 && selectedRecording && (
+            <Select
+              value={selectedRecording.id}
+              onValueChange={handleSelectionChange}
+            >
+              <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs">
+                <SelectValue>
+                  {t('player.transcript.recordingNumber', {
+                    number: selectedIndex + 1,
+                    defaultValue: `Recording ${selectedIndex + 1}`,
+                  })}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {recordings.map((recording, index) => {
+                  const dateStr = recording.createdAt
+                    ? new Date(recording.createdAt).toLocaleDateString()
+                    : ''
+                  return (
+                    <SelectItem key={recording.id} value={recording.id}>
+                      {t('player.transcript.recordingNumber', {
+                        number: index + 1,
+                        defaultValue: `Recording ${index + 1}`,
+                      })}
+                      {dateStr && ` (${dateStr})`}
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          )}
         </div>
-        <RecordingPlayer recordings={recordings} />
+
+        {/* Recording Player */}
+        {selectedRecording && <RecordingPlayer recording={selectedRecording} />}
       </div>
     </div>
   )
 }
-
