@@ -11,6 +11,7 @@ import type { AIServiceResponse, SmartTranslationResponse } from '../../../types
 import { AIServiceType, AIProvider } from '../../../types'
 import type { TranslationStyle } from '@/db/schema'
 import { buildSmartTranslationPrompt } from '../../../prompts'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 
 /**
  * Smart translation with style support
@@ -55,7 +56,7 @@ export async function smartTranslate(
       success: true,
       data: {
         translatedText,
-        aiModel: 'enjoy/@cf/meta/llama-3-8b-instruct-awq',
+        aiModel: DEFAULT_WORKERS_AI_TEXT_MODEL,
       },
       metadata: {
         serviceType: AIServiceType.SMART_TRANSLATION,

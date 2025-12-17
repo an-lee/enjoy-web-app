@@ -11,6 +11,7 @@ import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
 import { handleError } from '@/server/utils/errors'
 import { streamSSE } from 'hono/streaming'
 import { createLogger } from '@/lib/utils'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 
 // ============================================================================
 // Logger
@@ -49,7 +50,7 @@ chat.post('/completions', async (c) => {
 		const body = await c.req.json()
 		const {
 			messages,
-			model = env.WORKERS_AI_TEXT_MODEL || '@cf/meta/llama-3-8b-instruct-awq',
+			model = env.WORKERS_AI_TEXT_MODEL || DEFAULT_WORKERS_AI_TEXT_MODEL,
 			temperature = 0.7,
 			max_tokens = 2048,
 			stream = false,

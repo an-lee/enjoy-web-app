@@ -8,6 +8,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { chat } from './chat'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 
 describe('Chat Routes', () => {
 	it('should export chat route handler', () => {
@@ -28,7 +29,7 @@ describe('Chat Routes', () => {
 					{ role: 'system', content: 'You are a helpful assistant' },
 					{ role: 'user', content: 'Hello' }
 				],
-				model: '@cf/meta/llama-3-8b-instruct-awq',
+				model: DEFAULT_WORKERS_AI_TEXT_MODEL,
 				temperature: 0.7,
 				max_tokens: 2048,
 				stream: false,
@@ -45,7 +46,7 @@ describe('Chat Routes', () => {
 				id: 'chatcmpl-1234567890',
 				object: 'chat.completion',
 				created: 1234567890,
-				model: '@cf/meta/llama-3-8b-instruct-awq',
+				model: DEFAULT_WORKERS_AI_TEXT_MODEL,
 				choices: [
 					{
 						index: 0,

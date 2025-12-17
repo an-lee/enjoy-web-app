@@ -87,7 +87,7 @@ function getAccessToken(c: Context): string | null {
  * @returns true if valid, false otherwise
  */
 export function isValidSubscriptionTier(tier: unknown): tier is SubscriptionTier {
-	return tier === 'free' || tier === 'pro'
+	return tier === 'free' || tier === 'pro' || tier === 'ultra'
 }
 
 /**
@@ -99,9 +99,9 @@ export function validateUserProfile(profile: Partial<UserProfile>): asserts prof
 		throw new Error('Invalid user profile: missing required fields')
 	}
 
-	if (!isValidSubscriptionTier(profile.subscriptionTier)) {
+		if (!isValidSubscriptionTier(profile.subscriptionTier)) {
 		throw new Error(
-			`Invalid subscription tier: ${profile.subscriptionTier}. Expected 'free' or 'pro'.`
+			`Invalid subscription tier: ${profile.subscriptionTier}. Expected 'free', 'pro', or 'ultra'.`
 		)
 	}
 }

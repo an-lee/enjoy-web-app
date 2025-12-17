@@ -8,6 +8,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { models } from './models'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 
 describe('Models Routes', () => {
 	it('should export models route handler', () => {
@@ -27,12 +28,12 @@ describe('Models Routes', () => {
 				object: 'list',
 				data: [
 					{
-						id: '@cf/meta/llama-3-8b-instruct-awq',
+						id: DEFAULT_WORKERS_AI_TEXT_MODEL,
 						object: 'model',
 						created: 1234567890,
 						owned_by: 'cloudflare',
 						permission: [],
-						root: '@cf/meta/llama-3-8b-instruct-awq',
+						root: DEFAULT_WORKERS_AI_TEXT_MODEL,
 						parent: null,
 					}
 				]

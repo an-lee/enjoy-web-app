@@ -8,6 +8,7 @@ import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
 import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
 import { handleError } from '@/server/utils/errors'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 
 const models = new Hono<{
 	Bindings: Env
@@ -30,7 +31,7 @@ models.use('/*', authMiddleware)
 models.get('/', async (c) => {
 	try {
 		const env = c.env
-		const textModel = env.WORKERS_AI_TEXT_MODEL || '@cf/meta/llama-3-8b-instruct-awq'
+		const textModel = env.WORKERS_AI_TEXT_MODEL || DEFAULT_WORKERS_AI_TEXT_MODEL
 		const ttsModel = env.WORKERS_AI_TTS_MODEL || '@cf/myshell-ai/melotts'
 
 		return c.json({

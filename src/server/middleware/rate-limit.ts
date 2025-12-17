@@ -38,7 +38,7 @@ export function createRateLimitMiddleware(service: ServiceType) {
 		if (!isValidSubscriptionTier(user.subscriptionTier)) {
 			log.error('Invalid subscription tier:', user.subscriptionTier, 'User:', user)
 			throw new Error(
-				`Invalid subscription tier: ${user.subscriptionTier}. Expected 'free' or 'pro'.`
+				`Invalid subscription tier: ${user.subscriptionTier}. Expected 'free', 'pro', or 'ultra'.`
 			)
 		}
 

@@ -7,7 +7,7 @@ import { apiClient } from "./client"
 /**
  * Subscription tier type
  */
-export type SubscriptionTier = 'free' | 'pro'
+export type SubscriptionTier = 'free' | 'pro' | 'ultra'
 
 /**
  * User profile in camelCase format (used internally in the app)
