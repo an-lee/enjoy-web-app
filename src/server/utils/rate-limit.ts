@@ -40,13 +40,15 @@ export interface ServiceRateLimit {
  *
  * Pricing Strategy (verified against Azure official pricing):
  * - Free: Basic experience, encourages local model usage
- *   Daily cost: ~$0.02, monthly cost: ~$0.60
+ *   Daily cost: ~$0.04, monthly cost: ~$1.20
  * - Pro ($9.99/month): Daily usage for moderate users
- *   Daily cost: ~$0.15, monthly cost: ~$4.50 (at 100% usage)
- *   Assumes 50-60% actual usage, margin: ~55%
+ *   Daily cost (100%): ~$0.32, monthly cost: ~$9.60 (at 100% usage)
+ *   Daily cost (50%): ~$0.16, monthly cost: ~$4.80 (actual usage, 50% utilization)
+ *   Margin: ~43% (based on 50% actual usage rate)
  * - Ultra ($29.99/month): Heavy usage for power users
- *   Daily cost: ~$0.45, monthly cost: ~$13.50 (at 100% usage)
- *   Assumes 50-60% actual usage, margin: ~55%
+ *   Daily cost (100%): ~$0.97, monthly cost: ~$29.10 (at 100% usage)
+ *   Daily cost (60%): ~$0.58, monthly cost: ~$17.40 (actual usage, 60% utilization)
+ *   Margin: ~42% (based on 60% actual usage rate)
  *
  * Reference: https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/
  * Key: Azure Speech to Text charges per SECOND (one-second increments), not per minute
@@ -63,20 +65,26 @@ const SERVICE_RATE_LIMITS: Record<ServiceType, ServiceRateLimit> = {
 		ultra: 10000,  // Effectively unlimited
 	},
 	dictionary: {
-		free: 20,      // ~$0.00282/day, encourages local usage
+		free: 10,      // ~$0.00141/day, encourages local usage and upgrade
 		pro: 200,      // ~$0.0282/day, ~$0.85/month
 		ultra: 500,    // ~$0.0705/day, ~$2.12/month
 	},
 	asr: {
 		// Tracked in minutes
-		free: 10,      // 10 minutes/day, ~$0.005/day
+		free: 5,       // 5 minutes/day, ~$0.0025/day, encourages local ASR usage
 		pro: 60,       // 60 minutes/day, ~$0.03/day, ~$0.90/month
 		ultra: 180,    // 180 minutes/day, ~$0.09/day, ~$2.70/month
 	},
 	tts: {
-		free: 10,      // ~$0.001/day
-		pro: 100,      // ~$0.01/day, ~$0.30/month
-		ultra: 300,    // ~$0.03/day, ~$0.90/month
+		// IMPORTANT: Tracked in REQUESTS (count), but cost is per CHARACTER of text
+		// Azure TTS: $15.00 per 1M characters = $0.000015 per character
+		// Average text length: ~150 characters per request (a sentence)
+		// Cost per request: ~$0.0015 (100 chars) to $0.003 (200 chars)
+		// Assumed average: 150 characters per request = $0.00225 per request
+		// Reference: https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/
+		free: 5,       // ~5 requests/day, ~750 chars/day, ~$0.01125/day, ~$0.34/month (降低 50%)
+		pro: 120,      // ~120 requests/day, ~18,000 chars/day, ~$0.27/day, ~$8.10/month (上限)
+		ultra: 300,    // ~300 requests/day, ~45,000 chars/day, ~$0.675/day, ~$20.25/month (上限)
 	},
 	assessment: {
 		// IMPORTANT: Tracked in REQUESTS (count), not minutes
@@ -85,7 +93,7 @@ const SERVICE_RATE_LIMITS: Record<ServiceType, ServiceRateLimit> = {
 		// Each assessment typically processes 5-15 seconds of audio (average 10 seconds)
 		// Cost: ~$0.00361 per request (10 seconds × $0.000361/second)
 		// Reference: https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/
-		free: 3,       // 3 requests/day (~30 seconds), ~$0.01083/day, ~$0.33/month
+		free: 1,       // 1 request/day (~10 seconds), ~$0.00361/day, ~$0.11/month (降低 67%)
 		pro: 20,      // 20 requests/day (~200 seconds), ~$0.0722/day, ~$2.17/month
 		ultra: 60,    // 60 requests/day (~600 seconds), ~$0.2166/day, ~$6.50/month
 	},
