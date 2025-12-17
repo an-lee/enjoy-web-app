@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { usePlayerStore } from '@/stores/player'
-import { setDisplayTime } from '@/hooks/use-display-time'
+import { setDisplayTime } from '@/hooks/player/use-display-time'
 import { useTranscriptDisplay } from '@/components/player/transcript'
 import {
   clampSeekTimeToEchoWindow,

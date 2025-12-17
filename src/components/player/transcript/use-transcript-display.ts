@@ -7,7 +7,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranscriptsByTarget } from '@/hooks/queries'
-import { useTranscriptSync } from '@/hooks/use-transcript-sync'
+import { useTranscriptSync } from '@/hooks/player/use-transcript-sync'
 import { usePlayerStore } from '@/stores/player'
 import type { Transcript, TargetType } from '@/types/db'
 import type {
@@ -15,7 +15,7 @@ import type {
   SelectedTranscripts,
   UseTranscriptDisplayReturn,
 } from './types'
-import { useDisplayTime } from '@/hooks/use-display-time'
+import { useDisplayTime } from '@/hooks/player/use-display-time'
 
 // ============================================================================
 // Helper Functions

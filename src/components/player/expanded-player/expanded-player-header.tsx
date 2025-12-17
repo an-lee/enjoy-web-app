@@ -16,7 +16,7 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer'
 import { usePlayerStore } from '@/stores/player'
-import { useRetranscribe } from '@/hooks/use-retranscribe'
+import { useRetranscribe } from '@/hooks/player'
 import {
   useTranscriptDisplay,
   RetranscribeDialog,

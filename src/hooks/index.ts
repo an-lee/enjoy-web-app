@@ -50,9 +50,9 @@ export {
 // ============================================================================
 
 export { useTTS, type UseTTSOptions, type UseTTSReturn } from './use-tts'
-export { useRetranscribe } from './use-retranscribe'
-export { useTranscriptSync, type TranscriptSyncState } from './use-transcript-sync'
-export { useMediaElement, type UseMediaElementOptions, type UseMediaElementReturn } from './use-media-element'
+export { useRetranscribe } from './player/use-retranscribe'
+export { useTranscriptSync, type TranscriptSyncState } from './player/use-transcript-sync'
+export { useMediaElement, type UseMediaElementOptions, type UseMediaElementReturn } from './player/use-media-element'
 
 // ============================================================================
 // Utility Hooks
@@ -61,4 +61,4 @@ export { useMediaElement, type UseMediaElementOptions, type UseMediaElementRetur
 export { useCopyWithToast } from './use-copy-with-toast'
 export { useIsMobile } from './use-mobile'
 export { useModelStatus } from './use-model-status'
-export { useDisplayTime } from './use-display-time'
+export { useDisplayTime } from './player/use-display-time'

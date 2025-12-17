@@ -8,7 +8,7 @@
 
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useDisplayTime } from '@/hooks/use-display-time'
+import { useDisplayTime } from '@/hooks/player'
 import { ShadowReadingPanelHeader } from './shadow-reading-panel-header'
 import { PitchContourSection } from '../pitch-contour'
 import { ShadowRecorder } from './shadow-recorder'
