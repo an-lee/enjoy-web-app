@@ -245,7 +245,14 @@ export async function authMiddleware(
 	const accessToken = getAccessToken(c)
 
 	if (!accessToken) {
-		return c.json({ error: 'Missing access token' }, 401)
+		return c.json(
+			{
+				error: 'Missing access token',
+				message: 'Please sign in to continue',
+				reason: 'unauthorized',
+			},
+			401
+		)
 	}
 
 	try {
@@ -264,7 +271,14 @@ export async function authMiddleware(
 	} catch (error) {
 		const errorMessage =
 			error instanceof Error ? error.message : 'Authentication failed'
-		return c.json({ error: errorMessage }, 401)
+		return c.json(
+			{
+				error: errorMessage,
+				message: 'Please sign in to continue',
+				reason: 'unauthorized',
+			},
+			401
+		)
 	}
 }
 
