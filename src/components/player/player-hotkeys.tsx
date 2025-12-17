@@ -10,11 +10,7 @@ import { useAppHotkey } from '@/components/hotkeys'
 import { usePlayerStore } from '@/stores/player'
 import { useEchoRegion, usePlayerControls, useTranscriptDisplay } from '@/hooks/player'
 
-interface PlayerHotkeysProps {
-  // No props needed - component gets all data from hooks
-}
-
-export function PlayerHotkeys({}: PlayerHotkeysProps) {
+export function PlayerHotkeys() {
   const {
     collapse,
     expand,
