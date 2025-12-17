@@ -103,8 +103,8 @@ export function ShadowRecordingList({
               <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs">
                 <SelectValue>
                   {t('player.transcript.recordingNumber', {
-                    number: selectedIndex + 1,
-                    defaultValue: `Recording ${selectedIndex + 1}`,
+                    number: recordings.length - selectedIndex,
+                    defaultValue: `Recording ${recordings.length - selectedIndex}`,
                   })}
                 </SelectValue>
               </SelectTrigger>
@@ -113,11 +113,13 @@ export function ShadowRecordingList({
                   const dateStr = recording.createdAt
                     ? new Date(recording.createdAt).toLocaleDateString()
                     : ''
+                  // Display number in reverse order (newest = highest number)
+                  const displayNumber = recordings.length - index
                   return (
                     <SelectItem key={recording.id} value={recording.id}>
                       {t('player.transcript.recordingNumber', {
-                        number: index + 1,
-                        defaultValue: `Recording ${index + 1}`,
+                        number: displayNumber,
+                        defaultValue: `Recording ${displayNumber}`,
                       })}
                       {dateStr && ` (${dateStr})`}
                     </SelectItem>

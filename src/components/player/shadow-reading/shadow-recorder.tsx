@@ -7,9 +7,11 @@
 
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
 import { Icon } from '@iconify/react'
 import { usePlayerStore } from '@/stores/player'
 import { useTranscriptDisplay, useEchoRegion, useRecorder } from '@/hooks/player'
+import { recordingQueryKeys } from '@/hooks/queries'
 import { RecordButton } from './record-button'
 import { Button } from '@/components/ui/button'
 import { ShadowRecordingProgress } from './shadow-recording-progress'
@@ -21,6 +23,7 @@ const log = createLogger({ name: 'ShadowRecorder' })
 
 export function ShadowRecorder() {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const canvasRef = useRef<HTMLDivElement>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -118,6 +121,18 @@ export function ShadowRecorder() {
       // Save to database
       const recordingId = await recordingRepository.save(recordingInput)
       log.debug('Recording saved', { recordingId, duration })
+
+      // Invalidate recordings query to trigger refetch in ShadowRecordingList
+      // Query key uses milliseconds rounded to integers
+      await queryClient.invalidateQueries({
+        queryKey: recordingQueryKeys.byEchoRegion(
+          targetType,
+          targetId,
+          language,
+          Math.round(startTime * 1000),
+          Math.round(endTime * 1000)
+        ),
+      })
     } catch (err: any) {
       const errorMsg = `Failed to save recording: ${err?.message || 'Unknown error'}`
       setSaveError(errorMsg)
@@ -125,6 +140,7 @@ export function ShadowRecorder() {
     }
   }, [
     stopRecording,
+    queryClient,
     targetType,
     targetId,
     startTime,
