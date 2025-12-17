@@ -8,7 +8,7 @@
 import { useRef, useEffect } from 'react'
 import { useAppHotkey } from '@/components/hotkeys'
 import { usePlayerStore } from '@/stores/player'
-import { useEchoRegion, usePlayerControls, useTranscriptDisplay } from '@/hooks/player'
+import { useEchoRegionOperations, usePlayerControls, useTranscriptDisplay } from '@/hooks/player'
 
 export function PlayerHotkeys() {
   const {
@@ -32,7 +32,7 @@ export function PlayerHotkeys() {
     handleExpandEchoBackward,
     handleShrinkEchoForward,
     handleShrinkEchoBackward,
-  } = useEchoRegion(lines)
+  } = useEchoRegionOperations(lines)
 
   // Use refs to store all handlers to prevent infinite re-renders
   // These functions may change when state changes, but we don't want

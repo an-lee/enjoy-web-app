@@ -10,7 +10,7 @@ import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { formatHotkeyAsKbd } from '@/lib/format-hotkey'
 import { useHotkeyBinding } from '@/stores/hotkeys'
-import { useEchoRegion } from '@/hooks/player'
+import { useEchoRegion, useEchoRegionOperations } from '@/hooks/player'
 import type { TranscriptLineState } from '../transcript/types'
 import {
   Tooltip,
@@ -29,16 +29,16 @@ export function EchoRegionControls({
 }: EchoRegionControlsProps) {
   const { t } = useTranslation()
 
-  // Get echo region data and handlers from hook
-  // Pass lines to enable expand/shrink operations
+  // Get echo region state
+  const { echoStartLineIndex, echoEndLineIndex } = useEchoRegion()
+
+  // Get echo region operations
   const {
-    echoStartLineIndex,
-    echoEndLineIndex,
     handleExpandEchoForward,
     handleExpandEchoBackward,
     handleShrinkEchoForward,
     handleShrinkEchoBackward,
-  } = useEchoRegion(lines)
+  } = useEchoRegionOperations(lines)
 
   // Determine handlers and disabled states based on position
   const onExpand = position === 'top' ? handleExpandEchoBackward : handleExpandEchoForward

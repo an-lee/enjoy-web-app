@@ -26,7 +26,8 @@ function TranscriptLinesComponent({
     echoModeActive,
     echoStartLineIndex,
     echoEndLineIndex,
-    echoRegionTimeRange,
+    echoStartTime,
+    echoEndTime,
   } = useEchoRegion()
 
   // Get reference text from echo region lines
@@ -91,10 +92,10 @@ function TranscriptLinesComponent({
               <>
                 <EchoRegionControls position="bottom" lines={lines} />
                 {/* Shadow Reading Panel - shown below echo region controls */}
-                {echoRegionTimeRange?.startTime !== undefined && echoRegionTimeRange?.endTime !== undefined && (
+                {echoStartTime >= 0 && echoEndTime >= 0 && (
                   <ShadowReadingPanel
-                    startTime={echoRegionTimeRange.startTime}
-                    endTime={echoRegionTimeRange.endTime}
+                    startTime={echoStartTime}
+                    endTime={echoEndTime}
                     referenceText={referenceText || ''}
                   />
                 )}
