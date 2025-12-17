@@ -21,7 +21,7 @@ function TranscriptLinesComponent({
   lines,
   onLineClick,
 }: TranscriptLinesProps) {
-  // Echo region management
+  // Echo region state (no lines needed, we only read state for rendering)
   const {
     echoModeActive,
     echoStartLineIndex,

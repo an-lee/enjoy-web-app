@@ -8,7 +8,7 @@
 import { useRef, useEffect } from 'react'
 import { useAppHotkey } from '@/components/hotkeys'
 import { usePlayerStore } from '@/stores/player'
-import { useEchoRegion, usePlayerControls } from '@/hooks/player'
+import { useEchoRegion, usePlayerControls, useTranscriptDisplay } from '@/hooks/player'
 
 interface PlayerHotkeysProps {
   // No props needed - component gets all data from hooks
@@ -27,13 +27,16 @@ export function PlayerHotkeys({}: PlayerHotkeysProps) {
   // Get all player controls from unified hook
   const controls = usePlayerControls()
 
-  // Get echo region handlers
+  // Get transcript lines for echo region operations
+  const { lines } = useTranscriptDisplay()
+
+  // Get echo region handlers with lines for expand/shrink operations
   const {
     handleExpandEchoForward,
     handleExpandEchoBackward,
     handleShrinkEchoForward,
     handleShrinkEchoBackward,
-  } = useEchoRegion()
+  } = useEchoRegion(lines)
 
   // Use refs to store all handlers to prevent infinite re-renders
   // These functions may change when state changes, but we don't want

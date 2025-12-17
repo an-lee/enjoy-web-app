@@ -37,22 +37,25 @@ export function ShadowRecordingList({
   className,
 }: ShadowRecordingListProps) {
   const { t } = useTranslation()
-  if (!targetType || !targetId || !language || !startTime || !endTime) {
-    return null
-  }
+
+  // Check if all required props are available
+  const hasRequiredProps =
+    !!targetType && !!targetId && !!language && startTime != null && endTime != null
 
   // Query recordings for this echo region
+  // IMPORTANT: Hooks must be called unconditionally at the top level
+  // Use the `enabled` option to control whether the query actually runs
   const { recordings, isLoading } = useRecordingsByEchoRegion({
-    targetType,
-    targetId,
-    language,
-    startTime,
-    endTime,
-    enabled,
+    targetType: targetType ?? 'Audio',
+    targetId: targetId ?? '',
+    language: language ?? '',
+    startTime: startTime ?? 0,
+    endTime: endTime ?? 0,
+    enabled: enabled && hasRequiredProps,
   })
 
-  // Don't render anything if no recordings or loading
-  if (isLoading || recordings.length === 0) {
+  // Don't render if required props missing, loading, or no recordings
+  if (!hasRequiredProps || isLoading || recordings.length === 0) {
     return null
   }
 

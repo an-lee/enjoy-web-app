@@ -18,7 +18,7 @@ import { getAIServiceConfig } from '@/ai/core/config'
 import { AIProvider } from '@/ai/types'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
-import { useDisplayTime, usePlayerControls, useRetranscribe, useEchoRegion } from '@/hooks/player'
+import { useDisplayTime, usePlayerControls, useRetranscribe, useEchoRegion, useEchoRegionManager } from '@/hooks/player'
 import { useTranscriptDisplay } from '../../../hooks/player/use-transcript-display'
 import { useAutoScroll } from '../../../hooks/player/use-auto-scroll'
 import { TranscriptLines } from './transcript-lines'
@@ -89,7 +89,10 @@ export function TranscriptDisplay({
     }
   }, [activeLineIndex, isPlaying, currentTime])
 
-  // Echo region management
+  // Echo region management - useEchoRegionManager handles side effects and should only be called once
+  useEchoRegionManager()
+
+  // Echo region state (no lines needed here as we only read state)
   const {
     echoModeActive,
     echoStartLineIndex,

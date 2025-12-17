@@ -2,7 +2,7 @@
  * Recording Query Hooks - React Query hooks for Recording entity
  */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRecordingsByEchoRegion } from '@/db'
 import type { Recording, TargetType } from '@/types/db'
@@ -111,6 +111,12 @@ export function useRecordingsByEchoRegion(
     enabled = true,
   } = options
 
+  // IMPORTANT: Round times to integers to avoid floating point precision issues
+  // that would cause queryKey instability and infinite re-renders.
+  // Example: 64.68 * 1000 = 64680.00000000001, which would cause queryKey to change
+  const stableStartTime = Math.round(startTime)
+  const stableEndTime = Math.round(endTime)
+
   const {
     data: recordingList = [],
     isLoading,
@@ -122,35 +128,79 @@ export function useRecordingsByEchoRegion(
       targetType,
       targetId,
       language,
-      startTime,
-      endTime
+      stableStartTime,
+      stableEndTime
     ),
     queryFn: () =>
-      getRecordingsByEchoRegion(targetType, targetId, language, startTime, endTime),
+      getRecordingsByEchoRegion(targetType, targetId, language, stableStartTime, stableEndTime),
     enabled: enabled && !!targetId && !!language,
     staleTime: 1000 * 30,
   })
 
   const [recordings, setRecordings] = useState<RecordingWithUrl[]>([])
 
+  // Track the previous recordingList length to avoid unnecessary processing
+  const prevRecordingListRef = useRef<Recording[]>([])
+
   useEffect(() => {
+    // Skip if recordingList hasn't actually changed (same reference or same content)
+    if (
+      recordingList === prevRecordingListRef.current ||
+      (recordingList.length === 0 && prevRecordingListRef.current.length === 0)
+    ) {
+      return
+    }
+
+    // Check if content is actually different by comparing IDs
+    const prevIds = new Set(prevRecordingListRef.current.map((r) => r.id))
+    const currentIds = new Set(recordingList.map((r) => r.id))
+    const isSameContent =
+      prevIds.size === currentIds.size &&
+      recordingList.every((r) => prevIds.has(r.id))
+
+    if (isSameContent && recordings.length > 0) {
+      prevRecordingListRef.current = recordingList
+      return
+    }
+
+    prevRecordingListRef.current = recordingList
+
     let mounted = true
-    let urls: string[] = []
+    const urlsToRevoke: string[] = []
+
+    // Revoke old URLs before creating new ones
+    recordings.forEach((r) => {
+      urlsToRevoke.push(r.audioUrl)
+    })
 
     createRecordingsWithUrls(recordingList).then((results) => {
       if (mounted) {
-        urls = results.map((r) => r.audioUrl)
+        // Revoke old URLs now that we have new ones
+        urlsToRevoke.forEach((url) => {
+          URL.revokeObjectURL(url)
+        })
         setRecordings(results)
+      } else {
+        // Component unmounted, revoke the newly created URLs
+        results.forEach((r) => {
+          URL.revokeObjectURL(r.audioUrl)
+        })
       }
     })
 
     return () => {
       mounted = false
-      urls.forEach((url) => {
-        URL.revokeObjectURL(url)
+    }
+  }, [recordingList, recordings])
+
+  // Cleanup all URLs on unmount
+  useEffect(() => {
+    return () => {
+      recordings.forEach((r) => {
+        URL.revokeObjectURL(r.audioUrl)
       })
     }
-  }, [recordingList])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const refetch = useCallback(async () => {
     await refetchQuery()

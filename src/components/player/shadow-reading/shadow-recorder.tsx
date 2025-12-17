@@ -32,6 +32,7 @@ export function ShadowRecorder() {
 
   // Get transcript lines for reference text calculation
   const { lines } = useTranscriptDisplay()
+  // Get echo region state (no lines needed, we only read state)
   const { echoStartLineIndex, echoEndLineIndex } = useEchoRegion()
 
   // Calculate reference text from echo region lines
@@ -75,67 +76,8 @@ export function ShadowRecorder() {
   // Combined error display
   const displayError = recordingError || saveError
 
-  // Use refs to store latest values for cleanup
-  const isRecordingRef = useRef(isRecording)
-  const cancelRecordingRef = useRef(cancelRecording)
-
-  // Update refs when values change
-  useEffect(() => {
-    isRecordingRef.current = isRecording
-    cancelRecordingRef.current = cancelRecording
-  }, [isRecording, cancelRecording])
-
-  // Register recording controls with player store for keyboard shortcuts
-  const { registerRecordingControls, unregisterRecordingControls } =
-    usePlayerStore()
-  useEffect(() => {
-    registerRecordingControls({
-      startRecording,
-      stopRecording: async () => {
-        await handleStopRecording()
-      },
-      isRecording: () => isRecording,
-    })
-
-    return () => {
-      unregisterRecordingControls()
-    }
-  }, [
-    isRecording,
-    startRecording,
-    registerRecordingControls,
-    unregisterRecordingControls,
-  ])
-
-  // Cancel recording when component unmounts if still recording
-  useEffect(() => {
-    return () => {
-      // Check if recording is still active when component unmounts
-      // Use refs to access latest values in cleanup
-      if (isRecordingRef.current) {
-        cancelRecordingRef.current()
-      }
-    }
-  }, []) // Empty deps - only run on mount/unmount
-
-  // ESC key shortcut to cancel recording
-  useEffect(() => {
-    if (!isRecording) return
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        cancelRecording()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isRecording, cancelRecording])
-
   // Handle stop recording and save to database
+  // Defined early so it can be used in refs
   const handleStopRecording = useCallback(async () => {
     if (!targetType || !targetId) {
       log.error('Cannot save recording: missing target info')
@@ -190,6 +132,72 @@ export function ShadowRecorder() {
     referenceText,
     language,
   ])
+
+  // Use refs to store latest values for cleanup and to avoid stale closures
+  const isRecordingRef = useRef(isRecording)
+  const cancelRecordingRef = useRef(cancelRecording)
+  const startRecordingRef = useRef(startRecording)
+  const handleStopRecordingRef = useRef(handleStopRecording)
+
+  // Update refs when values change
+  useEffect(() => {
+    isRecordingRef.current = isRecording
+    cancelRecordingRef.current = cancelRecording
+    startRecordingRef.current = startRecording
+    handleStopRecordingRef.current = handleStopRecording
+  }, [isRecording, cancelRecording, startRecording, handleStopRecording])
+
+  // Register recording controls with player store for keyboard shortcuts
+  // Use individual selectors to get stable function references
+  const registerRecordingControls = usePlayerStore(
+    (state) => state.registerRecordingControls
+  )
+  const unregisterRecordingControls = usePlayerStore(
+    (state) => state.unregisterRecordingControls
+  )
+
+  // Register controls only once on mount - use refs to avoid re-triggering
+  useEffect(() => {
+    registerRecordingControls({
+      startRecording: () => startRecordingRef.current(),
+      stopRecording: async () => {
+        await handleStopRecordingRef.current()
+      },
+      isRecording: () => isRecordingRef.current,
+    })
+
+    return () => {
+      unregisterRecordingControls()
+    }
+  }, [registerRecordingControls, unregisterRecordingControls])
+
+  // Cancel recording when component unmounts if still recording
+  useEffect(() => {
+    return () => {
+      // Check if recording is still active when component unmounts
+      // Use refs to access latest values in cleanup
+      if (isRecordingRef.current) {
+        cancelRecordingRef.current()
+      }
+    }
+  }, []) // Empty deps - only run on mount/unmount
+
+  // ESC key shortcut to cancel recording
+  useEffect(() => {
+    if (!isRecording) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        cancelRecording()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isRecording, cancelRecording])
 
   // Handle record button click
   const handleRecordClick = useCallback(async () => {

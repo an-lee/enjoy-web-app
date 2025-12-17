@@ -30,6 +30,7 @@ export function EchoRegionControls({
   const { t } = useTranslation()
 
   // Get echo region data and handlers from hook
+  // Pass lines to enable expand/shrink operations
   const {
     echoStartLineIndex,
     echoEndLineIndex,
@@ -37,7 +38,7 @@ export function EchoRegionControls({
     handleExpandEchoBackward,
     handleShrinkEchoForward,
     handleShrinkEchoBackward,
-  } = useEchoRegion()
+  } = useEchoRegion(lines)
 
   // Determine handlers and disabled states based on position
   const onExpand = position === 'top' ? handleExpandEchoBackward : handleExpandEchoForward
