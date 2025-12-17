@@ -17,10 +17,12 @@ import {
 } from '@/components/ui/drawer'
 import { usePlayerStore } from '@/stores/player'
 import { useRetranscribe } from '@/hooks/use-retranscribe'
-import { useTranscriptDisplay } from '../transcript/use-transcript-display'
-import { LANGUAGE_NAMES } from '../transcript/constants'
-import { LanguageSelector } from '../transcript/language-selector'
-import { RetranscribeDialog } from '../transcript/retranscribe-dialog'
+import {
+  useTranscriptDisplay,
+  RetranscribeDialog,
+  LANGUAGE_NAMES,
+} from '../transcript'
+import { LanguageSelector } from '../shared'
 
 interface ExpandedPlayerHeaderProps {
   // No props needed - component gets all data from hooks

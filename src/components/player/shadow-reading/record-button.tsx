@@ -6,7 +6,7 @@
 
 import { Icon } from '@iconify/react'
 import { useTranslation } from 'react-i18next'
-import {Button} from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 
 interface RecordButtonProps {
   isRecording: boolean

@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
 import { usePlayerStore } from '@/stores/player'
 import { setDisplayTime } from '@/hooks/use-display-time'
-import { useTranscriptDisplay } from '@/components/player/transcript/use-transcript-display'
+import { useTranscriptDisplay } from '@/components/player/transcript'
 import {
   clampSeekTimeToEchoWindow,
   normalizeEchoWindow,
-} from '@/components/player/echo/echo-constraints'
+} from '@/components/player/echo/echo-utils'
 import { createLogger } from '@/lib/utils'
 
 const log = createLogger({ name: 'usePlayerControls' })

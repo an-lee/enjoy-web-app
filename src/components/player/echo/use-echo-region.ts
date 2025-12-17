@@ -6,9 +6,9 @@
 
 import { useCallback, useMemo, useRef, useEffect } from 'react'
 import { usePlayerStore } from '@/stores/player'
-import { useTranscriptDisplay } from './use-transcript-display'
+import { useTranscriptDisplay } from '../transcript/use-transcript-display'
 import { createLogger } from '@/lib/utils'
-import type { TranscriptLineState } from './types'
+import type { TranscriptLineState } from '../transcript/types'
 
 const log = createLogger({ name: 'useEchoRegion' })
 

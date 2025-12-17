@@ -3,7 +3,7 @@ import {
   clampSeekTimeToEchoWindow,
   decideEchoPlaybackTime,
   normalizeEchoWindow,
-} from './echo-constraints'
+} from './echo-utils'
 
 describe('echo-constraints', () => {
   describe('normalizeEchoWindow', () => {

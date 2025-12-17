@@ -7,9 +7,9 @@
 import { memo, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
-import { EchoRegionControls } from './echo-region-controls'
-import { ShadowReadingPanel } from './shadow-reading-panel'
-import { useEchoRegion } from './use-echo-region'
+import { EchoRegionControls } from '../echo/echo-region-controls'
+import { ShadowReadingPanel } from '../shadow-reading/shadow-reading-panel'
+import { useEchoRegion } from '../echo/use-echo-region'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLinesProps {

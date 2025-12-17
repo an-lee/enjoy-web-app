@@ -8,7 +8,7 @@
 import { useRef, useEffect } from 'react'
 import { useAppHotkey } from '@/components/hotkeys'
 import { usePlayerStore } from '@/stores/player'
-import { useEchoRegion } from './transcript/use-echo-region'
+import { useEchoRegion } from './echo/use-echo-region'
 import { usePlayerControls } from '@/hooks/use-player-controls'
 
 interface PlayerHotkeysProps {

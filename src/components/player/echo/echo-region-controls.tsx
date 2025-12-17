@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { formatHotkeyAsKbd } from '@/lib/format-hotkey'
 import { useHotkeyBinding } from '@/stores/hotkeys'
 import { useEchoRegion } from './use-echo-region'
-import type { TranscriptLineState } from './types'
+import type { TranscriptLineState } from '../transcript/types'
 import {
   Tooltip,
   TooltipContent,

@@ -19,7 +19,7 @@ import {
   decideEchoPlaybackTime,
   normalizeEchoWindow,
   type EchoWindow,
-} from '@/components/player/echo/echo-constraints'
+} from '@/components/player/echo'
 import { createLogger } from '@/lib/utils'
 
 const log = createLogger({ name: 'useMediaElement' })

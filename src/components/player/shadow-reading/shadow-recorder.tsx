@@ -1,5 +1,5 @@
 /**
- * ShadowRecording Component
+ * ShadowRecorder Component
  *
  * Independent component for shadow reading recording functionality.
  * Handles recording UI, visualization, and controls.
@@ -10,8 +10,8 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useRecorder } from '@/hooks/use-recorder'
 import { usePlayerStore } from '@/stores/player'
-import { useTranscriptDisplay } from './use-transcript-display'
-import { useEchoRegion } from './use-echo-region'
+import { useTranscriptDisplay } from '../transcript/use-transcript-display'
+import { useEchoRegion } from '../echo/use-echo-region'
 import { RecordButton } from './record-button'
 import { Button } from '@/components/ui/button'
 import { ShadowRecordingProgress } from './shadow-recording-progress'
@@ -254,3 +254,4 @@ export function ShadowRecorder() {
     </div>
   )
 }
+
