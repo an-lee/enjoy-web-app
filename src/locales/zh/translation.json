@@ -8,6 +8,7 @@
     "confirm": "确认",
     "save": "保存",
     "delete": "删除",
+    "download": "下载",
     "edit": "编辑",
     "close": "关闭",
     "back": "返回",
@@ -263,6 +264,10 @@
       "existingRecordings": "已有录音",
       "recordingNumber": "录音 {{number}}",
       "selectRecording": "选择录音",
+      "deleteRecording": {
+        "title": "删除录音",
+        "description": "确定要删除此录音吗？此操作无法撤消。"
+      },
       "syncing": "正在从服务器同步字幕...",
       "generateTranscript": "生成字幕"
     }

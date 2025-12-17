@@ -8,6 +8,7 @@
     "confirm": "Confirm",
     "save": "Save",
     "delete": "Delete",
+    "download": "Download",
     "edit": "Edit",
     "close": "Close",
     "back": "Back",
@@ -264,7 +265,11 @@
       "cancel": "Cancel",
       "existingRecordings": "Existing Recordings",
       "recordingNumber": "Recording {{number}}",
-      "selectRecording": "Select Recording"
+      "selectRecording": "Select Recording",
+      "deleteRecording": {
+        "title": "Delete Recording",
+        "description": "Are you sure you want to delete this recording? This action cannot be undone."
+      }
     }
   },
   "vocabulary": {

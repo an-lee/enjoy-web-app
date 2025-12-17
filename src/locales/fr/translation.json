@@ -8,6 +8,7 @@
     "confirm": "Confirmer",
     "save": "Enregistrer",
     "delete": "Supprimer",
+    "download": "Télécharger",
     "edit": "Modifier",
     "close": "Fermer",
     "back": "Retour",
@@ -264,7 +265,11 @@
       "cancel": "Annuler",
       "existingRecordings": "Enregistrements Existants",
       "recordingNumber": "Enregistrement {{number}}",
-      "selectRecording": "Sélectionner un Enregistrement"
+      "selectRecording": "Sélectionner un Enregistrement",
+      "deleteRecording": {
+        "title": "Supprimer l'enregistrement",
+        "description": "Êtes-vous sûr de vouloir supprimer cet enregistrement ? Cette action est irréversible."
+      }
     }
   },
   "vocabulary": {

@@ -6,10 +6,30 @@
  */
 
 import { useRef, useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
 import { Icon } from '@iconify/react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { usePlayerStore } from '@/stores/player'
+import { deleteRecording } from '@/db'
+import { recordingQueryKeys } from '@/hooks/queries'
 import { cn } from '@/lib/utils'
 import type { Recording } from '@/types/db'
 
@@ -41,11 +61,15 @@ function createRecordingUrl(recording: Recording): string | null {
 }
 
 export function RecordingPlayer({ recording, className }: RecordingPlayerProps) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // Create and cleanup blob URL when recording changes
   useEffect(() => {
@@ -152,6 +176,60 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
     [audioUrl, duration]
   )
 
+  // Download the recording as a file
+  const handleDownload = useCallback(() => {
+    if (!recording.blob || !audioUrl) return
+
+    const a = document.createElement('a')
+    a.href = audioUrl
+    // Generate filename with date
+    const date = recording.createdAt
+      ? new Date(recording.createdAt).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+    a.download = `recording-${date}-${recording.id.slice(0, 8)}.webm`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }, [recording.blob, recording.id, recording.createdAt, audioUrl])
+
+  // Delete the recording
+  const handleDelete = useCallback(async () => {
+    if (isDeleting) return
+
+    setIsDeleting(true)
+    try {
+      // Stop playback first
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+
+      // Delete from database
+      await deleteRecording(recording.id)
+
+      // Close the dialog
+      setShowDeleteDialog(false)
+
+      // Invalidate the recordings query to trigger refetch
+      // Calculate the echo region from recording's reference times
+      const startTime = Math.round(recording.referenceStart)
+      const endTime = Math.round(recording.referenceStart + recording.referenceDuration)
+
+      await queryClient.invalidateQueries({
+        queryKey: recordingQueryKeys.byEchoRegion(
+          recording.targetType,
+          recording.targetId,
+          recording.language,
+          startTime,
+          endTime
+        ),
+      })
+    } catch (error) {
+      console.error('Failed to delete recording:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [recording, queryClient, isDeleting])
+
   const progressPercentage = duration === 0 ? 0 : (currentTime / duration) * 100
 
   // Use refs to store latest values for the controls callbacks
@@ -193,7 +271,7 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
         variant="outline"
         size="icon"
         onClick={handlePlayPause}
-        className="h-8 w-8 shrink-0"
+        className="h-8 w-8 shrink-0 rounded-full cursor-pointer"
       >
         <Icon
           icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
@@ -216,6 +294,57 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
           {formatTime(duration)}
         </span>
       </div>
+
+      {/* More Actions Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 cursor-pointer"
+          >
+            <Icon icon="lucide:more-vertical" className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleDownload} disabled={!recording.blob}>
+            <Icon icon="lucide:download" className="h-4 w-4 mr-2" />
+            {t('common.download')}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setShowDeleteDialog(true)}
+            disabled={isDeleting}
+            variant="destructive"
+          >
+            <Icon icon="lucide:trash-2" className="h-4 w-4 mr-2" />
+            {t('common.delete')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('player.transcript.deleteRecording.title')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('player.transcript.deleteRecording.description')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -8,6 +8,7 @@
     "confirm": "Bestätigen",
     "save": "Speichern",
     "delete": "Löschen",
+    "download": "Herunterladen",
     "edit": "Bearbeiten",
     "close": "Schließen",
     "back": "Zurück",
@@ -264,7 +265,11 @@
       "cancel": "Abbrechen",
       "existingRecordings": "Vorhandene Aufnahmen",
       "recordingNumber": "Aufnahme {{number}}",
-      "selectRecording": "Aufnahme auswählen"
+      "selectRecording": "Aufnahme auswählen",
+      "deleteRecording": {
+        "title": "Aufnahme löschen",
+        "description": "Sind Sie sicher, dass Sie diese Aufnahme löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+      }
     }
   },
   "vocabulary": {

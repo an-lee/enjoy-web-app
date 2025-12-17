@@ -8,6 +8,7 @@
     "confirm": "Confirmar",
     "save": "Guardar",
     "delete": "Eliminar",
+    "download": "Descargar",
     "edit": "Editar",
     "close": "Cerrar",
     "back": "Atrás",
@@ -264,7 +265,11 @@
       "cancel": "Cancelar",
       "existingRecordings": "Grabaciones Existentes",
       "recordingNumber": "Grabación {{number}}",
-      "selectRecording": "Seleccionar Grabación"
+      "selectRecording": "Seleccionar Grabación",
+      "deleteRecording": {
+        "title": "Eliminar grabación",
+        "description": "¿Está seguro de que desea eliminar esta grabación? Esta acción no se puede deshacer."
+      }
     }
   },
   "vocabulary": {

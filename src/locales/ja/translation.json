@@ -8,6 +8,7 @@
     "confirm": "確認",
     "save": "保存",
     "delete": "削除",
+    "download": "ダウンロード",
     "edit": "編集",
     "close": "閉じる",
     "back": "戻る",
@@ -264,7 +265,11 @@
       "cancel": "キャンセル",
       "existingRecordings": "既存の録音",
       "recordingNumber": "録音 {{number}}",
-      "selectRecording": "録音を選択"
+      "selectRecording": "録音を選択",
+      "deleteRecording": {
+        "title": "録音を削除",
+        "description": "この録音を削除してもよろしいですか？この操作は元に戻せません。"
+      }
     }
   },
   "vocabulary": {
