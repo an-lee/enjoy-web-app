@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { usePlayerStore } from '@/stores/player'
 import { setDisplayTime } from '@/hooks/player/use-display-time'
-import { useTranscriptDisplay } from '@/components/player/transcript'
+import { useTranscriptDisplay } from '@/hooks/player'
 import {
   clampSeekTimeToEchoWindow,
   normalizeEchoWindow,

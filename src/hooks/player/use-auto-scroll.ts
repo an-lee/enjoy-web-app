@@ -5,8 +5,8 @@
  */
 
 import { useEffect, useRef } from 'react'
-import type { TranscriptDisplayConfig } from './types'
-import { SCROLL_OFFSET } from './constants'
+import type { TranscriptDisplayConfig } from '../../components/player/transcript/types'
+import { SCROLL_OFFSET } from '../../components/player/transcript/constants'
 
 export function useAutoScroll(
   scrollToLineIndex: number,

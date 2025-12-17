@@ -12,7 +12,6 @@ export { ProgressBar } from './shared/progress-bar'
 // Transcript components
 export {
   TranscriptDisplay,
-  useTranscriptDisplay,
   type TranscriptDisplayConfig,
   type TranscriptDisplayProps,
 } from './transcript'

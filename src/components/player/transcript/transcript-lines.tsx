@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
 import { EchoRegionControls } from '../echo/echo-region-controls'
 import { ShadowReadingPanel } from '../shadow-reading/shadow-reading-panel'
-import { useEchoRegion } from '../echo/use-echo-region'
+import { useEchoRegion } from '@/hooks/player'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLinesProps {

@@ -11,10 +11,6 @@ export { TranscriptLines } from './transcript-lines'
 export { TranscriptLineItem } from './transcript-line-item'
 export { RetranscribeDialog } from './retranscribe-dialog'
 
-// Hooks
-export { useTranscriptDisplay } from './use-transcript-display'
-export { useAutoScroll } from './use-auto-scroll'
-
 // Types
 export type {
   TranscriptDisplayConfig,

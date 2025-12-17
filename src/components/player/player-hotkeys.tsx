@@ -8,8 +8,7 @@
 import { useRef, useEffect } from 'react'
 import { useAppHotkey } from '@/components/hotkeys'
 import { usePlayerStore } from '@/stores/player'
-import { useEchoRegion } from './echo'
-import { usePlayerControls } from '@/hooks/player'
+import { useEchoRegion, usePlayerControls } from '@/hooks/player'
 
 interface PlayerHotkeysProps {
   // No props needed - component gets all data from hooks

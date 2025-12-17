@@ -16,12 +16,11 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer'
 import { usePlayerStore } from '@/stores/player'
-import { useRetranscribe } from '@/hooks/player'
 import {
   useTranscriptDisplay,
-  RetranscribeDialog,
-  LANGUAGE_NAMES,
-} from '../transcript'
+  useRetranscribe,
+} from '@/hooks/player'
+import { RetranscribeDialog, LANGUAGE_NAMES } from '../transcript'
 import { LanguageSelector } from '../shared'
 
 interface ExpandedPlayerHeaderProps {

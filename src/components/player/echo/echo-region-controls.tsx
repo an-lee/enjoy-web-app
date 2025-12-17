@@ -10,7 +10,7 @@ import { Icon } from '@iconify/react'
 import { cn } from '@/lib/utils'
 import { formatHotkeyAsKbd } from '@/lib/format-hotkey'
 import { useHotkeyBinding } from '@/stores/hotkeys'
-import { useEchoRegion } from './use-echo-region'
+import { useEchoRegion } from '@/hooks/player'
 import type { TranscriptLineState } from '../transcript/types'
 import {
   Tooltip,

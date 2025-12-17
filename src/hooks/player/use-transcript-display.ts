@@ -14,7 +14,7 @@ import type {
   TranscriptLineState,
   SelectedTranscripts,
   UseTranscriptDisplayReturn,
-} from './types'
+} from '../../components/player/transcript/types'
 import { useDisplayTime } from '@/hooks/player/use-display-time'
 
 // ============================================================================
