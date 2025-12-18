@@ -46,18 +46,6 @@ export function getAzureConfig(env: Env): AzureConfig {
 	return { subscriptionKey, region }
 }
 
-/**
- * Estimated usage factors based on real usage metrics.
- * These are used to estimate actual Azure usage for cost tracking.
- *
- * TTS: cost is per character
- * Assessment: cost is per second of audio
- *
- * The actual usage per request will be provided by the client.
- */
-const TTS_COST_PER_CHARACTER = 0.000015 // $15 per 1M characters
-const ASSESSMENT_COST_PER_SECOND = 0.000361 // Approximate cost per second
-
 type AzureTokenUsagePurpose = 'tts' | 'assessment'
 
 export interface AzureTokenUsagePayload {
@@ -86,80 +74,6 @@ function getAzureTokenCacheKey(userId: string): string {
 	return `azure-token:${userId}`
 }
 
-// Note: Hourly token limits were removed in favor of daily limits only.
-
-/**
- * Record estimated usage for cost tracking
- */
-async function recordEstimatedUsage(
-	userId: string,
-	tier: string,
-	kv: KVNamespace | undefined,
-	usagePayload?: AzureTokenUsagePayload
-): Promise<void> {
-	if (!kv) return
-
-	const today = new Date().toISOString().split('T')[0]
-	const usageKey = `azure-usage:${userId}:${today}`
-	const usageStr = await kv.get(usageKey, 'text')
-	const usage =
-		usageStr || '{}'
-			? {
-					tokens: 0,
-					estimatedUsage: 0,
-					ttsCharacters: 0,
-					assessmentSeconds: 0,
-					...(usageStr ? JSON.parse(usageStr) : {}),
-			  }
-			: {
-					tokens: 0,
-					estimatedUsage: 0,
-					ttsCharacters: 0,
-					assessmentSeconds: 0,
-			  }
-
-	usage.tokens = (usage.tokens || 0) + 1
-
-	// Estimate usage based on payload
-	if (usagePayload?.purpose === 'tts' && usagePayload.tts) {
-		const textLength = Math.max(usagePayload.tts.textLength, 0)
-		usage.ttsCharacters = (usage.ttsCharacters || 0) + textLength
-		usage.estimatedUsage =
-			(usage.estimatedUsage || 0) + textLength * TTS_COST_PER_CHARACTER
-	} else if (usagePayload?.purpose === 'assessment' && usagePayload.assessment) {
-		const durationSeconds = Math.max(usagePayload.assessment.durationSeconds, 0)
-		usage.assessmentSeconds = (usage.assessmentSeconds || 0) + durationSeconds
-		usage.estimatedUsage =
-			(usage.estimatedUsage || 0) + durationSeconds * ASSESSMENT_COST_PER_SECOND
-	}
-
-	usage.lastTokenTime = Date.now()
-
-	// Expire after 2 days
-	const expirationTtl = 2 * 24 * 60 * 60
-	await kv.put(usageKey, JSON.stringify(usage), { expirationTtl })
-
-	// Log warning if estimated cost is high (thresholds by tier, in USD per day)
-	const costWarningThresholds: Record<string, number> = {
-		free: 0.3, // Free: very small daily budget
-		pro: 6.0, // Pro: around expected monthly cost / 30
-		ultra: 18.0, // Ultra: higher budget for heavy users
-	}
-
-	const threshold =
-		costWarningThresholds[tier] ?? costWarningThresholds.free
-
-	if ((usage.estimatedUsage || 0) > threshold) {
-		log.warn('High Azure token cost detected', {
-			userId,
-			tier,
-			tokens: usage.tokens,
-			estimatedUsage: usage.estimatedUsage,
-			threshold,
-		})
-	}
-}
-
 /**
  * Generate Azure Speech token
  * Includes rate limiting and usage tracking
@@ -168,23 +82,24 @@ export async function generateAzureToken(
 	config: AzureConfig,
 	user: UserProfile,
 	kv: KVNamespace | undefined,
-	usagePayload: AzureTokenUsagePayload
+	usage: AzureTokenUsagePayload
 ): Promise<AzureTokenResponse> {
+
 	// ------------------------------------------------------------------------
 	// Credits-based daily quota check
 	// ------------------------------------------------------------------------
 	try {
 		let requiredCredits = 0
 
-		if (usagePayload.purpose === 'tts' && usagePayload.tts) {
+		if (usage.purpose === 'tts' && usage.tts) {
 			requiredCredits = calculateCredits({
 				type: 'tts',
-				chars: usagePayload.tts.textLength,
+				chars: usage.tts.textLength,
 			})
-		} else if (usagePayload.purpose === 'assessment' && usagePayload.assessment) {
+		} else if (usage.purpose === 'assessment' && usage.assessment) {
 			requiredCredits = calculateCredits({
 				type: 'assessment',
-				seconds: usagePayload.assessment.durationSeconds,
+				seconds: usage.assessment.durationSeconds,
 			})
 		} else {
 			throw new ServiceError('Invalid Azure usage payload')
@@ -299,9 +214,6 @@ export async function generateAzureToken(
 			})
 		}
 	}
-
-	// Record estimated usage for cost tracking
-	await recordEstimatedUsage(user.id, user.subscriptionTier, kv, usagePayload)
 
 	return {
 		token,

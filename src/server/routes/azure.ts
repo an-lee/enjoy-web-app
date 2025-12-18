@@ -35,16 +35,16 @@ azure.post('/tokens', async (c) => {
 
 		// Optional usage payload from client to improve cost estimation.
 		// During the compatibility window, default to a 15-second assessment
-		// when the client does not provide usagePayload.
-		const usagePayload: AzureTokenUsagePayload =
-			body?.usagePayload ?? {
+		// when the client does not provide usage.
+		const usage: AzureTokenUsagePayload =
+			body?.usage ?? {
 				purpose: 'assessment',
 				assessment: {
 					durationSeconds: 15,
 				},
 			}
 
-		const result = await generateAzureToken(config, user, kv, usagePayload)
+		const result = await generateAzureToken(config, user, kv, usage)
 
 		return c.json(result)
 	} catch (error) {

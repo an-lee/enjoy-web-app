@@ -180,12 +180,41 @@ export async function checkAndDeductCredits(
 		}
 	}
 
+	log.debug('Checking credits for request', {
+		userId,
+		tier,
+		requiredCredits,
+		limit,
+		today,
+		key,
+		resetAt,
+	})
+
 	const stored = await kv.get(key, 'text')
 	const used = stored ? parseInt(stored, 10) || 0 : 0
 	const nextUsed = used + requiredCredits
 
+	log.debug('Loaded current credits usage from KV', {
+		userId,
+		key,
+		stored,
+		used,
+		requiredCredits,
+		nextUsed,
+		limit,
+	})
+
 	if (nextUsed > limit) {
 		// Do not update KV when rejecting
+		log.info('Credits check rejected - daily limit exceeded', {
+			userId,
+			tier,
+			requiredCredits,
+			used,
+			limit,
+			nextUsed,
+			resetAt,
+		})
 		return {
 			allowed: false,
 			used,
@@ -198,6 +227,17 @@ export async function checkAndDeductCredits(
 	// Persist updated usage with a small TTL buffer for cleanup (2 days)
 	const expirationTtl = 2 * 24 * 60 * 60 // seconds
 	await kv.put(key, String(nextUsed), { expirationTtl })
+
+	log.info('Credits check passed and usage updated', {
+		userId,
+		tier,
+		requiredCredits,
+		previousUsed: used,
+		used: nextUsed,
+		limit,
+		expirationTtl,
+		resetAt,
+	})
 
 	return {
 		allowed: true,
