@@ -47,16 +47,23 @@ export function handleError(c: Context, error: unknown, defaultMessage = 'Intern
 	log.error('API Error:', error)
 
 	if (error instanceof RateLimitError) {
+		const limit = {
+			label: error.label,
+			used: error.used,
+			limit: error.limit,
+			resetAt: new Date(error.resetAt).toISOString(),
+			window: error.window,
+			scope: error.scope ?? null,
+		}
+
 		return c.json(
 			{
-				message: 'Rate limit exceeded',
-				limitInfo: {
-					label: error.label,
-					used: error.used,
-					limit: error.limit,
-					resetsAt: new Date(error.resetAt).toISOString(),
-					window: 'daily',
-				},
+				error: 'rate_limit_exceeded',
+				message: error.message,
+				code: error.code,
+				category: error.category,
+				kind: error.kind,
+			limit,
 			},
 			429
 		)
@@ -80,17 +87,9 @@ export function handleError(c: Context, error: unknown, defaultMessage = 'Intern
 	return c.json(createErrorResponse('Internal server error', defaultMessage), 500)
 }
 
-/**
- * Service type to human-readable label mapping
- */
-const SERVICE_LABELS: Record<string, string> = {
-	translation: 'Daily translations',
-	dictionary: 'Daily dictionary lookups',
-	asr: 'Daily speech recognitions',
-	tts: 'Daily text-to-speech',
-	assessment: 'Daily assessments',
-	credits: 'Daily Credits',
-}
+export type RateLimitKind = 'credits' | 'azure_token'
+
+export type RateLimitCategory = 'business_limit' | 'infrastructure_limit'
 
 /**
  * Custom error classes
@@ -98,17 +97,39 @@ const SERVICE_LABELS: Record<string, string> = {
 export class RateLimitError extends Error {
 	constructor(
 		message: string,
-		public readonly service: string,
+		public readonly kind: RateLimitKind,
 		public readonly limit: number,
 		public readonly used: number,
-		public readonly resetAt: number
+		public readonly resetAt: number,
+		public readonly scope?: string
 	) {
 		super(message)
 		this.name = 'RateLimitError'
 	}
 
+	get code(): string {
+		if (this.kind === 'credits') return 'CREDITS_EXHAUSTED'
+		if (this.kind === 'azure_token') return 'AZURE_TOKEN_RATE_LIMITED'
+		return 'RATE_LIMIT_EXCEEDED'
+	}
+
+	get category(): RateLimitCategory {
+		return this.kind === 'credits' ? 'business_limit' : 'infrastructure_limit'
+	}
+
+	get window(): string {
+		// Derive a simple window label from scope; fall back to 'daily'
+		if (!this.scope) return this.kind === 'credits' ? 'daily' : 'unknown'
+		if (this.scope.includes('daily')) return 'daily'
+		if (this.scope.includes('hour')) return 'hour'
+		if (this.scope.includes('minute')) return 'minute'
+		return this.kind === 'credits' ? 'daily' : 'unknown'
+	}
+
 	get label(): string {
-		return SERVICE_LABELS[this.service] || `Daily ${this.service}`
+		if (this.kind === 'credits') return 'Daily Credits'
+		if (this.kind === 'azure_token') return 'Azure token requests'
+		return 'Rate limit'
 	}
 }
 

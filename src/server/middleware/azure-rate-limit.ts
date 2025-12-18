@@ -175,12 +175,24 @@ export async function azureTokenRateLimitMiddleware(
 					resetAt: result.resetAt,
 				})
 
+				const scope =
+					key.includes(':user:') && key.includes(':minute')
+						? 'user_minute'
+						: key.includes(':user:') && key.includes(':hour')
+							? 'user_hour'
+							: key.includes(':ip:') && key.includes(':minute')
+								? 'ip_minute'
+								: key.includes(':ip:') && key.includes(':hour')
+									? 'ip_hour'
+									: undefined
+
 				throw new RateLimitError(
 					'Azure token rate limit exceeded',
 					'azure_token',
 					result.limit,
 					result.used,
-					result.resetAt
+					result.resetAt,
+					scope
 				)
 			}
 		}
@@ -198,7 +210,14 @@ export async function azureTokenRateLimitMiddleware(
 		// On unexpected errors, fail closed as well
 		const windowSeconds = 60
 		const { resetAt } = getWindowInfo(windowSeconds)
-		throw new RateLimitError('Azure token rate limit failed', 'azure_token', 0, 0, resetAt)
+		throw new RateLimitError(
+			'Azure token rate limit failed',
+			'azure_token',
+			0,
+			0,
+			resetAt,
+			'unknown'
+		)
 	}
 
 	await next()

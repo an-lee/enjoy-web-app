@@ -52,7 +52,8 @@ export async function enforceCreditsLimit(
 				'credits',
 				result.limit,
 				result.used,
-				result.resetAt
+				result.resetAt,
+				'user_daily'
 			)
 		}
 	} catch (error) {

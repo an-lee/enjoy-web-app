@@ -204,7 +204,8 @@ export async function generateAzureToken(
 					'credits',
 					creditsResult.limit,
 					creditsResult.used,
-					creditsResult.resetAt
+					creditsResult.resetAt,
+					'user_daily'
 				)
 			}
 		}
