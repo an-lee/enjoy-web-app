@@ -44,6 +44,11 @@
 			"binding": "TRANSLATION_CACHE_KV",
 			"id": "c98f68336b8c47de91699ec88e79eb6f",
 			"preview_id": "389491b5871e43e78d1257bd5cf31350"
+		},
+		{
+			"binding": "DICTIONARY_CACHE_KV",
+			"id": "81d28ded93cf4ccdb6a742104eb927c0",
+			"preview_id": "207177313bca48399e19b03c2a65f319"
 		}
 	],
 	/**

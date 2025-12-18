@@ -296,6 +296,11 @@ Two-tier dictionary service:
 - **Basic Dictionary**: Simple definitions via Enjoy API (FREE) - see `@/api/dictionary`
 - **Smart Dictionary**: AI-powered contextual detailed analysis with context awareness (all providers) - see `@/ai/services/smart-dictionary`
 
+For the Smart Dictionary service, there are two main API surfaces:
+
+- **Generic LLM endpoint**: `/api/chat/completions` (OpenAI-compatible) – used by the AI service layer for flexible, multi-purpose dictionary and translation prompts.
+- **AI Dictionary endpoint**: `/api/dictionary/query` – specialized, word-focused AI dictionary interface with JSON-mode structured output and permanent caching.
+
 - **Enjoy**: `/api/chat/completions` via `EnjoyAIClient`
 - **BYOK**: User's LLM API via `BYOKClient`
 - **Local**: transformers.js models in Web Workers
