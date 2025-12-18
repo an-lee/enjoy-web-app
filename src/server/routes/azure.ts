@@ -5,7 +5,7 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
-import { getAzureConfig, generateAzureToken } from '@/server/services/azure'
+import { getAzureConfig, generateAzureToken, type AzureTokenUsagePayload } from '@/server/services/azure'
 import { handleError } from '@/server/utils/errors'
 
 const azure = new Hono<{
@@ -31,8 +31,16 @@ azure.post('/tokens', async (c) => {
 
 		const config = getAzureConfig(env)
 
-		// Optional usage payload from client to improve cost estimation
-		const usagePayload = body?.usagePayload
+		// Optional usage payload from client to improve cost estimation.
+		// During the compatibility window, default to a 15-second assessment
+		// when the client does not provide usagePayload.
+		const usagePayload: AzureTokenUsagePayload =
+			body?.usagePayload ?? {
+				purpose: 'assessment',
+				assessment: {
+					durationSeconds: 15,
+				},
+			}
 
 		const result = await generateAzureToken(config, user, kv, usagePayload)
 

@@ -168,7 +168,7 @@ export async function generateAzureToken(
 	config: AzureConfig,
 	user: UserProfile,
 	kv: KVNamespace | undefined,
-	usagePayload?: AzureTokenUsagePayload
+	usagePayload: AzureTokenUsagePayload
 ): Promise<AzureTokenResponse> {
 	// ------------------------------------------------------------------------
 	// Credits-based daily quota check
@@ -176,22 +176,18 @@ export async function generateAzureToken(
 	try {
 		let requiredCredits = 0
 
-		if (usagePayload?.purpose === 'tts' && usagePayload.tts) {
+		if (usagePayload.purpose === 'tts' && usagePayload.tts) {
 			requiredCredits = calculateCredits({
 				type: 'tts',
 				chars: usagePayload.tts.textLength,
 			})
-		} else if (usagePayload?.purpose === 'assessment' && usagePayload.assessment) {
+		} else if (usagePayload.purpose === 'assessment' && usagePayload.assessment) {
 			requiredCredits = calculateCredits({
 				type: 'assessment',
 				seconds: usagePayload.assessment.durationSeconds,
 			})
-		}
-
-		// If we could not infer usage (missing payload), fall back to a minimal
-		// but non-zero charge to avoid completely free usage.
-		if (!requiredCredits && usagePayload) {
-			requiredCredits = 1
+		} else {
+			throw new ServiceError('Invalid Azure usage payload')
 		}
 
 		if (requiredCredits > 0) {
