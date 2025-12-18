@@ -7,7 +7,6 @@ import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
 import { handleError, RateLimitError } from '@/server/utils/errors'
-import { streamSSE } from 'hono/streaming'
 import { createLogger } from '@/lib/utils'
 import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 import { enforceCreditsLimit } from '../middleware/credits'
@@ -59,6 +58,13 @@ chat.post('/completions', async (c) => {
 			return c.json({ error: 'messages is required and must be an array' }, 400)
 		}
 
+		if (stream) {
+			return c.json(
+				{ error: 'Streaming chat completions are not supported. Use non-streaming requests only.' },
+				400,
+			)
+		}
+
 		// Prepare parameters for Workers AI
 		const aiParams: any = {
 			messages,
@@ -74,73 +80,6 @@ chat.post('/completions', async (c) => {
 		}
 		if (presence_penalty !== undefined) {
 			aiParams.presence_penalty = presence_penalty
-		}
-
-		// Credits-based quota check for non-streaming usage
-		// For now, we only enforce Credits on non-streaming requests where we
-		// have reliable token usage from the provider.
-
-		// Handle streaming response
-		if (stream) {
-			aiParams.stream = true
-			const aiStream = await ai.run(model, aiParams)
-
-			return streamSSE(c, async (stream) => {
-				const reader = aiStream.getReader()
-				const decoder = new TextDecoder()
-
-				try {
-					while (true) {
-						const { done, value } = await reader.read()
-						if (done) break
-
-						const chunk = decoder.decode(value, { stream: true })
-						const lines = chunk.split('\n').filter((line) => line.trim() !== '')
-
-						for (const line of lines) {
-							if (line.startsWith('data: ')) {
-								const data = line.slice(6)
-								if (data === '[DONE]') {
-									await stream.writeSSE({ data: '[DONE]' })
-									continue
-								}
-
-								try {
-									const parsed = JSON.parse(data)
-									// Transform Workers AI response to OpenAI format
-									const openaiChunk = {
-										id: `chatcmpl-${Date.now()}`,
-										object: 'chat.completion.chunk',
-										created: Math.floor(Date.now() / 1000),
-										model: model,
-										choices: [
-											{
-												index: 0,
-												delta: {
-													content: parsed.response || '',
-												},
-												finish_reason: null,
-											},
-										],
-									}
-									await stream.writeSSE({ data: JSON.stringify(openaiChunk) })
-								} catch (e) {
-									// Skip invalid JSON lines
-									log.warn('Failed to parse SSE data:', data)
-								}
-							}
-						}
-					}
-
-					// Send final [DONE] message
-					await stream.writeSSE({ data: '[DONE]' })
-				} catch (error) {
-					log.error('Streaming error:', error)
-					await stream.writeSSE({
-						data: JSON.stringify({ error: 'Stream processing failed' }),
-					})
-				}
-			})
 		}
 
 		// Handle non-streaming response with Credits enforcement
