@@ -89,6 +89,7 @@ const SERVICE_LABELS: Record<string, string> = {
 	asr: 'Daily speech recognitions',
 	tts: 'Daily text-to-speech',
 	assessment: 'Daily assessments',
+	credits: 'Daily Credits',
 }
 
 /**

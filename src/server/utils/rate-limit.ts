@@ -58,22 +58,32 @@ export interface ServiceRateLimit {
  */
 const SERVICE_RATE_LIMITS: Record<ServiceType, ServiceRateLimit> = {
 	translation: {
-		// Unlimited in practice (cost is negligible ~$0.000068/request)
-		// Set high limit to prevent abuse while allowing free usage
-		free: 10000,   // Effectively unlimited for normal usage
-		pro: 10000,    // Effectively unlimited
-		ultra: 10000,  // Effectively unlimited
+		// Approximate daily caps based on Credits model (see doc/pricing-strategy.md)
+		// Typical unit: 300 characters / request ≈ 30 Credits
+		// Free:  1,000 / 30  ≈ 33 requests / day
+		// Pro:  60,000 / 30  ≈ 2,000 requests / day
+		// Ultra:150,000 / 30 ≈ 5,000 requests / day
+		free: 33,
+		pro: 2000,
+		ultra: 5000,
 	},
 	dictionary: {
-		free: 10,      // ~$0.00141/day, encourages local usage and upgrade
-		pro: 200,      // ~$0.0282/day, ~$0.85/month
-		ultra: 500,    // ~$0.0705/day, ~$2.12/month
+		// Typical unit: 250 tokens in + 120 tokens out ≈ 21 Credits
+		// Free:  1,000 / 21  ≈   47 requests / day
+		// Pro:  60,000 / 21  ≈ 2,857 requests / day
+		// Ultra:150,000 / 21 ≈ 7,142 requests / day
+		free: 47,
+		pro: 2857,
+		ultra: 7142,
 	},
 	asr: {
-		// Tracked in minutes
-		free: 5,       // 5 minutes/day, ~$0.0025/day, encourages local ASR usage
-		pro: 60,       // 60 minutes/day, ~$0.03/day, ~$0.90/month
-		ultra: 180,    // 180 minutes/day, ~$0.09/day, ~$2.70/month
+		// Tracked in "typical minutes" of audio (≈ 80 Credits / minute)
+		// Free:  1,000 / 80  ≈   12 minutes / day
+		// Pro:  60,000 / 80  ≈  750 minutes / day
+		// Ultra:150,000 / 80 ≈ 1,875 minutes / day
+		free: 12,
+		pro: 750,
+		ultra: 1875,
 	},
 	tts: {
 		// IMPORTANT: Tracked in REQUESTS (count), but cost is per CHARACTER of text
@@ -82,9 +92,13 @@ const SERVICE_RATE_LIMITS: Record<ServiceType, ServiceRateLimit> = {
 		// Cost per request: ~$0.0015 (100 chars) to $0.003 (200 chars)
 		// Assumed average: 150 characters per request = $0.00225 per request
 		// Reference: https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/
-		free: 5,       // ~5 requests/day, ~750 chars/day, ~$0.01125/day, ~$0.34/month (降低 50%)
-		pro: 120,      // ~120 requests/day, ~18,000 chars/day, ~$0.27/day, ~$8.10/month (上限)
-		ultra: 300,    // ~300 requests/day, ~45,000 chars/day, ~$0.675/day, ~$20.25/month (上限)
+		// Limits below are approximated from character quotas using 150 chars / request:
+		// - Free:  333 chars / 150 ≈   2 requests / day
+		// - Pro:  20,000 chars / 150 ≈ 133 requests / day
+		// - Ultra:50,000 chars / 150 ≈ 333 requests / day
+		free: 2,
+		pro: 133,
+		ultra: 333,
 	},
 	assessment: {
 		// IMPORTANT: Tracked in REQUESTS (count), not minutes
@@ -93,9 +107,13 @@ const SERVICE_RATE_LIMITS: Record<ServiceType, ServiceRateLimit> = {
 		// Each assessment typically processes 5-15 seconds of audio (average 10 seconds)
 		// Cost: ~$0.00361 per request (10 seconds × $0.000361/second)
 		// Reference: https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/
-		free: 1,       // 1 request/day (~10 seconds), ~$0.00361/day, ~$0.11/month (降低 67%)
-		pro: 20,      // 20 requests/day (~200 seconds), ~$0.0722/day, ~$2.17/month
-		ultra: 60,    // 60 requests/day (~600 seconds), ~$0.2166/day, ~$6.50/month
+		// In Credits model, a typical 15-second assessment costs 750 Credits:
+		// Free:  1,000 / 750  ≈   1 assessment / day
+		// Pro:  60,000 / 750  ≈  80 assessments / day
+		// Ultra:150,000 / 750 ≈ 200 assessments / day
+		free: 1,
+		pro: 80,
+		ultra: 200,
 	},
 }
 
@@ -189,11 +207,15 @@ export async function checkRateLimit(
 
 /**
  * Increment rate limit counter for a user and service
+ *
+ * `amount` represents how many "typical units" to add (see comments above for
+ * each service's unit definition). For most existing call sites this will be 1.
  */
 export async function incrementRateLimit(
 	service: ServiceType,
 	userId: string,
-	kv: KVNamespace | undefined
+	kv: KVNamespace | undefined,
+	amount = 1
 ): Promise<void> {
 	if (!kv) {
 		log.warn(`KV namespace not available for service ${service}, cannot increment rate limit`)
@@ -210,7 +232,7 @@ export async function incrementRateLimit(
 	// Increment and store
 	// Set expiration to 2 days to ensure cleanup (TTL in seconds)
 	const expirationTtl = 2 * 24 * 60 * 60 // 2 days
-	await kv.put(key, String(count + 1), {
+	await kv.put(key, String(count + amount), {
 		expirationTtl,
 	})
 }

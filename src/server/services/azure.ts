@@ -3,7 +3,8 @@
  */
 
 import { incrementRateLimit } from '../utils/rate-limit'
-import { ConfigurationError, ServiceError } from '../utils/errors'
+import { checkAndDeductCredits, calculateCredits } from '../utils/credits'
+import { ConfigurationError, ServiceError, RateLimitError } from '../utils/errors'
 import type { UserProfile } from '@/api/auth'
 import { createLogger } from '@/lib/utils'
 
@@ -176,6 +177,62 @@ export async function generateAzureToken(
 	rateLimit: { count: number; limit: number; resetAt: number },
 	usagePayload?: AzureTokenUsagePayload
 ): Promise<AzureTokenResponse> {
+	// ------------------------------------------------------------------------
+	// Credits-based daily quota check
+	// ------------------------------------------------------------------------
+	try {
+		let requiredCredits = 0
+
+		if (usagePayload?.purpose === 'tts' && usagePayload.tts) {
+			requiredCredits = calculateCredits({
+				type: 'tts',
+				chars: usagePayload.tts.textLength,
+			})
+		} else if (usagePayload?.purpose === 'assessment' && usagePayload.assessment) {
+			requiredCredits = calculateCredits({
+				type: 'assessment',
+				seconds: usagePayload.assessment.durationSeconds,
+			})
+		}
+
+		// If we could not infer usage (missing payload), fall back to a minimal
+		// but non-zero charge to avoid completely free usage.
+		if (!requiredCredits && usagePayload) {
+			requiredCredits = 1
+		}
+
+		if (requiredCredits > 0) {
+			const creditsResult = await checkAndDeductCredits(
+				user.id,
+				user.subscriptionTier,
+				requiredCredits,
+				kv
+			)
+
+			if (!creditsResult.allowed) {
+				throw new RateLimitError(
+					'Daily Credits limit reached',
+					'credits',
+					creditsResult.limit,
+					creditsResult.used,
+					creditsResult.resetAt
+				)
+			}
+		}
+	} catch (error) {
+		// Any unexpected error in Credits calculation should not expose internals
+		// but should still block the request safely.
+		if (error instanceof RateLimitError) {
+			throw error
+		}
+
+		log.error('Failed to apply Credits-based limit for Azure token', {
+			userId: user.id,
+			error: String(error),
+		})
+		throw new ServiceError('Failed to apply Credits-based limit')
+	}
+
 	// Try to reuse cached token first (still counts against rate limits per request)
 	let token: string | null = null
 
