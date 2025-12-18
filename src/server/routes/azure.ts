@@ -5,8 +5,6 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
-import { createRateLimitMiddleware } from '../middleware/rate-limit'
-import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
 import { getAzureConfig, generateAzureToken } from '@/server/services/azure'
 import { handleError } from '@/server/utils/errors'
 
@@ -14,14 +12,11 @@ const azure = new Hono<{
 	Bindings: Env
 	Variables: {
 		user: UserProfile
-		rateLimit: RateLimitResult
-		service: ServiceType
 	}
 }>()
 
-// Apply authentication and rate limiting middleware
+// Apply authentication middleware
 azure.use('/*', authMiddleware)
-azure.use('/tokens', createRateLimitMiddleware('assessment'))
 
 /**
  * Generate Azure Speech token
@@ -31,7 +26,6 @@ azure.post('/tokens', async (c) => {
 	try {
 		const user = c.get('user')
 		const body = await c.req.json().catch(() => ({}))
-		const rateLimit = c.get('rateLimit')
 		const env = c.env
 		const kv = (env as any).RATE_LIMIT_KV as KVNamespace | undefined
 
@@ -40,7 +34,7 @@ azure.post('/tokens', async (c) => {
 		// Optional usage payload from client to improve cost estimation
 		const usagePayload = body?.usagePayload
 
-		const result = await generateAzureToken(config, user, kv, rateLimit, usagePayload)
+		const result = await generateAzureToken(config, user, kv, usagePayload)
 
 		return c.json(result)
 	} catch (error) {

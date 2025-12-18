@@ -150,7 +150,7 @@ function getCreditsKey(userId: string, date: string): string {
 /**
  * Check and deduct Credits from the user's daily pool.
  *
- * - If KV is unavailable, the check is bypassed (but we log a warning).
+ * - If KV is unavailable, the check FAILS CLOSED (we log and return allowed: false).
  * - If the deduction would exceed the daily limit, `allowed` is false and no
  *   write is performed.
  */
@@ -166,13 +166,13 @@ export async function checkAndDeductCredits(
 	const resetAt = getTomorrowMidnightTimestamp()
 
 	if (!kv) {
-		log.warn('KV namespace not available for credits, skipping Credits enforcement', {
+		log.error('KV namespace not available for credits, blocking Credits-based request', {
 			userId,
 			tier,
 			requiredCredits,
 		})
 		return {
-			allowed: true,
+			allowed: false,
 			used: 0,
 			limit,
 			required: requiredCredits,

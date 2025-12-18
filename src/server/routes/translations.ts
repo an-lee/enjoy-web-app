@@ -7,11 +7,9 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
-import { createRateLimitMiddleware } from '../middleware/rate-limit'
-import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
 import { handleError, RateLimitError } from '@/server/utils/errors'
 import { createLogger } from '@/lib/utils'
-import { calculateCredits, checkAndDeductCredits } from '@/server/utils/credits'
+import { enforceCreditsLimit } from '../middleware/credits'
 
 // ============================================================================
 // Logger
@@ -23,14 +21,11 @@ const translations = new Hono<{
 	Bindings: Env
 	Variables: {
 		user: UserProfile
-		rateLimit: RateLimitResult
-		service: ServiceType
 	}
 }>()
 
-// Apply authentication and rate limiting middleware
+// Apply authentication middleware
 translations.use('/*', authMiddleware)
-translations.use('/', createRateLimitMiddleware('translation'))
 
 /**
  * Generate a cache key for translation request
@@ -141,7 +136,6 @@ translations.post('/', async (c) => {
 		const env = c.env
 		const ai = (env as any).AI as Ai
 		const kv = (env as any).TRANSLATION_CACHE_KV as KVNamespace | undefined
-		const rateKv = (env as any).RATE_LIMIT_KV as KVNamespace | undefined
 
 		if (!ai) {
 			return c.json({ error: 'Workers AI binding is not configured' }, 500)
@@ -165,25 +159,10 @@ translations.post('/', async (c) => {
 
 		// Credits-based quota check (per pricing-strategy.md)
 		try {
-			const user = c.get('user')
-			const credits = calculateCredits({ type: 'translation', chars: text.length })
-
-			const result = await checkAndDeductCredits(
-				user.id,
-				user.subscriptionTier,
-				credits,
-				rateKv
-			)
-
-			if (!result.allowed) {
-				throw new RateLimitError(
-					'Daily Credits limit reached',
-					'credits',
-					result.limit,
-					result.used,
-					result.resetAt
-				)
-			}
+			await enforceCreditsLimit(c, {
+				type: 'translation',
+				chars: text.length,
+			})
 		} catch (error) {
 			if (error instanceof RateLimitError) {
 				throw error

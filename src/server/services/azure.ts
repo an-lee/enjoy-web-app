@@ -2,7 +2,6 @@
  * Azure Speech Service
  */
 
-import { incrementRateLimit } from '../utils/rate-limit'
 import { checkAndDeductCredits, calculateCredits } from '../utils/credits'
 import { ConfigurationError, ServiceError, RateLimitError } from '../utils/errors'
 import type { UserProfile } from '@/api/auth'
@@ -18,11 +17,6 @@ export interface AzureTokenResponse {
 	token: string
 	region: string
 	expiresIn: number
-	rateLimit: {
-		count: number
-		limit: number
-		resetAt: string
-	}
 }
 
 export interface AzureConfig {
@@ -174,7 +168,6 @@ export async function generateAzureToken(
 	config: AzureConfig,
 	user: UserProfile,
 	kv: KVNamespace | undefined,
-	rateLimit: { count: number; limit: number; resetAt: number },
 	usagePayload?: AzureTokenUsagePayload
 ): Promise<AzureTokenResponse> {
 	// ------------------------------------------------------------------------
@@ -310,9 +303,6 @@ export async function generateAzureToken(
 		}
 	}
 
-	// Increment daily rate limit counter (using assessment service type for Azure tokens)
-	await incrementRateLimit('assessment', user.id, kv)
-
 	// Record estimated usage for cost tracking
 	await recordEstimatedUsage(user.id, user.subscriptionTier, kv, usagePayload)
 
@@ -320,11 +310,6 @@ export async function generateAzureToken(
 		token,
 		region: config.region,
 		expiresIn: 600, // Azure tokens typically expire in 10 minutes
-		rateLimit: {
-			count: rateLimit.count + 1,
-			limit: rateLimit.limit,
-			resetAt: new Date(rateLimit.resetAt).toISOString(),
-		},
 	}
 }
 

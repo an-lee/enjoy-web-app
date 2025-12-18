@@ -6,23 +6,18 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
-import { createRateLimitMiddleware } from '../middleware/rate-limit'
-import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
 import { handleError, RateLimitError } from '@/server/utils/errors'
-import { calculateCredits, checkAndDeductCredits } from '@/server/utils/credits'
+import { enforceCreditsLimit } from '../middleware/credits'
 
 const audio = new Hono<{
 	Bindings: Env
 	Variables: {
 		user: UserProfile
-		rateLimit: RateLimitResult
-		service: ServiceType
 	}
 }>()
 
-// Apply authentication and rate limiting middleware
+// Apply authentication middleware
 audio.use('/*', authMiddleware)
-audio.use('/transcriptions', createRateLimitMiddleware('asr'))
 
 /**
  * Audio Transcription API (OpenAI-compatible)
@@ -35,7 +30,6 @@ audio.post('/transcriptions', async (c) => {
 	try {
 		const env = c.env
 		const ai = (env as any).AI as Ai
-		const rateKv = (env as any).RATE_LIMIT_KV as KVNamespace | undefined
 
 		if (!ai) {
 			return c.json({ error: 'Workers AI binding is not configured' }, 500)
@@ -62,30 +56,12 @@ audio.post('/transcriptions', async (c) => {
 
 		// Credits-based quota check for ASR
 		try {
-			const user = c.get('user')
 			// If duration is missing, we conservatively assume 60 seconds
 			const secondsForBilling = durationSeconds > 0 ? durationSeconds : 60
-			const credits = calculateCredits({
+			await enforceCreditsLimit(c, {
 				type: 'asr',
 				seconds: secondsForBilling,
 			})
-
-			const result = await checkAndDeductCredits(
-				user.id,
-				user.subscriptionTier,
-				credits,
-				rateKv
-			)
-
-			if (!result.allowed) {
-				throw new RateLimitError(
-					'Daily Credits limit reached',
-					'credits',
-					result.limit,
-					result.used,
-					result.resetAt
-				)
-			}
 		} catch (error) {
 			if (error instanceof RateLimitError) {
 				throw error

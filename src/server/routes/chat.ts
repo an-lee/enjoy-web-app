@@ -6,12 +6,11 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
-import { createRateLimitMiddleware } from '../middleware/rate-limit'
-import type { RateLimitResult, ServiceType } from '@/server/utils/rate-limit'
-import { handleError } from '@/server/utils/errors'
+import { handleError, RateLimitError } from '@/server/utils/errors'
 import { streamSSE } from 'hono/streaming'
 import { createLogger } from '@/lib/utils'
 import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
+import { enforceCreditsLimit } from '../middleware/credits'
 
 // ============================================================================
 // Logger
@@ -23,14 +22,11 @@ const chat = new Hono<{
 	Bindings: Env
 	Variables: {
 		user: UserProfile
-		rateLimit: RateLimitResult
-		service: ServiceType
 	}
 }>()
 
-// Apply authentication and rate limiting middleware
+// Apply authentication middleware
 chat.use('/*', authMiddleware)
-chat.use('/completions', createRateLimitMiddleware('translation'))
 
 /**
  * Chat Completions API (OpenAI-compatible)
@@ -79,6 +75,10 @@ chat.post('/completions', async (c) => {
 		if (presence_penalty !== undefined) {
 			aiParams.presence_penalty = presence_penalty
 		}
+
+		// Credits-based quota check for non-streaming usage
+		// For now, we only enforce Credits on non-streaming requests where we
+		// have reliable token usage from the provider.
 
 		// Handle streaming response
 		if (stream) {
@@ -143,8 +143,27 @@ chat.post('/completions', async (c) => {
 			})
 		}
 
-		// Handle non-streaming response
+		// Handle non-streaming response with Credits enforcement
 		const response = await ai.run(model, aiParams)
+
+		try {
+			const promptTokens = response.usage?.prompt_tokens || 0
+			const completionTokens = response.usage?.completion_tokens || 0
+
+			await enforceCreditsLimit(c, {
+				type: 'llm',
+				tokensIn: promptTokens,
+				tokensOut: completionTokens,
+			})
+		} catch (error) {
+			if (error instanceof RateLimitError) {
+				throw error
+			}
+			log.error('Failed to apply Credits-based limit for chat completion', {
+				error: String(error),
+			})
+			throw error
+		}
 
 		// Transform Workers AI response to OpenAI format
 		const openaiResponse = {
