@@ -30,12 +30,17 @@ azure.use('/tokens', createRateLimitMiddleware('assessment'))
 azure.post('/tokens', async (c) => {
 	try {
 		const user = c.get('user')
+		const body = await c.req.json().catch(() => ({}))
 		const rateLimit = c.get('rateLimit')
 		const env = c.env
 		const kv = (env as any).RATE_LIMIT_KV as KVNamespace | undefined
 
 		const config = getAzureConfig(env)
-		const result = await generateAzureToken(config, user, kv, rateLimit)
+
+		// Optional usage payload from client to improve cost estimation
+		const usagePayload = body?.usagePayload
+
+		const result = await generateAzureToken(config, user, kv, rateLimit, usagePayload)
 
 		return c.json(result)
 	} catch (error) {

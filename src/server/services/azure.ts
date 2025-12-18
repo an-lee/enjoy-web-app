@@ -52,76 +52,46 @@ export function getAzureConfig(env: Env): AzureConfig {
 }
 
 /**
- * Estimated usage per token (requests) based on tier
- * This is used to estimate actual Azure usage for cost tracking
+ * Estimated usage factors based on real usage metrics.
+ * These are used to estimate actual Azure usage for cost tracking.
+ *
+ * TTS: cost is per character
+ * Assessment: cost is per second of audio
+ *
+ * The actual usage per request will be provided by the client.
  */
-const ESTIMATED_USAGE_PER_TOKEN: Record<string, number> = {
-	free: 5,   // Free tier: ~5 requests per token (10 minutes)
-	pro: 10,  // Pro tier: ~10 requests per token
-	ultra: 15, // Ultra tier: ~15 requests per token
-}
+const TTS_COST_PER_CHARACTER = 0.000015 // $15 per 1M characters
+const ASSESSMENT_COST_PER_SECOND = 0.000361 // Approximate cost per second
 
-/**
- * Get hourly rate limit key for token requests
- */
-function getHourlyTokenKey(userId: string, date: string, hour: number): string {
-	return `token-limit:hourly:${userId}:${date}:${hour}`
-}
+type AzureTokenUsagePurpose = 'tts' | 'assessment'
 
-/**
- * Check hourly token rate limit
- */
-async function checkHourlyTokenLimit(
-	userId: string,
-	tier: string,
-	kv: KVNamespace | undefined
-): Promise<{ allowed: boolean; count: number; limit: number }> {
-	if (!kv) {
-		return { allowed: true, count: 0, limit: Infinity }
+export interface AzureTokenUsagePayload {
+	purpose: AzureTokenUsagePurpose
+	tts?: {
+		textLength: number // number of characters in the text
 	}
-
-	const today = new Date().toISOString().split('T')[0]
-	const hour = new Date().getUTCHours()
-
-	// Hourly limits based on tier
-	const hourlyLimits: Record<string, number> = {
-		free: 1,   // Free: 1 token per hour
-		pro: 3,    // Pro: 3 tokens per hour
-		ultra: 6,  // Ultra: 6 tokens per hour
-	}
-
-	const limit = hourlyLimits[tier] || 1
-	const key = getHourlyTokenKey(userId, today, hour)
-	const countStr = await kv.get(key, 'text')
-	const count = countStr ? parseInt(countStr, 10) : 0
-
-	return {
-		allowed: count < limit,
-		count,
-		limit,
+	assessment?: {
+		durationSeconds: number // duration of audio in seconds
 	}
 }
 
 /**
- * Increment hourly token counter
+ * Azure token cache entry
  */
-async function incrementHourlyTokenLimit(
-	userId: string,
-	kv: KVNamespace | undefined
-): Promise<void> {
-	if (!kv) return
-
-	const today = new Date().toISOString().split('T')[0]
-	const hour = new Date().getUTCHours()
-	const key = getHourlyTokenKey(userId, today, hour)
-
-	const countStr = await kv.get(key, 'text')
-	const count = countStr ? parseInt(countStr, 10) : 0
-
-	// Expire at end of hour (max 2 hours to ensure cleanup)
-	const expirationTtl = 2 * 60 * 60 // 2 hours
-	await kv.put(key, String(count + 1), { expirationTtl })
+interface AzureTokenCacheEntry {
+	token: string
+	region: string
+	expiresAt: number // Unix timestamp (ms) when the token is considered expired
 }
+
+/**
+ * Get KV key for caching Azure tokens per user
+ */
+function getAzureTokenCacheKey(userId: string): string {
+	return `azure-token:${userId}`
+}
+
+// Note: Hourly token limits were removed in favor of daily limits only.
 
 /**
  * Record estimated usage for cost tracking
@@ -129,31 +99,68 @@ async function incrementHourlyTokenLimit(
 async function recordEstimatedUsage(
 	userId: string,
 	tier: string,
-	kv: KVNamespace | undefined
+	kv: KVNamespace | undefined,
+	usagePayload?: AzureTokenUsagePayload
 ): Promise<void> {
 	if (!kv) return
 
 	const today = new Date().toISOString().split('T')[0]
 	const usageKey = `azure-usage:${userId}:${today}`
 	const usageStr = await kv.get(usageKey, 'text')
-	const usage = usageStr ? JSON.parse(usageStr) : { tokens: 0, estimatedUsage: 0 }
+	const usage =
+		usageStr || '{}'
+			? {
+					tokens: 0,
+					estimatedUsage: 0,
+					ttsCharacters: 0,
+					assessmentSeconds: 0,
+					...(usageStr ? JSON.parse(usageStr) : {}),
+			  }
+			: {
+					tokens: 0,
+					estimatedUsage: 0,
+					ttsCharacters: 0,
+					assessmentSeconds: 0,
+			  }
 
-	const estimatedPerToken = ESTIMATED_USAGE_PER_TOKEN[tier] || 5
 	usage.tokens = (usage.tokens || 0) + 1
-	usage.estimatedUsage = (usage.estimatedUsage || 0) + estimatedPerToken
+
+	// Estimate usage based on payload
+	if (usagePayload?.purpose === 'tts' && usagePayload.tts) {
+		const textLength = Math.max(usagePayload.tts.textLength, 0)
+		usage.ttsCharacters = (usage.ttsCharacters || 0) + textLength
+		usage.estimatedUsage =
+			(usage.estimatedUsage || 0) + textLength * TTS_COST_PER_CHARACTER
+	} else if (usagePayload?.purpose === 'assessment' && usagePayload.assessment) {
+		const durationSeconds = Math.max(usagePayload.assessment.durationSeconds, 0)
+		usage.assessmentSeconds = (usage.assessmentSeconds || 0) + durationSeconds
+		usage.estimatedUsage =
+			(usage.estimatedUsage || 0) + durationSeconds * ASSESSMENT_COST_PER_SECOND
+	}
+
 	usage.lastTokenTime = Date.now()
 
 	// Expire after 2 days
 	const expirationTtl = 2 * 24 * 60 * 60
 	await kv.put(usageKey, JSON.stringify(usage), { expirationTtl })
 
-	// Log warning if usage is high
-	if (usage.tokens > 50) {
-		log.warn('High Azure token usage detected', {
+	// Log warning if estimated cost is high (thresholds by tier, in USD per day)
+	const costWarningThresholds: Record<string, number> = {
+		free: 0.3, // Free: very small daily budget
+		pro: 6.0, // Pro: around expected monthly cost / 30
+		ultra: 18.0, // Ultra: higher budget for heavy users
+	}
+
+	const threshold =
+		costWarningThresholds[tier] ?? costWarningThresholds.free
+
+	if ((usage.estimatedUsage || 0) > threshold) {
+		log.warn('High Azure token cost detected', {
 			userId,
 			tier,
 			tokens: usage.tokens,
 			estimatedUsage: usage.estimatedUsage,
+			threshold,
 		})
 	}
 }
@@ -166,50 +173,91 @@ export async function generateAzureToken(
 	config: AzureConfig,
 	user: UserProfile,
 	kv: KVNamespace | undefined,
-	rateLimit: { count: number; limit: number; resetAt: number }
+	rateLimit: { count: number; limit: number; resetAt: number },
+	usagePayload?: AzureTokenUsagePayload
 ): Promise<AzureTokenResponse> {
-	// Check hourly limit
-	const hourlyLimit = await checkHourlyTokenLimit(user.id, user.subscriptionTier, kv)
-	if (!hourlyLimit.allowed) {
-		throw new ServiceError(
-			`Hourly token limit exceeded. You can request ${hourlyLimit.limit} token(s) per hour. Please try again later.`,
-			429
-		)
+	// Try to reuse cached token first (still counts against rate limits per request)
+	let token: string | null = null
+
+	if (kv) {
+		const cacheKey = getAzureTokenCacheKey(user.id)
+		const cachedStr = await kv.get(cacheKey, 'text')
+		if (cachedStr) {
+			try {
+				const cached = JSON.parse(cachedStr) as AzureTokenCacheEntry
+
+				// Consider token valid if:
+				// - It matches the current region
+				// - It has not expired (with a safety buffer)
+				const safetyBufferMs = 60 * 1000 // 60 seconds
+				if (
+					cached.token &&
+					cached.region === config.region &&
+					cached.expiresAt > Date.now() + safetyBufferMs
+				) {
+					token = cached.token
+				}
+			} catch (error) {
+				log.warn('Failed to parse Azure token cache entry', {
+					userId: user.id,
+					error: String(error),
+				})
+			}
+		}
 	}
 
-	const azureUrl = `https://${config.region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`
+	// If no valid cached token, request a new one from Azure and update cache
+	if (!token) {
+		const azureUrl = `https://${config.region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`
 
-	const response = await fetch(azureUrl, {
-		method: 'POST',
-		headers: {
-			'Ocp-Apim-Subscription-Key': config.subscriptionKey,
-			'Content-Type': 'application/x-www-form-urlencoded',
-		},
-	})
-
-	if (!response.ok) {
-		const errorText = await response.text()
-		log.error('Azure Speech token generation failed:', {
-			status: response.status,
-			statusText: response.statusText,
-			error: errorText,
+		const response = await fetch(azureUrl, {
+			method: 'POST',
+			headers: {
+				'Ocp-Apim-Subscription-Key': config.subscriptionKey,
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
 		})
-		throw new ServiceError(
-			`Failed to generate Azure Speech token: ${response.statusText}`,
-			response.status
-		)
-	}
 
-	const token = await response.text()
+		if (!response.ok) {
+			const errorText = await response.text()
+			log.error('Azure Speech token generation failed:', {
+				status: response.status,
+				statusText: response.statusText,
+				error: errorText,
+			})
+			throw new ServiceError(
+				`Failed to generate Azure Speech token: ${response.statusText}`,
+				response.status
+			)
+		}
+
+		token = await response.text()
+
+		// Cache the token for reuse within its lifetime
+		if (kv) {
+			const cacheKey = getAzureTokenCacheKey(user.id)
+			const expiresInSeconds = 600 // 10 minutes (Azure default)
+			const safetySeconds = 90 // Shorter TTL for safety (token will expire earlier on our side)
+			const ttlSeconds = Math.max(expiresInSeconds - safetySeconds, 60) // At least 60s
+			const expiresAt = Date.now() + ttlSeconds * 1000
+
+			const cacheEntry: AzureTokenCacheEntry = {
+				token,
+				region: config.region,
+				expiresAt,
+			}
+
+			await kv.put(cacheKey, JSON.stringify(cacheEntry), {
+				expirationTtl: ttlSeconds,
+			})
+		}
+	}
 
 	// Increment daily rate limit counter (using assessment service type for Azure tokens)
 	await incrementRateLimit('assessment', user.id, kv)
 
-	// Increment hourly token limit
-	await incrementHourlyTokenLimit(user.id, kv)
-
 	// Record estimated usage for cost tracking
-	await recordEstimatedUsage(user.id, user.subscriptionTier, kv)
+	await recordEstimatedUsage(user.id, user.subscriptionTier, kv, usagePayload)
 
 	return {
 		token,
