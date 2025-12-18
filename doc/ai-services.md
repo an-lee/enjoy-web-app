@@ -4,12 +4,12 @@
 
 The AI Service module provides a unified, provider-agnostic interface for all AI-powered features in the Enjoy Echo web application. It supports multiple providers (Enjoy API, Local models, and BYOK) through a clean abstraction layer, ensuring consistent behavior regardless of the underlying provider.
 
-**Important**: All AI services are now handled by **Hono API Worker** (`/api/*`). The frontend AI Service Client (`src/ai/`) calls Hono API Worker endpoints, which then process the requests using Cloudflare Workers AI or route to external providers.
+**Important**: All AI services are exposed through the **Cloudflare Worker API router** implemented in `src/server/router.ts` and `src/server/routes/*`, mounted under the `/api/*` prefix. The frontend AI Service Client (`src/ai/`) calls these server routes, which then process the requests using Cloudflare Workers AI or route to external providers.
 
 **Architecture Flow**:
 ```
 Frontend (AI Service Client)
-  → Hono API Worker (/api/*)
+  → API Worker router (src/server/router.ts → src/server/routes/*, mounted at /api/*)
     → Cloudflare Workers AI / External Providers
 ```
 
@@ -185,10 +185,13 @@ User Request (Frontend)
 
 **Architecture**:
 - **OpenAI-Compatible Services**: Uses `EnjoyAIClient` which wraps OpenAI SDK and Vercel AI SDK
-- **Endpoints**:
-  - `/api/chat/completions` - Smart Translation, Dictionary
-  - `/api/translations` - Basic Translation (non-standard)
-  - `/api/audio/transcriptions` - ASR (Whisper)
+- **Server Routes (implemented in `src/server/routes/*`)**:
+  - `/api/chat/completions` → `src/server/routes/chat.ts` (Cloudflare Workers AI chat model)
+  - `/api/translations` → `src/server/routes/translations.ts` (basic translation, KV cache)
+  - `/api/audio/transcriptions` → `src/server/routes/audio.ts` (ASR / Whisper)
+  - `/api/dictionary/query` → `src/server/routes/dictionary.ts` (AI dictionary with KV cache)
+  - `/api/models` → `src/server/routes/models.ts` (Workers AI model listing)
+  - `/api/azure/tokens` → `src/server/routes/azure.ts` (Azure Speech token generation)
 - **Azure Speech**: Token-based authentication via `/api/azure/tokens`
   - Tokens are cached for 9 minutes (Azure tokens expire after 10 minutes)
   - Services: TTS, Assessment
@@ -301,7 +304,7 @@ For the Smart Dictionary service, there are two main API surfaces:
 - **Generic LLM endpoint**: `/api/chat/completions` (OpenAI-compatible) – used by the AI service layer for flexible, multi-purpose dictionary and translation prompts.
 - **AI Dictionary endpoint**: `/api/dictionary/query` – specialized, word-focused AI dictionary interface with JSON-mode structured output and permanent caching.
 
-- **Enjoy**: `/api/chat/completions` via `EnjoyAIClient`
+- **Enjoy**: `/api/chat/completions` via `EnjoyAIClient` (implemented by `src/server/routes/chat.ts`)
 - **BYOK**: User's LLM API via `BYOKClient`
 - **Local**: transformers.js models in Web Workers
 
@@ -309,7 +312,7 @@ For the Smart Dictionary service, there are two main API surfaces:
 
 Whisper-based transcription with timestamped segments. Supports all three provider tiers.
 
-- **Enjoy**: `/api/audio/transcriptions` via `EnjoyAIClient` (OpenAI-compatible)
+- **Enjoy**: `/api/audio/transcriptions` via `EnjoyAIClient` (OpenAI-compatible, implemented by `src/server/routes/audio.ts`)
 - **BYOK OpenAI**: User's OpenAI Whisper API via `BYOKClient`
 - **BYOK Azure**: User's Azure Speech subscription via Azure SDK
 - **Local**: transformers.js Whisper in Web Workers
