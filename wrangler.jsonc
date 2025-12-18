@@ -59,6 +59,21 @@
 		"binding": "AI"
 	},
 	/**
+	 * D1 Databases
+	 *
+	 * To create a D1 database:
+	 * 1. Run: wrangler d1 create "enjoy-web-app-db"
+	 * 2. Copy the generated database_id into the config below
+	 * 3. For preview/staging, create a separate D1 database and configure via `env`
+	 */
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "enjoy-web-app-db",
+			"database_id": "REPLACE_WITH_D1_DATABASE_ID"
+		}
+	],
+	/**
 	 * Environment Variables (Non-sensitive)
 	 * For sensitive data like API keys, use secrets instead (see below)
 	 *

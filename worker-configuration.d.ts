@@ -17,6 +17,12 @@ declare namespace Cloudflare {
 		API_BASE_URL: string;
 		AI: Ai;
 		ASSETS: Fetcher;
+		/**
+		 * Primary relational database for server-side features (Cloudflare D1).
+		 *
+		 * Configured via `wrangler.jsonc` under `d1_databases` with binding `DB`.
+		 */
+		DB: D1Database;
 	}
 }
 interface Env extends Cloudflare.Env {}
