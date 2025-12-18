@@ -70,7 +70,8 @@
 		{
 			"binding": "DB",
 			"database_name": "enjoy-web-app-db",
-			"database_id": "REPLACE_WITH_D1_DATABASE_ID"
+			"database_id": "31c8ce29-b791-4723-a82c-6920882d7aa9",
+			"migrations_dir": "./src/server/migrations"
 		}
 	],
 	/**
