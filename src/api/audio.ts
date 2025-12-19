@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from "./client"
-import type { Audio, AudioProvider } from "@/types/db"
+import type { Audio, AudioProvider } from "@/page/types/db"
 
 // ============================================================================
 // Types & Exports

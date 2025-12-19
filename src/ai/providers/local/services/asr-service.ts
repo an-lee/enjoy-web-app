@@ -4,13 +4,13 @@
  */
 
 import type { LocalModelConfig } from '../../../types'
-import { useLocalModelsStore } from '@/stores/local-models'
+import { useLocalModelsStore } from '@/page/stores/local-models'
 import { getASRWorker } from '../workers/worker-manager'
 import { audioBlobToFloat32Array } from '../utils/audio'
 import { DEFAULT_ASR_MODEL } from '../constants'
 import type { LocalASRResult } from '../types'
 import { convertToTranscriptFormat } from '../../../utils/transcript-segmentation'
-import type { TranscriptLine } from '@/types/db/transcript'
+import type { TranscriptLine } from '@/page/types/db/transcript'
 
 /**
  * Transcribe audio using local ASR model

@@ -7,7 +7,7 @@
 
 import * as React from 'react'
 import type { ReactNode } from 'react'
-import { Kbd, KbdGroup } from '@/components/ui/kbd'
+import { Kbd, KbdGroup } from '@/page/components/ui/kbd'
 
 const KEY_DISPLAY_MAP: Record<string, string> = {
   space: 'Space',

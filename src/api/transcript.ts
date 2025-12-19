@@ -5,7 +5,7 @@
 
 import { Language } from "@/lib/constants"
 import { apiClient } from "./client"
-import type { TargetType, Transcript, TranscriptSource } from "@/types/db"
+import type { TargetType, Transcript, TranscriptSource } from "@/page/types/db"
 
 // ============================================================================
 // Types & Exports

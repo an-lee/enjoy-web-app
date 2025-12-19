@@ -6,7 +6,7 @@
  * This manager caches tokens and refreshes them before expiration.
  */
 
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/page/stores/auth'
 
 // Token cache duration (9 minutes to allow buffer before 10-minute expiration)
 const TOKEN_CACHE_DURATION_MS = 9 * 60 * 1000

@@ -9,7 +9,7 @@
 import { getEnjoyClient } from '../client'
 import type { AIServiceResponse, SmartTranslationResponse } from '../../../types'
 import { AIServiceType, AIProvider } from '../../../types'
-import type { TranslationStyle } from '@/db/schema'
+import type { TranslationStyle } from '@/page/db/schema'
 import { buildSmartTranslationPrompt } from '../../../prompts'
 import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 

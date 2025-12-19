@@ -1,0 +1,113 @@
+/**
+ * TranscriptLines Component
+ *
+ * Renders the list of transcript lines with echo region controls.
+ */
+
+import { memo, useMemo } from 'react'
+import { cn } from '@/lib/utils'
+import { TranscriptLineItem } from './transcript-line-item'
+import { EchoRegionControls } from '../echo/echo-region-controls'
+import { ShadowReadingPanel } from '../shadow-reading/shadow-reading-panel'
+import { useEchoRegion } from '@/page/hooks/player'
+import type { TranscriptLineState } from './types'
+
+interface TranscriptLinesProps {
+  lines: TranscriptLineState[]
+  onLineClick: (line: TranscriptLineState) => void
+}
+
+function TranscriptLinesComponent({
+  lines,
+  onLineClick,
+}: TranscriptLinesProps) {
+  // Echo region state (no lines needed, we only read state for rendering)
+  const {
+    echoModeActive,
+    echoStartLineIndex,
+    echoEndLineIndex,
+    echoStartTime,
+    echoEndTime,
+  } = useEchoRegion()
+
+  // Get reference text from echo region lines
+  const referenceText = useMemo(() => {
+    if (!echoModeActive || echoStartLineIndex < 0 || echoEndLineIndex < 0) {
+      return ''
+    }
+    return lines
+      .filter(
+        (line) => line.index >= echoStartLineIndex && line.index <= echoEndLineIndex
+      )
+      .map((line) => line.primary.text)
+      .join(' ')
+  }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, lines])
+
+  return (
+    <div className="py-4 px-3 space-y-1.5">
+      {lines.map((line, lineArrayIndex) => {
+        const isInEchoRegion =
+          echoModeActive &&
+          line.index >= echoStartLineIndex &&
+          line.index <= echoEndLineIndex
+        const isEchoStart = echoModeActive && line.index === echoStartLineIndex
+        const isEchoEnd = echoModeActive && line.index === echoEndLineIndex
+
+        // Check if previous/next line is in echo region to determine spacing
+        const prevLineInEcho =
+          lineArrayIndex > 0 &&
+          echoModeActive &&
+          lines[lineArrayIndex - 1].index >= echoStartLineIndex &&
+          lines[lineArrayIndex - 1].index <= echoEndLineIndex
+        const nextLineInEcho =
+          lineArrayIndex < lines.length - 1 &&
+          echoModeActive &&
+          lines[lineArrayIndex + 1].index >= echoStartLineIndex &&
+          lines[lineArrayIndex + 1].index <= echoEndLineIndex
+
+        return (
+          <div
+            key={line.index}
+            data-line-index={line.index}
+            className={cn(
+              'relative',
+              // Remove spacing between echo region lines
+              isInEchoRegion && prevLineInEcho && '-mt-2',
+              // Remove spacing after echo region
+              isInEchoRegion && !nextLineInEcho && isEchoEnd && 'mb-0'
+            )}
+          >
+            {/* Echo region top controls - shown above the first line of echo region */}
+            {isEchoStart && echoModeActive && (
+              <EchoRegionControls position="top" lines={lines} />
+            )}
+
+            <TranscriptLineItem
+              line={line}
+              onLineClick={onLineClick}
+            />
+
+            {/* Echo region bottom controls - shown below the last line of echo region */}
+            {isEchoEnd && echoModeActive && (
+              <>
+                <EchoRegionControls position="bottom" lines={lines} />
+                {/* Shadow Reading Panel - shown below echo region controls */}
+                {echoStartTime >= 0 && echoEndTime >= 0 && (
+                  <ShadowReadingPanel
+                    startTime={echoStartTime}
+                    endTime={echoEndTime}
+                    referenceText={referenceText || ''}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Memoize component to prevent unnecessary re-renders when props haven't changed
+export const TranscriptLines = memo(TranscriptLinesComponent)
+

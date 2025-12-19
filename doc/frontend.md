@@ -33,13 +33,13 @@ All base UI components are provided by **shadcn/ui**. Components are copied dire
 - **Base Color**: Neutral
 - **CSS Variables**: Enabled (theming via CSS variables)
 - **Path Aliases**:
-  - `@/components/ui` → `src/components/ui`
+  - `@/page/components/ui` → `src/components/ui`
   - `@/lib/utils` → `src/lib/utils` (contains `cn()` utility for class merging)
 
 #### Usage Pattern
 
 ```tsx
-import { Button } from "@/components/ui/button"
+import { Button } from "@/page/components/ui/button"
 
 function MyComponent() {
   return <Button variant="default">Click me</Button>
@@ -211,7 +211,7 @@ interface HotkeyDefinition {
 **`useAppHotkey`** - Hook to register a shortcut:
 
 ```tsx
-import { useAppHotkey } from '@/components/hotkeys'
+import { useAppHotkey } from '@/page/components/hotkeys'
 
 function PlayerControls({ onTogglePlay }) {
   useAppHotkey('player.togglePlay', (e) => {
@@ -339,7 +339,7 @@ function MyComponent() {
 Language changes are managed through the settings store:
 
 ```tsx
-import { useSettingsStore } from '@/stores/settings'
+import { useSettingsStore } from '@/page/stores/settings'
 
 function LanguageSwitcher() {
   const { preferredLanguage, setPreferredLanguage } = useSettingsStore()

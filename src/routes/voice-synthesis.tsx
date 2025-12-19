@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect, useRef } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/page/components/ui/button'
 import { Icon } from '@iconify/react'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
-import { useSettingsStore } from '@/stores/settings'
+import { useSettingsStore } from '@/page/stores/settings'
 import { createLogger } from '@/lib/utils'
 
 // ============================================================================
@@ -21,16 +21,16 @@ import {
   ErrorAlert,
   TTSHistoryToggle,
   TTSHistory,
-} from '@/components/voice-synthesis'
+} from '@/page/components/voice-synthesis'
 import {
   useAudioHistory,
   useCreateTTSAudio,
   useAudio,
   useCreateTranscript,
-} from '@/hooks/queries'
+} from '@/page/hooks/queries'
 import { getDefaultTTSVoice, getTTSVoices } from '@/ai/constants/tts-voices'
 import { AIProvider } from '@/ai/types'
-import type { TTSAudioInput, TranscriptInput } from '@/types/db'
+import type { TTSAudioInput, TranscriptInput } from '@/page/types/db'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/voice-synthesis')({

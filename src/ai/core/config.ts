@@ -3,8 +3,8 @@
  * Unified configuration helper that combines config-helper and provider-selector
  */
 
-import { useSettingsStore } from '@/stores'
-import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/page/stores'
+import { useAuthStore } from '@/page/stores/auth'
 import type { AIServiceConfig, AIProvider, AIServiceType } from '../types'
 import { AIProvider as AIProviderEnum, AIServiceType as AIServiceTypeEnum } from '../types'
 

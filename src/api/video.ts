@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from "./client"
-import type { Video, VideoProvider } from "@/types/db"
+import type { Video, VideoProvider } from "@/page/types/db"
 
 // ============================================================================
 // Types & Exports

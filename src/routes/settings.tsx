@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect } from 'react'
-import { SettingsTabs } from '@/components/settings'
+import { SettingsTabs } from '@/page/components/settings'
 
 export const Route = createFileRoute('/settings')({
   component: Settings,

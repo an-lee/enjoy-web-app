@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { SyncPage } from '@/components/sync'
+import { SyncPage } from '@/page/components/sync'
 
 export const Route = createFileRoute('/sync')({
   component: Sync,

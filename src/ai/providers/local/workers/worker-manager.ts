@@ -3,7 +3,7 @@
  * Creates and manages Web Workers for local model inference
  */
 
-import { useLocalModelsStore } from '@/stores/local-models'
+import { useLocalModelsStore } from '@/page/stores/local-models'
 import { normalizeProgress } from '../utils/progress'
 import { createLogger } from '@/lib/utils'
 

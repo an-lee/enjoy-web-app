@@ -125,7 +125,7 @@ if (typeof window !== 'undefined') {
       i18n.changeLanguage(targetLanguage).then(() => {
         // Sync to settings store if no saved preference
         if (!hasSavedPreference) {
-          import('../stores/settings').then(({ useSettingsStore }) => {
+          import('@/page/stores/settings').then(({ useSettingsStore }) => {
             const store = useSettingsStore.getState()
             store.setPreferredLanguage(targetLanguage)
           }).catch(() => {

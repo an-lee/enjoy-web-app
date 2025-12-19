@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
 import type { QueryClient } from '@tanstack/react-query'
 
-import '../lib/i18n'
+import '@/lib/i18n'
 import { createLogger } from '@/lib/utils'
 
 // ============================================================================
@@ -16,19 +16,19 @@ import { createLogger } from '@/lib/utils'
 
 const log = createLogger({ name: '__root' })
 
-import appCss from '../styles.css?url'
-import { AppSidebar, SiteHeader, ThemeProvider } from '@/components/layout'
-import { AppSidebarSkeleton } from '@/components/layout/app-sidebar-skeleton'
-import { SiteHeaderSkeleton } from '@/components/layout/site-header-skeleton'
+import appCss from '@/page/styles.css?url'
+import { AppSidebar, SiteHeader, ThemeProvider } from '@/page/components/layout'
+import { AppSidebarSkeleton } from '@/page/components/layout/app-sidebar-skeleton'
+import { SiteHeaderSkeleton } from '@/page/components/layout/site-header-skeleton'
 import {
   SidebarInset,
   SidebarProvider,
-} from '@/components/ui/sidebar'
-import { Toaster } from '@/components/ui/sonner'
-import { PlayerContainer } from '@/components/player'
-import { AppHotkeysProvider, HotkeysHelpModal, useAppHotkey } from '@/components/hotkeys'
-import { useAuthStore, usePlayerStore } from '@/stores'
-import { initDatabaseWithCleanup, initSyncManager } from '@/db'
+} from '@/page/components/ui/sidebar'
+import { Toaster } from '@/page/components/ui/sonner'
+import { PlayerContainer } from '@/page/components/player'
+import { AppHotkeysProvider, HotkeysHelpModal, useAppHotkey } from '@/page/components/hotkeys'
+import { useAuthStore, usePlayerStore } from '@/page/stores'
+import { initDatabaseWithCleanup, initSyncManager } from '@/page/db'
 
 // ============================================================================
 // Global Hotkeys Handler

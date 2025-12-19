@@ -6,7 +6,7 @@
 
 import type { LocalModelConfig } from '../../../types'
 import type { LocalTTSResult, LocalTTSTranscript } from '../types'
-import { useLocalModelsStore } from '@/stores/local-models'
+import { useLocalModelsStore } from '@/page/stores/local-models'
 import { getTTSWorker } from '../workers/worker-manager'
 import { DEFAULT_TTS_MODEL } from '../constants'
 

@@ -7,7 +7,7 @@
  */
 
 import type { LocalModelConfig } from '../../types'
-import { useLocalModelsStore } from '@/stores/local-models'
+import { useLocalModelsStore } from '@/page/stores/local-models'
 import { transcribe } from './services/asr-service'
 import { smartTranslate } from './services/smart-translation-service'
 import { lookup } from './services/dictionary-service'

@@ -2,7 +2,7 @@
  * Local Model Result Types
  */
 
-import type { TranscriptLine } from '@/types/db/transcript'
+import type { TranscriptLine } from '@/page/types/db/transcript'
 
 export interface LocalASRResult {
   text: string

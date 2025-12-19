@@ -2,12 +2,12 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect, useRef } from 'react'
 import { useDebounce } from '@uidotdev/usehooks'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/page/components/ui/button'
 import { Icon } from '@iconify/react'
-import type { Translation, TranslationStyle } from '@/types/db'
+import type { Translation, TranslationStyle } from '@/page/types/db'
 import { smartTranslationService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
-import { useSettingsStore } from '@/stores/settings'
+import { useSettingsStore } from '@/page/stores/settings'
 import { AIProvider } from '@/ai/types'
 import { createLogger } from '@/lib/utils'
 
@@ -21,7 +21,7 @@ import {
   useCreateTranslation,
   useUpdateTranslation,
   findExistingTranslation,
-} from '@/hooks/queries'
+} from '@/page/hooks/queries'
 import {
   LanguageSelector,
   TranslationStyleSelector,
@@ -31,7 +31,7 @@ import {
   ErrorAlert,
   HistoryToggle,
   TranslationHistory,
-} from '@/components/smart-translation'
+} from '@/page/components/smart-translation'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/smart-translation')({

@@ -5,7 +5,7 @@
  * Handles fileHandle, mediaUrl, and file verification.
  */
 
-import type { Video, Audio } from '@/types/db'
+import type { Video, Audio } from '@/page/types/db'
 
 // ============================================================================
 // Constants

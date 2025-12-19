@@ -3,7 +3,7 @@
  * Shared prompts for smart translation across all providers (local, cloud, etc.)
  */
 
-import type { TranslationStyle } from '@/db/schema'
+import type { TranslationStyle } from '@/page/db/schema'
 import { getLanguageName } from './language-utils'
 
 /**

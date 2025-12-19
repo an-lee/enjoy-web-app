@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/page/stores/auth'
 import { convertSnakeToCamel, convertCamelToSnake } from './utils'
 
 // API base URL - should be configured via environment variable

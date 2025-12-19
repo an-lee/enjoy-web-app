@@ -10,14 +10,14 @@ import { Icon } from '@iconify/react'
 import { toast } from 'sonner'
 
 import { createLogger } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/page/components/ui/button'
 
 // ============================================================================
 // Logger
 // ============================================================================
 
 const log = createLogger({ name: 'library' })
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@/page/components/ui/skeleton'
 import {
   MediaCard,
   ImportMediaDialog,
@@ -25,17 +25,17 @@ import {
   LibraryPagination,
   LibraryEmptyState,
   type MediaMetadata,
-} from '@/components/library'
+} from '@/page/components/library'
 import {
   useLibrary,
   useLibraryStats,
   useDeleteLibraryItem,
   type MediaType,
   type LibraryMedia,
-} from '@/hooks/queries'
-import { saveLocalAudio, saveLocalVideo } from '@/db'
+} from '@/page/hooks/queries'
+import { saveLocalAudio, saveLocalVideo } from '@/page/db'
 import { getFileHandleFromFile } from '@/lib/file-helpers'
-import { usePlayerStore } from '@/stores'
+import { usePlayerStore } from '@/page/stores'
 
 // ============================================================================
 // Route Configuration

@@ -8,7 +8,7 @@
 import { createBYOKClient } from '../client'
 import type { BYOKConfig, AIServiceResponse, SmartTranslationResponse } from '../../../types'
 import { AIServiceType, AIProvider } from '../../../types'
-import type { TranslationStyle } from '@/db/schema'
+import type { TranslationStyle } from '@/page/db/schema'
 import { buildSmartTranslationPrompt } from '../../../prompts'
 
 /**

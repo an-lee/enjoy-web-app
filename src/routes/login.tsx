@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
-import { useAuthStore, type User } from '@/stores'
+import { useAuthStore, type User } from '@/page/stores'
 import { authApi } from '@/api'
 import { createLogger } from '@/lib/utils'
 

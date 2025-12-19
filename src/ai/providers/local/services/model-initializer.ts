@@ -4,7 +4,7 @@
  */
 
 import type { LocalModelConfig } from '../../../types'
-import { useLocalModelsStore } from '@/stores/local-models'
+import { useLocalModelsStore } from '@/page/stores/local-models'
 import { createLogger } from '@/lib/utils'
 
 // ============================================================================

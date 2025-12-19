@@ -5,7 +5,7 @@
  */
 
 import type { LocalModelConfig } from '../../../types'
-import { useLocalModelsStore } from '@/stores/local-models'
+import { useLocalModelsStore } from '@/page/stores/local-models'
 import { getSmartTranslationWorker } from '../workers/worker-manager'
 import { DEFAULT_SMART_TRANSLATION_MODEL } from '../constants'
 import type { LocalTranslationResult } from '../types'

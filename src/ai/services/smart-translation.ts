@@ -7,7 +7,7 @@ import { localModelService } from '../providers/local'
 import { smartTranslateWithBYOK } from '../providers/byok'
 import { smartTranslateWithEnjoy } from '../providers/enjoy'
 import { DEFAULT_SMART_TRANSLATION_MODEL } from '../providers/local/constants'
-import type { TranslationStyle } from '@/db/schema'
+import type { TranslationStyle } from '@/page/db/schema'
 import type {
   AIServiceConfig,
   AIServiceResponse,

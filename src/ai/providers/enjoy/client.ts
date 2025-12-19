@@ -22,7 +22,7 @@
 import OpenAI from 'openai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateText } from 'ai'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/page/stores/auth'
 import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 
 // Base URL for the Hono API Worker

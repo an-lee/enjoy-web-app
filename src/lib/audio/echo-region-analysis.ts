@@ -37,7 +37,7 @@ export async function loadMediaBlobForSession(session: {
   if (typeof window === 'undefined') {
     throw new Error('IndexedDB is only available in the browser')
   }
-  const { db } = await import('@/db')
+  const { db } = await import('@/page/db')
 
   if (session.mediaType === 'audio') {
     const audio = await db.audios.get(session.mediaId)
