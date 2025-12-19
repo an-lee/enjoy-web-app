@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AIServiceCard } from './ai-service-card'
-import { AIServiceType, AIProvider } from '@/ai/types'
+import { AIServiceType, AIProvider } from '@/page/ai/types'
 
 export function AISettings() {
   const { t } = useTranslation()

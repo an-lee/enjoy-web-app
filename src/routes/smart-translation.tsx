@@ -5,10 +5,10 @@ import { useDebounce } from '@uidotdev/usehooks'
 import { Button } from '@/page/components/ui/button'
 import { Icon } from '@iconify/react'
 import type { Translation, TranslationStyle } from '@/page/types/db'
-import { smartTranslationService } from '@/ai/services'
-import { getAIServiceConfig } from '@/ai/core/config'
+import { smartTranslationService } from '@/page/ai/services'
+import { getAIServiceConfig } from '@/page/ai/core/config'
 import { useSettingsStore } from '@/page/stores/settings'
-import { AIProvider } from '@/ai/types'
+import { AIProvider } from '@/page/ai/types'
 import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================

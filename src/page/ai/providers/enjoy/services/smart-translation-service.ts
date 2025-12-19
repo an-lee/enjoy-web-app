@@ -11,7 +11,7 @@ import type { AIServiceResponse, SmartTranslationResponse } from '../../../types
 import { AIServiceType, AIProvider } from '../../../types'
 import type { TranslationStyle } from '@/page/db/schema'
 import { buildSmartTranslationPrompt } from '../../../prompts'
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 
 /**
  * Smart translation with style support

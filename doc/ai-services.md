@@ -206,7 +206,7 @@ User Request (Frontend)
 **Client Usage**:
 
 ```typescript
-import { getEnjoyClient } from "@/ai/providers/enjoy";
+import { getEnjoyClient } from "@/page/ai/providers/enjoy";
 
 const client = getEnjoyClient();
 // LLM generation
@@ -233,7 +233,7 @@ const translation = await client.translate({ text: "...", targetLang: "zh" });
 **Client Usage**:
 
 ```typescript
-import { createBYOKClient } from "@/ai/providers/byok";
+import { createBYOKClient } from "@/page/ai/providers/byok";
 
 const client = createBYOKClient({
   provider: "openai",
@@ -308,7 +308,7 @@ Style-aware translation using LLMs. Supports multiple styles (literal, natural, 
 Two-tier dictionary service:
 
 - **Basic Dictionary**: Simple definitions via Enjoy API (FREE) - see `@/api/dictionary`
-- **Smart Dictionary**: AI-powered contextual detailed analysis with context awareness (all providers) - see `@/ai/services/smart-dictionary`
+- **Smart Dictionary**: AI-powered contextual detailed analysis with context awareness (all providers) - see `@/page/ai/services/smart-dictionary`
 
 For the Smart Dictionary service, there are two main API surfaces:
 

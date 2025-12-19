@@ -8,7 +8,7 @@ import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
 import { handleError, RateLimitError } from '@/worker/utils/errors'
 import { createLogger } from '@/shared/lib/utils'
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 import { enforceCreditsLimit } from '../middleware/credits'
 
 // ============================================================================

@@ -11,12 +11,12 @@ import { getAzureToken } from './token-manager'
 import type {
   AIServiceResponse,
   TTSResponse,
-} from '@/ai/types'
-import { AIServiceType, AIProvider } from '@/ai/types'
+} from '@/page/ai/types'
+import { AIServiceType, AIProvider } from '@/page/ai/types'
 import {
   convertToTranscriptFormat,
   type RawWordTiming,
-} from '@/ai/utils/transcript-segmentation'
+} from '@/page/ai/utils/transcript-segmentation'
 
 /**
  * Raw word timing data from Azure word boundary events (internal use)

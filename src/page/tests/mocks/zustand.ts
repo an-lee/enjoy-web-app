@@ -102,7 +102,7 @@ export function createMockStore<T extends object>(
 // Settings Store Mock
 // ============================================================================
 
-import type { AIProvider } from '@/ai/types'
+import type { AIProvider } from '@/page/ai/types'
 
 interface MockSettingsState {
   preferredLanguage: string

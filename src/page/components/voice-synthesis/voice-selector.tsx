@@ -7,10 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/page/components/ui/select'
-import { getTTSVoices, getDefaultTTSVoice } from '@/ai/constants/tts-voices'
+import { getTTSVoices, getDefaultTTSVoice } from '@/page/ai/constants/tts-voices'
 import { useSettingsStore } from '@/page/stores/settings'
-import { AIProvider } from '@/ai/types'
-import { getAIServiceConfig } from '@/ai/core/config'
+import { AIProvider } from '@/page/ai/types'
+import { getAIServiceConfig } from '@/page/ai/core/config'
 
 interface VoiceSelectorProps {
   voice: string

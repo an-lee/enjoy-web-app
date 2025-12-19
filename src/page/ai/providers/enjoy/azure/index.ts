@@ -31,5 +31,5 @@ export {
   getAzureTTSVoices,
   getDefaultAzureTTSVoice,
 } from './voices'
-// Note: VoiceOption type is exported from '@/ai/constants/tts-voices'
+// Note: VoiceOption type is exported from '@/page/ai/constants/tts-voices'
 

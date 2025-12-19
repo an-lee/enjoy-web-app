@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/page/components/ui/card'
 import { useTranslation } from 'react-i18next'
 import { useSettingsStore } from '@/page/stores'
-import { AIProvider, AIServiceType } from '@/ai/types'
+import { AIProvider, AIServiceType } from '@/page/ai/types'
 import { ProviderSelector } from './components/provider-selector'
 import { ModelErrorAlert } from './components/model-error-alert'
 import { ModelSelector } from './components/model-selector'

@@ -6,10 +6,10 @@
  */
 
 import { getEnjoyClient } from '../client'
-import type { AIServiceResponse, ASRResponse } from '@/ai/types'
-import { AIServiceType, AIProvider } from '@/ai/types'
-import { convertToTranscriptFormat } from '@/ai/utils/transcript-segmentation'
-import type { RawWordTiming } from '@/ai/utils/transcript-segmentation'
+import type { AIServiceResponse, ASRResponse } from '@/page/ai/types'
+import { AIServiceType, AIProvider } from '@/page/ai/types'
+import { convertToTranscriptFormat } from '@/page/ai/utils/transcript-segmentation'
+import type { RawWordTiming } from '@/page/ai/utils/transcript-segmentation'
 
 /**
  * Transcribe speech to text

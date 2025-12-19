@@ -5,7 +5,7 @@
 
 import { pipeline, env } from '@huggingface/transformers'
 import { DEFAULT_ASR_MODEL } from '../constants'
-import { createLogger } from '../../../../shared/lib/utils'
+import { createLogger } from '../../../../../shared/lib/utils'
 
 // ============================================================================
 // Logger

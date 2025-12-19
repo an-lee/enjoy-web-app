@@ -55,7 +55,7 @@ The module is organized into focused, single-responsibility files:
 ## Usage
 
 ```typescript
-import { convertToTranscriptFormat } from '@/ai/utils/transcript-segmentation'
+import { convertToTranscriptFormat } from '@/page/ai/utils/transcript-segmentation'
 
 const transcript = convertToTranscriptFormat(
   "Hello world. How are you?",
@@ -157,9 +157,9 @@ When modifying the segmentation algorithm:
 The module should be imported using the directory path, which will automatically resolve to `index.ts`:
 
 ```typescript
-import { convertToTranscriptFormat } from '@/ai/utils/transcript-segmentation'
+import { convertToTranscriptFormat } from '@/page/ai/utils/transcript-segmentation'
 // or explicitly:
-import { convertToTranscriptFormat } from '@/ai/utils/transcript-segmentation'
+import { convertToTranscriptFormat } from '@/page/ai/utils/transcript-segmentation'
 ```
 
 Both import styles work, as TypeScript automatically resolves directory imports to `index.ts`.

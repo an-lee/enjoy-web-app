@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { AIProvider } from '@/ai/types'
+import { AIProvider } from '@/page/ai/types'
 
 // Mock i18n before importing the store
 vi.mock('@/locales/i18n', () => ({

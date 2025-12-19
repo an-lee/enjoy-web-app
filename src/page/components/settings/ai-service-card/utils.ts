@@ -1,5 +1,5 @@
 import type { ModelType } from '@/page/stores/local-models'
-import { AIServiceType } from '@/ai/types'
+import { AIServiceType } from '@/page/ai/types'
 import {
   ASR_MODEL_OPTIONS,
   SMART_TRANSLATION_MODEL_OPTIONS,
@@ -7,7 +7,7 @@ import {
   TTS_MODEL_OPTIONS,
   getDefaultModel,
   type ModelOption,
-} from '@/ai/providers/local/constants'
+} from '@/page/ai/providers/local/constants'
 
 // Map service types to model types
 export const SERVICE_TO_MODEL_TYPE: Partial<Record<AIServiceType, ModelType>> = {

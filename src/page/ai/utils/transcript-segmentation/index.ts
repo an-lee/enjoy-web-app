@@ -38,7 +38,7 @@
  * ## Usage
  *
  * ```typescript
- * import { convertToTranscriptFormat } from '@/ai/utils/transcript-segmentation'
+ * import { convertToTranscriptFormat } from '@/page/ai/utils/transcript-segmentation'
  *
  * const transcript = convertToTranscriptFormat(
  *   "Hello world. How are you?",

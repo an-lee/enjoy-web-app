@@ -20,7 +20,6 @@ import { AIServiceType, AIProvider, BYOKProvider } from '../types'
 import {
   ERROR_ASSESSMENT,
   ERROR_ASSESSMENT_BYOK_PROVIDER_NOT_SUPPORTED,
-  DEFAULT_AZURE_REGION,
 } from '../constants'
 import {
   createSuccessResponse,
@@ -49,14 +48,14 @@ export const assessmentService = {
 
       // BYOK mode with Azure
       if (useBYOK && request.config?.byok) {
-        if (request.config.byok.provider === BYOKProvider.AZURE) {
+        if (request.config.byok.provider === BYOKProvider.AZURE && request.config.byok.region) {
           const result = await assessWithBYOKAzure(
             request.audioBlob,
             request.referenceText,
             request.language,
             {
               subscriptionKey: request.config.byok.apiKey,
-              region: request.config.byok.region || DEFAULT_AZURE_REGION,
+              region: request.config.byok.region,
             }
           )
 

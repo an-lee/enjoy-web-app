@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { models } from './models'
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 
 describe('Models Routes', () => {
 	it('should export models route handler', () => {

@@ -7,8 +7,8 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Link } from '@tanstack/react-router'
-import { getAIServiceConfig } from '@/ai/core/config'
-import { AIProvider } from '@/ai/types'
+import { getAIServiceConfig } from '@/page/ai/core/config'
+import { AIProvider } from '@/page/ai/types'
 import { usePlayerStore } from '@/page/stores/player'
 import {
   AlertDialog,

@@ -23,7 +23,7 @@ import OpenAI from 'openai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateText } from 'ai'
 import { useAuthStore } from '@/page/stores/auth'
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 
 // Base URL for the Hono API Worker
 // Use relative path, but ensure it's properly handled by OpenAI SDK

@@ -7,7 +7,7 @@ import {
 } from '@/page/components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import type { ModelOption } from '@/ai/providers/local/constants'
+import type { ModelOption } from '@/page/ai/providers/local/constants'
 import type { ModelStatus } from '@/page/stores/local-models'
 
 interface ModelSelectorProps {

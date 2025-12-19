@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/page/components/ui/button'
 import { Icon } from '@iconify/react'
-import { ttsService } from '@/ai/services'
-import { getAIServiceConfig } from '@/ai/core/config'
+import { ttsService } from '@/page/ai/services'
+import { getAIServiceConfig } from '@/page/ai/core/config'
 import { useSettingsStore } from '@/page/stores/settings'
 import { createLogger } from '@/shared/lib/utils'
 
@@ -28,8 +28,8 @@ import {
   useAudio,
   useCreateTranscript,
 } from '@/page/hooks/queries'
-import { getDefaultTTSVoice, getTTSVoices } from '@/ai/constants/tts-voices'
-import { AIProvider } from '@/ai/types'
+import { getDefaultTTSVoice, getTTSVoices } from '@/page/ai/constants/tts-voices'
+import { AIProvider } from '@/page/ai/types'
 import type { TTSAudioInput, TranscriptInput } from '@/page/types/db'
 import { cn } from '@/shared/lib/utils'
 

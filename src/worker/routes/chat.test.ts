@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { chat } from './chat'
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
+import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 
 describe('Chat Routes', () => {
 	it('should export chat route handler', () => {

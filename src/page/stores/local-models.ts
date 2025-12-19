@@ -5,7 +5,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { normalizeProgress } from '@/ai/providers/local/utils/progress'
+import { normalizeProgress } from '@/page/ai/providers/local/utils/progress'
 
 export type ModelType = 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts'
 
