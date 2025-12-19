@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useAuthStore, type User } from '@/page/stores'
-import { authApi } from '@/api'
+import { authApi } from '@/page/api'
 import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================

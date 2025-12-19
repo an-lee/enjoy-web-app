@@ -310,7 +310,7 @@ The app uses **i18next** with **react-i18next** for internationalization.
 
 #### Configuration
 
-- **Config File**: `@/locales/i18n.ts`
+- **Config File**: `@/shared/locales/i18n.ts`
 - **Translation Files**: `src/locales/{lang}/translation.json`
 - **Language Detection**: Automatically detects from:
   1. Settings store (`enjoy-settings` localStorage)

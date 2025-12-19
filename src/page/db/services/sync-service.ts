@@ -10,9 +10,9 @@
  */
 
 import { createLogger } from '@/shared/lib/utils'
-import { audioApi } from '@/api/audio'
-import { videoApi } from '@/api/video'
-import { transcriptApi } from '@/api/transcript'
+import { audioApi } from '@/page/api/audio'
+import { videoApi } from '@/page/api/video'
+import { transcriptApi } from '@/page/api/transcript'
 import {
   getAudioById,
   saveAudioFromServer,

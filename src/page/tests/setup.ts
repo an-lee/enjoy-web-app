@@ -123,7 +123,7 @@ if (typeof window.crypto === 'undefined') {
 // Mock i18n
 // ============================================================================
 
-vi.mock('@/locales/i18n', () => ({
+vi.mock('@/shared/locales/i18n', () => ({
   default: {
     changeLanguage: vi.fn().mockResolvedValue(undefined),
     language: 'en',

@@ -7,7 +7,7 @@
  * For contextual explanations with AI, use the AI dictionary service.
  */
 
-import { apiClient } from '@/api/client'
+import { apiClient } from '@/page/api/client'
 
 export interface DictionaryBasicRequest {
   word: string
