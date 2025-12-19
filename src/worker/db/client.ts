@@ -1,6 +1,6 @@
 import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1'
 import * as schema from './schema'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 const log = createLogger({ name: 'd1' })
 

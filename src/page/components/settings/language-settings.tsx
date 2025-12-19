@@ -9,7 +9,7 @@ import {
 } from '@/page/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import { useSettingsStore } from '@/page/stores'
-import { LANGUAGES } from '@/lib/constants'
+import { LANGUAGES } from '@/page/lib/constants'
 
 export function LanguageSettings() {
   const { t } = useTranslation()

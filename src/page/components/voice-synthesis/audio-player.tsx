@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import { Icon } from '@iconify/react'
 import { Button } from '@/page/components/ui/button'
 import { Slider } from '@/page/components/ui/slider'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 interface AudioPlayerProps {
   audioUrl: string

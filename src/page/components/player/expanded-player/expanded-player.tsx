@@ -7,7 +7,7 @@
  */
 
 import { TooltipProvider } from '@/page/components/ui/tooltip'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { usePlayerStore } from '@/page/stores/player'
 import { ExpandedPlayerHeader } from './expanded-player-header'
 import { ExpandedPlayerContent } from './expanded-player-content'

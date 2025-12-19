@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Label } from '@/page/components/ui/label'
 import { Button } from '@/page/components/ui/button'
 import { Icon } from '@iconify/react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import type { Translation } from '@/page/types/db'
 
 interface TranslationResultProps {

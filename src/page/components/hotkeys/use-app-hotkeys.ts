@@ -8,7 +8,7 @@
 import { useHotkeys, type Options } from 'react-hotkeys-hook'
 import { useHotkeysStore, HOTKEY_MAP, type HotkeyScope } from '@/page/stores/hotkeys'
 import { useCallback, useMemo, useEffect } from 'react'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 const log = createLogger({ name: 'Hotkeys' })
 

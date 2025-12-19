@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import i18n from "@/lib/i18n"
+import i18n from "@/locales/i18n"
 import { AIProvider } from "@/ai/types"
 
 interface AIServiceSettings {

@@ -5,7 +5,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn, createLogger } from '@/lib/utils'
+import { cn, createLogger } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 
 // ============================================================================

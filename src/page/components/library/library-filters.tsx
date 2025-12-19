@@ -4,7 +4,7 @@
 
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { Input } from '@/page/components/ui/input'
 import { Button } from '@/page/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/page/components/ui/toggle-group'

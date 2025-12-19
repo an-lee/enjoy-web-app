@@ -5,7 +5,7 @@
  */
 
 import { Icon } from '@iconify/react'
-import { formatTime } from '@/lib/utils'
+import { formatTime } from '@/shared/lib/utils'
 import { useTranslation } from 'react-i18next'
 
 interface ShadowReadingPanelHeaderProps {

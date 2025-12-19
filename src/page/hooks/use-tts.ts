@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useCreateTTSAudio, useCreateTranscript } from './queries'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import type { Audio, TTSAudioInput, TranscriptInput } from '@/page/types/db'
 
 // ============================================================================

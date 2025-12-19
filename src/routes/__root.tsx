@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
 import type { QueryClient } from '@tanstack/react-query'
 
-import '@/lib/i18n'
-import { createLogger } from '@/lib/utils'
+import '@/locales/i18n'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger

@@ -8,14 +8,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 import { usePlayerStore } from '@/page/stores/player'
-import type { EchoRegionAnalysisResult } from '@/lib/audio/echo-region-analysis'
+import type { EchoRegionAnalysisResult } from '@/page/lib/audio/echo-region-analysis'
 import {
   analyzeEchoRegionFromBlob,
   loadMediaBlobForSession,
-} from '@/lib/audio/echo-region-analysis'
+} from '@/page/lib/audio/echo-region-analysis'
 import { PitchContourChart, type PitchContourVisibility } from './pitch-contour-chart'
 import { PitchContourControls } from './pitch-contour-controls'
 

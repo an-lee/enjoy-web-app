@@ -8,12 +8,12 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useQuery } from '@tanstack/react-query'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { usePlayerStore } from '@/page/stores/player'
 import { getActiveEchoSessions, getVideoById, getAudioById } from '@/page/db'
 import type { LibraryMedia } from '@/page/hooks/queries'
 import type { EchoSession } from '@/page/types/db'
-import { formatRelativeTime, createLogger } from '@/lib/utils'
+import { formatRelativeTime, createLogger } from '@/shared/lib/utils'
 import { GenerativeCover } from '@/page/components/library/generative-cover'
 
 // ============================================================================

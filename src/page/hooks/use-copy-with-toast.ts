@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCopyToClipboard } from '@uidotdev/usehooks'
 import { toast } from 'sonner'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger

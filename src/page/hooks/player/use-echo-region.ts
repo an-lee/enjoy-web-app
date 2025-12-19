@@ -185,7 +185,7 @@ export function useEchoRegionOperations(lines: TranscriptLineState[]) {
 // Manager Hook - Side Effects
 // ============================================================================
 
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import { useTranscriptDisplay } from './use-transcript-display'
 
 const log = createLogger({ name: 'useEchoRegionManager' })

@@ -6,7 +6,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // Import Recorder library
 // @ts-ignore - recorder-core doesn't have TypeScript definitions

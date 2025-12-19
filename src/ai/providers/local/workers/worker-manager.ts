@@ -5,7 +5,7 @@
 
 import { useLocalModelsStore } from '@/page/stores/local-models'
 import { normalizeProgress } from '../utils/progress'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger

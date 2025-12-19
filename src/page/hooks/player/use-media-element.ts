@@ -20,7 +20,7 @@ import {
   normalizeEchoWindow,
   type EchoWindow,
 } from '@/page/components/player/echo'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 const log = createLogger({ name: 'useMediaElement' })
 

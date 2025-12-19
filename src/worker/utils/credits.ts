@@ -7,7 +7,7 @@
  * counters.
  */
 
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import type { SubscriptionTier } from '@/api/auth'
 
 const log = createLogger({ name: 'credits' })

@@ -9,7 +9,7 @@ import {
 } from '@/page/components/ui/select'
 import { Button } from '@/page/components/ui/button'
 import { Icon } from '@iconify/react'
-import { LANGUAGES } from '@/lib/constants'
+import { LANGUAGES } from '@/page/lib/constants'
 
 interface LanguageSelectorProps {
   sourceLanguage: string

@@ -18,7 +18,7 @@ import {
 } from '@/page/db'
 import { syncTranscriptsForTarget } from '@/page/db/services/sync-manager'
 import type { TargetType } from '@/page/types/db'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger

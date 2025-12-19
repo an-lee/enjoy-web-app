@@ -5,7 +5,7 @@
  */
 
 import { memo, useMemo } from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
 import { EchoRegionControls } from '../echo/echo-region-controls'
 import { ShadowReadingPanel } from '../shadow-reading/shadow-reading-panel'

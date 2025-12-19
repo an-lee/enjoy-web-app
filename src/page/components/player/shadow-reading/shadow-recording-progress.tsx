@@ -8,7 +8,7 @@
 import { useMemo, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Progress } from '@/page/components/ui/progress'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 interface ShadowRecordingProgressProps {
   /** Whether recording is in progress */

@@ -9,7 +9,7 @@
  * 5. Retry mechanism with exponential backoff
  */
 
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import { audioApi } from '@/api/audio'
 import { videoApi } from '@/api/video'
 import { transcriptApi } from '@/api/transcript'

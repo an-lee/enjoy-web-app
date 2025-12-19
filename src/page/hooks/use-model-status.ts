@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocalModelsStore } from '@/page/stores'
 import { localModelService } from '@/ai/providers/local'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import type { ModelType } from '@/page/stores/local-models'
 
 // ============================================================================

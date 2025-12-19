@@ -16,7 +16,7 @@ import { RecordButton } from './record-button'
 import { Button } from '@/page/components/ui/button'
 import { ShadowRecordingProgress } from './shadow-recording-progress'
 import { recordingRepository } from '@/page/db/repositories/recording-repository'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import type { TargetType, RecordingInput } from '@/page/types/db'
 
 const log = createLogger({ name: 'ShadowRecorder' })

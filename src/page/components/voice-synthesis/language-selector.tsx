@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/page/components/ui/select'
-import { LANGUAGES } from '@/lib/constants'
+import { LANGUAGES } from '@/page/lib/constants'
 
 interface LanguageSelectorProps {
   language: string

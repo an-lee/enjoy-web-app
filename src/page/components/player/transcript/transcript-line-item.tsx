@@ -6,7 +6,7 @@
  */
 
 import { memo, useMemo } from 'react'
-import { cn, formatTime } from '@/lib/utils'
+import { cn, formatTime } from '@/shared/lib/utils'
 import { useDisplayTime } from '@/page/hooks/player/use-display-time'
 import { usePlayerStore } from '@/page/stores/player'
 import type { TranscriptLineState } from './types'

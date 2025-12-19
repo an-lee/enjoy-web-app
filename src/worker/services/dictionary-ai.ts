@@ -6,7 +6,7 @@
 
 import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/ai/constants'
 import { ServiceError } from '@/worker/utils/errors'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Types

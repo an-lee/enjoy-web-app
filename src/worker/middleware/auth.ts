@@ -1,7 +1,7 @@
 import type { Context, Next } from 'hono'
 import type { UserProfile, SubscriptionTier } from '@/api/auth'
 import { convertSnakeToCamel } from '@/api/utils'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // Re-export for convenience
 export type { UserProfile, SubscriptionTier }

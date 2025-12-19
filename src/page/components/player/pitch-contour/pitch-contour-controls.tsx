@@ -5,11 +5,11 @@
  */
 
 import { Icon } from '@iconify/react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/page/components/ui/tooltip'
 import type { PitchContourVisibility } from './pitch-contour-chart'
-import type { EchoRegionAnalysisResult } from '@/lib/audio/echo-region-analysis'
+import type { EchoRegionAnalysisResult } from '@/page/lib/audio/echo-region-analysis'
 import { Separator } from '@/page/components/ui/separator'
 
 interface PitchContourControlsProps {

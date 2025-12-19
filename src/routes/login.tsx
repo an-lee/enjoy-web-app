@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useAuthStore, type User } from '@/page/stores'
 import { authApi } from '@/api'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger

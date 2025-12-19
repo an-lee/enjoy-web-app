@@ -6,7 +6,7 @@
 
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn, formatTime } from '@/lib/utils'
+import { cn, formatTime } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 import { Slider } from '@/page/components/ui/slider'
 import { usePlayerStore } from '@/page/stores/player'

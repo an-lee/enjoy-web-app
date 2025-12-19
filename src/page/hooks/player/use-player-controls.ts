@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { usePlayerStore } from '@/page/stores/player'
 import { useTranscriptDisplay } from '@/page/hooks/player'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 const log = createLogger({ name: 'usePlayerControls' })
 

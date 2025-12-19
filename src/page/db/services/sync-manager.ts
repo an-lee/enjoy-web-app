@@ -8,7 +8,7 @@
  * - Manual sync triggers
  */
 
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import { fullSync, processSyncQueue, queueUploadSync, downloadTranscriptsByTarget } from './sync-service'
 import type { SyncOptions, SyncResult } from './sync-service'
 import type { TargetType } from '@/page/types/db'

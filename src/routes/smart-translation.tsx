@@ -9,7 +9,7 @@ import { smartTranslationService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/page/stores/settings'
 import { AIProvider } from '@/ai/types'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger
@@ -32,7 +32,7 @@ import {
   HistoryToggle,
   TranslationHistory,
 } from '@/page/components/smart-translation'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 export const Route = createFileRoute('/smart-translation')({
   component: SmartTranslation,

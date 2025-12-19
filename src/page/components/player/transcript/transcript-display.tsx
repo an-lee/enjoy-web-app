@@ -12,7 +12,7 @@
 import { useRef, useCallback, useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn, createLogger } from '@/lib/utils'
+import { cn, createLogger } from '@/shared/lib/utils'
 import { usePlayerStore } from '@/page/stores/player'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { AIProvider } from '@/ai/types'

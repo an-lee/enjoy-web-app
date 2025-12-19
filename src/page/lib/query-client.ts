@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query'
-import { createLogger } from './utils'
+import { createLogger } from '../../shared/lib/utils'
 
 // ============================================================================
 // Logger

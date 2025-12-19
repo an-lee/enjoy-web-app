@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import type { UserProfile } from '@/api/auth'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import {
 	calculateCredits,
 	checkAndDeductCredits,

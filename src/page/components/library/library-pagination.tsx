@@ -11,7 +11,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/page/components/ui/pagination'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 // ============================================================================
 // Types

@@ -68,7 +68,7 @@ export interface UseVideosOptions {
 // Helper Functions
 // ============================================================================
 
-import { getMediaUrl } from '@/lib/file-access'
+import { getMediaUrl } from '@/page/lib/file-access'
 
 async function createVideoUrl(video: Video | undefined | null): Promise<string | null> {
   if (!video) return null

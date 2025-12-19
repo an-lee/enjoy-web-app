@@ -14,7 +14,7 @@ import {
   type ChartConfig,
 } from '@/page/components/ui/chart'
 import { useIsMobile } from '@/page/hooks/use-mobile'
-import type { EchoRegionSeriesPoint } from '@/lib/audio/echo-region-analysis'
+import type { EchoRegionSeriesPoint } from '@/page/lib/audio/echo-region-analysis'
 
 function formatSecondsShort(value: number) {
   if (!Number.isFinite(value)) return ''

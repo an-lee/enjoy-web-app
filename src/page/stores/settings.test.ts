@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { AIProvider } from '@/ai/types'
 
 // Mock i18n before importing the store
-vi.mock('@/lib/i18n', () => ({
+vi.mock('@/locales/i18n', () => ({
   default: {
     changeLanguage: vi.fn().mockResolvedValue(undefined),
     language: 'en',
@@ -95,7 +95,7 @@ describe('Settings Store', () => {
     })
 
     it('should sync with i18n when language changes', async () => {
-      const i18n = await import('@/lib/i18n')
+      const i18n = await import('@/locales/i18n')
       useSettingsStore.getState().setPreferredLanguage('ja')
       expect(i18n.default.changeLanguage).toHaveBeenCalledWith('ja')
     })

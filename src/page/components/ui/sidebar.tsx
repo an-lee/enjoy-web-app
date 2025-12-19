@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { Icon } from "@iconify/react"
 
 import { useIsMobile } from "@/page/hooks/use-mobile"
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 import { Button } from "@/page/components/ui/button"
 import { Input } from "@/page/components/ui/input"
 import { Separator } from "@/page/components/ui/separator"

@@ -3,7 +3,7 @@
  * Handles video-related API calls
  */
 
-import { Language } from "@/lib/constants"
+import { Language } from "@/page/lib/constants"
 import { apiClient } from "./client"
 import type { TargetType, Transcript, TranscriptSource } from "@/page/types/db"
 

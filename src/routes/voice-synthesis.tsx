@@ -6,7 +6,7 @@ import { Icon } from '@iconify/react'
 import { ttsService } from '@/ai/services'
 import { getAIServiceConfig } from '@/ai/core/config'
 import { useSettingsStore } from '@/page/stores/settings'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger
@@ -31,7 +31,7 @@ import {
 import { getDefaultTTSVoice, getTTSVoices } from '@/ai/constants/tts-voices'
 import { AIProvider } from '@/ai/types'
 import type { TTSAudioInput, TranscriptInput } from '@/page/types/db'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 export const Route = createFileRoute('/voice-synthesis')({
   component: VoiceSynthesis,

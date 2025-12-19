@@ -8,7 +8,7 @@
 import { HotkeysProvider as RHHProvider, useHotkeysContext } from 'react-hotkeys-hook'
 import { useEffect, type ReactNode } from 'react'
 import { usePlayerStore } from '@/page/stores/player'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 const log = createLogger({ name: 'HotkeysScope' })
 

@@ -3,7 +3,7 @@
  */
 
 import type { Context } from 'hono'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger

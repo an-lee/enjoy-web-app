@@ -19,7 +19,7 @@ import {
   saveTTSAudio,
   deleteAudio,
 } from '@/page/db'
-import { getMediaUrl } from '@/lib/file-access'
+import { getMediaUrl } from '@/page/lib/file-access'
 import type { Audio, UserAudioInput, TTSAudioInput } from '@/page/types/db'
 
 const MAX_HISTORY_ITEMS = 50

@@ -9,7 +9,7 @@ import { useDebounce } from '@uidotdev/usehooks'
 import { Icon } from '@iconify/react'
 import { toast } from 'sonner'
 
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 
 // ============================================================================
@@ -34,7 +34,7 @@ import {
   type LibraryMedia,
 } from '@/page/hooks/queries'
 import { saveLocalAudio, saveLocalVideo } from '@/page/db'
-import { getFileHandleFromFile } from '@/lib/file-helpers'
+import { getFileHandleFromFile } from '@/page/lib/file-helpers'
 import { usePlayerStore } from '@/page/stores'
 
 // ============================================================================

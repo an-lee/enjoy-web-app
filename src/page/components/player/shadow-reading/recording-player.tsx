@@ -31,7 +31,7 @@ import { toast } from 'sonner'
 import { usePlayerStore } from '@/page/stores/player'
 import { deleteRecording } from '@/page/db'
 import { recordingQueryKeys } from '@/page/hooks/queries'
-import { cn, createLogger } from '@/lib/utils'
+import { cn, createLogger } from '@/shared/lib/utils'
 import type { Recording } from '@/page/types/db'
 
 const log = createLogger({ name: 'RecordingPlayer' })

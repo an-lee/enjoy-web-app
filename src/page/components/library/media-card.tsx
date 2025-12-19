@@ -5,7 +5,7 @@
 import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 import { Card, CardContent } from '@/page/components/ui/card'
 import { Badge } from '@/page/components/ui/badge'

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { formatHotkeyAsKbd } from '@/lib/format-hotkey'
+import { formatHotkeyAsKbd } from '@/page/lib/format-hotkey'
 import { useHotkeyBinding } from '@/page/stores/hotkeys'
 import { Button } from '@/page/components/ui/button'
 import { Slider } from '@/page/components/ui/slider'

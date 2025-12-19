@@ -1,6 +1,6 @@
 import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
 import { router } from './router'
-import { createLogger } from '@/lib/utils'
+import { createLogger } from '@/shared/lib/utils'
 
 // Env type is declared globally in worker-configuration.d.ts
 // No need to import it
