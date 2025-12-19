@@ -60,6 +60,41 @@ export interface LLMGenerationParams {
 }
 
 /**
+ * Credits usage log entry
+ */
+export interface CreditsUsageLog {
+  id: string
+  userId: string
+  date: string // YYYY-MM-DD
+  timestamp: number // Unix timestamp in milliseconds
+  serviceType: string // 'tts' | 'asr' | 'translation' | 'llm' | 'assessment' | ...
+  tier: string // 'free' | 'pro' | 'ultra'
+  required: number // Credits requested for this operation
+  usedBefore: number // Credits used before this operation
+  usedAfter: number // Credits used after this operation
+  allowed: boolean // Whether the request was allowed
+  meta: Record<string, unknown> | null // Optional JSON metadata
+}
+
+/**
+ * Credits usage logs response
+ */
+export interface CreditsUsageLogsResponse {
+  logs: CreditsUsageLog[]
+}
+
+/**
+ * Query parameters for fetching credits usage logs
+ */
+export interface GetCreditsUsageLogsParams {
+  startDate?: string // YYYY-MM-DD
+  endDate?: string // YYYY-MM-DD
+  serviceType?: string
+  limit?: number // Default: 50, Max: 100
+  offset?: number // Default: 0
+}
+
+/**
  * Create authenticated fetch function
  * Injects Bearer token from auth store into all requests
  */
@@ -260,6 +295,59 @@ export class EnjoyAIClient {
    */
   async listModels() {
     return this.openaiClient.models.list()
+  }
+
+  // ============================================
+  // Credits Services
+  // ============================================
+
+  /**
+   * Get credits usage logs for the authenticated user
+   * Uses worker API credits endpoint
+   *
+   * @param params - Query parameters for filtering and pagination
+   * @returns Credits usage logs
+   */
+  async getCreditsUsageLogs(
+    params: GetCreditsUsageLogsParams = {}
+  ): Promise<CreditsUsageLogsResponse> {
+    // Build query string
+    const queryParams = new URLSearchParams()
+    if (params.startDate) {
+      queryParams.append('startDate', params.startDate)
+    }
+    if (params.endDate) {
+      queryParams.append('endDate', params.endDate)
+    }
+    if (params.serviceType) {
+      queryParams.append('serviceType', params.serviceType)
+    }
+    if (params.limit !== undefined) {
+      queryParams.append('limit', params.limit.toString())
+    }
+    if (params.offset !== undefined) {
+      queryParams.append('offset', params.offset.toString())
+    }
+
+    const queryString = queryParams.toString()
+    const url = `${this.baseUrl}/credits/usages${queryString ? `?${queryString}` : ''}`
+
+    const response = await this.authenticatedFetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to fetch credits usage logs' }))
+      const errorMessage = typeof errorData === 'object' && errorData !== null && 'error' in errorData
+        ? String(errorData.error)
+        : `HTTP error! status: ${response.status}`
+      throw new Error(errorMessage)
+    }
+
+    return response.json()
   }
 }
 

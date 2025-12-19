@@ -480,5 +480,35 @@
         "forceHint": "Force download will fetch all records, ignoring incremental sync"
       }
     }
+  },
+  "credits": {
+    "title": "Credits Usage",
+    "description": "View your credits usage history",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "serviceType": "Service Type",
+    "allServices": "All Services",
+    "clearFilters": "Clear Filters",
+    "error": "Failed to load credits usage",
+    "errorDescription": "An error occurred",
+    "retry": "Retry",
+    "noRecords": "No usage records found",
+    "noRecordsWithFilters": "Try adjusting your filters",
+    "noRecordsDescription": "Your credits usage history will appear here",
+    "pageInfo": "Page {{page}}",
+    "totalRecords": "{{count}} records",
+    "previous": "Previous",
+    "next": "Next",
+    "allowed": "Allowed",
+    "denied": "Denied",
+    "table": {
+      "date": "Date",
+      "time": "Time",
+      "service": "Service",
+      "tier": "Tier",
+      "required": "Required",
+      "usedAfter": "Used After",
+      "status": "Status"
+    }
   }
 }
