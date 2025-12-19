@@ -481,5 +481,43 @@
         "forceHint": "La descarga forzada obtendrá todos los registros, ignorando la sincronización incremental"
       }
     }
+  },
+  "credits": {
+    "title": "Uso de IA",
+    "description": "Ver su historial de uso de IA",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha de fin",
+    "serviceType": "Tipo de servicio",
+    "allServices": "Todos los servicios",
+    "clearFilters": "Limpiar filtros",
+    "error": "Error al cargar los registros de uso",
+    "errorDescription": "Ocurrió un error",
+    "retry": "Reintentar",
+    "noRecords": "No se encontraron registros de uso",
+    "noRecordsWithFilters": "Intente ajustar sus filtros",
+    "noRecordsDescription": "Su historial de uso aparecerá aquí",
+    "pageInfo": "Página {{page}}",
+    "totalRecords": "{{count}} registros",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "allowed": "Permitido",
+    "denied": "Denegado",
+    "table": {
+      "date": "Fecha",
+      "time": "Hora",
+      "service": "Servicio",
+      "tier": "Nivel",
+      "required": "Requerido",
+      "usedAfter": "Usado después",
+      "status": "Estado"
+    },
+    "serviceTypes": {
+      "all": "Todos los servicios",
+      "tts": "TTS",
+      "asr": "ASR",
+      "translation": "Traducción",
+      "llm": "LLM",
+      "assessment": "Evaluación"
+    }
   }
 }

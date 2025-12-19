@@ -483,19 +483,19 @@
     }
   },
   "credits": {
-    "title": "Credits Usage",
-    "description": "View your credits usage history",
+    "title": "AI Usage",
+    "description": "View your AI usage history",
     "startDate": "Start Date",
     "endDate": "End Date",
     "serviceType": "Service Type",
     "allServices": "All Services",
     "clearFilters": "Clear Filters",
-    "error": "Failed to load credits usage",
+    "error": "Failed to load usage records",
     "errorDescription": "An error occurred",
     "retry": "Retry",
     "noRecords": "No usage records found",
     "noRecordsWithFilters": "Try adjusting your filters",
-    "noRecordsDescription": "Your credits usage history will appear here",
+    "noRecordsDescription": "Your usage history will appear here",
     "pageInfo": "Page {{page}}",
     "totalRecords": "{{count}} records",
     "previous": "Previous",
@@ -510,6 +510,14 @@
       "required": "Required",
       "usedAfter": "Used After",
       "status": "Status"
+    },
+    "serviceTypes": {
+      "all": "All Services",
+      "tts": "TTS",
+      "asr": "ASR",
+      "translation": "Translation",
+      "llm": "LLM",
+      "assessment": "Assessment"
     }
   }
 }

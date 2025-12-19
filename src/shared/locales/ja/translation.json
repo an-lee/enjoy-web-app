@@ -481,5 +481,43 @@
         "forceHint": "強制ダウンロードは増分同期を無視してすべてのレコードを取得します"
       }
     }
+  },
+  "credits": {
+    "title": "AI使用量",
+    "description": "AI使用履歴を表示",
+    "startDate": "開始日",
+    "endDate": "終了日",
+    "serviceType": "サービスタイプ",
+    "allServices": "すべてのサービス",
+    "clearFilters": "フィルターをクリア",
+    "error": "使用記録の読み込みに失敗しました",
+    "errorDescription": "エラーが発生しました",
+    "retry": "再試行",
+    "noRecords": "使用記録が見つかりませんでした",
+    "noRecordsWithFilters": "フィルターを調整してください",
+    "noRecordsDescription": "使用履歴がここに表示されます",
+    "pageInfo": "ページ {{page}}",
+    "totalRecords": "{{count}} 件の記録",
+    "previous": "前へ",
+    "next": "次へ",
+    "allowed": "許可済み",
+    "denied": "拒否",
+    "table": {
+      "date": "日付",
+      "time": "時刻",
+      "service": "サービス",
+      "tier": "レベル",
+      "required": "必要",
+      "usedAfter": "使用後",
+      "status": "ステータス"
+    },
+    "serviceTypes": {
+      "all": "すべてのサービス",
+      "tts": "TTS",
+      "asr": "ASR",
+      "translation": "翻訳",
+      "llm": "LLM",
+      "assessment": "評価"
+    }
   }
 }

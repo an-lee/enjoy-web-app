@@ -38,12 +38,12 @@ export const Route = createFileRoute('/credits')({
 
 const PAGE_SIZE = 50
 const SERVICE_TYPES = [
-  { value: 'all', label: 'All Services' },
-  { value: 'tts', label: 'TTS' },
-  { value: 'asr', label: 'ASR' },
-  { value: 'translation', label: 'Translation' },
-  { value: 'llm', label: 'LLM' },
-  { value: 'assessment', label: 'Assessment' },
+  { value: 'all', translationKey: 'credits.serviceTypes.all' },
+  { value: 'tts', translationKey: 'credits.serviceTypes.tts' },
+  { value: 'asr', translationKey: 'credits.serviceTypes.asr' },
+  { value: 'translation', translationKey: 'credits.serviceTypes.translation' },
+  { value: 'llm', translationKey: 'credits.serviceTypes.llm' },
+  { value: 'assessment', translationKey: 'credits.serviceTypes.assessment' },
 ] as const
 
 // ============================================================================
@@ -73,11 +73,6 @@ function formatTimestamp(timestamp: number): string {
   } catch {
     return new Date(timestamp).toLocaleString()
   }
-}
-
-function getServiceTypeLabel(serviceType: string): string {
-  const found = SERVICE_TYPES.find((st) => st.value === serviceType)
-  return found ? found.label : serviceType
 }
 
 // ============================================================================
@@ -159,9 +154,9 @@ function Credits() {
     <div className="container mx-auto py-6 px-4 max-w-7xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">{t('credits.title', { defaultValue: 'Credits Usage' })}</h1>
+        <h1 className="text-3xl font-bold mb-2">{t('credits.title')}</h1>
         <p className="text-muted-foreground">
-          {t('credits.description', { defaultValue: 'View your credits usage history' })}
+          {t('credits.description')}
         </p>
       </div>
 
@@ -170,7 +165,7 @@ function Credits() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="text-sm font-medium mb-2 block">
-              {t('credits.startDate', { defaultValue: 'Start Date' })}
+              {t('credits.startDate')}
             </label>
             <Input
               type="date"
@@ -181,7 +176,7 @@ function Credits() {
           </div>
           <div>
             <label className="text-sm font-medium mb-2 block">
-              {t('credits.endDate', { defaultValue: 'End Date' })}
+              {t('credits.endDate')}
             </label>
             <Input
               type="date"
@@ -192,7 +187,7 @@ function Credits() {
           </div>
           <div>
             <label className="text-sm font-medium mb-2 block">
-              {t('credits.serviceType', { defaultValue: 'Service Type' })}
+              {t('credits.serviceType')}
             </label>
             <Select value={serviceType} onValueChange={handleServiceTypeChange}>
               <SelectTrigger>
@@ -201,7 +196,7 @@ function Credits() {
               <SelectContent>
                 {SERVICE_TYPES.map((st) => (
                   <SelectItem key={st.value} value={st.value}>
-                    {st.label}
+                    {t(st.translationKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -211,7 +206,7 @@ function Credits() {
             {hasFilters && (
               <Button variant="outline" onClick={handleClearFilters} className="w-full">
                 <Icon icon="lucide:x" className="mr-2 h-4 w-4" />
-                {t('credits.clearFilters', { defaultValue: 'Clear Filters' })}
+                {t('credits.clearFilters')}
               </Button>
             )}
           </div>
@@ -233,14 +228,14 @@ function Credits() {
             <Icon icon="lucide:alert-circle" className="w-8 h-8 text-destructive" />
           </div>
           <h3 className="text-lg font-medium mb-2">
-            {t('credits.error', { defaultValue: 'Failed to load credits usage' })}
+            {t('credits.error')}
           </h3>
           <p className="text-sm text-muted-foreground max-w-md mb-4">
-            {error instanceof Error ? error.message : t('credits.errorDescription', { defaultValue: 'An error occurred' })}
+            {error instanceof Error ? error.message : t('credits.errorDescription')}
           </p>
           <Button onClick={() => refetch()}>
             <Icon icon="lucide:refresh-cw" className="mr-2 h-4 w-4" />
-            {t('credits.retry', { defaultValue: 'Retry' })}
+            {t('credits.retry')}
           </Button>
         </div>
       ) : logs.length === 0 ? (
@@ -249,12 +244,12 @@ function Credits() {
             <Icon icon="lucide:inbox" className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-medium mb-2">
-            {t('credits.noRecords', { defaultValue: 'No usage records found' })}
+            {t('credits.noRecords')}
           </h3>
           <p className="text-sm text-muted-foreground max-w-md">
             {hasFilters
-              ? t('credits.noRecordsWithFilters', { defaultValue: 'Try adjusting your filters' })
-              : t('credits.noRecordsDescription', { defaultValue: 'Your credits usage history will appear here' })}
+              ? t('credits.noRecordsWithFilters')
+              : t('credits.noRecordsDescription')}
           </p>
         </div>
       ) : (
@@ -264,17 +259,17 @@ function Credits() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('credits.table.date', { defaultValue: 'Date' })}</TableHead>
-                  <TableHead>{t('credits.table.time', { defaultValue: 'Time' })}</TableHead>
-                  <TableHead>{t('credits.table.service', { defaultValue: 'Service' })}</TableHead>
-                  <TableHead>{t('credits.table.tier', { defaultValue: 'Tier' })}</TableHead>
+                  <TableHead>{t('credits.table.date')}</TableHead>
+                  <TableHead>{t('credits.table.time')}</TableHead>
+                  <TableHead>{t('credits.table.service')}</TableHead>
+                  <TableHead>{t('credits.table.tier')}</TableHead>
                   <TableHead className="text-right">
-                    {t('credits.table.required', { defaultValue: 'Required' })}
+                    {t('credits.table.required')}
                   </TableHead>
                   <TableHead className="text-right">
-                    {t('credits.table.usedAfter', { defaultValue: 'Used After' })}
+                    {t('credits.table.usedAfter')}
                   </TableHead>
-                  <TableHead>{t('credits.table.status', { defaultValue: 'Status' })}</TableHead>
+                  <TableHead>{t('credits.table.status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -285,7 +280,9 @@ function Credits() {
                       {formatTimestamp(log.timestamp)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{getServiceTypeLabel(log.serviceType)}</Badge>
+                      <Badge variant="outline">
+                        {t(`credits.serviceTypes.${log.serviceType}`, { defaultValue: log.serviceType })}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{log.tier}</Badge>
@@ -295,11 +292,11 @@ function Credits() {
                     <TableCell>
                       {log.allowed ? (
                         <Badge variant="default" className="bg-green-600">
-                          {t('credits.allowed', { defaultValue: 'Allowed' })}
+                          {t('credits.allowed')}
                         </Badge>
                       ) : (
                         <Badge variant="destructive">
-                          {t('credits.denied', { defaultValue: 'Denied' })}
+                          {t('credits.denied')}
                         </Badge>
                       )}
                     </TableCell>
@@ -312,13 +309,10 @@ function Credits() {
           {/* Pagination */}
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              {t('credits.pageInfo', {
-                defaultValue: 'Page {{page}}',
-                page: currentPage,
-              })}
+              {t('credits.pageInfo', { page: currentPage })}
               {!hasMore && logs.length > 0 && (
                 <span className="ml-2">
-                  ({t('credits.totalRecords', { defaultValue: '{{count}} records', count: offset + logs.length })})
+                  ({t('credits.totalRecords', { count: offset + logs.length })})
                 </span>
               )}
             </div>
@@ -329,14 +323,14 @@ function Credits() {
                 disabled={offset === 0}
               >
                 <Icon icon="lucide:chevron-left" className="mr-2 h-4 w-4" />
-                {t('credits.previous', { defaultValue: 'Previous' })}
+                {t('credits.previous')}
               </Button>
               <Button
                 variant="outline"
                 onClick={handleNextPage}
                 disabled={!hasMore}
               >
-                {t('credits.next', { defaultValue: 'Next' })}
+                {t('credits.next')}
                 <Icon icon="lucide:chevron-right" className="ml-2 h-4 w-4" />
               </Button>
             </div>

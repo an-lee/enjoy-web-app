@@ -481,5 +481,43 @@
         "forceHint": "Le téléchargement forcé récupérera tous les enregistrements, en ignorant la synchronisation incrémentale"
       }
     }
+  },
+  "credits": {
+    "title": "Utilisation IA",
+    "description": "Afficher votre historique d'utilisation de l'IA",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "serviceType": "Type de service",
+    "allServices": "Tous les services",
+    "clearFilters": "Effacer les filtres",
+    "error": "Échec du chargement des enregistrements d'utilisation",
+    "errorDescription": "Une erreur s'est produite",
+    "retry": "Réessayer",
+    "noRecords": "Aucun enregistrement d'utilisation trouvé",
+    "noRecordsWithFilters": "Essayez d'ajuster vos filtres",
+    "noRecordsDescription": "Votre historique d'utilisation apparaîtra ici",
+    "pageInfo": "Page {{page}}",
+    "totalRecords": "{{count}} enregistrements",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "allowed": "Autorisé",
+    "denied": "Refusé",
+    "table": {
+      "date": "Date",
+      "time": "Heure",
+      "service": "Service",
+      "tier": "Niveau",
+      "required": "Requis",
+      "usedAfter": "Utilisé après",
+      "status": "Statut"
+    },
+    "serviceTypes": {
+      "all": "Tous les services",
+      "tts": "TTS",
+      "asr": "ASR",
+      "translation": "Traduction",
+      "llm": "LLM",
+      "assessment": "Évaluation"
+    }
   }
 }

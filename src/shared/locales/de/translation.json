@@ -481,5 +481,43 @@
         "forceHint": "Erzwungener Download lädt alle Datensätze herunter und ignoriert inkrementelle Synchronisierung"
       }
     }
+  },
+  "credits": {
+    "title": "KI-Nutzung",
+    "description": "Ihre KI-Nutzungshistorie anzeigen",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "serviceType": "Servicetyp",
+    "allServices": "Alle Dienste",
+    "clearFilters": "Filter löschen",
+    "error": "Nutzungsdatensätze konnten nicht geladen werden",
+    "errorDescription": "Ein Fehler ist aufgetreten",
+    "retry": "Wiederholen",
+    "noRecords": "Keine Nutzungsdatensätze gefunden",
+    "noRecordsWithFilters": "Versuchen Sie, Ihre Filter anzupassen",
+    "noRecordsDescription": "Ihre Nutzungshistorie wird hier angezeigt",
+    "pageInfo": "Seite {{page}}",
+    "totalRecords": "{{count}} Datensätze",
+    "previous": "Vorherige",
+    "next": "Nächste",
+    "allowed": "Erlaubt",
+    "denied": "Verweigert",
+    "table": {
+      "date": "Datum",
+      "time": "Zeit",
+      "service": "Service",
+      "tier": "Stufe",
+      "required": "Erforderlich",
+      "usedAfter": "Nach Verwendung",
+      "status": "Status"
+    },
+    "serviceTypes": {
+      "all": "Alle Dienste",
+      "tts": "TTS",
+      "asr": "ASR",
+      "translation": "Übersetzung",
+      "llm": "LLM",
+      "assessment": "Bewertung"
+    }
   }
 }
