@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
-import type { UserProfile } from '@/api/auth'
+import type { UserProfile } from '../middleware/auth'
 import { handleError } from '@/worker/utils/errors'
 import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 

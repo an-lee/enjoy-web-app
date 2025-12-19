@@ -8,7 +8,7 @@
  */
 
 import { createLogger } from '@/shared/lib/utils'
-import type { SubscriptionTier } from '@/api/auth'
+import type { SubscriptionTier } from '../middleware/auth'
 
 const log = createLogger({ name: 'credits' })
 

@@ -4,7 +4,7 @@
 
 import { checkAndDeductCredits, calculateCredits } from '../utils/credits'
 import { ConfigurationError, ServiceError, RateLimitError } from '../utils/errors'
-import type { UserProfile } from '@/api/auth'
+import type { UserProfile } from '../middleware/auth'
 import { createLogger } from '@/shared/lib/utils'
 
 // ============================================================================

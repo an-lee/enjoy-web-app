@@ -5,7 +5,7 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import { azureTokenRateLimitMiddleware } from '../middleware/azure-rate-limit'
-import type { UserProfile } from '@/api/auth'
+import type { UserProfile } from '../middleware/auth'
 import { getAzureConfig, generateAzureToken, type AzureTokenUsagePayload } from '@/worker/services/azure'
 import { handleError } from '@/worker/utils/errors'
 

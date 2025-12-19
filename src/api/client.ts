@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios'
 import { useAuthStore } from '@/page/stores/auth'
-import { convertSnakeToCamel, convertCamelToSnake } from './utils'
+import { convertSnakeToCamel, convertCamelToSnake } from '@/shared/lib/utils'
 
 // API base URL - should be configured via environment variable
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.API_BASE_URL

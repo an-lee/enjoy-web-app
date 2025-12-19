@@ -1,10 +1,5 @@
 import type { Context, Next } from 'hono'
-import type { UserProfile, SubscriptionTier } from '@/api/auth'
-import { convertSnakeToCamel } from '@/api/utils'
-import { createLogger } from '@/shared/lib/utils'
-
-// Re-export for convenience
-export type { UserProfile, SubscriptionTier }
+import { convertSnakeToCamel, createLogger } from '@/shared/lib/utils'
 
 // ============================================================================
 // Logger
@@ -23,6 +18,24 @@ const CACHE_CLEANUP_INTERVAL = 10 * 60 * 1000 // 10 minutes
 // ============================================================================
 // Internal Types
 // ============================================================================
+
+/**
+ * Subscription tier type
+ */
+export type SubscriptionTier = 'free' | 'pro' | 'ultra'
+
+/**
+ * User profile in camelCase format (used internally in the app)
+ */
+export interface UserProfile {
+	id: string
+	email: string
+	name: string
+	avatarUrl: string
+	subscriptionTier: SubscriptionTier
+	subscriptionExpireDate: string
+	createdAt: string
+}
 
 interface CacheEntry {
 	profile: UserProfile
