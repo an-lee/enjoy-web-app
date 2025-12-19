@@ -93,6 +93,7 @@ chat.post('/completions', async (c) => {
 				type: 'llm',
 				tokensIn: promptTokens,
 				tokensOut: completionTokens,
+				model,
 			})
 		} catch (error) {
 			if (error instanceof RateLimitError) {

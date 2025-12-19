@@ -142,6 +142,7 @@ dictionary.post('/query', async (c) => {
 					usage?.completion_tokens != null
 						? usage.completion_tokens
 						: 512,
+				model: env.WORKERS_AI_TEXT_MODEL,
 			})
 		} catch (error) {
 			if (error instanceof RateLimitError) {

@@ -67,6 +67,7 @@ export type CreditCalculationInput =
 			type: 'llm'
 			tokensIn: number
 			tokensOut: number
+			model?: string // Optional model identifier for audit logging
 	  }
 
 /**
@@ -128,7 +129,11 @@ export function calculateCredits(input: CreditCalculationInput): number {
 	return credits
 }
 
-function getTodayDateString(): string {
+/**
+ * Get today's date string in YYYY-MM-DD format (UTC).
+ * Exported for use in audit logging.
+ */
+export function getTodayDateString(): string {
 	const now = new Date()
 	const year = now.getUTCFullYear()
 	const month = String(now.getUTCMonth() + 1).padStart(2, '0')
