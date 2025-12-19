@@ -6,6 +6,7 @@ import { chat } from './routes/chat'
 import { audio } from './routes/audio'
 import { models } from './routes/models'
 import { translations } from './routes/translations'
+import { credits } from './routes/credits'
 
 // Env type is declared globally in worker-configuration.d.ts
 // You can extend it in wrangler.jsonc when adding bindings
@@ -31,5 +32,6 @@ router.route('/chat', chat)
 router.route('/audio', audio)
 router.route('/models', models)
 router.route('/translations', translations)
+router.route('/credits', credits)
 
 export { router }
