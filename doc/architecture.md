@@ -10,6 +10,7 @@ Enjoy Echo consists of three main components:
 4. **Hono API Worker**: All AI services (translation, dictionary, ASR, TTS, assessment).
 
 The Web App is a full-stack application deployed as a Cloudflare Worker, providing:
+
 - **SSR (Server-Side Rendering)**: Using TanStack Start
 - **API Layer**: Hono API Worker for serverless API endpoints
 - **Static Assets**: Workers Assets for client-side resources
@@ -224,7 +225,7 @@ Request → Cloudflare Worker
 
 The deployment is configured via `wrangler.jsonc`:
 
-- **Main Entry**: `./src/server/index.ts` - Custom server-entry that routes requests
+- **Main Entry**: `./src/worker/index.ts` - Custom server-entry that routes requests
 - **Assets**: `./dist/client` - Client-side build output
 - **Route Priority**: `/api/*` routes are handled by Worker first
 

@@ -1,7 +1,7 @@
 import type { Context, Next } from 'hono'
 import type { UserProfile } from '@/api/auth'
 import { createLogger } from '@/lib/utils'
-import { RateLimitError } from '@/server/utils/errors'
+import { RateLimitError } from '@/worker/utils/errors'
 
 const log = createLogger({ name: 'azure-token-rate-limit' })
 

@@ -6,8 +6,8 @@ import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import { azureTokenRateLimitMiddleware } from '../middleware/azure-rate-limit'
 import type { UserProfile } from '@/api/auth'
-import { getAzureConfig, generateAzureToken, type AzureTokenUsagePayload } from '@/server/services/azure'
-import { handleError } from '@/server/utils/errors'
+import { getAzureConfig, generateAzureToken, type AzureTokenUsagePayload } from '@/worker/services/azure'
+import { handleError } from '@/worker/utils/errors'
 
 const azure = new Hono<{
 	Bindings: Env

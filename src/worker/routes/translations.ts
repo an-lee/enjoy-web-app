@@ -7,7 +7,7 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '@/api/auth'
-import { handleError, RateLimitError } from '@/server/utils/errors'
+import { handleError, RateLimitError } from '@/worker/utils/errors'
 import { createLogger } from '@/lib/utils'
 import { enforceCreditsLimit } from '../middleware/credits'
 

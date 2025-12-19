@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { azureTokenRateLimitMiddleware } from './azure-rate-limit'
-import { RateLimitError } from '@/server/utils/errors'
+import { RateLimitError } from '@/worker/utils/errors'
 
 describe('azureTokenRateLimitMiddleware', () => {
 	const mockUser = {

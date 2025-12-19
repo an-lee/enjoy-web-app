@@ -4,12 +4,13 @@
 
 The AI Service module provides a unified, provider-agnostic interface for all AI-powered features in the Enjoy Echo web application. It supports multiple providers (Enjoy API, Local models, and BYOK) through a clean abstraction layer, ensuring consistent behavior regardless of the underlying provider.
 
-**Important**: All AI services are exposed through the **Cloudflare Worker API router** implemented in `src/server/router.ts` and `src/server/routes/*`, mounted under the `/api/*` prefix. The frontend AI Service Client (`src/ai/`) calls these server routes, which then process the requests using Cloudflare Workers AI or route to external providers.
+**Important**: All AI services are exposed through the **Cloudflare Worker API router** implemented in `src/worker/router.ts` and `src/worker/routes/*`, mounted under the `/api/*` prefix. The frontend AI Service Client (`src/ai/`) calls these server routes, which then process the requests using Cloudflare Workers AI or route to external providers.
 
 **Architecture Flow**:
+
 ```
 Frontend (AI Service Client)
-  → API Worker router (src/server/router.ts → src/server/routes/*, mounted at /api/*)
+  → API Worker router (src/worker/router.ts → src/worker/routes/*, mounted at /api/*)
     → Cloudflare Workers AI / External Providers
 ```
 
@@ -36,20 +37,21 @@ Services expose a clean, consistent API independent of the underlying provider. 
 ### 4. Consistent Code Organization
 
 All providers follow the same organizational structure:
+
 - `client.ts` - Unified client for API access
 - `services/` - Individual service implementations
 - `azure/` - Azure Speech services (when applicable)
 
 ## Service Support Matrix
 
-| Service | Enjoy | Local | BYOK | Cost |
-|---------|-------|-------|------|------|
-| **Translation** | ✅ | ❌ | ❌ | FREE |
-| **Smart Translation** | ✅ | ✅ | ✅ | Quota/BYOK |
-| **Smart Dictionary (contextual)** | ✅ | ✅ | ✅ | Quota/BYOK |
-| **ASR (Whisper)** | ✅ | ✅ | ✅ | Quota/BYOK |
-| **TTS** | ✅ | ✅ | ✅ | Quota/BYOK |
-| **Assessment (Azure)** | ✅ | ❌ | ✅ (Azure only) | Quota/BYOK |
+| Service                           | Enjoy | Local | BYOK            | Cost       |
+| --------------------------------- | ----- | ----- | --------------- | ---------- |
+| **Translation**                   | ✅    | ❌    | ❌              | FREE       |
+| **Smart Translation**             | ✅    | ✅    | ✅              | Quota/BYOK |
+| **Smart Dictionary (contextual)** | ✅    | ✅    | ✅              | Quota/BYOK |
+| **ASR (Whisper)**                 | ✅    | ✅    | ✅              | Quota/BYOK |
+| **TTS**                           | ✅    | ✅    | ✅              | Quota/BYOK |
+| **Assessment (Azure)**            | ✅    | ❌    | ✅ (Azure only) | Quota/BYOK |
 
 **Note**: Translation service is always free and only uses Enjoy API (fast translation models like M2M100, NLLB). All other AI services are handled by Hono API Worker with provider selection.
 
@@ -95,6 +97,7 @@ enjoy/
 ```
 
 **Key Features**:
+
 - Uses `EnjoyAIClient` for OpenAI-compatible endpoints
 - Azure Speech services use tokens from `/api/azure/tokens`
 - Token caching (9 minutes) for performance
@@ -117,6 +120,7 @@ byok/
 ```
 
 **Key Features**:
+
 - Uses `BYOKClient` for multi-provider LLM access (OpenAI, Claude, Google, etc.)
 - Azure Speech services use user's own subscription key
 - Supports OpenAI, Claude, Google, Azure OpenAI, and custom endpoints
@@ -136,6 +140,7 @@ local/
 ```
 
 **Key Features**:
+
 - Browser-based models using transformers.js
 - Web Workers for non-blocking execution
 - Model initialization and caching
@@ -174,6 +179,7 @@ User Request (Frontend)
 ```
 
 **Key Points**:
+
 - Frontend AI Service Client routes requests through provider router
 - Provider router automatically selects appropriate provider
 - Each provider has consistent structure (client, services, azure)
@@ -184,34 +190,37 @@ User Request (Frontend)
 ### Enjoy Provider
 
 **Architecture**:
+
 - **OpenAI-Compatible Services**: Uses `EnjoyAIClient` which wraps OpenAI SDK and Vercel AI SDK
-- **Server Routes (implemented in `src/server/routes/*`)**:
-  - `/api/chat/completions` → `src/server/routes/chat.ts` (Cloudflare Workers AI chat model)
-  - `/api/translations` → `src/server/routes/translations.ts` (basic translation, KV cache)
-  - `/api/audio/transcriptions` → `src/server/routes/audio.ts` (ASR / Whisper)
-  - `/api/dictionary/query` → `src/server/routes/dictionary.ts` (AI dictionary with KV cache)
-  - `/api/models` → `src/server/routes/models.ts` (Workers AI model listing)
-  - `/api/azure/tokens` → `src/server/routes/azure.ts` (Azure Speech token generation)
+- **Server Routes (implemented in `src/worker/routes/*`)**:
+  - `/api/chat/completions` → `src/worker/routes/chat.ts` (Cloudflare Workers AI chat model)
+  - `/api/translations` → `src/worker/routes/translations.ts` (basic translation, KV cache)
+  - `/api/audio/transcriptions` → `src/worker/routes/audio.ts` (ASR / Whisper)
+  - `/api/dictionary/query` → `src/worker/routes/dictionary.ts` (AI dictionary with KV cache)
+  - `/api/models` → `src/worker/routes/models.ts` (Workers AI model listing)
+  - `/api/azure/tokens` → `src/worker/routes/azure.ts` (Azure Speech token generation)
 - **Azure Speech**: Token-based authentication via `/api/azure/tokens`
   - Tokens are cached for 9 minutes (Azure tokens expire after 10 minutes)
   - Services: TTS, Assessment
 
 **Client Usage**:
-```typescript
-import { getEnjoyClient } from '@/ai/providers/enjoy'
 
-const client = getEnjoyClient()
+```typescript
+import { getEnjoyClient } from "@/ai/providers/enjoy";
+
+const client = getEnjoyClient();
 // LLM generation
-const text = await client.generateText({ prompt: '...' })
+const text = await client.generateText({ prompt: "..." });
 // ASR
-const result = await client.transcribeSpeech(audioBlob)
+const result = await client.transcribeSpeech(audioBlob);
 // Translation (non-standard endpoint)
-const translation = await client.translate({ text: '...', targetLang: 'zh' })
+const translation = await client.translate({ text: "...", targetLang: "zh" });
 ```
 
 ### BYOK Provider
 
 **Architecture**:
+
 - **LLM Services**: Uses `BYOKClient` with Vercel AI SDK
   - Supports: OpenAI, Claude, Google, Azure OpenAI, Custom endpoints
 - **OpenAI Audio Services**: Uses OpenAI SDK directly
@@ -222,24 +231,26 @@ const translation = await client.translate({ text: '...', targetLang: 'zh' })
   - Services: TTS, ASR, Assessment
 
 **Client Usage**:
+
 ```typescript
-import { createBYOKClient } from '@/ai/providers/byok'
+import { createBYOKClient } from "@/ai/providers/byok";
 
 const client = createBYOKClient({
-  provider: 'openai',
-  apiKey: 'sk-xxx',
-  model: 'gpt-4',
-})
+  provider: "openai",
+  apiKey: "sk-xxx",
+  model: "gpt-4",
+});
 
 // LLM generation
-const text = await client.generateText({ prompt: '...' })
+const text = await client.generateText({ prompt: "..." });
 // OpenAI TTS
-const audioBlob = await client.synthesizeSpeech('Hello world')
+const audioBlob = await client.synthesizeSpeech("Hello world");
 ```
 
 ### Local Provider
 
 **Architecture**:
+
 - **Models**: transformers.js running in Web Workers
 - **Services**: All services use browser-based models
 - **Model Management**: Initialization, caching, and loading state tracking
@@ -304,7 +315,7 @@ For the Smart Dictionary service, there are two main API surfaces:
 - **Generic LLM endpoint**: `/api/chat/completions` (OpenAI-compatible) – used by the AI service layer for flexible, multi-purpose dictionary and translation prompts.
 - **AI Dictionary endpoint**: `/api/dictionary/query` – specialized, word-focused AI dictionary interface with JSON-mode structured output and permanent caching.
 
-- **Enjoy**: `/api/chat/completions` via `EnjoyAIClient` (implemented by `src/server/routes/chat.ts`)
+- **Enjoy**: `/api/chat/completions` via `EnjoyAIClient` (implemented by `src/worker/routes/chat.ts`)
 - **BYOK**: User's LLM API via `BYOKClient`
 - **Local**: transformers.js models in Web Workers
 
@@ -312,7 +323,7 @@ For the Smart Dictionary service, there are two main API surfaces:
 
 Whisper-based transcription with timestamped segments. Supports all three provider tiers.
 
-- **Enjoy**: `/api/audio/transcriptions` via `EnjoyAIClient` (OpenAI-compatible, implemented by `src/server/routes/audio.ts`)
+- **Enjoy**: `/api/audio/transcriptions` via `EnjoyAIClient` (OpenAI-compatible, implemented by `src/worker/routes/audio.ts`)
 - **BYOK OpenAI**: User's OpenAI Whisper API via `BYOKClient`
 - **BYOK Azure**: User's Azure Speech subscription via Azure SDK
 - **Local**: transformers.js Whisper in Web Workers
@@ -338,22 +349,22 @@ The transcript format follows the same structure as `TranscriptLine` from the DB
 ```typescript
 // Matches TranscriptLine format from db schema
 interface TTSTranscriptItem {
-  text: string
-  start: number // milliseconds (integer)
-  duration: number // milliseconds (integer)
-  timeline?: TTSTranscriptItem[] // nested: Sentence → Word
-  confidence?: number // 0-1
+  text: string;
+  start: number; // milliseconds (integer)
+  duration: number; // milliseconds (integer)
+  timeline?: TTSTranscriptItem[]; // nested: Sentence → Word
+  confidence?: number; // 0-1
 }
 
 interface TTSTranscript {
-  timeline: TTSTranscriptItem[] // Sentence-level items with word timeline
+  timeline: TTSTranscriptItem[]; // Sentence-level items with word timeline
 }
 
 interface TTSResponse {
-  audioBlob?: Blob
-  duration?: number
-  format?: string
-  transcript?: TTSTranscript // Sentence → Word timeline
+  audioBlob?: Blob;
+  duration?: number;
+  format?: string;
+  transcript?: TTSTranscript; // Sentence → Word timeline
 }
 ```
 
@@ -389,14 +400,14 @@ Example transcript structure:
 
 Kokoro TTS supports the following languages (matching project locales):
 
-| Language | Code | Voices Available |
-|----------|------|------------------|
-| English | `en` | American (af_*, am_*) and British (bf_*, bm_*) accents |
-| Japanese | `ja` | jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro, jm_kumo |
+| Language           | Code | Voices Available                                                                           |
+| ------------------ | ---- | ------------------------------------------------------------------------------------------ |
+| English            | `en` | American (af*\*, am*_) and British (bf\__, bm\_\*) accents                                 |
+| Japanese           | `ja` | jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro, jm_kumo                                   |
 | Chinese (Mandarin) | `zh` | zf_xiaobei, zf_xiaoni, zf_xiaoxiao, zf_xiaoyi, zm_yunjian, zm_yunxi, zm_yunxia, zm_yunyang |
-| Spanish | `es` | ef_dora, em_alex, em_santa |
-| French | `fr` | ff_siwis |
-| Portuguese | `pt` | pf_dora, pm_alex, pm_santa |
+| Spanish            | `es` | ef_dora, em_alex, em_santa                                                                 |
+| French             | `fr` | ff_siwis                                                                                   |
+| Portuguese         | `pt` | pf_dora, pm_alex, pm_santa                                                                 |
 
 **Not supported by Kokoro**: Korean (`ko`), German (`de`) - use Azure TTS for these languages.
 
@@ -432,6 +443,7 @@ BYOK allows users to use their own API keys for supported providers:
 - **Custom**: Any OpenAI-compatible endpoint
 
 BYOK uses:
+
 - **Vercel AI SDK** for unified LLM access
 - **OpenAI SDK** for audio services (when using OpenAI)
 - **Azure Speech SDK** for Azure Speech services
@@ -486,6 +498,7 @@ providers/
 ```
 
 This structure ensures:
+
 - **Consistency**: Same organization across all providers
 - **Maintainability**: Easy to find and update services
 - **Clarity**: Clear separation between OpenAI-compatible and Azure services

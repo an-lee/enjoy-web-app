@@ -26,12 +26,10 @@ Schema (logical model):
 
 Implementation notes:
 
-- Physical table is defined in `src/server/db/schema.ts` via Drizzle’s
+- Physical table is defined in `src/worker/db/schema.ts` via Drizzle’s
   `sqliteTable('credits_usage_logs', …)`.
 - KV remains the **source of truth** for enforcing daily Credits limits.
   D1 is used for **auditability and reporting**, not for rate limiting logic.
 - Writes to this table should be **best-effort**:
   - Logging failures must not break the user-facing request.
   - Services should log both successful and rejected Credits checks when useful.
-
-

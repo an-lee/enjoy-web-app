@@ -6,7 +6,7 @@ The **Hono API Worker** is responsible for **all AI services** and some auxiliar
 It is deployed as part of the Cloudflare Worker that also serves the Web App.
 
 - **Base URL (same origin)**: `/api/*`
-- **Implementation entry**: `src/server/index.ts` + `src/server/router.ts`
+- **Implementation entry**: `src/worker/index.ts` + `src/worker/router.ts`
 - **Route group root**: Hono router mounts feature routers under:
   - `/azure`
   - `/chat`
@@ -29,7 +29,7 @@ Unless otherwise noted, all endpoints:
 Authorization: Bearer <token>
 ```
 
-All Worker routes use the shared `authMiddleware` (`src/server/middleware/auth.ts`), which:
+All Worker routes use the shared `authMiddleware` (`src/worker/middleware/auth.ts`), which:
 
 - Extracts and validates the JWT
 - Attaches the `user` object (`UserProfile`) to the Hono context
@@ -216,9 +216,9 @@ This endpoint uses **Cloudflare Workers AI m2m100-1.2b** model and applies **per
 
 ```ts
 enforceCreditsLimit(c, {
-  type: 'translation',
-  chars: text.length
-})
+  type: "translation",
+  chars: text.length,
+});
 ```
 
 - If the Credits limit fails with `RateLimitError`, the error is propagated and should be handled by frontend as a quota/rate-limit error.
@@ -268,7 +268,7 @@ Generates a **dictionary-style entry** using Workers AI text model, with **KV ca
 }
 ```
 
-The exact shape of `DictionaryAIResult` is defined in `src/server/services/dictionary-ai.ts` and documented in `doc/ai-services.md`. It typically includes:
+The exact shape of `DictionaryAIResult` is defined in `src/worker/services/dictionary-ai.ts` and documented in `doc/ai-services.md`. It typically includes:
 
 - Senses/meanings
 - Example sentences
@@ -285,10 +285,10 @@ The exact shape of `DictionaryAIResult` is defined in `src/server/services/dicti
 
 ```ts
 enforceCreditsLimit(c, {
-  type: 'llm',
+  type: "llm",
   tokensIn: usage?.prompt_tokens ?? Math.max(word.length, 16),
-  tokensOut: usage?.completion_tokens ?? 512
-})
+  tokensOut: usage?.completion_tokens ?? 512,
+});
 ```
 
 If Credits are exceeded with `RateLimitError`, the result is **not cached**.
@@ -326,12 +326,12 @@ This endpoint is **compatible with OpenAI Whisper API** but powered by **Cloudfl
 Before calling the ASR model, the route enforces Credits:
 
 ```ts
-const secondsForBilling = durationSeconds > 0 ? durationSeconds : 60
+const secondsForBilling = durationSeconds > 0 ? durationSeconds : 60;
 
 enforceCreditsLimit(c, {
-  type: 'asr',
-  seconds: secondsForBilling
-})
+  type: "asr",
+  seconds: secondsForBilling,
+});
 ```
 
 If Credits are exceeded with `RateLimitError`, the request fails with an error response.
@@ -341,7 +341,6 @@ If Credits are exceeded with `RateLimitError`, the request fails with an error r
 Depending on `response_format`:
 
 1. `response_format === "text"`
-
    - Returns **plain text** transcription:
 
    ```text
@@ -351,12 +350,10 @@ Depending on `response_format`:
    - `Content-Type: text/plain`
 
 2. `response_format === "vtt"` **and** Workers AI returned `vtt`
-
    - Returns **VTT subtitle text**
    - `Content-Type: text/vtt`
 
 3. Default (`"json"` or any other value)
-
    - Returns full Workers AI Whisper output:
 
    ```json
@@ -425,7 +422,7 @@ Generates a **short-lived Azure Speech token** and records approximate usage for
   }
   ```
 
-The exact structure of `AzureTokenUsagePayload` is defined in `src/server/services/azure.ts` and documented in `doc/ai-services.md`.
+The exact structure of `AzureTokenUsagePayload` is defined in `src/worker/services/azure.ts` and documented in `doc/ai-services.md`.
 
 **Response (200)**:
 
@@ -451,7 +448,7 @@ On error, the route delegates to `handleError` with context `"Failed to generate
 
 ## Error Format & Handling
 
-All Worker APIs ultimately rely on the shared error handler (`src/server/utils/errors.ts`), which:
+All Worker APIs ultimately rely on the shared error handler (`src/worker/utils/errors.ts`), which:
 
 - Normalizes thrown errors
 - Adds appropriate HTTP status codes
@@ -545,5 +542,3 @@ Frontend code should:
   - Default to cached responses for better performance and lower cost.
 
 For higher-level, provider-agnostic usage patterns, see [`doc/ai-services.md`](./ai-services.md) and the `@/ai` service layer, which wraps these raw Worker endpoints.
-
-

@@ -5,8 +5,8 @@ import {
 	calculateCredits,
 	checkAndDeductCredits,
 	type CreditCalculationInput,
-} from '@/server/utils/credits'
-import { RateLimitError } from '@/server/utils/errors'
+} from '@/worker/utils/credits'
+import { RateLimitError } from '@/worker/utils/errors'
 
 const log = createLogger({ name: 'credits-middleware' })
 

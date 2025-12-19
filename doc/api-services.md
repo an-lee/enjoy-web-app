@@ -5,22 +5,22 @@
 The project uses **two API systems** with clear responsibility separation:
 
 1. **Rails API Backend** (`src/api/`): **User information management** - authentication, user profiles, and data synchronization
-2. **Hono API Worker** (`src/server/api.ts`): **All AI services** - translation, dictionary, ASR, TTS, assessment, and other AI-powered features
+2. **Hono API Worker** (`src/worker/api.ts`): **All AI services** - translation, dictionary, ASR, TTS, assessment, and other AI-powered features
 
 This document focuses on the **Rails API Backend** client. For AI services via Hono API Worker, see [API Worker Integration Guide](./api-worker-integration.md) and [AI Service Architecture](./ai-services.md).
 
 ## API Systems Comparison
 
-| Feature | Rails API Backend | Hono API Worker |
-|---------|------------------|-----------------|
-| **Location** | External server (`https://enjoy.bot`) | Cloudflare Worker (same domain) |
-| **Route Prefix** | `/api/v1/*` | `/api/*` |
-| **Primary Responsibility** | **User information management** | **All AI services** |
-| **Services** | Auth, user profiles, data sync | Translation, dictionary, ASR, TTS, assessment |
-| **Client Module** | `src/api/` | Direct fetch calls or service wrappers |
-| **Authentication** | Bearer token (JWT) | Can use same JWT or Cloudflare-specific auth |
-| **Bindings** | N/A | KV, D1, AI, R2, etc. |
-| **AI Integration** | ❌ No AI services | ✅ Direct Cloudflare Workers AI access |
+| Feature                    | Rails API Backend                     | Hono API Worker                               |
+| -------------------------- | ------------------------------------- | --------------------------------------------- |
+| **Location**               | External server (`https://enjoy.bot`) | Cloudflare Worker (same domain)               |
+| **Route Prefix**           | `/api/v1/*`                           | `/api/*`                                      |
+| **Primary Responsibility** | **User information management**       | **All AI services**                           |
+| **Services**               | Auth, user profiles, data sync        | Translation, dictionary, ASR, TTS, assessment |
+| **Client Module**          | `src/api/`                            | Direct fetch calls or service wrappers        |
+| **Authentication**         | Bearer token (JWT)                    | Can use same JWT or Cloudflare-specific auth  |
+| **Bindings**               | N/A                                   | KV, D1, AI, R2, etc.                          |
+| **AI Integration**         | ❌ No AI services                     | ✅ Direct Cloudflare Workers AI access        |
 
 ## Rails API Backend
 
@@ -91,7 +91,7 @@ These endpoints use the authenticated `apiClient` instance, which automatically 
 - Uses Redis for caching/sessions
 - External service (separate server)
 
-### Hono API Worker (`src/server/api.ts`) - All AI Services
+### Hono API Worker (`src/worker/api.ts`) - All AI Services
 
 **Responsibility**: All AI-powered features
 
@@ -129,13 +129,13 @@ All API services return a consistent response format:
 
 ```typescript
 interface ApiResponse<T> {
-  success: boolean
-  data?: T
+  success: boolean;
+  data?: T;
   error?: {
-    code: string
-    message: string
-    details?: unknown
-  }
+    code: string;
+    message: string;
+    details?: unknown;
+  };
 }
 ```
 
@@ -180,12 +180,14 @@ The API base URL is configured via environment variable:
 ## When to Use Which API
 
 ### Use Rails API Backend (`src/api/`) when
+
 - ✅ **User authentication** (login, logout, token refresh)
 - ✅ **User profile management** (get/update profile)
 - ✅ **Data synchronization** (sync local data with server)
 - ✅ **Access to PostgreSQL/Redis/S3** (backend storage)
 
 ### Use Hono API Worker (`/api/*`) when
+
 - ✅ **All AI services** (translation, dictionary, ASR, TTS, assessment)
 - ✅ **OpenAI-compatible API** (chat completions, TTS with Cloudflare Workers AI)
 - ✅ **Cloudflare Workers AI** (direct access to AI models)
@@ -194,6 +196,7 @@ The API base URL is configured via environment variable:
 - ✅ **Same-domain API** (no CORS issues)
 
 ### Use AI Service Client (`@/ai`) when
+
 - ✅ **Frontend integration** (unified interface for AI services)
 - ✅ **Provider abstraction** (Enjoy, Local, BYOK support)
 - ✅ **Type-safe API calls** (TypeScript interfaces)

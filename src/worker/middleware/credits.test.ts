@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { enforceCreditsLimit } from './credits'
-import { RateLimitError } from '@/server/utils/errors'
+import { RateLimitError } from '@/worker/utils/errors'
 import {
 	calculateCredits,
 	checkAndDeductCredits,
 	type CreditsCheckResult,
-} from '@/server/utils/credits'
+} from '@/worker/utils/credits'
 
-vi.mock('@/server/utils/credits', () => {
+vi.mock('@/worker/utils/credits', () => {
 	return {
 		calculateCredits: vi.fn(() => 42),
 		checkAndDeductCredits: vi.fn(async () => {
