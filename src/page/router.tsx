@@ -23,3 +23,4 @@ export const getRouter = () => {
 
 // Export queryClient for use in components if needed
 export { queryClient }
+

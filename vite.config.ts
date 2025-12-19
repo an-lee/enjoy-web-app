@@ -30,7 +30,17 @@ export default defineConfig(({ mode }) => {
         projects: ['./tsconfig.json'],
       }),
       tailwindcss(),
-      tanstackStart(),
+      tanstackStart({
+        srcDirectory: 'src',
+        router: {
+          // Router entry file path relative to srcDirectory
+          entry: 'page/router',
+          // Routes directory relative to srcDirectory
+          routesDirectory: 'page/routes',
+          // Generated route tree file path relative to srcDirectory
+          generatedRouteTree: 'page/routeTree.gen.ts',
+        },
+      }),
       viteReact(),
       VitePWA({
         registerType: 'autoUpdate',

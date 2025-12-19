@@ -12,7 +12,7 @@ import { createLogger } from '@/shared/lib/utils'
 import { fullSync, processSyncQueue, queueUploadSync, downloadTranscriptsByTarget } from './sync-service'
 import type { SyncOptions, SyncResult } from './sync-service'
 import type { TargetType } from '@/page/types/db'
-import { queryClient } from '@/router'
+import { queryClient } from '@/page/router'
 import { transcriptQueryKeys } from '@/page/hooks/queries/use-transcript-queries'
 
 // ============================================================================
