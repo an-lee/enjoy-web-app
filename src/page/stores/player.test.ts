@@ -17,12 +17,36 @@ vi.mock('@/lib/utils', () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
 }))
 
-// Create in-memory data store for EchoSessions
-const echoSessionData = new Map<string, EchoSession>()
+// Mock shared logger
+vi.mock('@/shared/lib/utils', () => ({
+  createLogger: () => ({
+    debug: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  }),
+}))
 
-// Mock database operations
-vi.mock('@/db', () => ({
-  getOrCreateActiveEchoSession: vi.fn(
+// Mock database schema to prevent IndexedDB initialization
+vi.mock('@/page/db/schema', () => ({
+  db: {
+    echoSessions: {
+      get: vi.fn(),
+      put: vi.fn(),
+      update: vi.fn(),
+      where: vi.fn(),
+    },
+  },
+  EnjoyDatabase: vi.fn(),
+  initDatabase: vi.fn().mockResolvedValue(undefined),
+}))
+
+// Create in-memory data store for EchoSessions (hoisted so it's available in mock factory)
+const echoSessionData = vi.hoisted(() => new Map<string, EchoSession>())
+
+// Mock database operations - use vi.hoisted to ensure they're available in mock factory
+const { getOrCreateActiveEchoSessionSpy, updateEchoSessionProgressSpy, getEchoSessionByIdSpy } = vi.hoisted(() => {
+  const getOrCreateActiveEchoSessionSpy = vi.fn(
     async (
       targetType: TargetType,
       targetId: string,
@@ -72,9 +96,9 @@ vi.mock('@/db', () => ({
       echoSessionData.set(id, session)
       return id
     }
-  ),
+  )
 
-  updateEchoSessionProgress: vi.fn(
+  const updateEchoSessionProgressSpy = vi.fn(
     async (
       id: string,
       progress: {
@@ -97,16 +121,38 @@ vi.mock('@/db', () => ({
         updatedAt: now,
       })
     }
-  ),
+  )
 
-  getEchoSessionById: vi.fn(async (id: string): Promise<EchoSession | undefined> => {
+  const getEchoSessionByIdSpy = vi.fn(async (id: string): Promise<EchoSession | undefined> => {
     return echoSessionData.get(id)
+  })
+
+  return {
+    getOrCreateActiveEchoSessionSpy,
+    updateEchoSessionProgressSpy,
+    getEchoSessionByIdSpy,
+  }
+})
+
+vi.mock('@/page/db', () => {
+  return {
+    getOrCreateActiveEchoSession: getOrCreateActiveEchoSessionSpy,
+    updateEchoSessionProgress: updateEchoSessionProgressSpy,
+    getEchoSessionById: getEchoSessionByIdSpy,
+  }
+})
+
+vi.mock('@/page/db/services/sync-manager', () => ({
+  syncTranscriptsForTarget: vi.fn().mockResolvedValue({
+    success: true,
+    synced: 0,
+    failed: 0,
+    errors: [],
   }),
 }))
 
 // Import store after mocking
 import { usePlayerStore } from './player'
-import { getOrCreateActiveEchoSession, updateEchoSessionProgress } from '@/page/db'
 
 // ============================================================================
 // Test Utilities
@@ -155,6 +201,7 @@ describe('Player Store with EchoSession Integration', () => {
       echoEndTime: -1,
     })
 
+    // Clear all mocks (spies already have default implementations from mock factory)
     vi.clearAllMocks()
   })
 
@@ -190,7 +237,7 @@ describe('Player Store with EchoSession Integration', () => {
       expect(state.isPlaying).toBe(true)
 
       // Verify EchoSession was created
-      expect(getOrCreateActiveEchoSession).toHaveBeenCalledWith(
+      expect(getOrCreateActiveEchoSessionSpy).toHaveBeenCalledWith(
         'Audio',
         media.id,
         media.language,
@@ -222,9 +269,7 @@ describe('Player Store with EchoSession Integration', () => {
       }
       echoSessionData.set(existingSession.id, existingSession)
 
-      // Mock getOrCreateActiveEchoSession to return existing session
-      vi.mocked(getOrCreateActiveEchoSession).mockResolvedValueOnce(existingSession.id)
-
+      // getOrCreateActiveEchoSession will automatically find and return existing session
       await usePlayerStore.getState().loadMedia(media)
 
       const state = usePlayerStore.getState()
@@ -256,7 +301,6 @@ describe('Player Store with EchoSession Integration', () => {
         updatedAt: now,
       }
       echoSessionData.set(existingSession.id, existingSession)
-      vi.mocked(getOrCreateActiveEchoSession).mockResolvedValueOnce(existingSession.id)
 
       await usePlayerStore.getState().loadMedia(media)
 
@@ -286,7 +330,6 @@ describe('Player Store with EchoSession Integration', () => {
         updatedAt: now,
       }
       echoSessionData.set(existingSession.id, existingSession)
-      vi.mocked(getOrCreateActiveEchoSession).mockResolvedValueOnce(existingSession.id)
 
       await usePlayerStore.getState().loadMedia(media)
 
@@ -301,7 +344,7 @@ describe('Player Store with EchoSession Integration', () => {
 
       await usePlayerStore.getState().loadMedia(media)
 
-      expect(getOrCreateActiveEchoSession).toHaveBeenCalledWith(
+      expect(getOrCreateActiveEchoSessionSpy).toHaveBeenCalledWith(
         'Video',
         media.id,
         media.language,
@@ -311,7 +354,7 @@ describe('Player Store with EchoSession Integration', () => {
 
     it('should not update state on error', async () => {
       const media = createTestMedia()
-      vi.mocked(getOrCreateActiveEchoSession).mockRejectedValueOnce(
+      getOrCreateActiveEchoSessionSpy.mockRejectedValueOnce(
         new Error('Database error')
       )
 
@@ -349,14 +392,14 @@ describe('Player Store with EchoSession Integration', () => {
       usePlayerStore.getState().updateProgress(30, 3)
 
       // Should not be called immediately
-      expect(updateEchoSessionProgress).not.toHaveBeenCalled()
+      expect(updateEchoSessionProgressSpy).not.toHaveBeenCalled()
 
       // Wait for debounce
       await waitForDebounce()
 
       // Should be called once with final value
-      expect(updateEchoSessionProgress).toHaveBeenCalledTimes(1)
-      expect(updateEchoSessionProgress).toHaveBeenCalledWith(echoSessionId, {
+      expect(updateEchoSessionProgressSpy).toHaveBeenCalledTimes(1)
+      expect(updateEchoSessionProgressSpy).toHaveBeenCalledWith(echoSessionId, {
         currentTime: 30,
       })
     })
@@ -364,7 +407,7 @@ describe('Player Store with EchoSession Integration', () => {
     it('should not save if no EchoSession exists', () => {
       usePlayerStore.getState().updateProgress(10, 1)
 
-      expect(updateEchoSessionProgress).not.toHaveBeenCalled()
+      expect(updateEchoSessionProgressSpy).not.toHaveBeenCalled()
     })
   })
 
@@ -380,7 +423,7 @@ describe('Player Store with EchoSession Integration', () => {
       expect(state.volume).toBe(0.7)
 
       // Should save immediately (not debounced)
-      expect(updateEchoSessionProgress).toHaveBeenCalledWith(echoSessionId, {
+      expect(updateEchoSessionProgressSpy).toHaveBeenCalledWith(echoSessionId, {
         volume: 0.7,
       })
     })
@@ -409,7 +452,7 @@ describe('Player Store with EchoSession Integration', () => {
       expect(state.playbackRate).toBe(1.5)
 
       // Should save immediately
-      expect(updateEchoSessionProgress).toHaveBeenCalledWith(echoSessionId, {
+      expect(updateEchoSessionProgressSpy).toHaveBeenCalledWith(echoSessionId, {
         playbackRate: 1.5,
       })
     })
@@ -438,7 +481,7 @@ describe('Player Store with EchoSession Integration', () => {
       expect(state.currentSession?.currentTime).toBe(60)
 
       // Should save immediately (seek is explicit user action)
-      expect(updateEchoSessionProgress).toHaveBeenCalledWith(echoSessionId, {
+      expect(updateEchoSessionProgressSpy).toHaveBeenCalledWith(echoSessionId, {
         currentTime: 60,
       })
     })
@@ -471,7 +514,7 @@ describe('Player Store with EchoSession Integration', () => {
       expect(state.echoEndTime).toBe(35)
 
       // Should save immediately
-      expect(updateEchoSessionProgress).toHaveBeenCalledWith(echoSessionId, {
+      expect(updateEchoSessionProgressSpy).toHaveBeenCalledWith(echoSessionId, {
         echoStartTime: 25,
         echoEndTime: 35,
       })
@@ -495,7 +538,7 @@ describe('Player Store with EchoSession Integration', () => {
       expect(state.echoEndTime).toBe(-1)
 
       // Should clear in database
-      expect(updateEchoSessionProgress).toHaveBeenCalledWith(echoSessionId, {
+      expect(updateEchoSessionProgressSpy).toHaveBeenCalledWith(echoSessionId, {
         echoStartTime: undefined,
         echoEndTime: undefined,
       })
@@ -515,7 +558,7 @@ describe('Player Store with EchoSession Integration', () => {
       expect(state.echoEndTime).toBe(40)
 
       // Should save immediately
-      expect(updateEchoSessionProgress).toHaveBeenCalledWith(echoSessionId, {
+      expect(updateEchoSessionProgressSpy).toHaveBeenCalledWith(echoSessionId, {
         echoStartTime: 30,
         echoEndTime: 40,
       })
@@ -551,7 +594,7 @@ describe('Player Store with EchoSession Integration', () => {
       await waitForDebounce()
 
       // Should not have been called
-      expect(updateEchoSessionProgress).not.toHaveBeenCalled()
+      expect(updateEchoSessionProgressSpy).not.toHaveBeenCalled()
     })
   })
 
@@ -645,7 +688,7 @@ describe('Player Store with EchoSession Integration', () => {
       const media = createTestMedia()
       await usePlayerStore.getState().loadMedia(media)
 
-      vi.mocked(updateEchoSessionProgress).mockRejectedValueOnce(
+      updateEchoSessionProgressSpy.mockRejectedValueOnce(
         new Error('Database error')
       )
 
@@ -662,7 +705,7 @@ describe('Player Store with EchoSession Integration', () => {
       const media = createTestMedia()
       await usePlayerStore.getState().loadMedia(media)
 
-      vi.mocked(updateEchoSessionProgress).mockRejectedValueOnce(
+      updateEchoSessionProgressSpy.mockRejectedValueOnce(
         new Error('Database error')
       )
 
