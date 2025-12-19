@@ -287,6 +287,7 @@
     "menu": {
       "account": "账户",
       "billing": "账单",
+      "credits": "AI 使用量",
       "notifications": "通知"
     }
   },

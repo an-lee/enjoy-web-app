@@ -287,6 +287,7 @@
     "menu": {
       "account": "Compte",
       "billing": "Facturation",
+      "credits": "Utilisation IA",
       "notifications": "Notifications"
     }
   },

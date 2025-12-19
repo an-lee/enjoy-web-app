@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import {
   IconCreditCard,
+  IconCoins,
   IconDotsVertical,
   IconLogout,
   IconNotification,
@@ -47,6 +48,10 @@ export function NavUser({
   const handleLogout = () => {
     logout()
     navigate({ to: '/login', search: { redirect: undefined } })
+  }
+
+  const handleCreditsClick = () => {
+    navigate({ to: '/credits' })
   }
 
   // Generate initials for avatar fallback
@@ -120,6 +125,10 @@ export function NavUser({
               <DropdownMenuItem>
                 <IconCreditCard />
                 {t('auth.menu.billing')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCreditsClick}>
+                <IconCoins />
+                {t('auth.menu.credits')}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <IconNotification />

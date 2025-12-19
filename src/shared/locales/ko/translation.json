@@ -287,6 +287,7 @@
     "menu": {
       "account": "계정",
       "billing": "결제",
+      "credits": "AI 사용량",
       "notifications": "알림"
     }
   },
