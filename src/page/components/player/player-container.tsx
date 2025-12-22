@@ -193,39 +193,53 @@ export function PlayerContainer() {
           isLoading={isLoading}
           error={error}
           isVideo={isVideo}
+          mediaRef={isVideo ? mediaRef : undefined}
+          mediaUrl={isVideo ? mediaUrl : undefined}
+          onTimeUpdate={isVideo ? handleTimeUpdate : undefined}
+          onEnded={isVideo ? handleEnded : undefined}
+          onCanPlay={isVideo ? handleCanPlay : undefined}
+          onError={isVideo ? handleLoadError : undefined}
         />
       )}
 
-      {/* Actual media element - always rendered when there's a session */}
+      {/* Actual media element - rendered based on mode and media type */}
       {currentSession && mediaUrl && (
-        <div className="hidden">
-          {isVideo ? (
-            <video
-              ref={mediaRef as React.RefObject<HTMLVideoElement>}
-              src={mediaUrl}
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={handleEnded}
-              onCanPlay={handleCanPlay}
-              onWaiting={() => log.debug('buffering...')}
-              onStalled={() => log.warn('stalled!')}
-              onError={handleLoadError}
-              playsInline
-              preload="auto"
-            />
-          ) : (
-            <audio
-              ref={mediaRef as React.RefObject<HTMLAudioElement>}
-              src={mediaUrl}
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={handleEnded}
-              onCanPlay={handleCanPlay}
-              onWaiting={() => log.debug('buffering...')}
-              onStalled={() => log.warn('stalled!')}
-              onError={handleLoadError}
-              preload="auto"
-            />
+        <>
+          {/* Video: render in hidden div when NOT in expanded mode, or in expanded mode for audio */}
+          {/* In expanded mode for video, the video element is rendered in ExpandedPlayerContent */}
+          {isVideo && mode !== 'expanded' && (
+            <div className="hidden">
+              <video
+                ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                src={mediaUrl}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                onCanPlay={handleCanPlay}
+                onWaiting={() => log.debug('buffering...')}
+                onStalled={() => log.warn('stalled!')}
+                onError={handleLoadError}
+                playsInline
+                preload="auto"
+              />
+            </div>
           )}
-        </div>
+          {/* Audio: always render in hidden div (no visual display needed) */}
+          {!isVideo && (
+            <div className="hidden">
+              <audio
+                ref={mediaRef as React.RefObject<HTMLAudioElement>}
+                src={mediaUrl}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                onCanPlay={handleCanPlay}
+                onWaiting={() => log.debug('buffering...')}
+                onStalled={() => log.warn('stalled!')}
+                onError={handleLoadError}
+                preload="auto"
+              />
+            </div>
+          )}
+        </>
       )}
     </>
   )

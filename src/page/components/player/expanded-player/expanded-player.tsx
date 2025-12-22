@@ -23,6 +23,12 @@ export function ExpandedPlayer({
   isLoading,
   error,
   isVideo,
+  mediaRef,
+  mediaUrl,
+  onTimeUpdate,
+  onEnded,
+  onCanPlay,
+  onError,
 }: ExpandedPlayerProps) {
   const { currentSession } = usePlayerStore()
 
@@ -45,6 +51,12 @@ export function ExpandedPlayer({
           isLoading={isLoading}
           error={error}
           isVideo={isVideo}
+          mediaRef={mediaRef}
+          mediaUrl={mediaUrl}
+          onTimeUpdate={onTimeUpdate}
+          onEnded={onEnded}
+          onCanPlay={onCanPlay}
+          onError={onError}
         />
 
         <ExpandedPlayerControls />
