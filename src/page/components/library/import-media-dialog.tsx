@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from '@/page/components/ui/select'
 import { useSettingsStore } from '@/page/stores/settings'
+import { selectFileWithHandle } from '@/page/lib/file-helpers'
 
 // ============================================================================
 // Types
@@ -40,7 +41,7 @@ import { useSettingsStore } from '@/page/stores/settings'
 export interface ImportMediaDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onImport: (file: File, metadata: MediaMetadata) => Promise<void>
+  onImport: (file: File | FileSystemFileHandle, metadata: MediaMetadata) => Promise<void>
 }
 
 export interface MediaMetadata {
@@ -100,6 +101,7 @@ export function ImportMediaDialog({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFileHandle, setSelectedFileHandle] = useState<FileSystemFileHandle | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [language, setLanguage] = useState(learningLanguage)
@@ -110,6 +112,7 @@ export function ImportMediaDialog({
 
   const resetForm = useCallback(() => {
     setSelectedFile(null)
+    setSelectedFileHandle(null)
     setTitle('')
     setDescription('')
     setLanguage(learningLanguage)
@@ -173,18 +176,50 @@ export function ImportMediaDialog({
     [handleFileSelect]
   )
 
-  const handleBrowseClick = useCallback(() => {
+  const handleBrowseClick = useCallback(async () => {
+    // Try to use File System Access API first if supported
+    if ('showOpenFilePicker' in window) {
+      try {
+        const fileHandle = await selectFileWithHandle({
+          types: [
+            {
+              description: 'Media files',
+              accept: {
+                'audio/*': ['.mp3', '.wav', '.ogg', '.webm', '.m4a', '.aac'],
+                'video/*': ['.mp4', '.webm', '.ogg', '.mov', '.avi'],
+              },
+            },
+          ],
+        })
+        if (fileHandle) {
+          const file = await fileHandle.getFile()
+          setSelectedFileHandle(fileHandle)
+          handleFileSelect(file)
+        }
+        return
+      } catch (err) {
+        // User cancelled or error - fall back to input
+        if ((err as Error).name !== 'AbortError') {
+          log.error('Failed to select file with File System Access API:', err)
+        }
+      }
+    }
+    // Fall back to traditional file input
     fileInputRef.current?.click()
-  }, [])
+  }, [handleFileSelect])
 
   const handleImport = useCallback(async () => {
-    if (!selectedFile || !title.trim()) return
+    if ((!selectedFile && !selectedFileHandle) || !title.trim()) return
 
     setIsImporting(true)
     setError(null)
 
     try {
-      await onImport(selectedFile, {
+      // Prefer fileHandle if available (from File System Access API)
+      const fileOrHandle = selectedFileHandle || selectedFile
+      if (!fileOrHandle) return
+
+      await onImport(fileOrHandle, {
         title: title.trim(),
         description: description.trim() || undefined,
         language,
@@ -192,11 +227,14 @@ export function ImportMediaDialog({
       handleOpenChange(false)
     } catch (err) {
       log.error('Import failed:', err)
-      setError(t('library.import.failed'))
+      // Show specific error message if available, otherwise show generic error
+      const errorMessage =
+        err instanceof Error ? err.message : t('library.import.failed')
+      setError(errorMessage)
     } finally {
       setIsImporting(false)
     }
-  }, [selectedFile, title, description, language, level, onImport, handleOpenChange, t])
+  }, [selectedFile, selectedFileHandle, title, description, language, level, onImport, handleOpenChange, t])
 
   const isAudioFile = selectedFile && ACCEPTED_AUDIO_TYPES.includes(selectedFile.type)
 
@@ -357,7 +395,7 @@ export function ImportMediaDialog({
           </Button>
           <Button
             onClick={handleImport}
-            disabled={!selectedFile || !title.trim() || isImporting}
+            disabled={(!selectedFile && !selectedFileHandle) || !title.trim() || isImporting}
           >
             {isImporting ? (
               <>

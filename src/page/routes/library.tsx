@@ -153,18 +153,30 @@ function Library() {
   )
 
   const handleImport = useCallback(
-    async (file: File, metadata: MediaMetadata) => {
+    async (fileOrHandle: File | FileSystemFileHandle, metadata: MediaMetadata) => {
       try {
+        let fileHandle: FileSystemFileHandle
+        let file: File
+
+        // If we have a FileSystemFileHandle, use it directly
+        if (fileOrHandle instanceof File) {
+          // Convert File to FileSystemFileHandle
+          // Note: This requires user interaction to save the file
+          const handle = await getFileHandleFromFile(fileOrHandle)
+          if (!handle) {
+            // User cancelled file save dialog - throw error to be handled by dialog
+            throw new Error(t('library.import.cancelled'))
+          }
+          fileHandle = handle
+          file = fileOrHandle
+        } else {
+          // We already have a FileSystemFileHandle
+          fileHandle = fileOrHandle
+          file = await fileHandle.getFile()
+        }
+
         const isVideo = file.type.startsWith('video/')
         const duration = await getMediaDuration(file)
-
-        // Convert File to FileSystemFileHandle
-        // Note: This requires user interaction to save the file
-        const fileHandle = await getFileHandleFromFile(file)
-        if (!fileHandle) {
-          toast.error(t('library.import.cancelled'))
-          return
-        }
 
         if (isVideo) {
           await saveLocalVideo(fileHandle, {
@@ -189,7 +201,8 @@ function Library() {
         setMediaType('all')
       } catch (err) {
         log.error('Failed to import media:', err)
-        toast.error(err instanceof Error ? err.message : t('library.import.failed'))
+        // Re-throw error so ImportMediaDialog can handle it
+        throw err
       }
     },
     [t]
