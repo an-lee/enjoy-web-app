@@ -10,8 +10,10 @@ import {
 const mockInsertCreditsUsageLog = vi.fn()
 const mockGetD1Db = vi.fn()
 
-vi.mock('@/worker/utils/credits', () => {
+vi.mock('@/worker/utils/credits', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('@/worker/utils/credits')>()
 	return {
+		...actual,
 		calculateCredits: vi.fn(() => 42),
 		checkAndDeductCredits: vi.fn(async () => {
 			const result: CreditsCheckResult = {
@@ -341,18 +343,33 @@ describe('credits middleware - enforceCreditsLimit', () => {
 		expect(logEntry.usedAfter).toBe(950)
 	})
 
-	it('should skip audit log when requiredCredits is 0', async () => {
+	it('should still record audit log when requiredCredits is 0', async () => {
 		;(calculateCredits as any).mockReturnValueOnce(0)
-
+		// Mock KV to return current usage
+		const mockKv = {
+			get: vi.fn().mockResolvedValue('100'),
+		}
 		const c = createMockContext()
+		c.env.RATE_LIMIT_KV = mockKv as any
 
 		await enforceCreditsLimit(c, {
 			type: 'translation',
 			chars: 0,
 		})
 
+		// Should not call checkAndDeductCredits when credits are 0
 		expect(checkAndDeductCredits).not.toHaveBeenCalled()
-		expect(mockGetD1Db).not.toHaveBeenCalled()
+		// But should still record audit log
+		expect(mockGetD1Db).toHaveBeenCalled()
+		expect(mockInsertCreditsUsageLog).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				required: 0,
+				usedBefore: 100,
+				usedAfter: 100,
+				allowed: true,
+			})
+		)
 	})
 })
 

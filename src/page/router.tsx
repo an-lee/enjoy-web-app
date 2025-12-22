@@ -8,7 +8,8 @@ import { createQueryClient } from '@/page/lib/query-client'
 const queryClient = createQueryClient()
 
 // Create a new router instance with QueryClient context
-export const getRouter = () => {
+// You must export a getRouter function that returns a new router instance each time
+export function getRouter() {
   const router = createRouter({
     routeTree,
     context: {

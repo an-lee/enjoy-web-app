@@ -12,7 +12,7 @@ const log = createLogger({ name: 'Auth' })
 // ============================================================================
 
 const PROFILE_API_PATH = '/api/v1/profile'
-const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const CACHE_TTL_MS = 1 * 60 * 1000 // 1 minutes
 const CACHE_CLEANUP_INTERVAL = 10 * 60 * 1000 // 10 minutes
 
 // ============================================================================

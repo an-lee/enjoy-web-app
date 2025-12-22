@@ -5,6 +5,7 @@ import {
 	calculateCredits,
 	checkAndDeductCredits,
 	getTodayDateString,
+	getDailyCreditsLimit,
 	type CreditCalculationInput,
 } from '@/worker/utils/credits'
 import { RateLimitError } from '@/worker/utils/errors'
@@ -37,7 +38,50 @@ export async function enforceCreditsLimit(
 	const user = c.get('user')
 
 	const requiredCredits = calculateCredits(input)
+
+	// Even if requiredCredits <= 0, we should still attempt to record a log entry
+	// (though in practice, calculateCredits should rarely return 0 for real usage)
+	// However, if credits are 0 or negative, skip the KV check and just record the log
 	if (requiredCredits <= 0) {
+		// Record a log entry even for 0-credit operations (for audit trail)
+		// Try to get actual usage from KV if available
+		let used = 0
+		const limit = getDailyCreditsLimit(user.subscriptionTier)
+
+		try {
+			if (kv) {
+				const today = getTodayDateString()
+				const key = `credits:${user.id}:${today}`
+				const stored = await kv.get(key, 'text')
+				used = stored ? parseInt(stored, 10) || 0 : 0
+			}
+		} catch (error) {
+			// Ignore errors when getting usage for 0-credit operations
+		}
+
+		// Calculate resetAt (next UTC midnight)
+		const tomorrow = new Date()
+		tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+		tomorrow.setUTCHours(0, 0, 0, 0)
+		const resetAt = tomorrow.getTime()
+
+		const mockResult = {
+			allowed: true,
+			used,
+			limit,
+			required: 0,
+			resetAt,
+		} as Awaited<ReturnType<typeof checkAndDeductCredits>>
+
+		await recordCreditsAuditLog(env, user, input, mockResult, requiredCredits).catch(
+			(auditError) => {
+				log.warn('Failed to record credits audit log for 0-credit operation', {
+					userId: user.id,
+					error: String(auditError),
+				})
+			}
+		)
+
 		return
 	}
 
@@ -108,8 +152,11 @@ export async function enforceCreditsLimit(
  *
  * This is called asynchronously and errors are caught to ensure audit logging
  * failures don't affect the main request flow.
+ *
+ * Exported for use in services that directly call checkAndDeductCredits
+ * (e.g., azure.ts) to ensure audit logs are recorded.
  */
-async function recordCreditsAuditLog(
+export async function recordCreditsAuditLog(
 	env: Env,
 	user: UserProfile,
 	input: CreditCalculationInput,

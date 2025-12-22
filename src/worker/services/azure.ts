@@ -2,10 +2,12 @@
  * Azure Speech Service
  */
 
-import { checkAndDeductCredits, calculateCredits } from '../utils/credits'
+import { checkAndDeductCredits, calculateCredits, getDailyCreditsLimit, getTodayDateString } from '../utils/credits'
 import { ConfigurationError, ServiceError, RateLimitError } from '../utils/errors'
 import type { UserProfile } from '../middleware/auth'
 import { createLogger } from '@/shared/lib/utils'
+import { recordCreditsAuditLog } from '../middleware/credits'
+import type { CreditCalculationInput } from '../utils/credits'
 
 // ============================================================================
 // Logger
@@ -82,31 +84,36 @@ export async function generateAzureToken(
 	config: AzureConfig,
 	user: UserProfile,
 	kv: KVNamespace | undefined,
-	usage: AzureTokenUsagePayload
+	usage: AzureTokenUsagePayload,
+	env?: Env
 ): Promise<AzureTokenResponse> {
 
 	// ------------------------------------------------------------------------
 	// Credits-based daily quota check
 	// ------------------------------------------------------------------------
-	try {
-		let requiredCredits = 0
+	let creditsInput: CreditCalculationInput | null = null
+	let requiredCredits = 0
+	let creditsResult: Awaited<ReturnType<typeof checkAndDeductCredits>> | null = null
 
+	try {
 		if (usage.purpose === 'tts' && usage.tts) {
-			requiredCredits = calculateCredits({
+			creditsInput = {
 				type: 'tts',
 				chars: usage.tts.textLength,
-			})
+			}
+			requiredCredits = calculateCredits(creditsInput)
 		} else if (usage.purpose === 'assessment' && usage.assessment) {
-			requiredCredits = calculateCredits({
+			creditsInput = {
 				type: 'assessment',
 				seconds: usage.assessment.durationSeconds,
-			})
+			}
+			requiredCredits = calculateCredits(creditsInput)
 		} else {
 			throw new ServiceError('Invalid Azure usage payload')
 		}
 
 		if (requiredCredits > 0) {
-			const creditsResult = await checkAndDeductCredits(
+			creditsResult = await checkAndDeductCredits(
 				user.id,
 				user.subscriptionTier,
 				requiredCredits,
@@ -114,6 +121,18 @@ export async function generateAzureToken(
 			)
 
 			if (!creditsResult.allowed) {
+				// Record audit log before throwing error
+				if (creditsInput && env && creditsResult) {
+					await recordCreditsAuditLog(env, user, creditsInput, creditsResult, requiredCredits).catch(
+						(auditError) => {
+							log.warn('Failed to record credits audit log for rejected Azure token request', {
+								userId: user.id,
+								error: String(auditError),
+							})
+						}
+					)
+				}
+
 				throw new RateLimitError(
 					'Daily Credits limit reached',
 					'credits',
@@ -123,6 +142,45 @@ export async function generateAzureToken(
 					'user_daily'
 				)
 			}
+		} else if (requiredCredits <= 0 && creditsInput && env) {
+			// Record audit log even for 0-credit operations (for audit trail)
+			// Get current usage from KV if available
+			let used = 0
+			const limit = getDailyCreditsLimit(user.subscriptionTier)
+
+			try {
+				if (kv) {
+					const today = getTodayDateString()
+					const key = `credits:${user.id}:${today}`
+					const stored = await kv.get(key, 'text')
+					used = stored ? parseInt(stored, 10) || 0 : 0
+				}
+			} catch (error) {
+				// Ignore errors when getting usage for 0-credit operations
+			}
+
+			// Calculate resetAt (next UTC midnight)
+			const tomorrow = new Date()
+			tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+			tomorrow.setUTCHours(0, 0, 0, 0)
+			const resetAt = tomorrow.getTime()
+
+			const mockResult = {
+				allowed: true,
+				used,
+				limit,
+				required: 0,
+				resetAt,
+			} as Awaited<ReturnType<typeof checkAndDeductCredits>>
+
+			await recordCreditsAuditLog(env, user, creditsInput, mockResult, requiredCredits).catch(
+				(auditError) => {
+					log.warn('Failed to record credits audit log for 0-credit Azure token operation', {
+						userId: user.id,
+						error: String(auditError),
+					})
+				}
+			)
 		}
 	} catch (error) {
 		// Any unexpected error in Credits calculation should not expose internals
@@ -136,6 +194,18 @@ export async function generateAzureToken(
 			error: String(error),
 		})
 		throw new ServiceError('Failed to apply Credits-based limit')
+	}
+
+	// Record audit log for successful credits check
+	if (creditsInput && env && creditsResult) {
+		await recordCreditsAuditLog(env, user, creditsInput, creditsResult, requiredCredits).catch(
+			(auditError) => {
+				log.warn('Failed to record credits audit log for Azure token', {
+					userId: user.id,
+					error: String(auditError),
+				})
+			}
+		)
 	}
 
 	// Try to reuse cached token first (still counts against rate limits per request)

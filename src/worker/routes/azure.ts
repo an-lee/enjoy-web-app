@@ -44,7 +44,7 @@ azure.post('/tokens', async (c) => {
 				},
 			}
 
-		const result = await generateAzureToken(config, user, kv, usage)
+		const result = await generateAzureToken(config, user, kv, usage, env)
 
 		return c.json(result)
 	} catch (error) {
