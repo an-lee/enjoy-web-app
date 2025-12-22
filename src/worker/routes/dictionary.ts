@@ -39,8 +39,7 @@ dictionary.use('/*', authMiddleware)
  * - result: DictionaryAIResult - LLM-generated dictionary-style entry
  *
  * This endpoint is intended for rich, AI-generated dictionary explanations
- * (multi-sense, usage notes, examples, etc). For the basic, non-AI dictionary
- * service, use `/api/v1/services/dictionary/basic`.
+ * (multi-sense, usage notes, examples, etc).
  */
 dictionary.post('/query', async (c) => {
 	try {
@@ -110,9 +109,7 @@ dictionary.post('/query', async (c) => {
 				if (cached) {
 					const parsed = JSON.parse(cached) as unknown
 					const cachedResult = parseDictionaryResult(parsed)
-					return c.json({
-						result: cachedResult,
-					})
+					return c.json(cachedResult)
 				}
 			} catch {
 				// Ignore cache read / parse errors and fall through to regeneration
@@ -162,9 +159,7 @@ dictionary.post('/query', async (c) => {
 			}
 		}
 
-		return c.json({
-			result,
-		})
+		return c.json(result)
 	} catch (error) {
 		return handleError(c, error, 'Failed to generate AI dictionary result')
 	}
