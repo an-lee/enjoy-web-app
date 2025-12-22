@@ -10,16 +10,18 @@
  * - expanded: Full-screen player
  */
 
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePlayerStore } from '@/page/stores/player'
-import { db } from '@/page/db'
+import { db, updateVideo, updateAudio } from '@/page/db'
 import { createLogger } from '@/shared/lib/utils'
-import { getMediaUrl, FileAccessError } from '@/page/lib/file-access'
+import { getMediaUrl, FileAccessError, verifyFile } from '@/page/lib/file-access'
+import { selectFileWithHandle } from '@/page/lib/file-helpers'
 import { useMediaElement, setDisplayTime } from '@/page/hooks/player'
 import { MiniPlayerBar } from './mini-player-bar'
 import { ExpandedPlayer } from './expanded-player'
 import { PlayerHotkeys } from './player-hotkeys'
+import type { Video, Audio } from '@/page/types/db'
 
 // ============================================================================
 // Logger
@@ -44,6 +46,8 @@ export function PlayerContainer() {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<string | null>(null)
+  const [currentMedia, setCurrentMedia] = useState<Video | Audio | null>(null)
   const [isReady, setIsReady] = useState(false)
   const renderCountRef = useRef(0)
 
@@ -84,15 +88,21 @@ export function PlayerContainer() {
 
         if (!media) {
           log.error('Media not found!')
-          setError('Media not found in local storage')
+          setError(t('player.mediaNotFound'))
+          setErrorCode(null)
+          setCurrentMedia(null)
           setIsLoading(false)
           return
         }
+
+        setCurrentMedia(media)
 
         // Get media URL using unified interface
         objectUrl = await getMediaUrl(media)
         log.debug('Media URL created:', objectUrl)
         setMediaUrl(objectUrl)
+        setError(null)
+        setErrorCode(null)
         setIsLoading(false)
       } catch (err) {
         if (!isMounted) return
@@ -101,9 +111,11 @@ export function PlayerContainer() {
         // Handle FileAccessError with i18n
         if (err instanceof FileAccessError) {
           setError(t(err.code))
+          setErrorCode(err.code)
         } else {
           // Fallback for other errors
           setError(t('player.loadingFailed'))
+          setErrorCode(null)
         }
         setIsLoading(false)
       }
@@ -243,6 +255,118 @@ export function PlayerContainer() {
     }
   }, [mode, isReady, currentSession, isPlaying, volume, playbackRate, setPlaying])
 
+  // Handle retry for permission errors
+  const handleRetry = useCallback(async () => {
+    if (!currentSession || !currentMedia) return
+
+    log.debug('Retrying media load...')
+    setIsLoading(true)
+    setError(null)
+    setErrorCode(null)
+
+    try {
+      const objectUrl = await getMediaUrl(currentMedia)
+      log.debug('Media URL created on retry:', objectUrl)
+      setMediaUrl(objectUrl)
+      setIsLoading(false)
+    } catch (err) {
+      log.error('Retry failed:', err)
+      if (err instanceof FileAccessError) {
+        setError(t(err.code))
+        setErrorCode(err.code)
+      } else {
+        setError(t('player.loadingFailed'))
+        setErrorCode(null)
+      }
+      setIsLoading(false)
+    }
+  }, [currentSession, currentMedia, t])
+
+  // Handle file reselection for file not found errors
+  const handleReselectFile = useCallback(async () => {
+    if (!currentSession || !currentMedia) return
+
+    log.debug('Reselecting file...')
+    setIsLoading(true)
+    setError(null)
+    setErrorCode(null)
+
+    try {
+      // Determine file types based on media type
+      const isVideo = currentSession.mediaType === 'video'
+      const fileTypes = isVideo
+        ? [
+            {
+              description: 'Video files',
+              accept: {
+                'video/*': ['.mp4', '.webm', '.ogg', '.mov', '.avi'],
+              },
+            },
+          ]
+        : [
+            {
+              description: 'Audio files',
+              accept: {
+                'audio/*': ['.mp3', '.wav', '.ogg', '.webm', '.m4a', '.aac'],
+              },
+            },
+          ]
+
+      // Select file with handle
+      const fileHandle = await selectFileWithHandle({
+        types: fileTypes,
+      })
+
+      if (!fileHandle) {
+        // User cancelled
+        setIsLoading(false)
+        return
+      }
+
+      // Get file and verify it matches the expected hash and size
+      const file = await fileHandle.getFile()
+
+      if (!currentMedia.md5 || !currentMedia.size) {
+        throw new Error('Media metadata missing for verification')
+      }
+
+      // Verify file matches
+      const isValid = await verifyFile(file, currentMedia.md5, currentMedia.size)
+      if (!isValid) {
+        setError(t('fileAccess.fileMismatch'))
+        setErrorCode(null)
+        setIsLoading(false)
+        return
+      }
+
+      // Update media with new fileHandle
+      if (isVideo) {
+        await updateVideo(currentMedia.id, { fileHandle })
+      } else {
+        await updateAudio(currentMedia.id, { fileHandle })
+      }
+
+      // Update current media state
+      const updatedMedia = { ...currentMedia, fileHandle }
+      setCurrentMedia(updatedMedia)
+
+      // Try to load media with new fileHandle
+      const objectUrl = await getMediaUrl(updatedMedia)
+      log.debug('Media URL created after reselection:', objectUrl)
+      setMediaUrl(objectUrl)
+      setIsLoading(false)
+    } catch (err) {
+      log.error('File reselection failed:', err)
+      if (err instanceof FileAccessError) {
+        setError(t(err.code))
+        setErrorCode(err.code)
+      } else {
+        setError(t('player.loadingFailed'))
+        setErrorCode(null)
+      }
+      setIsLoading(false)
+    }
+  }, [currentSession, currentMedia, t])
 
   // Don't render anything if no session and mode is hidden
   if (mode === 'hidden' && !currentSession) {
@@ -268,6 +392,7 @@ export function PlayerContainer() {
         <ExpandedPlayer
           isLoading={isLoading}
           error={error}
+          errorCode={errorCode}
           isVideo={isVideo}
           mediaRef={isVideo ? mediaRef : undefined}
           mediaUrl={isVideo ? mediaUrl : undefined}
@@ -275,6 +400,8 @@ export function PlayerContainer() {
           onEnded={isVideo ? handleEnded : undefined}
           onCanPlay={isVideo ? handleCanPlay : undefined}
           onError={isVideo ? handleLoadError : undefined}
+          onRetry={handleRetry}
+          onReselectFile={handleReselectFile}
         />
       )}
 

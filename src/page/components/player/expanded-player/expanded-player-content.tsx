@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
+import { Button } from '@/page/components/ui/button'
 import { TranscriptDisplay } from '../transcript'
 import { createLogger } from '@/shared/lib/utils'
+import { FileAccessErrorCode } from '@/page/lib/file-access'
 
 const log = createLogger({ name: 'ExpandedPlayerContent' })
 
@@ -10,6 +12,8 @@ interface ExpandedPlayerContentProps {
   isLoading?: boolean
   /** Error message if loading failed */
   error?: string | null
+  /** Error code for determining action buttons */
+  errorCode?: string | null
   /** Whether it's a video */
   isVideo?: boolean
   /** Media element ref (for video display) */
@@ -21,11 +25,16 @@ interface ExpandedPlayerContentProps {
   onEnded?: () => void
   onCanPlay?: (e: React.SyntheticEvent<HTMLVideoElement>) => void
   onError?: (e: React.SyntheticEvent<HTMLVideoElement>) => void
+  /** Retry handler for permission errors */
+  onRetry?: () => void
+  /** Reselect file handler for file not found errors */
+  onReselectFile?: () => void
 }
 
 export function ExpandedPlayerContent({
   isLoading,
   error,
+  errorCode,
   isVideo,
   mediaRef,
   mediaUrl,
@@ -33,8 +42,16 @@ export function ExpandedPlayerContent({
   onEnded,
   onCanPlay,
   onError,
+  onRetry,
+  onReselectFile,
 }: ExpandedPlayerContentProps) {
   const { t } = useTranslation()
+
+  // Determine which action button to show based on error code
+  const showRetryButton =
+    errorCode === FileAccessErrorCode.PERMISSION_DENIED ||
+    errorCode === FileAccessErrorCode.PERMISSION_REQUIRED
+  const showReselectButton = errorCode === FileAccessErrorCode.FILE_NOT_FOUND
 
   return (
     <main className="flex-1 flex min-h-0 overflow-hidden bg-muted/30">
@@ -44,9 +61,25 @@ export function ExpandedPlayerContent({
           <p className="text-sm">{t('common.loading')}</p>
         </div>
       ) : error ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-destructive">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-destructive px-4">
           <Icon icon="lucide:alert-circle" className="w-10 h-10" />
-          <p className="text-sm">{error}</p>
+          <p className="text-sm text-center max-w-md">{error}</p>
+          {(showRetryButton || showReselectButton) && (
+            <div className="flex gap-3 mt-2">
+              {showRetryButton && onRetry && (
+                <Button onClick={onRetry} variant="default" size="sm">
+                  <Icon icon="lucide:refresh-cw" className="w-4 h-4 mr-2" />
+                  {t('player.retry')}
+                </Button>
+              )}
+              {showReselectButton && onReselectFile && (
+                <Button onClick={onReselectFile} variant="default" size="sm">
+                  <Icon icon="lucide:file-up" className="w-4 h-4 mr-2" />
+                  {t('player.reselectFile')}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       ) : isVideo ? (
         /* Video mode: Actual video player on top, transcript below */

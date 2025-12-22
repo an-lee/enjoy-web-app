@@ -199,6 +199,8 @@
     "continueLearning": "Weiter lernen",
     "mediaNotFound": "Medien nicht gefunden",
     "loadingFailed": "Medien konnten nicht geladen werden",
+    "retry": "Wiederholen",
+    "reselectFile": "Datei erneut auswählen",
     "dictationMode": "Diktat-Modus",
     "echoMode": "Nachsprech-Modus",
     "transcript": {
@@ -488,7 +490,8 @@
     "fileNotFound": "Zugriff auf die Datei fehlgeschlagen. Die Datei wurde möglicherweise verschoben, gelöscht oder die Berechtigung wurde widerrufen.",
     "permissionDenied": "Die Dateizugriffsberechtigung wurde verweigert. Bitte wählen Sie die Datei erneut aus, um den Zugriff zu gewähren.",
     "permissionRequired": "Die Dateizugriffsberechtigung ist erforderlich. Bitte gewähren Sie den Zugriff, wenn Sie dazu aufgefordert werden, oder wählen Sie die Datei erneut aus.",
-    "fileAccessFailed": "Zugriff auf lokale Datei fehlgeschlagen. Die Datei wurde möglicherweise verschoben oder gelöscht."
+    "fileAccessFailed": "Zugriff auf lokale Datei fehlgeschlagen. Die Datei wurde möglicherweise verschoben oder gelöscht.",
+    "fileMismatch": "Die ausgewählte Datei stimmt nicht mit der ursprünglichen Datei überein. Bitte wählen Sie die richtige Datei aus."
   },
   "credits": {
     "title": "KI-Nutzung",

@@ -199,6 +199,8 @@
     "continueLearning": "Continuer à apprendre",
     "mediaNotFound": "Média non trouvé",
     "loadingFailed": "Échec du chargement du média",
+    "retry": "Réessayer",
+    "reselectFile": "Resélectionner le fichier",
     "dictationMode": "Mode dictée",
     "echoMode": "Mode écho",
     "transcript": {
@@ -488,7 +490,8 @@
     "fileNotFound": "Impossible d'accéder au fichier. Le fichier a peut-être été déplacé, supprimé ou l'autorisation a été révoquée.",
     "permissionDenied": "L'autorisation d'accès au fichier a été refusée. Veuillez sélectionner à nouveau le fichier pour accorder l'accès.",
     "permissionRequired": "L'autorisation d'accès au fichier est requise. Veuillez accorder l'accès lorsque vous y êtes invité, ou sélectionner à nouveau le fichier.",
-    "fileAccessFailed": "Impossible d'accéder au fichier local. Le fichier a peut-être été déplacé ou supprimé."
+    "fileAccessFailed": "Impossible d'accéder au fichier local. Le fichier a peut-être été déplacé ou supprimé.",
+    "fileMismatch": "Le fichier sélectionné ne correspond pas au fichier d'origine. Veuillez sélectionner le bon fichier."
   },
   "credits": {
     "title": "Utilisation IA",

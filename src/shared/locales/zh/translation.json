@@ -199,6 +199,8 @@
     "continueLearning": "继续学习",
     "mediaNotFound": "媒体未找到",
     "loadingFailed": "加载媒体失败",
+    "retry": "重试",
+    "reselectFile": "重新选择文件",
     "dictationMode": "听写模式",
     "echoMode": "跟读模式",
     "transcript": {
@@ -488,7 +490,8 @@
     "fileNotFound": "无法访问文件。文件可能已被移动、删除或权限已被撤销。",
     "permissionDenied": "文件访问权限被拒绝。请重新选择文件以授予访问权限。",
     "permissionRequired": "需要文件访问权限。请在提示时授予访问权限，或重新选择文件。",
-    "fileAccessFailed": "无法访问本地文件。文件可能已被移动或删除。"
+    "fileAccessFailed": "无法访问本地文件。文件可能已被移动或删除。",
+    "fileMismatch": "所选文件与原始文件不匹配。请选择正确的文件。"
   },
   "credits": {
     "title": "AI 使用量",

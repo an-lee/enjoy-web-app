@@ -199,6 +199,8 @@
     "continueLearning": "Continuar aprendiendo",
     "mediaNotFound": "Medio no encontrado",
     "loadingFailed": "Error al cargar el medio",
+    "retry": "Reintentar",
+    "reselectFile": "Seleccionar archivo nuevamente",
     "dictationMode": "Modo dictado",
     "echoMode": "Modo eco",
     "transcript": {
@@ -488,7 +490,8 @@
     "fileNotFound": "Error al acceder al archivo. El archivo puede haber sido movido, eliminado o se revocó el permiso.",
     "permissionDenied": "Se denegó el permiso de acceso al archivo. Por favor, seleccione el archivo nuevamente para otorgar acceso.",
     "permissionRequired": "Se requiere permiso de acceso al archivo. Por favor, otorgue acceso cuando se le solicite o seleccione el archivo nuevamente.",
-    "fileAccessFailed": "Error al acceder al archivo local. El archivo puede haber sido movido o eliminado."
+    "fileAccessFailed": "Error al acceder al archivo local. El archivo puede haber sido movido o eliminado.",
+    "fileMismatch": "El archivo seleccionado no coincide con el archivo original. Por favor, seleccione el archivo correcto."
   },
   "credits": {
     "title": "Uso de IA",
