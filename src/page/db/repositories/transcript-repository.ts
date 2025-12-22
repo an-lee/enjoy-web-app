@@ -2,7 +2,7 @@
  * Transcript Repository - Database operations for Transcript entity
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import { generateTranscriptId } from '../id-generator'
 import type {
   Transcript,
@@ -17,14 +17,14 @@ import type {
 // ============================================================================
 
 export async function getTranscriptById(id: string): Promise<Transcript | undefined> {
-  return db.transcripts.get(id)
+  return getCurrentDatabase().transcripts.get(id)
 }
 
 export async function getTranscriptsByTarget(
   targetType: TargetType,
   targetId: string
 ): Promise<Transcript[]> {
-  return db.transcripts
+  return getCurrentDatabase().transcripts
     .where('[targetType+targetId]')
     .equals([targetType, targetId])
     .toArray()
@@ -36,7 +36,7 @@ export async function getTranscriptByTargetLanguageSource(
   language: string,
   source: TranscriptSource
 ): Promise<Transcript | undefined> {
-  return db.transcripts
+  return getCurrentDatabase().transcripts
     .where('[targetType+targetId+language+source]')
     .equals([targetType, targetId, language, source])
     .first()
@@ -45,21 +45,21 @@ export async function getTranscriptByTargetLanguageSource(
 export async function getTranscriptsBySyncStatus(
   status: SyncStatus
 ): Promise<Transcript[]> {
-  return db.transcripts.where('syncStatus').equals(status).toArray()
+  return getCurrentDatabase().transcripts.where('syncStatus').equals(status).toArray()
 }
 
 export async function getTranscriptsByLanguage(language: string): Promise<Transcript[]> {
-  return db.transcripts.where('language').equals(language).toArray()
+  return getCurrentDatabase().transcripts.where('language').equals(language).toArray()
 }
 
 export async function getTranscriptsBySource(
   source: TranscriptSource
 ): Promise<Transcript[]> {
-  return db.transcripts.where('source').equals(source).toArray()
+  return getCurrentDatabase().transcripts.where('source').equals(source).toArray()
 }
 
 export async function getAllTranscripts(): Promise<Transcript[]> {
-  return db.transcripts.toArray()
+  return getCurrentDatabase().transcripts.toArray()
 }
 
 // ============================================================================
@@ -78,7 +78,7 @@ export async function saveTranscriptFromServer(input: Transcript): Promise<strin
     throw new Error('Server transcript must have id')
   }
 
-  const existing = await db.transcripts.get(input.id)
+  const existing = await getCurrentDatabase().transcripts.get(input.id)
   if (existing) {
     // Update existing transcript
     const updated: Transcript = {
@@ -87,7 +87,7 @@ export async function saveTranscriptFromServer(input: Transcript): Promise<strin
       id: input.id,
       updatedAt: now,
     }
-    await db.transcripts.put(updated)
+    await getCurrentDatabase().transcripts.put(updated)
     return input.id
   }
 
@@ -98,7 +98,7 @@ export async function saveTranscriptFromServer(input: Transcript): Promise<strin
     createdAt: input.createdAt || now,
     updatedAt: input.updatedAt || now,
   }
-  await db.transcripts.put(transcript)
+  await getCurrentDatabase().transcripts.put(transcript)
   return input.id
 }
 
@@ -111,7 +111,7 @@ export async function saveTranscript(input: TranscriptInput): Promise<string> {
     input.source
   )
 
-  const existing = await db.transcripts.get(id)
+  const existing = await getCurrentDatabase().transcripts.get(id)
   if (existing) {
     const updated: Transcript = {
       ...existing,
@@ -119,7 +119,7 @@ export async function saveTranscript(input: TranscriptInput): Promise<string> {
       id,
       updatedAt: now,
     }
-    await db.transcripts.put(updated)
+    await getCurrentDatabase().transcripts.put(updated)
     return id
   }
 
@@ -129,7 +129,7 @@ export async function saveTranscript(input: TranscriptInput): Promise<string> {
     createdAt: now,
     updatedAt: now,
   }
-  await db.transcripts.put(transcript)
+  await getCurrentDatabase().transcripts.put(transcript)
   return id
 }
 
@@ -138,7 +138,7 @@ export async function updateTranscript(
   updates: Partial<Omit<Transcript, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
-  const existing = await db.transcripts.get(id)
+  const existing = await getCurrentDatabase().transcripts.get(id)
   if (existing) {
     const updated: Transcript = {
       ...existing,
@@ -146,12 +146,12 @@ export async function updateTranscript(
       id,
       updatedAt: now,
     }
-    await db.transcripts.put(updated)
+    await getCurrentDatabase().transcripts.put(updated)
   }
 }
 
 export async function deleteTranscript(id: string): Promise<void> {
-  await db.transcripts.delete(id)
+  await getCurrentDatabase().transcripts.delete(id)
 }
 
 // ============================================================================

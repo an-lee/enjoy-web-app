@@ -9,66 +9,67 @@ import type { Translation, TranslationStyle, TranslationInput } from '@/page/typ
 const translationData = new Map<string, Translation>()
 
 // Mock the database module BEFORE importing the repository
-vi.mock('../schema', () => ({
-  db: {
-    translations: {
-      get: vi.fn((id: string) => Promise.resolve(translationData.get(id))),
-      put: vi.fn((item: Translation) => {
-        translationData.set(item.id, item)
-        return Promise.resolve(item.id)
-      }),
-      update: vi.fn((id: string, changes: Partial<Translation>) => {
-        const existing = translationData.get(id)
-        if (existing) {
-          translationData.set(id, { ...existing, ...changes })
-          return Promise.resolve(1)
-        }
-        return Promise.resolve(0)
-      }),
-      delete: vi.fn((id: string) => {
-        translationData.delete(id)
-        return Promise.resolve()
-      }),
-      toArray: vi.fn(() => Promise.resolve(Array.from(translationData.values()))),
-      where: vi.fn((index: string) => ({
-        equals: vi.fn((value: unknown) => ({
-          first: vi.fn(async () => {
-            for (const item of translationData.values()) {
-              if (index.startsWith('[')) {
-                // Compound index
-                const fields = index.slice(1, -1).split('+')
-                const values = value as unknown[]
-                const matches = fields.every((field, i) =>
-                  (item as any)[field] === values[i]
-                )
-                if (matches) return item
-              } else if ((item as any)[index] === value) {
-                return item
-              }
+vi.mock('../schema', async () => {
+  const { vi: vitestVi } = await import('vitest')
+  const mockTranslations = {
+    get: vitestVi.fn((id: string) => Promise.resolve(translationData.get(id))),
+    put: vitestVi.fn((item: Translation) => {
+      translationData.set(item.id, item)
+      return Promise.resolve(item.id)
+    }),
+    update: vitestVi.fn((id: string, changes: Partial<Translation>) => {
+      const existing = translationData.get(id)
+      if (existing) {
+        translationData.set(id, { ...existing, ...changes })
+        return Promise.resolve(1)
+      }
+      return Promise.resolve(0)
+    }),
+    delete: vitestVi.fn((id: string) => {
+      translationData.delete(id)
+      return Promise.resolve()
+    }),
+    toArray: vitestVi.fn(() => Promise.resolve(Array.from(translationData.values()))),
+    where: vitestVi.fn((index: string) => ({
+      equals: vitestVi.fn((value: unknown) => ({
+        first: vitestVi.fn(async () => {
+          for (const item of translationData.values()) {
+            if (index.startsWith('[')) {
+              const fields = index.slice(1, -1).split('+')
+              const values = value as unknown[]
+              const matches = fields.every((field, i) => (item as any)[field] === values[i])
+              if (matches) return item
+            } else if ((item as any)[index] === value) {
+              return item
             }
-            return undefined
-          }),
-          toArray: vi.fn(async () => {
-            const results: Translation[] = []
-            for (const item of translationData.values()) {
-              if (index.startsWith('[')) {
-                const fields = index.slice(1, -1).split('+')
-                const values = value as unknown[]
-                const matches = fields.every((field, i) =>
-                  (item as any)[field] === values[i]
-                )
-                if (matches) results.push(item)
-              } else if ((item as any)[index] === value) {
-                results.push(item)
-              }
+          }
+          return undefined
+        }),
+        toArray: vitestVi.fn(async () => {
+          const results: Translation[] = []
+          for (const item of translationData.values()) {
+            if (index.startsWith('[')) {
+              const fields = index.slice(1, -1).split('+')
+              const values = value as unknown[]
+              const matches = fields.every((field, i) => (item as any)[field] === values[i])
+              if (matches) results.push(item)
+            } else if ((item as any)[index] === value) {
+              results.push(item)
             }
-            return results
-          }),
-        })),
+          }
+          return results
+        }),
       })),
-    },
-  },
-}))
+    })),
+  }
+  const mockDb = {
+    translations: mockTranslations,
+  }
+  return {
+    db: mockDb,
+    getCurrentDatabase: vitestVi.fn(() => mockDb),
+  }
+})
 
 // Mock ID generator
 vi.mock('../id-generator', () => ({

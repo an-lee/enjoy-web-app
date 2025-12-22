@@ -2,7 +2,7 @@
  * EchoSession Repository - Database operations for EchoSession entity
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import { generateEchoSessionId } from '../id-generator'
 import type {
   EchoSession,
@@ -18,14 +18,14 @@ import type {
 export async function getEchoSessionById(
   id: string
 ): Promise<EchoSession | undefined> {
-  return db.echoSessions.get(id)
+  return getCurrentDatabase().echoSessions.get(id)
 }
 
 export async function getEchoSessionsByTarget(
   targetType: TargetType,
   targetId: string
 ): Promise<EchoSession[]> {
-  return db.echoSessions
+  return getCurrentDatabase().echoSessions
     .where('[targetType+targetId]')
     .equals([targetType, targetId])
     .toArray()
@@ -101,7 +101,7 @@ export async function getOrCreateActiveEchoSession(
   if (activeSession) {
     // Update lastActiveAt to mark it as recently used
     const now = new Date().toISOString()
-    await db.echoSessions.update(activeSession.id, {
+    await getCurrentDatabase().echoSessions.update(activeSession.id, {
       lastActiveAt: now,
       updatedAt: now,
     })
@@ -129,27 +129,27 @@ export async function getOrCreateActiveEchoSession(
     updatedAt: now,
   }
 
-  await db.echoSessions.put(session)
+  await getCurrentDatabase().echoSessions.put(session)
   return id
 }
 
 export async function getEchoSessionsBySyncStatus(
   status: SyncStatus
 ): Promise<EchoSession[]> {
-  return db.echoSessions.where('syncStatus').equals(status).toArray()
+  return getCurrentDatabase().echoSessions.where('syncStatus').equals(status).toArray()
 }
 
 export async function getEchoSessionsByLanguage(
   language: string
 ): Promise<EchoSession[]> {
-  return db.echoSessions.where('language').equals(language).toArray()
+  return getCurrentDatabase().echoSessions.where('language').equals(language).toArray()
 }
 
 /**
  * Get all active sessions (not completed)
  */
 export async function getActiveEchoSessions(): Promise<EchoSession[]> {
-  return db.echoSessions
+  return getCurrentDatabase().echoSessions
     .filter((session) => !session.completedAt)
     .toArray()
 }
@@ -158,13 +158,13 @@ export async function getActiveEchoSessions(): Promise<EchoSession[]> {
  * Get all completed sessions
  */
 export async function getCompletedEchoSessions(): Promise<EchoSession[]> {
-  return db.echoSessions
+  return getCurrentDatabase().echoSessions
     .filter((session) => !!session.completedAt)
     .toArray()
 }
 
 export async function getAllEchoSessions(): Promise<EchoSession[]> {
-  return db.echoSessions.toArray()
+  return getCurrentDatabase().echoSessions.toArray()
 }
 
 // ============================================================================
@@ -183,7 +183,7 @@ export async function saveEchoSession(input: EchoSessionInput): Promise<string> 
     createdAt: now,
     updatedAt: now,
   }
-  await db.echoSessions.put(session)
+  await getCurrentDatabase().echoSessions.put(session)
   return id
 }
 
@@ -192,7 +192,7 @@ export async function updateEchoSession(
   updates: Partial<Omit<EchoSession, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
-  await db.echoSessions.update(id, {
+  await getCurrentDatabase().echoSessions.update(id, {
     ...updates,
     updatedAt: now,
   })
@@ -213,7 +213,7 @@ export async function updateEchoSessionProgress(
   }
 ): Promise<void> {
   const now = new Date().toISOString()
-  await db.echoSessions.update(id, {
+  await getCurrentDatabase().echoSessions.update(id, {
     ...progress,
     lastActiveAt: now,
     updatedAt: now,
@@ -227,14 +227,14 @@ export async function incrementEchoSessionRecording(
   id: string,
   recordingDuration: number // milliseconds
 ): Promise<void> {
-  const session = await db.echoSessions.get(id)
+  const session = await getCurrentDatabase().echoSessions.get(id)
   if (!session) return
 
   const now = new Date().toISOString()
   const newCount = session.recordingsCount + 1
   const newTotalDuration = session.recordingsDuration + recordingDuration
 
-  await db.echoSessions.update(id, {
+  await getCurrentDatabase().echoSessions.update(id, {
     recordingsCount: newCount,
     recordingsDuration: newTotalDuration,
     lastRecordingAt: now,
@@ -248,7 +248,7 @@ export async function incrementEchoSessionRecording(
  */
 export async function completeEchoSession(id: string): Promise<void> {
   const now = new Date().toISOString()
-  await db.echoSessions.update(id, {
+  await getCurrentDatabase().echoSessions.update(id, {
     completedAt: now,
     lastActiveAt: now,
     updatedAt: now,
@@ -256,7 +256,7 @@ export async function completeEchoSession(id: string): Promise<void> {
 }
 
 export async function deleteEchoSession(id: string): Promise<void> {
-  await db.echoSessions.delete(id)
+  await getCurrentDatabase().echoSessions.delete(id)
 }
 
 // ============================================================================

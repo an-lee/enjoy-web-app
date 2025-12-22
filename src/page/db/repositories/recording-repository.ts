@@ -2,7 +2,7 @@
  * Recording Repository - Database operations for Recording entity
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import { generateRecordingId } from '../id-generator'
 import type { Recording, TargetType, SyncStatus, RecordingInput } from '@/page/types/db'
 
@@ -11,14 +11,14 @@ import type { Recording, TargetType, SyncStatus, RecordingInput } from '@/page/t
 // ============================================================================
 
 export async function getRecordingById(id: string): Promise<Recording | undefined> {
-  return db.recordings.get(id)
+  return getCurrentDatabase().recordings.get(id)
 }
 
 export async function getRecordingsByTarget(
   targetType: TargetType,
   targetId: string
 ): Promise<Recording[]> {
-  return db.recordings
+  return getCurrentDatabase().recordings
     .where('[targetType+targetId]')
     .equals([targetType, targetId])
     .toArray()
@@ -27,15 +27,15 @@ export async function getRecordingsByTarget(
 export async function getRecordingsBySyncStatus(
   status: SyncStatus
 ): Promise<Recording[]> {
-  return db.recordings.where('syncStatus').equals(status).toArray()
+  return getCurrentDatabase().recordings.where('syncStatus').equals(status).toArray()
 }
 
 export async function getRecordingsByLanguage(language: string): Promise<Recording[]> {
-  return db.recordings.where('language').equals(language).toArray()
+  return getCurrentDatabase().recordings.where('language').equals(language).toArray()
 }
 
 export async function getAllRecordings(): Promise<Recording[]> {
-  return db.recordings.toArray()
+  return getCurrentDatabase().recordings.toArray()
 }
 
 /**
@@ -50,7 +50,7 @@ export async function getRecordingsByEchoRegion(
   endTime: number // milliseconds
 ): Promise<Recording[]> {
   // Get all recordings for this target
-  const allRecordings = await db.recordings
+  const allRecordings = await getCurrentDatabase().recordings
     .where('[targetType+targetId]')
     .equals([targetType, targetId])
     .toArray()
@@ -89,7 +89,7 @@ export async function saveRecording(input: RecordingInput): Promise<string> {
     createdAt: now,
     updatedAt: now,
   }
-  await db.recordings.put(recording)
+  await getCurrentDatabase().recordings.put(recording)
   return id
 }
 
@@ -98,14 +98,14 @@ export async function updateRecording(
   updates: Partial<Omit<Recording, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
-  await db.recordings.update(id, {
+  await getCurrentDatabase().recordings.update(id, {
     ...updates,
     updatedAt: now,
   })
 }
 
 export async function deleteRecording(id: string): Promise<void> {
-  await db.recordings.delete(id)
+  await getCurrentDatabase().recordings.delete(id)
 }
 
 // ============================================================================

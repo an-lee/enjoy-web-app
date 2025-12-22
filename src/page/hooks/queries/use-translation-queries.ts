@@ -10,7 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  db,
+  getCurrentDatabase,
   getTranslationById,
   saveTranslation as dbSaveTranslation,
   updateTranslation as dbUpdateTranslation,
@@ -50,7 +50,7 @@ async function fetchTranslations(
   total: number
   totalPages: number
 }> {
-  let query = db.translations.orderBy('createdAt').reverse()
+  let query = getCurrentDatabase().translations.orderBy('createdAt').reverse()
 
   if (searchQuery && searchQuery.trim()) {
     const searchTerm = searchQuery.toLowerCase().trim()
@@ -89,13 +89,13 @@ async function fetchTranslationByParams(params: {
   const { sourceText, targetLanguage, style, customPrompt } = params
 
   if (style === 'custom') {
-    const candidates = await db.translations
+    const candidates = await getCurrentDatabase().translations
       .where('[sourceText+targetLanguage+style]')
       .equals([sourceText.trim(), targetLanguage, style])
       .toArray()
     return candidates.find((item) => item.customPrompt === customPrompt?.trim())
   } else {
-    return db.translations
+    return getCurrentDatabase().translations
       .where('[sourceText+targetLanguage+style]')
       .equals([sourceText.trim(), targetLanguage, style])
       .first()
@@ -238,7 +238,7 @@ export function useUpdateTranslation() {
       updates: Partial<Translation>
     }): Promise<Translation> => {
       await dbUpdateTranslation(id, updates)
-      const updated = await db.translations.get(id)
+      const updated = await getCurrentDatabase().translations.get(id)
       if (!updated) {
         throw new Error('Translation not found after update')
       }

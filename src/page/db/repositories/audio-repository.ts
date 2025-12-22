@@ -2,7 +2,7 @@
  * Audio Repository - Database operations for Audio entity
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import { generateAudioId, generateLocalAudioAid, generateTTSAudioAid } from '../id-generator'
 import { queueAudioSync } from '../utils/auto-sync'
 import type {
@@ -26,47 +26,47 @@ function ensureUserProvider(input: UserAudioInput): UserAudioInput {
 // ============================================================================
 
 export async function getAudioById(id: string): Promise<Audio | undefined> {
-  return db.audios.get(id)
+  return getCurrentDatabase().audios.get(id)
 }
 
 export async function getAudioByProviderAndAid(
   provider: AudioProvider,
   aid: string
 ): Promise<Audio | undefined> {
-  return db.audios.where('[aid+provider]').equals([aid, provider]).first()
+  return getCurrentDatabase().audios.where('[aid+provider]').equals([aid, provider]).first()
 }
 
 export async function getAudiosBySyncStatus(status: SyncStatus): Promise<Audio[]> {
-  return db.audios.where('syncStatus').equals(status).toArray()
+  return getCurrentDatabase().audios.where('syncStatus').equals(status).toArray()
 }
 
 
 export async function getAudioByTranslationKey(
   translationKey: string
 ): Promise<Audio | undefined> {
-  return db.audios.where('translationKey').equals(translationKey).first()
+  return getCurrentDatabase().audios.where('translationKey').equals(translationKey).first()
 }
 
 export async function getAudiosByTranslationKey(
   translationKey: string
 ): Promise<Audio[]> {
-  return db.audios.where('translationKey').equals(translationKey).toArray()
+  return getCurrentDatabase().audios.where('translationKey').equals(translationKey).toArray()
 }
 
 export async function getAudiosByProvider(provider: AudioProvider): Promise<Audio[]> {
-  return db.audios.where('provider').equals(provider).toArray()
+  return getCurrentDatabase().audios.where('provider').equals(provider).toArray()
 }
 
 export async function getAudiosByLanguage(language: string): Promise<Audio[]> {
-  return db.audios.where('language').equals(language).toArray()
+  return getCurrentDatabase().audios.where('language').equals(language).toArray()
 }
 
 export async function getAudiosByVoice(voice: string): Promise<Audio[]> {
-  return db.audios.where('voice').equals(voice).toArray()
+  return getCurrentDatabase().audios.where('voice').equals(voice).toArray()
 }
 
 export async function getAllAudios(): Promise<Audio[]> {
-  return db.audios.toArray()
+  return getCurrentDatabase().audios.toArray()
 }
 
 
@@ -97,10 +97,10 @@ export async function saveAudioFromServer(input: Audio): Promise<string> {
     throw new Error('Server audio must have aid')
   }
 
-  const existing = await db.audios.get(input.id)
+  const existing = await getCurrentDatabase().audios.get(input.id)
   if (existing) {
     // Update existing audio
-    await db.audios.update(input.id, {
+    await getCurrentDatabase().audios.update(input.id, {
       ...input,
       updatedAt: now,
       // Don't overwrite local-only fields
@@ -117,7 +117,7 @@ export async function saveAudioFromServer(input: Audio): Promise<string> {
     createdAt: input.createdAt || now,
     updatedAt: input.updatedAt || now,
   }
-  await db.audios.put(audio)
+  await getCurrentDatabase().audios.put(audio)
   return input.id
 }
 
@@ -152,9 +152,9 @@ export async function saveAudio(input: UserAudioInput): Promise<string> {
     audioData = normalizedInput
   }
 
-  const existing = await db.audios.get(id)
+  const existing = await getCurrentDatabase().audios.get(id)
   if (existing) {
-    await db.audios.update(id, {
+    await getCurrentDatabase().audios.update(id, {
       ...audioData,
       aid,
       updatedAt: now,
@@ -173,7 +173,7 @@ export async function saveAudio(input: UserAudioInput): Promise<string> {
     createdAt: now,
     updatedAt: now,
   } as Audio
-  await db.audios.put(audio)
+  await getCurrentDatabase().audios.put(audio)
   // Queue for sync
   await queueAudioSync(id, 'create', 'local')
   return id
@@ -204,9 +204,9 @@ export async function saveTTSAudio(input: TTSAudioInput): Promise<string> {
   // Extract blob to store separately
   const { blob, ...rest } = input
 
-  const existing = await db.audios.get(id)
+  const existing = await getCurrentDatabase().audios.get(id)
   if (existing) {
-    await db.audios.update(id, {
+    await getCurrentDatabase().audios.update(id, {
       ...rest,
       blob, // Store blob directly in IndexedDB for TTS audio
       md5,
@@ -230,7 +230,7 @@ export async function saveTTSAudio(input: TTSAudioInput): Promise<string> {
     createdAt: now,
     updatedAt: now,
   }
-  await db.audios.put(audio)
+  await getCurrentDatabase().audios.put(audio)
   // Queue for sync
   await queueAudioSync(id, 'create', 'local')
   return id
@@ -259,9 +259,9 @@ export async function saveLocalAudio(
   const size = fileObj.size
   const id = generateAudioId('user', aid)
 
-  const existing = await db.audios.get(id)
+  const existing = await getCurrentDatabase().audios.get(id)
   if (existing) {
-    await db.audios.update(id, {
+    await getCurrentDatabase().audios.update(id, {
       ...input,
       fileHandle,
       md5,
@@ -287,7 +287,7 @@ export async function saveLocalAudio(
     createdAt: now,
     updatedAt: now,
   }
-  await db.audios.put(audio)
+  await getCurrentDatabase().audios.put(audio)
   // Queue for sync
   await queueAudioSync(id, 'create', 'local')
   return id
@@ -298,8 +298,8 @@ export async function updateAudio(
   updates: Partial<Omit<Audio, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
-  const existing = await db.audios.get(id)
-  await db.audios.update(id, {
+  const existing = await getCurrentDatabase().audios.get(id)
+  await getCurrentDatabase().audios.update(id, {
     ...updates,
     updatedAt: now,
   })
@@ -310,8 +310,8 @@ export async function updateAudio(
 }
 
 export async function deleteAudio(id: string): Promise<void> {
-  const existing = await db.audios.get(id)
-  await db.audios.delete(id)
+  const existing = await getCurrentDatabase().audios.get(id)
+  await getCurrentDatabase().audios.delete(id)
   // Queue for sync if was synced
   if (existing?.syncStatus === 'synced') {
     await queueAudioSync(id, 'delete', existing.syncStatus)

@@ -55,10 +55,10 @@ export async function loadMediaBlobForSession(session: {
   if (typeof window === 'undefined') {
     throw new Error('IndexedDB is only available in the browser')
   }
-  const { db } = await import('@/page/db')
+  const { getCurrentDatabase } = await import('@/page/db')
 
   if (session.mediaType === 'audio') {
-    const audio = await db.audios.get(session.mediaId)
+    const audio = await getCurrentDatabase().audios.get(session.mediaId)
     if (!audio) throw new Error('Audio not found')
 
     // Priority 1: Direct blob (for TTS-generated audio)
@@ -87,7 +87,7 @@ export async function loadMediaBlobForSession(session: {
   }
 
   // Video handling
-  const video = await db.videos.get(session.mediaId)
+  const video = await getCurrentDatabase().videos.get(session.mediaId)
   if (!video) throw new Error('Video not found')
 
   // Priority 1: Server URL (for synced media)

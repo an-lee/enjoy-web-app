@@ -2,7 +2,7 @@
  * Sync Queue Repository - Database operations for SyncQueueItem
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import type { SyncQueueItem } from '@/page/types/db'
 
 // ============================================================================
@@ -10,37 +10,37 @@ import type { SyncQueueItem } from '@/page/types/db'
 // ============================================================================
 
 export async function getSyncQueueItemById(id: number): Promise<SyncQueueItem | undefined> {
-  return db.syncQueue.get(id)
+  return getCurrentDatabase().syncQueue.get(id)
 }
 
 export async function getSyncQueueItemsByEntityType(
   entityType: SyncQueueItem['entityType']
 ): Promise<SyncQueueItem[]> {
-  return db.syncQueue.where('entityType').equals(entityType).toArray()
+  return getCurrentDatabase().syncQueue.where('entityType').equals(entityType).toArray()
 }
 
 export async function getSyncQueueItemsByEntityId(
   entityId: string
 ): Promise<SyncQueueItem[]> {
-  return db.syncQueue.where('entityId').equals(entityId).toArray()
+  return getCurrentDatabase().syncQueue.where('entityId').equals(entityId).toArray()
 }
 
 export async function getPendingSyncQueueItems(): Promise<SyncQueueItem[]> {
-  return db.syncQueue
+  return getCurrentDatabase().syncQueue
     .orderBy('createdAt')
     .filter((item) => !item.error || item.retryCount < 5)
     .toArray()
 }
 
 export async function getFailedSyncQueueItems(): Promise<SyncQueueItem[]> {
-  return db.syncQueue
+  return getCurrentDatabase().syncQueue
     .where('retryCount')
     .aboveOrEqual(5)
     .toArray()
 }
 
 export async function getAllSyncQueueItems(): Promise<SyncQueueItem[]> {
-  return db.syncQueue.orderBy('createdAt').toArray()
+  return getCurrentDatabase().syncQueue.orderBy('createdAt').toArray()
 }
 
 // ============================================================================
@@ -59,14 +59,14 @@ export async function addSyncQueueItem(
   const now = new Date().toISOString()
 
   // Check if there's already a pending item for this entity and action
-  const existing = await db.syncQueue
+  const existing = await getCurrentDatabase().syncQueue
     .where('[entityType+entityId+action]')
     .equals([entityType, entityId, action])
     .first()
 
   if (existing) {
     // Update existing item instead of creating duplicate
-    await db.syncQueue.update(existing.id, {
+    await getCurrentDatabase().syncQueue.update(existing.id, {
       payload,
       retryCount: 0, // Reset retry count
       error: undefined,
@@ -85,7 +85,7 @@ export async function addSyncQueueItem(
     createdAt: now,
   }
 
-  const id = await db.syncQueue.add(item as SyncQueueItem)
+  const id = await getCurrentDatabase().syncQueue.add(item as SyncQueueItem)
   return id as number
 }
 
@@ -96,28 +96,28 @@ export async function updateSyncQueueItem(
   id: number,
   updates: Partial<Pick<SyncQueueItem, 'retryCount' | 'lastAttempt' | 'error' | 'payload'>>
 ): Promise<void> {
-  await db.syncQueue.update(id, updates)
+  await getCurrentDatabase().syncQueue.update(id, updates)
 }
 
 /**
  * Remove an item from the sync queue (after successful sync)
  */
 export async function removeSyncQueueItem(id: number): Promise<void> {
-  await db.syncQueue.delete(id)
+  await getCurrentDatabase().syncQueue.delete(id)
 }
 
 /**
  * Remove all sync queue items for a specific entity
  */
 export async function removeSyncQueueItemsByEntityId(entityId: string): Promise<void> {
-  await db.syncQueue.where('entityId').equals(entityId).delete()
+  await getCurrentDatabase().syncQueue.where('entityId').equals(entityId).delete()
 }
 
 /**
  * Clear all sync queue items
  */
 export async function clearSyncQueue(): Promise<void> {
-  await db.syncQueue.clear()
+  await getCurrentDatabase().syncQueue.clear()
 }
 
 // ============================================================================

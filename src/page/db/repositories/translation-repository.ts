@@ -2,7 +2,7 @@
  * Translation Repository - Database operations for Translation entity
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import { generateTranslationId } from '../id-generator'
 import type { Translation, TranslationStyle, SyncStatus, TranslationInput } from '@/page/types/db'
 
@@ -11,7 +11,7 @@ import type { Translation, TranslationStyle, SyncStatus, TranslationInput } from
 // ============================================================================
 
 export async function getTranslationById(id: string): Promise<Translation | undefined> {
-  return db.translations.get(id)
+  return getCurrentDatabase().translations.get(id)
 }
 
 export async function getTranslationByTextAndStyle(
@@ -19,7 +19,7 @@ export async function getTranslationByTextAndStyle(
   targetLanguage: string,
   style: TranslationStyle
 ): Promise<Translation | undefined> {
-  return db.translations
+  return getCurrentDatabase().translations
     .where('[sourceText+targetLanguage+style]')
     .equals([sourceText, targetLanguage, style])
     .first()
@@ -28,35 +28,35 @@ export async function getTranslationByTextAndStyle(
 export async function getTranslationsBySourceText(
   sourceText: string
 ): Promise<Translation[]> {
-  return db.translations.where('sourceText').equals(sourceText).toArray()
+  return getCurrentDatabase().translations.where('sourceText').equals(sourceText).toArray()
 }
 
 export async function getTranslationsBySourceLanguage(
   sourceLanguage: string
 ): Promise<Translation[]> {
-  return db.translations.where('sourceLanguage').equals(sourceLanguage).toArray()
+  return getCurrentDatabase().translations.where('sourceLanguage').equals(sourceLanguage).toArray()
 }
 
 export async function getTranslationsByTargetLanguage(
   targetLanguage: string
 ): Promise<Translation[]> {
-  return db.translations.where('targetLanguage').equals(targetLanguage).toArray()
+  return getCurrentDatabase().translations.where('targetLanguage').equals(targetLanguage).toArray()
 }
 
 export async function getTranslationsByStyle(
   style: TranslationStyle
 ): Promise<Translation[]> {
-  return db.translations.where('style').equals(style).toArray()
+  return getCurrentDatabase().translations.where('style').equals(style).toArray()
 }
 
 export async function getTranslationsBySyncStatus(
   status: SyncStatus
 ): Promise<Translation[]> {
-  return db.translations.where('syncStatus').equals(status).toArray()
+  return getCurrentDatabase().translations.where('syncStatus').equals(status).toArray()
 }
 
 export async function getAllTranslations(): Promise<Translation[]> {
-  return db.translations.toArray()
+  return getCurrentDatabase().translations.toArray()
 }
 
 // ============================================================================
@@ -72,9 +72,9 @@ export async function saveTranslation(input: TranslationInput): Promise<string> 
     input.customPrompt
   )
 
-  const existing = await db.translations.get(id)
+  const existing = await getCurrentDatabase().translations.get(id)
   if (existing) {
-    await db.translations.update(id, {
+    await getCurrentDatabase().translations.update(id, {
       ...input,
       updatedAt: now,
     })
@@ -87,7 +87,7 @@ export async function saveTranslation(input: TranslationInput): Promise<string> 
     createdAt: now,
     updatedAt: now,
   }
-  await db.translations.put(translation)
+  await getCurrentDatabase().translations.put(translation)
   return id
 }
 
@@ -96,14 +96,14 @@ export async function updateTranslation(
   updates: Partial<Omit<Translation, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
-  await db.translations.update(id, {
+  await getCurrentDatabase().translations.update(id, {
     ...updates,
     updatedAt: now,
   })
 }
 
 export async function deleteTranslation(id: string): Promise<void> {
-  await db.translations.delete(id)
+  await getCurrentDatabase().translations.delete(id)
 }
 
 // ============================================================================

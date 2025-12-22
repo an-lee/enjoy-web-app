@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  db,
+  getCurrentDatabase,
   getVideoById,
   getVideosByProvider,
   saveVideo,
@@ -101,7 +101,7 @@ async function fetchVideosByProvider(provider: VideoProvider): Promise<Video[]> 
 }
 
 async function fetchAllVideos(): Promise<Video[]> {
-  return db.videos.orderBy('createdAt').reverse().toArray()
+  return getCurrentDatabase().videos.orderBy('createdAt').reverse().toArray()
 }
 
 // ============================================================================

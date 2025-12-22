@@ -2,7 +2,7 @@
  * CachedDefinition Repository - Database operations for dictionary cache
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import { generateCachedDefinitionId } from '../id-generator'
 import type { CachedDefinition } from '@/page/types/db'
 
@@ -18,19 +18,19 @@ export async function getCachedDefinition(
   word: string,
   languagePair: string
 ): Promise<CachedDefinition | undefined> {
-  const cached = await db.cachedDefinitions.get([word, languagePair])
+  const cached = await getCurrentDatabase().cachedDefinitions.get([word, languagePair])
   if (cached && cached.expiresAt > Date.now()) {
     return cached
   }
   // Remove expired cache
   if (cached) {
-    await db.cachedDefinitions.delete([word, languagePair])
+    await getCurrentDatabase().cachedDefinitions.delete([word, languagePair])
   }
   return undefined
 }
 
 export async function getAllCachedDefinitions(): Promise<CachedDefinition[]> {
-  return db.cachedDefinitions.toArray()
+  return getCurrentDatabase().cachedDefinitions.toArray()
 }
 
 // ============================================================================
@@ -52,7 +52,7 @@ export async function setCachedDefinition(
 ): Promise<void> {
   const now = new Date().toISOString()
   const id = generateCachedDefinitionId(word, languagePair)
-  await db.cachedDefinitions.put({
+  await getCurrentDatabase().cachedDefinitions.put({
     id,
     word,
     languagePair,
@@ -67,11 +67,11 @@ export async function deleteCachedDefinition(
   word: string,
   languagePair: string
 ): Promise<void> {
-  await db.cachedDefinitions.delete([word, languagePair])
+  await getCurrentDatabase().cachedDefinitions.delete([word, languagePair])
 }
 
 export async function clearAllCachedDefinitions(): Promise<void> {
-  await db.cachedDefinitions.clear()
+  await getCurrentDatabase().cachedDefinitions.clear()
 }
 
 /**
@@ -80,14 +80,14 @@ export async function clearAllCachedDefinitions(): Promise<void> {
  */
 export async function cleanupExpiredCache(): Promise<number> {
   const now = Date.now()
-  const expired = await db.cachedDefinitions
+  const expired = await getCurrentDatabase().cachedDefinitions
     .where('expiresAt')
     .below(now)
     .toArray()
   const keys = expired.map(
     (item) => [item.word, item.languagePair] as [string, string]
   )
-  await db.cachedDefinitions.bulkDelete(keys)
+  await getCurrentDatabase().cachedDefinitions.bulkDelete(keys)
   return keys.length
 }
 

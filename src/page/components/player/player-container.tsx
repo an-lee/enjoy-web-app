@@ -13,7 +13,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePlayerStore } from '@/page/stores/player'
-import { db, updateVideo, updateAudio } from '@/page/db'
+import { getCurrentDatabase, updateVideo, updateAudio } from '@/page/db'
 import { createLogger } from '@/shared/lib/utils'
 import { getMediaUrl, FileAccessError, verifyFile } from '@/page/lib/file-access'
 import { selectFileWithHandle } from '@/page/lib/file-helpers'
@@ -79,9 +79,9 @@ export function PlayerContainer() {
         let media
 
         if (currentSession.mediaType === 'audio') {
-          media = await db.audios.get(currentSession.mediaId)
+          media = await getCurrentDatabase().audios.get(currentSession.mediaId)
         } else {
-          media = await db.videos.get(currentSession.mediaId)
+          media = await getCurrentDatabase().videos.get(currentSession.mediaId)
         }
 
         if (!isMounted) return

@@ -9,58 +9,63 @@ import type { EchoSession, EchoSessionInput } from '@/page/types/db'
 const echoSessionData = new Map<string, EchoSession>()
 
 // Mock the database module BEFORE importing the repository
-vi.mock('../schema', () => ({
-  db: {
-    echoSessions: {
-      get: vi.fn((id: string) => Promise.resolve(echoSessionData.get(id))),
-      put: vi.fn((item: EchoSession) => {
-        echoSessionData.set(item.id, item)
-        return Promise.resolve(item.id)
-      }),
-      update: vi.fn((id: string, changes: Partial<EchoSession>) => {
-        const existing = echoSessionData.get(id)
-        if (existing) {
-          echoSessionData.set(id, { ...existing, ...changes })
-          return Promise.resolve(1)
-        }
-        return Promise.resolve(0)
-      }),
-      delete: vi.fn((id: string) => {
-        echoSessionData.delete(id)
-        return Promise.resolve()
-      }),
-      toArray: vi.fn(() => Promise.resolve(Array.from(echoSessionData.values()))),
-      where: vi.fn((index: string) => ({
-        equals: vi.fn((value: unknown) => ({
-          toArray: vi.fn(async () => {
-            const results: EchoSession[] = []
-            for (const item of echoSessionData.values()) {
-              if (index.startsWith('[')) {
-                // Compound index [targetType+targetId]
-                const fields = index.slice(1, -1).split('+')
-                const values = value as unknown[]
-                const matches = fields.every((field, i) => {
-                  const fieldValue = (item as any)[field]
-                  const compareValue = values[i]
-                  return fieldValue === compareValue
-                })
-                if (matches) results.push(item)
-              } else if ((item as any)[index] === value) {
-                results.push(item)
-              }
+vi.mock('../schema', async () => {
+  const { vi: vitestVi } = await import('vitest')
+  const mockEchoSessions = {
+    get: vitestVi.fn((id: string) => Promise.resolve(echoSessionData.get(id))),
+    put: vitestVi.fn((item: EchoSession) => {
+      echoSessionData.set(item.id, item)
+      return Promise.resolve(item.id)
+    }),
+    update: vitestVi.fn((id: string, changes: Partial<EchoSession>) => {
+      const existing = echoSessionData.get(id)
+      if (existing) {
+        echoSessionData.set(id, { ...existing, ...changes })
+        return Promise.resolve(1)
+      }
+      return Promise.resolve(0)
+    }),
+    delete: vitestVi.fn((id: string) => {
+      echoSessionData.delete(id)
+      return Promise.resolve()
+    }),
+    toArray: vitestVi.fn(() => Promise.resolve(Array.from(echoSessionData.values()))),
+    where: vitestVi.fn((index: string) => ({
+      equals: vitestVi.fn((value: unknown) => ({
+        toArray: vitestVi.fn(async () => {
+          const results: EchoSession[] = []
+          for (const item of echoSessionData.values()) {
+            if (index.startsWith('[')) {
+              const fields = index.slice(1, -1).split('+')
+              const values = value as unknown[]
+              const matches = fields.every((field, i) => {
+                const fieldValue = (item as any)[field]
+                const compareValue = values[i]
+                return fieldValue === compareValue
+              })
+              if (matches) results.push(item)
+            } else if ((item as any)[index] === value) {
+              results.push(item)
             }
-            return results
-          }),
-        })),
-      })),
-      filter: vi.fn((predicate: (item: EchoSession) => boolean) => ({
-        toArray: vi.fn(async () => {
-          return Array.from(echoSessionData.values()).filter(predicate)
+          }
+          return results
         }),
       })),
-    },
-  },
-}))
+    })),
+    filter: vitestVi.fn((predicate: (item: EchoSession) => boolean) => ({
+      toArray: vitestVi.fn(async () => {
+        return Array.from(echoSessionData.values()).filter(predicate)
+      }),
+    })),
+  }
+  const mockDb = {
+    echoSessions: mockEchoSessions,
+  }
+  return {
+    db: mockDb,
+    getCurrentDatabase: vitestVi.fn(() => mockDb),
+  }
+})
 
 // Mock ID generator
 vi.mock('../id-generator', () => ({

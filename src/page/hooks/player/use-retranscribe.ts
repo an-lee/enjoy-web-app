@@ -8,7 +8,7 @@
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { usePlayerStore } from '@/page/stores/player'
-import { db } from '@/page/db'
+import { getCurrentDatabase } from '@/page/db'
 import { asrService } from '@/page/ai/services/asr'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { useCreateTranscript } from '@/page/hooks/queries'
@@ -132,7 +132,7 @@ export function useRetranscribe() {
         let targetId: string
 
         if (currentSession.mediaType === 'audio') {
-          const audio = await db.audios.get(currentSession.mediaId)
+          const audio = await getCurrentDatabase().audios.get(currentSession.mediaId)
           if (!audio) throw new Error('Audio not found')
 
           // Priority 1: Direct blob (for TTS-generated audio)
@@ -156,7 +156,7 @@ export function useRetranscribe() {
           targetType = 'Audio'
           targetId = currentSession.mediaId
         } else {
-          const video = await db.videos.get(currentSession.mediaId)
+          const video = await getCurrentDatabase().videos.get(currentSession.mediaId)
           if (!video) throw new Error('Video not found')
 
           // Priority 1: Server URL (for synced media)
@@ -258,17 +258,17 @@ export function useRetranscribe() {
         // Update video/audio language if detected language differs
         if (detectedLanguage) {
           if (currentSession.mediaType === 'video') {
-            const video = await db.videos.get(currentSession.mediaId)
+            const video = await getCurrentDatabase().videos.get(currentSession.mediaId)
             if (video && video.language !== detectedLanguage) {
-              await db.videos.update(currentSession.mediaId, {
+              await getCurrentDatabase().videos.update(currentSession.mediaId, {
                 language: detectedLanguage,
                 updatedAt: new Date().toISOString(),
               })
             }
           } else {
-            const audio = await db.audios.get(currentSession.mediaId)
+            const audio = await getCurrentDatabase().audios.get(currentSession.mediaId)
             if (audio && audio.language !== detectedLanguage) {
-              await db.audios.update(currentSession.mediaId, {
+              await getCurrentDatabase().audios.update(currentSession.mediaId, {
                 language: detectedLanguage,
                 updatedAt: new Date().toISOString(),
               })

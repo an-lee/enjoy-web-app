@@ -2,7 +2,7 @@
  * Dictation Repository - Database operations for Dictation entity
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import { generateDictationId } from '../id-generator'
 import type { Dictation, TargetType, SyncStatus, DictationInput } from '@/page/types/db'
 
@@ -11,14 +11,14 @@ import type { Dictation, TargetType, SyncStatus, DictationInput } from '@/page/t
 // ============================================================================
 
 export async function getDictationById(id: string): Promise<Dictation | undefined> {
-  return db.dictations.get(id)
+  return getCurrentDatabase().dictations.get(id)
 }
 
 export async function getDictationsByTarget(
   targetType: TargetType,
   targetId: string
 ): Promise<Dictation[]> {
-  return db.dictations
+  return getCurrentDatabase().dictations
     .where('[targetType+targetId]')
     .equals([targetType, targetId])
     .toArray()
@@ -27,15 +27,15 @@ export async function getDictationsByTarget(
 export async function getDictationsBySyncStatus(
   status: SyncStatus
 ): Promise<Dictation[]> {
-  return db.dictations.where('syncStatus').equals(status).toArray()
+  return getCurrentDatabase().dictations.where('syncStatus').equals(status).toArray()
 }
 
 export async function getDictationsByLanguage(language: string): Promise<Dictation[]> {
-  return db.dictations.where('language').equals(language).toArray()
+  return getCurrentDatabase().dictations.where('language').equals(language).toArray()
 }
 
 export async function getAllDictations(): Promise<Dictation[]> {
-  return db.dictations.toArray()
+  return getCurrentDatabase().dictations.toArray()
 }
 
 // ============================================================================
@@ -52,7 +52,7 @@ export async function saveDictation(input: DictationInput): Promise<string> {
     createdAt: now,
     updatedAt: now,
   }
-  await db.dictations.put(dictation)
+  await getCurrentDatabase().dictations.put(dictation)
   return id
 }
 
@@ -61,14 +61,14 @@ export async function updateDictation(
   updates: Partial<Omit<Dictation, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
-  await db.dictations.update(id, {
+  await getCurrentDatabase().dictations.update(id, {
     ...updates,
     updatedAt: now,
   })
 }
 
 export async function deleteDictation(id: string): Promise<void> {
-  await db.dictations.delete(id)
+  await getCurrentDatabase().dictations.delete(id)
 }
 
 // ============================================================================

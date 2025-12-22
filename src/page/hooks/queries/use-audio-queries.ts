@@ -11,7 +11,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  db,
+  getCurrentDatabase,
   getAudioById,
   getAudioByTranslationKey,
   getAudiosByTranslationKey,
@@ -120,7 +120,7 @@ function getQueryKey(loader: AudioLoader) {
 }
 
 async function fetchAudioHistory(searchQuery?: string): Promise<Audio[]> {
-  const query = db.audios.orderBy('createdAt').reverse()
+  const query = getCurrentDatabase().audios.orderBy('createdAt').reverse()
   const allAudios = await query.toArray()
 
   // Filter to TTS audios (those with sourceText)

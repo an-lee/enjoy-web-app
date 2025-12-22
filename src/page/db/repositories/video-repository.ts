@@ -2,7 +2,7 @@
  * Video Repository - Database operations for Video entity
  */
 
-import { db } from '../schema'
+import { getCurrentDatabase } from '../schema'
 import { generateVideoId, generateLocalVideoVid } from '../id-generator'
 import { queueVideoSync } from '../utils/auto-sync'
 import type { Video, VideoProvider, SyncStatus, VideoInput } from '@/page/types/db'
@@ -20,31 +20,31 @@ function ensureUserProvider(input: VideoInput): VideoInput {
 // ============================================================================
 
 export async function getVideoById(id: string): Promise<Video | undefined> {
-  return db.videos.get(id)
+  return getCurrentDatabase().videos.get(id)
 }
 
 export async function getVideoByProviderAndVid(
   provider: VideoProvider,
   vid: string
 ): Promise<Video | undefined> {
-  return db.videos.where('[vid+provider]').equals([vid, provider]).first()
+  return getCurrentDatabase().videos.where('[vid+provider]').equals([vid, provider]).first()
 }
 
 export async function getVideosBySyncStatus(status: SyncStatus): Promise<Video[]> {
-  return db.videos.where('syncStatus').equals(status).toArray()
+  return getCurrentDatabase().videos.where('syncStatus').equals(status).toArray()
 }
 
 
 export async function getVideosByProvider(provider: VideoProvider): Promise<Video[]> {
-  return db.videos.where('provider').equals(provider).toArray()
+  return getCurrentDatabase().videos.where('provider').equals(provider).toArray()
 }
 
 export async function getVideosByLanguage(language: string): Promise<Video[]> {
-  return db.videos.where('language').equals(language).toArray()
+  return getCurrentDatabase().videos.where('language').equals(language).toArray()
 }
 
 export async function getAllVideos(): Promise<Video[]> {
-  return db.videos.toArray()
+  return getCurrentDatabase().videos.toArray()
 }
 
 // ============================================================================
@@ -66,10 +66,10 @@ export async function saveVideoFromServer(input: Video): Promise<string> {
     throw new Error('Server video must have vid')
   }
 
-  const existing = await db.videos.get(input.id)
+  const existing = await getCurrentDatabase().videos.get(input.id)
   if (existing) {
     // Update existing video
-    await db.videos.update(input.id, {
+    await getCurrentDatabase().videos.update(input.id, {
       ...input,
       updatedAt: now,
       // Don't overwrite local-only fields
@@ -85,7 +85,7 @@ export async function saveVideoFromServer(input: Video): Promise<string> {
     createdAt: input.createdAt || now,
     updatedAt: input.updatedAt || now,
   }
-  await db.videos.put(video)
+  await getCurrentDatabase().videos.put(video)
   return input.id
 }
 
@@ -94,9 +94,9 @@ export async function saveVideo(input: VideoInput): Promise<string> {
   const normalizedInput = ensureUserProvider(input)
   const id = generateVideoId(normalizedInput.provider, normalizedInput.vid)
 
-  const existing = await db.videos.get(id)
+  const existing = await getCurrentDatabase().videos.get(id)
   if (existing) {
-    await db.videos.update(id, {
+    await getCurrentDatabase().videos.update(id, {
       ...normalizedInput,
       updatedAt: now,
     })
@@ -112,7 +112,7 @@ export async function saveVideo(input: VideoInput): Promise<string> {
     createdAt: now,
     updatedAt: now,
   }
-  await db.videos.put(video)
+  await getCurrentDatabase().videos.put(video)
   // Queue for sync
   await queueVideoSync(id, 'create', 'local')
   return id
@@ -142,9 +142,9 @@ export async function saveLocalVideo(
   const size = fileObj.size
   const id = generateVideoId('user', vid)
 
-  const existing = await db.videos.get(id)
+  const existing = await getCurrentDatabase().videos.get(id)
   if (existing) {
-    await db.videos.update(id, {
+    await getCurrentDatabase().videos.update(id, {
       ...input,
       fileHandle,
       md5,
@@ -170,7 +170,7 @@ export async function saveLocalVideo(
     createdAt: now,
     updatedAt: now,
   }
-  await db.videos.put(video)
+  await getCurrentDatabase().videos.put(video)
   // Queue for sync
   await queueVideoSync(id, 'create', 'local')
   return id
@@ -181,8 +181,8 @@ export async function updateVideo(
   updates: Partial<Omit<Video, 'id' | 'createdAt'>>
 ): Promise<void> {
   const now = new Date().toISOString()
-  const existing = await db.videos.get(id)
-  await db.videos.update(id, {
+  const existing = await getCurrentDatabase().videos.get(id)
+  await getCurrentDatabase().videos.update(id, {
     ...updates,
     updatedAt: now,
   })
@@ -193,8 +193,8 @@ export async function updateVideo(
 }
 
 export async function deleteVideo(id: string): Promise<void> {
-  const existing = await db.videos.get(id)
-  await db.videos.delete(id)
+  const existing = await getCurrentDatabase().videos.get(id)
+  await getCurrentDatabase().videos.delete(id)
   // Queue for sync if was synced
   if (existing?.syncStatus === 'synced') {
     await queueVideoSync(id, 'delete', existing.syncStatus)
