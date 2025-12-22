@@ -143,29 +143,96 @@ export function PlayerContainer() {
   // Sync play state with media element
   useEffect(() => {
     const el = mediaRef.current
-    log.debug('Effect: Sync play state', { isPlaying, isReady, hasElement: !!el })
+    log.debug('Effect: Sync play state', { isPlaying, isReady, hasElement: !!el, mode })
 
     if (!el || !isReady) {
       log.debug('Skipping play sync - not ready')
       return
     }
 
-    if (isPlaying) {
-      log.debug('Calling el.play()...')
-      el.play()
-        .then(() => {
-          log.debug('el.play() succeeded')
-        })
-        .catch((err) => {
+    // When mode changes, sync the actual playback state with store state
+    // This ensures UI correctly reflects playback state after mode switch
+    const actualIsPlaying = !el.paused
+    if (actualIsPlaying !== isPlaying) {
+      log.debug('Playback state mismatch detected, syncing...', {
+        storeIsPlaying: isPlaying,
+        actualIsPlaying,
+      })
+      if (isPlaying) {
+        el.play().catch((err) => {
           log.warn('el.play() blocked:', err)
-          // Auto-play was prevented
           setPlaying(false)
         })
+      } else {
+        el.pause()
+      }
+    } else if (isPlaying) {
+      // Ensure playing state is maintained
+      if (el.paused) {
+        log.debug('Element is paused but should be playing, calling play()...')
+        el.play()
+          .then(() => {
+            log.debug('el.play() succeeded')
+          })
+          .catch((err) => {
+            log.warn('el.play() blocked:', err)
+            setPlaying(false)
+          })
+      }
     } else {
-      log.debug('Calling el.pause()')
-      el.pause()
+      // Ensure paused state is maintained
+      if (!el.paused) {
+        log.debug('Element is playing but should be paused, calling pause()')
+        el.pause()
+      }
     }
-  }, [isPlaying, isReady, setPlaying])
+  }, [isPlaying, isReady, setPlaying, mode])
+
+  // Sync all media state when mode changes (to handle video element recreation)
+  useEffect(() => {
+    const el = mediaRef.current
+    if (!el || !isReady || !currentSession) return
+
+    const isVideo = currentSession.mediaType === 'video'
+
+    // When mode changes, ensure all state is synchronized
+    // This is especially important when video element is recreated in different location
+    log.debug('Effect: Sync media state on mode change', { mode, isVideo })
+
+    // Sync playback state
+    const actualIsPlaying = !el.paused
+    if (actualIsPlaying !== isPlaying) {
+      log.debug('Syncing playback state on mode change', {
+        storeIsPlaying: isPlaying,
+        actualIsPlaying,
+      })
+      if (isPlaying && el.paused) {
+        el.play().catch((err) => {
+          log.warn('el.play() blocked on mode change:', err)
+          setPlaying(false)
+        })
+      } else if (!isPlaying && !el.paused) {
+        el.pause()
+      }
+    }
+
+    // Sync volume and playback rate (already handled by other effects, but ensure they're set)
+    if (el.volume !== volume) {
+      el.volume = volume
+    }
+    if (el.playbackRate !== playbackRate) {
+      el.playbackRate = playbackRate
+    }
+
+    // Sync currentTime if needed (useMediaElement hook handles this on canplay, but ensure it's set)
+    if (currentSession.currentTime > 0 && Math.abs(el.currentTime - currentSession.currentTime) > 0.5) {
+      log.debug('Syncing currentTime on mode change', {
+        storeTime: currentSession.currentTime,
+        elementTime: el.currentTime,
+      })
+      el.currentTime = currentSession.currentTime
+    }
+  }, [mode, isReady, currentSession, isPlaying, volume, playbackRate, setPlaying])
 
 
   // Don't render anything if no session and mode is hidden
@@ -202,14 +269,15 @@ export function PlayerContainer() {
         />
       )}
 
-      {/* Actual media element - rendered based on mode and media type */}
+      {/* Actual media element - always render one element, position changes based on mode */}
       {currentSession && mediaUrl && (
         <>
-          {/* Video: render in hidden div when NOT in expanded mode, or in expanded mode for audio */}
-          {/* In expanded mode for video, the video element is rendered in ExpandedPlayerContent */}
+          {/* Video: render in hidden div when NOT in expanded mode */}
+          {/* In expanded mode, video is rendered in ExpandedPlayerContent with the same ref */}
           {isVideo && mode !== 'expanded' && (
             <div className="hidden">
               <video
+                key={`video-${currentSession.mediaId}`}
                 ref={mediaRef as React.RefObject<HTMLVideoElement>}
                 src={mediaUrl}
                 onTimeUpdate={handleTimeUpdate}
@@ -227,6 +295,7 @@ export function PlayerContainer() {
           {!isVideo && (
             <div className="hidden">
               <audio
+                key={`audio-${currentSession.mediaId}`}
                 ref={mediaRef as React.RefObject<HTMLAudioElement>}
                 src={mediaUrl}
                 onTimeUpdate={handleTimeUpdate}

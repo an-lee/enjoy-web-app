@@ -55,6 +55,7 @@ export function ExpandedPlayerContent({
             <div className="w-full max-w-3xl aspect-video bg-black rounded-xl overflow-hidden">
               {mediaUrl && mediaRef ? (
                 <video
+                  key={`video-expanded-${mediaUrl}`}
                   ref={mediaRef as React.RefObject<HTMLVideoElement>}
                   src={mediaUrl}
                   onTimeUpdate={onTimeUpdate}
