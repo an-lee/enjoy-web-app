@@ -1,5 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { closeDatabase } from '@/page/db'
+import { createLogger } from '@/shared/lib/utils'
+
+const log = createLogger({ name: 'auth-store' })
 
 export interface User {
   id: string
@@ -35,7 +39,20 @@ export const useAuthStore = create<AuthState>()(
         set({ user, isAuthenticated: !!user && !!get().token })
       },
 
-      logout: () => {
+      logout: async () => {
+        const currentUser = get().user
+        const userId = currentUser?.id || null
+
+        // Close database for the logged-out user
+        if (userId) {
+          try {
+            await closeDatabase(userId)
+            log.info(`Database closed for user: ${userId}`)
+          } catch (error) {
+            log.error(`Failed to close database for user ${userId}:`, error)
+          }
+        }
+
         set({ token: null, user: null, isAuthenticated: false })
         // Token is automatically retrieved from store by API client interceptor
       },

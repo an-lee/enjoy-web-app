@@ -28,7 +28,7 @@ import { Toaster } from '@/page/components/ui/sonner'
 import { PlayerContainer } from '@/page/components/player'
 import { AppHotkeysProvider, HotkeysHelpModal, useAppHotkey } from '@/page/components/hotkeys'
 import { useAuthStore, usePlayerStore } from '@/page/stores'
-import { initDatabaseWithCleanup, initSyncManager } from '@/page/db'
+import { initDatabaseWithCleanup, initSyncManager, switchDatabase } from '@/page/db'
 
 // ============================================================================
 // Global Hotkeys Handler
@@ -182,6 +182,9 @@ function RootComponent() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Get current user from auth store
+  const currentUser = useAuthStore((state) => state.user)
+
   // Initialize database and sync manager after hydration
   useEffect(() => {
     // Only run on client side after hydration
@@ -192,9 +195,10 @@ function RootComponent() {
     // Initialize database and sync manager
     const initializeApp = async () => {
       try {
-        // Initialize database first
-        await initDatabaseWithCleanup()
-        log.info('Database initialized')
+        // Initialize database for current user (userId will be null if not logged in)
+        const userId = currentUser?.id || null
+        await initDatabaseWithCleanup(userId)
+        log.info(`Database initialized for user: ${userId || 'unauthenticated'}`)
 
         // Then initialize sync manager
         await initSyncManager({
@@ -209,7 +213,29 @@ function RootComponent() {
     }
 
     initializeApp()
-  }, [isHydrated, isLoginPage])
+  }, [isHydrated, isLoginPage, currentUser?.id])
+
+  // Handle database switching when user changes (login/logout)
+  useEffect(() => {
+    if (!isHydrated) {
+      return
+    }
+
+    const handleUserChange = async () => {
+      const state = useAuthStore.getState()
+      const userId = state.user?.id || null
+
+      try {
+        // Switch to the user's database
+        await switchDatabase(userId)
+        log.info(`Switched to database for user: ${userId || 'unauthenticated'}`)
+      } catch (error) {
+        log.error('Failed to switch database:', error)
+      }
+    }
+
+    handleUserChange()
+  }, [isHydrated, currentUser?.id])
 
   // Client-side auth check after hydration
   useEffect(() => {

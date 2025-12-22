@@ -239,10 +239,14 @@ export const mockDb = new MockEnjoyDatabase()
  * Call this in your test setup
  */
 export function setupDexieMock() {
-  vi.mock('@/db/schema', () => ({
+  vi.mock('@/page/db/schema', () => ({
     db: mockDb,
     EnjoyDatabase: MockEnjoyDatabase,
     initDatabase: vi.fn().mockResolvedValue(undefined),
+    getDatabase: vi.fn(() => mockDb),
+    getCurrentDatabase: vi.fn(() => mockDb),
+    switchDatabase: vi.fn().mockResolvedValue(mockDb),
+    closeDatabase: vi.fn().mockResolvedValue(undefined),
   }))
 }
 

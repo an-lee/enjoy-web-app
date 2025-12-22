@@ -12,15 +12,24 @@
 // Database Instance & Initialization
 // ============================================================================
 
-export { db, EnjoyDatabase, initDatabase } from './schema'
+export {
+  db,
+  EnjoyDatabase,
+  initDatabase,
+  getDatabase,
+  getCurrentDatabase,
+  switchDatabase,
+  closeDatabase,
+} from './schema'
 import { cleanupExpiredCache } from './repositories/cached-definition-repository'
 
 /**
  * Initialize database with cleanup (call this on app startup)
+ * @param userId - User ID to initialize database for, or null/undefined for unauthenticated state
  */
-export async function initDatabaseWithCleanup(): Promise<void> {
+export async function initDatabaseWithCleanup(userId: string | null | undefined = null): Promise<void> {
   const { initDatabase } = await import('./schema')
-  await initDatabase()
+  await initDatabase(userId)
   await cleanupExpiredCache()
 }
 
