@@ -4,7 +4,7 @@
  * Encapsulates prompt construction and LLM call for dictionary-style lookups.
  */
 
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
+import { DEFAULT_WORKERS_AI_DICTIONARY_MODEL } from '@/shared/constants'
 import { ServiceError } from '@/worker/utils/errors'
 import { createLogger } from '@/shared/lib/utils'
 
@@ -69,33 +69,60 @@ const log = createLogger({ name: 'dictionary-ai-service' })
  */
 function buildSystemPrompt(): string {
 	return [
-		'You are an AI-powered bilingual learner dictionary for language learners.',
-		'Your job is to explain a single word in a clear, structured way.',
-		'You must respond strictly in compact JSON, with no markdown, text, or comments outside JSON.',
-		'The JSON MUST follow this TypeScript-style schema:',
-		'{"word": string,                 // user query word as given',
-		'"sourceLanguage": string,',
-		'"targetLanguage": string,',
-		'"lemma": string,                // optional canonical base form, e.g. "run" for "running"; omit if unknown',
-		'"ipa": string,                  // optional IPA pronunciation for the headword in source language, e.g. "/rʌn/"; omit if unknown',
-		'"senses": [',
-		'  {',
-		'    "definition": string,              // explanation in source language, short and clear',
-		'    "translation": string,             // main translation in target language',
-		'    "partOfSpeech": string,           // e.g. "verb", "noun", "phrasal verb"',
-		'    "examples": [',
-		'      { "source": string, "target": string } // source/target bilingual example sentence',
-		'    ],',
-		'    "notes": string                    // optional usage notes; omit if not needed',
-		'  }',
-		']}',
-		'Rules:',
-		'- Include 1–3 main senses in "senses".',
-		'- Each sense should have at least 1 example sentence, preferably bilingual.',
-		'- Make explanations concise but informative for intermediate learners.',
-		'- Do NOT include any keys with null/undefined; just omit them.',
-		'- If the word is nonsense, a typo you cannot safely correct, or there is no reliable dictionary entry, return an empty array for "senses" and do NOT hallucinate definitions. You may still keep "word", "sourceLanguage", and "targetLanguage" filled.',
-		'- Output ONLY valid JSON. Do not wrap in markdown, do not add extra text.',
+		'You are a professional bilingual learner dictionary.',
+		'Return ONE dictionary entry as compact JSON only (no markdown, no extra text).',
+		'',
+		'The caller provides language codes (e.g. "en", "zh"). Follow them strictly:',
+		'- "definition" and examples[].source MUST be written in the SOURCE language.',
+		'- "translation" and examples[].target MUST be written in the TARGET language.',
+		'',
+		'Schema (JSON only):',
+		'{',
+		'  "word": string,',
+		'  "sourceLanguage": string,      // language code, e.g. "en"',
+		'  "targetLanguage": string,      // language code, e.g. "zh"',
+		'  "lemma": string,               // canonical base form; if unsure, reuse "word"',
+		'  "ipa": string,                 // IPA for headword in the source language (prefer /slashes/); omit only if truly unknown',
+		'  "senses": [',
+		'    {',
+		'      "definition": string,      // meaning explained in source language',
+		'      "translation": string,     // target-language equivalent word/phrase (not a rephrased definition)',
+		'      "partOfSpeech": string,',
+		'      "examples": [ { "source": string, "target": string } ],',
+		'      "notes": string            // optional',
+		'    }',
+		'  ]',
+		'}',
+		'',
+		'Example (en → zh):',
+		'{',
+		'  "word": "run",',
+		'  "sourceLanguage": "en",',
+		'  "targetLanguage": "zh",',
+		'  "lemma": "run",',
+		'  "ipa": "/rʌn/",',
+		'  "senses": [',
+		'    {',
+		'      "definition": "to move quickly on foot",',
+		'      "translation": "跑",',
+		'      "partOfSpeech": "verb",',
+		'      "examples": [ { "source": "I run every morning.", "target": "我每天早上跑步。" } ]',
+		'    }',
+		'  ]',
+		'}',
+		'',
+		'Coverage and quality:',
+		'- Include as many DISTINCT, commonly used senses as a good learner dictionary would list (core senses + common idioms/phrasal uses when applicable).',
+		'- Do not omit major senses. Merge near-duplicates. Order senses by frequency/usefulness.',
+		'- Keep each definition short and clear. Keep translation concise (a word or short phrase).',
+		'- Each sense must have at least 1 natural bilingual example.',
+		'- Add "notes" only when it adds real value (register, collocation, usage constraints).',
+		'- Omit optional fields rather than using null/undefined.',
+		'- If the word is invalid/unknown, return an empty "senses" array and do not invent content.',
+		'',
+		'Preflight check before you answer:',
+		'1) definition/examples.source in SOURCE language? 2) translation/examples.target in TARGET language?',
+		'3) lemma included (always) and ipa included (unless truly unknown)? 4) major distinct senses covered?',
 	].join('\n')
 }
 
@@ -107,9 +134,8 @@ function buildUserPrompt(params: DictionaryAIParams): string {
 
 	return [
 		`Word: "${word}"`,
-		`Source language (definition language): ${sourceLang}`,
-		`Target language (translation language): ${targetLang}`,
-		'Explain it like a good bilingual learner dictionary, following the JSON schema exactly.',
+		`Source language code: ${sourceLang}`,
+		`Target language code: ${targetLang}`,
 	].join('\n')
 }
 
@@ -183,7 +209,7 @@ export function parseDictionaryResult(raw: unknown): DictionaryAIResult {
 		lemma:
 			obj.lemma != null && String(obj.lemma).trim()
 				? String(obj.lemma).trim()
-				: undefined,
+				: String(obj.word).trim(),
 		ipa:
 			obj.ipa != null && String(obj.ipa).trim()
 				? String(obj.ipa).trim()
@@ -206,7 +232,7 @@ export async function generateDictionaryAIEntry(
 	ai: Ai,
 	params: DictionaryAIParams
 ): Promise<{ result: DictionaryAIResult; usage?: DictionaryAIUsage }> {
-	const model = (params.model || DEFAULT_WORKERS_AI_TEXT_MODEL) as any
+	const model = (params.model || DEFAULT_WORKERS_AI_DICTIONARY_MODEL) as any
 
 	const systemPrompt = buildSystemPrompt()
 	const userPrompt = buildUserPrompt(params)
@@ -216,8 +242,8 @@ export async function generateDictionaryAIEntry(
 			{ role: 'system', content: systemPrompt },
 			{ role: 'user', content: userPrompt },
 		],
-		temperature: 0.4,
-		max_tokens: 1024,
+		temperature: 0.2,
+		max_tokens: 1536,
 		// Enable Cloudflare Workers AI JSON Mode with an explicit schema.
 		// See: https://developers.cloudflare.com/workers-ai/features/json-mode/
 		response_format: {
@@ -235,8 +261,8 @@ export async function generateDictionaryAIEntry(
 						items: {
 							type: 'object',
 							properties: {
-								definition: { type: 'string' },
-								translation: { type: 'string' },
+								definition: { type: 'string', description: 'Explanation of the word\'s meaning, written in the source language' },
+								translation: { type: 'string', description: 'Equivalent word or phrase in the target language' },
 								partOfSpeech: { type: 'string' },
 								examples: {
 									type: 'array',
@@ -255,7 +281,7 @@ export async function generateDictionaryAIEntry(
 						},
 					},
 				},
-				required: ['word', 'sourceLanguage', 'targetLanguage', 'senses'],
+				required: ['word', 'sourceLanguage', 'targetLanguage', 'lemma', 'senses'],
 			},
 		},
 	}
