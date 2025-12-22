@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { db } from '@/page/db'
+import { getCurrentDatabase } from '@/page/db'
 import type { Audio, Video, AudioProvider, VideoProvider } from '@/page/types/db'
 
 // ============================================================================
@@ -116,13 +116,13 @@ async function fetchLibraryItems(
   const [audios, videos] = await Promise.all([
     mediaType === 'video'
       ? Promise.resolve([])
-      : db.audios
+      : getCurrentDatabase().audios
           .where('provider')
           .anyOf(USER_AUDIO_PROVIDERS)
           .toArray(),
     mediaType === 'audio'
       ? Promise.resolve([])
-      : db.videos
+      : getCurrentDatabase().videos
           .where('provider')
           .anyOf(USER_VIDEO_PROVIDERS)
           .toArray(),
@@ -163,8 +163,8 @@ async function fetchLibraryStats(): Promise<{
   totalCount: number
 }> {
   const [audioCount, videoCount] = await Promise.all([
-    db.audios.where('provider').anyOf(USER_AUDIO_PROVIDERS).count(),
-    db.videos.where('provider').anyOf(USER_VIDEO_PROVIDERS).count(),
+    getCurrentDatabase().audios.where('provider').anyOf(USER_AUDIO_PROVIDERS).count(),
+    getCurrentDatabase().videos.where('provider').anyOf(USER_VIDEO_PROVIDERS).count(),
   ])
 
   return {
@@ -225,9 +225,9 @@ export function useDeleteLibraryItem() {
       type: MediaType
     }): Promise<void> => {
       if (type === 'audio') {
-        await db.audios.delete(id)
+        await getCurrentDatabase().audios.delete(id)
       } else {
-        await db.videos.delete(id)
+        await getCurrentDatabase().videos.delete(id)
       }
     },
     onSuccess: () => {
