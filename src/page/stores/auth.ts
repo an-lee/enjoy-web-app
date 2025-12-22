@@ -53,7 +53,13 @@ export const useAuthStore = create<AuthState>()(
           }
         }
 
+        // Clear state first
         set({ token: null, user: null, isAuthenticated: false })
+
+        // Clear persisted data from localStorage to prevent restore
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('enjoy-auth')
+        }
         // Token is automatically retrieved from store by API client interceptor
       },
     }),

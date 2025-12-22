@@ -111,13 +111,13 @@ describe('Auth Store', () => {
       name: 'Test User',
     }
 
-    it('should clear token, user, and isAuthenticated', () => {
+    it('should clear token, user, and isAuthenticated', async () => {
       // First set up authenticated state
       useAuthStore.getState().setToken('test-token')
       useAuthStore.getState().setUser(mockUser)
       expect(useAuthStore.getState().isAuthenticated).toBe(true)
       // Then logout
-      useAuthStore.getState().logout()
+      await useAuthStore.getState().logout()
       const state = useAuthStore.getState()
       expect(state.token).toBeNull()
       expect(state.user).toBeNull()
