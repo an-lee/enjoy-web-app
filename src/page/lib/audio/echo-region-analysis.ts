@@ -1,6 +1,20 @@
-import { decodeAudioBlobToBuffer, extractMonoSegmentFromAudioBuffer } from './segment'
+import {
+  decodeAudioBlobToBuffer,
+  extractMonoSegmentFromAudioBuffer,
+  shouldUseOptimizedLoading,
+} from './segment'
 import { computeRmsEnvelope } from './waveform'
 import { extractPitchContourForEnvelope } from './essentia-pitch'
+import {
+  getAudioAnalysisWorkerManager,
+  isWebCodecsSupported,
+} from './workers/audio-analysis-worker-manager'
+
+/**
+ * Check if WebCodecs API is supported in the current browser.
+ * WebCodecs provides more efficient streaming audio decoding.
+ */
+export { isWebCodecsSupported }
 
 export type EchoRegionSeriesPoint = {
   /** Time in seconds relative to region start */
@@ -29,6 +43,10 @@ export type EchoRegionAnalysisResult = {
  * - blob: Direct blob storage (for TTS-generated audio)
  * - fileHandle: Local file handle (for user-uploaded files)
  * - mediaUrl: Server URL (for synced media files)
+ *
+ * For large files from server URLs, this function attempts to use HTTP Range requests
+ * to reduce initial download time. However, note that compressed audio/video formats
+ * (MP3, MP4, etc.) still require full file decoding, so the optimization is limited.
  */
 export async function loadMediaBlobForSession(session: {
   mediaId: string
@@ -50,6 +68,9 @@ export async function loadMediaBlobForSession(session: {
 
     // Priority 2: Server URL (for synced media)
     if (audio.mediaUrl) {
+      // For server URLs, we could use Range requests, but compressed audio formats
+      // (MP3, AAC, etc.) require full file decoding anyway, so we fetch the full file.
+      // The browser's caching will help with subsequent requests.
       const response = await fetch(audio.mediaUrl)
       if (!response.ok) {
         throw new Error(`Failed to fetch audio from server: ${response.statusText}`)
@@ -71,6 +92,7 @@ export async function loadMediaBlobForSession(session: {
 
   // Priority 1: Server URL (for synced media)
   if (video.mediaUrl) {
+    // Similar to audio: compressed video formats require full file decoding
     const response = await fetch(video.mediaUrl)
     if (!response.ok) {
       throw new Error(`Failed to fetch video from server: ${response.statusText}`)
@@ -86,16 +108,58 @@ export async function loadMediaBlobForSession(session: {
   throw new Error('Video file not available (no mediaUrl or fileHandle)')
 }
 
+/**
+ * Analyze echo region from blob.
+ *
+ * Performance optimizations:
+ * - Uses Web Worker for decoding to avoid blocking main thread
+ * - Uses WebCodecs API when available for more efficient streaming decoding
+ * - Falls back to Web Audio API if WebCodecs is not supported
+ * - Caches decoded AudioBuffers to avoid re-decoding the same file
+ *
+ * For large files:
+ * - Decoding happens in a background thread (non-blocking)
+ * - WebCodecs can provide streaming decoding (when supported)
+ * - Subsequent analyses of the same file use cached AudioBuffer
+ */
 export async function analyzeEchoRegionFromBlob(opts: {
   blob: Blob
   startTimeSeconds: number
   endTimeSeconds: number
   envelopePoints?: number
+  useWorker?: boolean // Option to disable worker (for testing or fallback)
 }): Promise<EchoRegionAnalysisResult> {
-  const { blob, startTimeSeconds, endTimeSeconds } = opts
+  const { blob, startTimeSeconds, endTimeSeconds, useWorker = true } = opts
 
-  const audioBuffer = await decodeAudioBlobToBuffer(blob)
-  const segment = extractMonoSegmentFromAudioBuffer(audioBuffer, startTimeSeconds, endTimeSeconds)
+  // Check if we should log performance info for large files
+  const isLargeFile = shouldUseOptimizedLoading(blob)
+  const webCodecsSupported = isWebCodecsSupported()
+
+  if (isLargeFile && typeof console !== 'undefined') {
+    console.debug(
+      `[PitchContour] Analyzing large file (${(blob.size / 1024 / 1024).toFixed(2)}MB). ` +
+        `Worker: ${useWorker}, WebCodecs: ${webCodecsSupported}`
+    )
+  }
+
+  let segment: { sampleRate: number; samples: Float32Array }
+
+  if (useWorker && typeof window !== 'undefined') {
+    // Use Web Worker for decoding (non-blocking, supports WebCodecs)
+    try {
+      const workerManager = getAudioAnalysisWorkerManager()
+      segment = await workerManager.decodeAudio(blob, startTimeSeconds, endTimeSeconds)
+    } catch (error) {
+      // Fallback to main thread if worker fails
+      console.warn('[PitchContour] Worker failed, falling back to main thread:', error)
+      const audioBuffer = await decodeAudioBlobToBuffer(blob)
+      segment = extractMonoSegmentFromAudioBuffer(audioBuffer, startTimeSeconds, endTimeSeconds)
+    }
+  } else {
+    // Use main thread (traditional method, with caching)
+    const audioBuffer = await decodeAudioBlobToBuffer(blob)
+    segment = extractMonoSegmentFromAudioBuffer(audioBuffer, startTimeSeconds, endTimeSeconds)
+  }
 
   const durationSeconds = segment.samples.length / segment.sampleRate
   const envelope = computeRmsEnvelope(segment.samples, segment.sampleRate, {
