@@ -8,7 +8,7 @@
  * - Delete: useDeleteAudio
  */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   db,
@@ -282,14 +282,40 @@ export function useAudiosByTranslationKey(
 
   const [audios, setAudios] = useState<AudioWithUrl[]>([])
 
+  // Create a stable reference key based on audio IDs to prevent infinite loops
+  // This ensures useEffect only runs when the actual audio data changes, not just the array reference
+  const audioListKey = useMemo(() => {
+    return audioList.map(a => a.id).sort().join(',')
+  }, [audioList])
+
+  // Track previous URLs for cleanup
+  const previousUrlsRef = useRef<string[]>([])
+  // Store audioList in a ref to access the latest value in useEffect
+  const audioListRef = useRef(audioList)
+  audioListRef.current = audioList
+
   useEffect(() => {
     let mounted = true
     let urls: string[] = []
 
-    createAudiosWithUrls(audioList).then((results) => {
+    // Cleanup previous URLs
+    previousUrlsRef.current.forEach((url) => {
+      URL.revokeObjectURL(url)
+    })
+    previousUrlsRef.current = []
+
+    // Use ref to get the latest audioList value
+    createAudiosWithUrls(audioListRef.current).then((results) => {
       if (mounted) {
         urls = results.map((a) => a.audioUrl)
+        previousUrlsRef.current = urls
         setAudios(results)
+      }
+    }).catch((error) => {
+      // Handle errors gracefully to prevent blocking
+      console.error('Failed to create audio URLs:', error)
+      if (mounted) {
+        setAudios([])
       }
     })
 
@@ -299,7 +325,7 @@ export function useAudiosByTranslationKey(
         URL.revokeObjectURL(url)
       })
     }
-  }, [audioList])
+  }, [audioListKey])
 
   const refetch = useCallback(async () => {
     await refetchQuery()
