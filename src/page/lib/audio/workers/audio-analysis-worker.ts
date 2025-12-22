@@ -5,6 +5,7 @@
  */
 
 import type { MonoPcmSegment } from '../segment'
+import { detectAudioFormat, getCodecConfig, extractAudioChunks } from './webcodecs-utils'
 
 // ============================================================================
 // Types
@@ -56,18 +57,27 @@ async function decodeWithWebCodecs(
   }
 
   const AudioDecoder = (self as any).AudioDecoder
-  const arrayBuffer = await blob.arrayBuffer()
+  const EncodedAudioChunk = (self as any).EncodedAudioChunk
 
-  // Detect codec from blob type
-  const mimeType = blob.type || ''
-  let codec = 'mp4a.40.2' // Default AAC
+  if (!AudioDecoder || !EncodedAudioChunk) {
+    throw new Error('WebCodecs APIs are not available')
+  }
 
-  if (mimeType.includes('mp3') || mimeType.includes('mpeg')) {
-    codec = 'mp3'
-  } else if (mimeType.includes('opus')) {
-    codec = 'opus'
-  } else if (mimeType.includes('vorbis')) {
-    codec = 'vorbis'
+  // Detect audio format
+  let formatInfo = await detectAudioFormat(blob)
+  if (formatInfo.format === 'unknown') {
+    throw new Error('Unable to detect audio format')
+  }
+
+  // Extract encoded chunks from the file (this may update formatInfo with additional metadata)
+  const extractionResult = await extractAudioChunks(blob, formatInfo)
+  formatInfo = extractionResult.formatInfo // Use updated format info with metadata
+  const encodedChunks = extractionResult.chunks
+
+  // Get codec configuration (with codec config buffer if available)
+  const codecConfig = await getCodecConfig(formatInfo, extractionResult.codecConfig)
+  if (!codecConfig) {
+    throw new Error(`Codec ${formatInfo.codec} is not supported by WebCodecs`)
   }
 
   return new Promise<MonoPcmSegment>((resolve, reject) => {
@@ -75,84 +85,115 @@ async function decodeWithWebCodecs(
     let sampleRate = 44100
     let numberOfChannels = 2
     let totalSamples = 0
+    let currentTimestamp = 0
+    let decoderError: Error | null = null
 
     const decoder = new AudioDecoder({
       output: (chunk: any) => {
-        // Convert AudioData to Float32Array
-        // AudioData format: { format: { sampleRate, numberOfChannels }, numberOfFrames, numberOfChannels, allocationSize }
-        const format = chunk.format
-        sampleRate = format.sampleRate
-        numberOfChannels = format.numberOfChannels
+        try {
+          // Convert AudioData to Float32Array
+          const format = chunk.format
+          sampleRate = format.sampleRate
+          numberOfChannels = format.numberOfChannels
 
-        // Copy audio data from AudioData
-        const frameCount = chunk.numberOfFrames
-        const channelData: Float32Array[] = []
+          // Copy audio data from AudioData
+          const frameCount = chunk.numberOfFrames
+          const channelData: Float32Array[] = []
 
-        for (let ch = 0; ch < numberOfChannels; ch++) {
-          const channel = new Float32Array(frameCount)
-          chunk.copyTo(channel, { planeIndex: ch })
-          channelData.push(channel)
-        }
-
-        // Mix to mono
-        const mono = new Float32Array(frameCount)
-        for (let i = 0; i < frameCount; i++) {
-          let sum = 0
           for (let ch = 0; ch < numberOfChannels; ch++) {
-            sum += channelData[ch][i]
+            const channel = new Float32Array(frameCount)
+            chunk.copyTo(channel, { planeIndex: ch })
+            channelData.push(channel)
           }
-          mono[i] = sum / numberOfChannels
+
+          // Mix to mono
+          const mono = new Float32Array(frameCount)
+          for (let i = 0; i < frameCount; i++) {
+            let sum = 0
+            for (let ch = 0; ch < numberOfChannels; ch++) {
+              sum += channelData[ch][i]
+            }
+            mono[i] = sum / numberOfChannels
+          }
+
+          audioChunks.push(mono)
+          totalSamples += frameCount
+
+          chunk.close()
+        } catch (error) {
+          console.error('[WebCodecs] Error processing audio chunk:', error)
+          decoderError = error instanceof Error ? error : new Error(String(error))
         }
-
-        audioChunks.push(mono)
-        totalSamples += frameCount
-
-        chunk.close()
       },
       error: (err: Error) => {
-        reject(err)
+        console.error('[WebCodecs] Decoder error:', err)
+        decoderError = err
+        // Don't reject immediately - let flush() handle it
       },
     })
 
     // Configure decoder
-    // Note: WebCodecs requires proper codec configuration string
-    // For MP4/AAC: 'mp4a.40.2', for MP3: 'mp3', etc.
-    // The actual configuration may need to be extracted from the file
-    // For now, we'll try a common configuration
     try {
       decoder.configure({
-        codec,
-        sampleRate: 44100, // Will be determined from actual data
-        numberOfChannels: 2,
+        codec: codecConfig.codec,
+        sampleRate: codecConfig.sampleRate,
+        numberOfChannels: codecConfig.numberOfChannels,
       })
     } catch (configError) {
-      // If configuration fails, the codec string might be wrong
-      // Fallback to Web Audio API
       reject(new Error(`WebCodecs configuration failed: ${configError}`))
       return
     }
 
-    // Create encoded chunk
-    // Note: For a complete file, we'd need to parse it into chunks
-    // This is a simplified version - in production, you'd want to parse the file format
-    const EncodedAudioChunk = (self as any).EncodedAudioChunk
-    if (!EncodedAudioChunk) {
-      reject(new Error('EncodedAudioChunk is not available'))
-      return
-    }
+    // Decode all chunks
+    const decodeChunks = async () => {
+      for (let i = 0; i < encodedChunks.length; i++) {
+        if (decoderError) {
+          reject(decoderError)
+          return
+        }
 
-    const chunk = new EncodedAudioChunk({
-      type: 'key', // First chunk is usually a key frame
-      timestamp: 0,
-      duration: 0,
-      data: arrayBuffer,
-    })
+        const chunkData = encodedChunks[i]
+        const chunk = new EncodedAudioChunk({
+          type: i === 0 ? 'key' : 'delta', // First chunk is key frame
+          timestamp: currentTimestamp,
+          duration: 0, // Duration will be determined by decoder
+          data: chunkData,
+        })
 
-    decoder.decode(chunk)
-    chunk.close?.()
+        try {
+          decoder.decode(chunk)
 
-    decoder.flush().then(() => {
+          // Estimate timestamp increment (rough approximation)
+          // Actual duration depends on codec and frame size
+          currentTimestamp += (chunkData.byteLength / 1000) * 1000000 // Rough estimate in microseconds
+        } catch (error) {
+          console.error(`[WebCodecs] Error decoding chunk ${i}:`, error)
+          decoderError = error instanceof Error ? error : new Error(String(error))
+          break
+        }
+      }
+
+      // Flush decoder
+      try {
+        await decoder.flush()
+      } catch (error) {
+        console.error('[WebCodecs] Flush error:', error)
+        if (!decoderError) {
+          decoderError = error instanceof Error ? error : new Error(String(error))
+        }
+      }
+
+      if (decoderError) {
+        reject(decoderError)
+        return
+      }
+
       // Combine all chunks
+      if (totalSamples === 0) {
+        resolve({ sampleRate, samples: new Float32Array() })
+        return
+      }
+
       const combined = new Float32Array(totalSamples)
       let offset = 0
       for (const chunk of audioChunks) {
@@ -175,7 +216,10 @@ async function decodeWithWebCodecs(
         sampleRate,
         samples: segment,
       })
-    })
+    }
+
+    // Start decoding
+    decodeChunks().catch(reject)
   })
 }
 
@@ -267,16 +311,29 @@ async function handleDecodeMessage(message: DecodeAudioMessage): Promise<WorkerR
     if (useWebCodecs && isWebCodecsSupported()) {
       // Try WebCodecs first (streaming, more efficient)
       try {
+        const startTime = performance.now()
         segment = await decodeWithWebCodecs(blob, startTimeSeconds, endTimeSeconds)
+        const decodeTime = performance.now() - startTime
+        console.debug(
+          `[AudioAnalysisWorker] WebCodecs decode completed in ${decodeTime.toFixed(2)}ms for ${(blob.size / 1024).toFixed(2)}KB`
+        )
       } catch (err) {
         // Fallback to Web Audio API if WebCodecs fails
-        console.warn('[AudioAnalysisWorker] WebCodecs failed, falling back to Web Audio API:', err)
+        const errorMsg = err instanceof Error ? err.message : String(err)
+        console.warn(
+          `[AudioAnalysisWorker] WebCodecs failed (${errorMsg}), falling back to Web Audio API`
+        )
         const audioBuffer = await decodeWithWebAudio(blob)
         segment = extractMonoSegment(audioBuffer, startTimeSeconds, endTimeSeconds)
       }
     } else {
       // Use Web Audio API (traditional method)
+      const startTime = performance.now()
       const audioBuffer = await decodeWithWebAudio(blob)
+      const decodeTime = performance.now() - startTime
+      console.debug(
+        `[AudioAnalysisWorker] Web Audio API decode completed in ${decodeTime.toFixed(2)}ms for ${(blob.size / 1024).toFixed(2)}KB`
+      )
       segment = extractMonoSegment(audioBuffer, startTimeSeconds, endTimeSeconds)
     }
 

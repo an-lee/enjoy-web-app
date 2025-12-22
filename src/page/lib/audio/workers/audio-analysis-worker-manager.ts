@@ -5,6 +5,7 @@
  */
 
 import type { MonoPcmSegment } from '../segment'
+import { useWorkerStatusStore } from '@/page/stores/worker-status'
 
 // ============================================================================
 // Types
@@ -25,6 +26,8 @@ class AudioAnalysisWorkerManager {
   private tasks = new Map<string, DecodeTask>()
   private taskIdCounter = 0
   private isWebCodecsSupported: boolean | null = null
+  private readonly workerId = 'audio-analysis-worker'
+  private readonly workerName = 'Audio Analysis Worker'
 
   /**
    * Initialize the worker
@@ -32,40 +35,75 @@ class AudioAnalysisWorkerManager {
   async init(): Promise<void> {
     if (this.worker) return
 
-    // Check WebCodecs support
+    const store = useWorkerStatusStore.getState()
+
+    // Check WebCodecs support first
     this.checkWebCodecsSupport()
 
-    // Create worker using the same pattern as other workers in the project
-    this.worker = new Worker(
-      new URL('./audio-analysis-worker.ts', import.meta.url),
-      { type: 'module' }
-    )
+    // Register worker in status store
+    store.registerWorker(this.workerId, this.workerName, 'audio-analysis', {
+      webCodecsSupported: this.isWebCodecsSupported ?? false,
+    })
+    store.updateWorkerStatus(this.workerId, 'initializing')
 
-    this.worker.onmessage = (event) => {
-      const response = event.data
-      const task = this.tasks.get(response.taskId)
+    try {
+      // Create worker using the same pattern as other workers in the project
+      this.worker = new Worker(
+        new URL('./audio-analysis-worker.ts', import.meta.url),
+        { type: 'module' }
+      )
 
-      if (!task) {
-        console.warn(`[AudioAnalysisWorkerManager] Unknown task ID: ${response.taskId}`)
-        return
+      this.worker.onmessage = (event) => {
+        const response = event.data
+        const task = this.tasks.get(response.taskId)
+
+        if (!task) {
+          console.warn(`[AudioAnalysisWorkerManager] Unknown task ID: ${response.taskId}`)
+          return
+        }
+
+        this.tasks.delete(response.taskId)
+
+        if (response.type === 'result') {
+          store.incrementTask(this.workerId, 'completed')
+          task.resolve(response.data)
+        } else if (response.type === 'error') {
+          store.incrementTask(this.workerId, 'failed')
+          store.updateWorkerError(this.workerId, response.error || 'Unknown error')
+          task.reject(new Error(response.error || 'Unknown error'))
+        }
       }
 
-      this.tasks.delete(response.taskId)
-
-      if (response.type === 'result') {
-        task.resolve(response.data)
-      } else if (response.type === 'error') {
-        task.reject(new Error(response.error || 'Unknown error'))
+      this.worker.onerror = (error) => {
+        console.error('[AudioAnalysisWorkerManager] Worker error:', error)
+        const errorMessage = error.message || 'Worker error occurred'
+        const errorName = (error as any).name || 'Error'
+        store.updateWorkerError(this.workerId, errorMessage, {
+          message: errorMessage,
+          name: errorName,
+        })
+        // Reject all pending tasks
+        for (const task of this.tasks.values()) {
+          task.reject(new Error('Worker error occurred'))
+        }
+        this.tasks.clear()
       }
-    }
 
-    this.worker.onerror = (error) => {
-      console.error('[AudioAnalysisWorkerManager] Worker error:', error)
-      // Reject all pending tasks
-      for (const task of this.tasks.values()) {
-        task.reject(new Error('Worker error occurred'))
+      this.worker.onmessageerror = (error) => {
+        console.error('[AudioAnalysisWorkerManager] Worker message error:', error)
+        store.updateWorkerError(this.workerId, 'Worker message error', {
+          message: 'Failed to deserialize message',
+        })
       }
-      this.tasks.clear()
+
+      store.updateWorkerStatus(this.workerId, 'ready')
+    } catch (error) {
+      store.updateWorkerStatus(this.workerId, 'error')
+      store.updateWorkerError(this.workerId, error instanceof Error ? error.message : 'Failed to initialize worker', {
+        message: error instanceof Error ? error.message : 'Failed to initialize worker',
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      throw error
     }
   }
 
@@ -97,7 +135,11 @@ class AudioAnalysisWorkerManager {
       throw new Error('Failed to initialize audio analysis worker')
     }
 
+    const store = useWorkerStatusStore.getState()
     const taskId = `task-${++this.taskIdCounter}`
+
+    store.updateWorkerStatus(this.workerId, 'running')
+    store.incrementTask(this.workerId, 'active')
 
     return new Promise<MonoPcmSegment>((resolve, reject) => {
       this.tasks.set(taskId, { taskId, resolve, reject })
@@ -111,6 +153,11 @@ class AudioAnalysisWorkerManager {
         endTimeSeconds,
         useWebCodecs: this.isWebCodecsSupported ?? false,
       })
+    }).finally(() => {
+      // Update status to ready if no active tasks
+      if (this.tasks.size === 0) {
+        store.updateWorkerStatus(this.workerId, 'ready')
+      }
     })
   }
 
@@ -128,11 +175,15 @@ class AudioAnalysisWorkerManager {
    * Terminate the worker
    */
   terminate(): void {
+    const store = useWorkerStatusStore.getState()
+
     if (this.worker) {
       this.worker.terminate()
       this.worker = null
     }
     this.tasks.clear()
+
+    store.updateWorkerStatus(this.workerId, 'terminated')
   }
 }
 

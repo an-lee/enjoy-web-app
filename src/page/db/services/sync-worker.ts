@@ -5,8 +5,12 @@
  * only handles network requests. Database operations are done via postMessage.
  */
 
+import { useWorkerStatusStore } from '@/page/stores/worker-status'
+
 // Worker context
 let workerContext: Worker | null = null
+const WORKER_ID = 'sync-worker'
+const WORKER_NAME = 'Sync Worker'
 
 // ============================================================================
 // Types
@@ -110,7 +114,39 @@ function createSyncWorker(): Worker {
  */
 function getSyncWorker(): Worker {
   if (!workerContext) {
-    workerContext = createSyncWorker()
+    const store = useWorkerStatusStore.getState()
+
+    // Register worker in status store
+    store.registerWorker(WORKER_ID, WORKER_NAME, 'sync')
+    store.updateWorkerStatus(WORKER_ID, 'initializing')
+
+    try {
+      workerContext = createSyncWorker()
+
+      workerContext.addEventListener('error', (error) => {
+        const store = useWorkerStatusStore.getState()
+        store.updateWorkerError(WORKER_ID, 'Worker error occurred', {
+          message: error.message || 'Worker error occurred',
+        })
+      })
+
+      workerContext.addEventListener('messageerror', () => {
+        const store = useWorkerStatusStore.getState()
+        store.updateWorkerError(WORKER_ID, 'Worker message error', {
+          message: 'Failed to deserialize message',
+        })
+      })
+
+      store.updateWorkerStatus(WORKER_ID, 'ready')
+    } catch (error) {
+      const store = useWorkerStatusStore.getState()
+      store.updateWorkerStatus(WORKER_ID, 'error')
+      store.updateWorkerError(WORKER_ID, error instanceof Error ? error.message : 'Failed to initialize worker', {
+        message: error instanceof Error ? error.message : 'Failed to initialize worker',
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+      throw error
+    }
   }
   return workerContext
 }
@@ -119,10 +155,14 @@ function getSyncWorker(): Worker {
  * Terminate sync worker
  */
 export function terminateSyncWorker(): void {
+  const store = useWorkerStatusStore.getState()
+
   if (workerContext) {
     workerContext.terminate()
     workerContext = null
   }
+
+  store.updateWorkerStatus(WORKER_ID, 'terminated')
 }
 
 // ============================================================================
@@ -133,6 +173,10 @@ export function terminateSyncWorker(): void {
  * Send message to sync worker and wait for response
  */
 function sendToWorker(message: SyncWorkerMessage): Promise<SyncWorkerResponse> {
+  const store = useWorkerStatusStore.getState()
+  store.updateWorkerStatus(WORKER_ID, 'running')
+  store.incrementTask(WORKER_ID, 'active')
+
   return new Promise((resolve, reject) => {
     const worker = getSyncWorker()
     const messageId = `${Date.now()}-${Math.random()}`
@@ -140,10 +184,20 @@ function sendToWorker(message: SyncWorkerMessage): Promise<SyncWorkerResponse> {
     const handler = (e: MessageEvent<SyncWorkerResponse>) => {
       if (e.data.id === messageId) {
         worker.removeEventListener('message', handler)
+
         if (e.data.type === 'error') {
+          store.incrementTask(WORKER_ID, 'failed')
+          store.updateWorkerError(WORKER_ID, e.data.error || 'Unknown error')
           reject(new Error(e.data.error || 'Unknown error'))
         } else {
+          store.incrementTask(WORKER_ID, 'completed')
           resolve(e.data)
+        }
+
+        // Update status to ready if no active tasks
+        const currentStatus = store.getWorkerStatus(WORKER_ID)
+        if (currentStatus && currentStatus.activeTasks === 0) {
+          store.updateWorkerStatus(WORKER_ID, 'ready')
         }
       }
     }

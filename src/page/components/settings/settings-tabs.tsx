@@ -19,7 +19,7 @@ export function SettingsTabs({
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="general" className="flex items-center gap-2">
           <Icon icon="lucide:settings" className="h-4 w-4" />
           {t('settings.tabs.general', { defaultValue: 'General' })}
