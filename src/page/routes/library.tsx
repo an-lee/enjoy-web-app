@@ -55,24 +55,63 @@ const PAGE_SIZE = 12
 // Helper Functions
 // ============================================================================
 
-async function getMediaDuration(file: File): Promise<number> {
+async function getMediaDuration(
+  fileOrHandle: File | FileSystemFileHandle
+): Promise<number> {
+  // Get file from handle if needed
+  const file = fileOrHandle instanceof File
+    ? fileOrHandle
+    : await fileOrHandle.getFile()
+
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const isVideo = file.type.startsWith('video/')
     const media = isVideo ? document.createElement('video') : document.createElement('audio')
+    let isResolved = false
+
+    // Add timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      if (!isResolved) {
+        isResolved = true
+        URL.revokeObjectURL(url)
+        reject(new Error('Timeout while loading media metadata'))
+      }
+    }, 30000) // 30 seconds timeout
+
+    const cleanup = () => {
+      if (!isResolved) {
+        isResolved = true
+        clearTimeout(timeout)
+        URL.revokeObjectURL(url)
+      }
+    }
 
     media.onloadedmetadata = () => {
+      if (isResolved) return
       const duration = Math.round(media.duration)
-      URL.revokeObjectURL(url)
+      cleanup()
       resolve(duration)
     }
 
     media.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Failed to load media'))
+      if (isResolved) return
+      cleanup()
+      reject(new Error('Failed to load media metadata'))
     }
 
-    media.src = url
+    // Handle potential permission errors
+    media.onabort = () => {
+      if (isResolved) return
+      cleanup()
+      reject(new Error('Media loading was aborted'))
+    }
+
+    try {
+      media.src = url
+    } catch (err) {
+      cleanup()
+      reject(new Error('Failed to set media source'))
+    }
   })
 }
 
@@ -153,45 +192,53 @@ function Library() {
   )
 
   const handleImport = useCallback(
-    async (fileOrHandle: File | FileSystemFileHandle, metadata: MediaMetadata) => {
+    async (
+      fileHandle: FileSystemFileHandle | null,
+      file: File,
+      metadata: MediaMetadata
+    ) => {
       try {
-        let fileHandle: FileSystemFileHandle
-        let file: File
+        let finalFileHandle: FileSystemFileHandle
 
-        // If we have a FileSystemFileHandle, use it directly
-        if (fileOrHandle instanceof File) {
-          // Convert File to FileSystemFileHandle
+        // If we have a FileSystemFileHandle from File System Access API, use it directly
+        if (fileHandle) {
+          finalFileHandle = fileHandle
+        } else {
+          // Convert File to FileSystemFileHandle (traditional file input)
           // Note: This requires user interaction to save the file
-          const handle = await getFileHandleFromFile(fileOrHandle)
+          const handle = await getFileHandleFromFile(file)
           if (!handle) {
             // User cancelled file save dialog - throw error to be handled by dialog
             throw new Error(t('library.import.cancelled'))
           }
-          fileHandle = handle
-          file = fileOrHandle
-        } else {
-          // We already have a FileSystemFileHandle
-          fileHandle = fileOrHandle
-          file = await fileHandle.getFile()
+          finalFileHandle = handle
         }
 
         const isVideo = file.type.startsWith('video/')
-        const duration = await getMediaDuration(file)
 
+        // Use fileHandle to get duration to avoid ObjectURL locking issues with the original file
+        // This ensures we're using a fresh file instance from the handle
+        const duration = await getMediaDuration(finalFileHandle)
+
+        // Get a fresh file instance for hash calculation to avoid conflicts with ObjectURL
+        // We need to get it after duration calculation to avoid simultaneous file access
+        const fileForHash = await finalFileHandle.getFile()
+
+        // Pass the file object to avoid multiple getFile() calls which can cause permission issues
         if (isVideo) {
-          await saveLocalVideo(fileHandle, {
+          await saveLocalVideo(finalFileHandle, {
             title: metadata.title,
             description: metadata.description,
             language: metadata.language,
             duration,
-          })
+          }, undefined, fileForHash)
         } else {
-          await saveLocalAudio(fileHandle, {
+          await saveLocalAudio(finalFileHandle, {
             title: metadata.title,
             description: metadata.description,
             language: metadata.language,
             duration,
-          })
+          }, undefined, fileForHash)
         }
 
         toast.success(t('library.import.success'))
@@ -201,6 +248,16 @@ function Library() {
         setMediaType('all')
       } catch (err) {
         log.error('Failed to import media:', err)
+        // Provide more specific error messages
+        if (err instanceof Error) {
+          if (err.name === 'NotReadableError' || err.message.includes('could not be read')) {
+            throw new Error(
+              t('library.import.fileAccessError', {
+                defaultValue: 'File access error. Please ensure the file is not moved or deleted, and try again.',
+              })
+            )
+          }
+        }
         // Re-throw error so ImportMediaDialog can handle it
         throw err
       }

@@ -125,19 +125,21 @@ export async function saveVideo(input: VideoInput): Promise<string> {
  * @param fileHandle - FileSystemFileHandle for the video file
  * @param input - Video metadata (without vid and provider)
  * @param source - Optional original URL if downloaded from web
+ * @param file - Optional File object to avoid multiple getFile() calls
  */
 export async function saveLocalVideo(
   fileHandle: FileSystemFileHandle,
   input: Omit<VideoInput, 'vid' | 'provider' | 'fileHandle' | 'md5' | 'size'>,
-  source?: string
+  source?: string,
+  file?: File
 ): Promise<string> {
   const now = new Date().toISOString()
 
-  // Get file to calculate hash and size
-  const file = await fileHandle.getFile()
-  const vid = await generateLocalVideoVid(file)
+  // Get file to calculate hash and size (use provided file if available to avoid multiple getFile() calls)
+  const fileObj = file || await fileHandle.getFile()
+  const vid = await generateLocalVideoVid(fileObj)
   const md5 = vid // md5 is same as vid (both are SHA-256 hash)
-  const size = file.size
+  const size = fileObj.size
   const id = generateVideoId('user', vid)
 
   const existing = await db.videos.get(id)

@@ -41,7 +41,11 @@ import { selectFileWithHandle } from '@/page/lib/file-helpers'
 export interface ImportMediaDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onImport: (file: File | FileSystemFileHandle, metadata: MediaMetadata) => Promise<void>
+  onImport: (
+    fileHandle: FileSystemFileHandle | null,
+    file: File,
+    metadata: MediaMetadata
+  ) => Promise<void>
 }
 
 export interface MediaMetadata {
@@ -215,11 +219,11 @@ export function ImportMediaDialog({
     setError(null)
 
     try {
-      // Prefer fileHandle if available (from File System Access API)
-      const fileOrHandle = selectedFileHandle || selectedFile
-      if (!fileOrHandle) return
+      // We need both fileHandle and file
+      // If we have fileHandle, use it; otherwise fileHandle will be null (traditional file input)
+      if (!selectedFile) return
 
-      await onImport(fileOrHandle, {
+      await onImport(selectedFileHandle, selectedFile, {
         title: title.trim(),
         description: description.trim() || undefined,
         language,
@@ -395,7 +399,7 @@ export function ImportMediaDialog({
           </Button>
           <Button
             onClick={handleImport}
-            disabled={(!selectedFile && !selectedFileHandle) || !title.trim() || isImporting}
+            disabled={!selectedFile || !title.trim() || isImporting}
           >
             {isImporting ? (
               <>

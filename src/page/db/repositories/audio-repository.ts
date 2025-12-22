@@ -247,15 +247,16 @@ export async function saveTTSAudio(input: TTSAudioInput): Promise<string> {
 export async function saveLocalAudio(
   fileHandle: FileSystemFileHandle,
   input: Omit<UserAudioInput, 'aid' | 'provider' | 'fileHandle' | 'md5' | 'size'>,
-  source?: string
+  source?: string,
+  file?: File
 ): Promise<string> {
   const now = new Date().toISOString()
 
-  // Get file to calculate hash and size
-  const file = await fileHandle.getFile()
-  const aid = await generateLocalAudioAid(file)
+  // Get file to calculate hash and size (use provided file if available to avoid multiple getFile() calls)
+  const fileObj = file || await fileHandle.getFile()
+  const aid = await generateLocalAudioAid(fileObj)
   const md5 = aid // md5 is same as aid (both are SHA-256 hash)
-  const size = file.size
+  const size = fileObj.size
   const id = generateAudioId('user', aid)
 
   const existing = await db.audios.get(id)
