@@ -86,7 +86,7 @@ Returns the list of available Workers AI models that are exposed via the OpenAI-
 ```
 
 - The actual `id` values come from:
-  - `Env.WORKERS_AI_TEXT_MODEL` (text model, default: `DEFAULT_WORKERS_AI_TEXT_MODEL`)
+  - `Env.WORKERS_AI_TEXT_MODEL` (text model)
   - `Env.WORKERS_AI_TTS_MODEL` (TTS model, default: `@cf/myshell-ai/melotts`)
 
 > **Frontend usage**: When using generic OpenAI clients, this endpoint can be used to introspect supported model IDs.
@@ -119,7 +119,7 @@ This endpoint is **OpenAI Chat Completions compatible** and internally routes to
 ```
 
 - `model`:
-  - Optional, defaults to `Env.WORKERS_AI_TEXT_MODEL` or `DEFAULT_WORKERS_AI_TEXT_MODEL`
+  - Optional, defaults to `Env.WORKERS_AI_TEXT_MODEL`
 - `messages`:
   - **Required**, must be an array. Same structure as OpenAI (`role` + `content`).
 - `stream`:

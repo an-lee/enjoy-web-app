@@ -17,7 +17,7 @@ export interface TranslationResponse {
  */
 export interface SmartTranslationResponse {
   translatedText: string
-  aiModel: string
+  aiModel?: string
   tokensUsed?: number
 }
 

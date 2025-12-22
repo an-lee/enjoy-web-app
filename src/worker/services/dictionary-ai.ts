@@ -4,7 +4,6 @@
  * Encapsulates prompt construction and LLM call for dictionary-style lookups.
  */
 
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 import { ServiceError } from '@/worker/utils/errors'
 import { createLogger } from '@/shared/lib/utils'
 
@@ -45,7 +44,7 @@ export interface DictionaryAIParams {
 	word: string
 	sourceLang: string
 	targetLang: string
-	model?: string
+	model: string
 }
 
 export interface DictionaryAIUsage {
@@ -232,7 +231,7 @@ export async function generateDictionaryAIEntry(
 	ai: Ai,
 	params: DictionaryAIParams
 ): Promise<{ result: DictionaryAIResult; usage?: DictionaryAIUsage }> {
-	const model = (params.model || DEFAULT_WORKERS_AI_TEXT_MODEL) as any
+	const model = params.model as any
 
 	const systemPrompt = buildSystemPrompt()
 	const userPrompt = buildUserPrompt(params)

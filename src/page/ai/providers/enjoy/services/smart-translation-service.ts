@@ -11,7 +11,6 @@ import type { AIServiceResponse, SmartTranslationResponse } from '../../../types
 import { AIServiceType, AIProvider } from '../../../types'
 import type { TranslationStyle } from '@/page/db/schema'
 import { buildSmartTranslationPrompt } from '../../../prompts'
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 
 /**
  * Smart translation with style support
@@ -56,7 +55,6 @@ export async function smartTranslate(
       success: true,
       data: {
         translatedText,
-        aiModel: DEFAULT_WORKERS_AI_TEXT_MODEL,
       },
       metadata: {
         serviceType: AIServiceType.SMART_TRANSLATION,

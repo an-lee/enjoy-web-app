@@ -7,7 +7,6 @@ import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '../middleware/auth'
 import { handleError } from '@/worker/utils/errors'
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 
 const models = new Hono<{
 	Bindings: Env
@@ -28,8 +27,8 @@ models.use('/*', authMiddleware)
 models.get('/', async (c) => {
 	try {
 		const env = c.env
-		const textModel = env.WORKERS_AI_TEXT_MODEL || DEFAULT_WORKERS_AI_TEXT_MODEL
-		const ttsModel = env.WORKERS_AI_TTS_MODEL || '@cf/myshell-ai/melotts'
+		const textModel = env.WORKERS_AI_TEXT_MODEL
+		const ttsModel = env.WORKERS_AI_TTS_MODEL
 
 		return c.json({
 			object: 'list',

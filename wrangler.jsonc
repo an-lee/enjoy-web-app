@@ -83,7 +83,7 @@
 	"vars": {
 		"AZURE_SPEECH_REGION": "southeastasia",
 		"API_BASE_URL": "https://enjoy.bot",
-		"WORKERS_AI_TEXT_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast",
+		"WORKERS_AI_TEXT_MODEL": "@cf/meta/llama-4-scout-17b-16e-instruct",
 		"WORKERS_AI_TTS_MODEL": "@cf/myshell-ai/melotts",
 		"WORKERS_AI_ASR_MODEL": "@cf/openai/whisper-large-v3-turbo"
 	},

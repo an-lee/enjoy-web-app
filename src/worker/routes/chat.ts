@@ -8,7 +8,6 @@ import { authMiddleware } from '../middleware/auth'
 import type { UserProfile } from '../middleware/auth'
 import { handleError, RateLimitError } from '@/worker/utils/errors'
 import { createLogger } from '@/shared/lib/utils'
-import { DEFAULT_WORKERS_AI_TEXT_MODEL } from '@/shared/constants'
 import { enforceCreditsLimit } from '../middleware/credits'
 
 // ============================================================================
@@ -45,7 +44,6 @@ chat.post('/completions', async (c) => {
 		const body = await c.req.json()
 		const {
 			messages,
-			model = env.WORKERS_AI_TEXT_MODEL || DEFAULT_WORKERS_AI_TEXT_MODEL,
 			temperature = 0.7,
 			max_tokens = 2048,
 			stream = false,
@@ -81,6 +79,9 @@ chat.post('/completions', async (c) => {
 		if (presence_penalty !== undefined) {
 			aiParams.presence_penalty = presence_penalty
 		}
+
+		// Use the model from the environment variables, ignore the model parameter
+		const model = env.WORKERS_AI_TEXT_MODEL as any
 
 		// Handle non-streaming response with Credits enforcement
 		const response = await ai.run(model, aiParams)
