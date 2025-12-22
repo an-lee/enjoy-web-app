@@ -198,6 +198,7 @@
     "repeatAll": "Repetir tudo",
     "continueLearning": "Continuar aprendendo",
     "mediaNotFound": "Mídia não encontrada",
+    "loadingFailed": "Falha ao carregar mídia",
     "dictationMode": "Modo ditado",
     "echoMode": "Modo eco",
     "transcript": {
@@ -481,6 +482,13 @@
         "forceHint": "O download forçado buscará todos os registros, ignorando a sincronização incremental"
       }
     }
+  },
+  "fileAccess": {
+    "mediaNotAvailable": "Arquivo de mídia não disponível. Por favor, selecione o arquivo ou certifique-se de que ele foi enviado.",
+    "fileNotFound": "Falha ao acessar o arquivo. O arquivo pode ter sido movido, excluído ou a permissão foi revogada.",
+    "permissionDenied": "A permissão de acesso ao arquivo foi negada. Por favor, selecione o arquivo novamente para conceder acesso.",
+    "permissionRequired": "A permissão de acesso ao arquivo é necessária. Por favor, conceda acesso quando solicitado ou selecione o arquivo novamente.",
+    "fileAccessFailed": "Falha ao acessar o arquivo local. O arquivo pode ter sido movido ou excluído."
   },
   "credits": {
     "title": "Uso de IA",

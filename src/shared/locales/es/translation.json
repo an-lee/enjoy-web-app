@@ -198,6 +198,7 @@
     "repeatAll": "Repetir todo",
     "continueLearning": "Continuar aprendiendo",
     "mediaNotFound": "Medio no encontrado",
+    "loadingFailed": "Error al cargar el medio",
     "dictationMode": "Modo dictado",
     "echoMode": "Modo eco",
     "transcript": {
@@ -481,6 +482,13 @@
         "forceHint": "La descarga forzada obtendrá todos los registros, ignorando la sincronización incremental"
       }
     }
+  },
+  "fileAccess": {
+    "mediaNotAvailable": "Archivo de medios no disponible. Por favor, seleccione el archivo o asegúrese de que esté cargado.",
+    "fileNotFound": "Error al acceder al archivo. El archivo puede haber sido movido, eliminado o se revocó el permiso.",
+    "permissionDenied": "Se denegó el permiso de acceso al archivo. Por favor, seleccione el archivo nuevamente para otorgar acceso.",
+    "permissionRequired": "Se requiere permiso de acceso al archivo. Por favor, otorgue acceso cuando se le solicite o seleccione el archivo nuevamente.",
+    "fileAccessFailed": "Error al acceder al archivo local. El archivo puede haber sido movido o eliminado."
   },
   "credits": {
     "title": "Uso de IA",

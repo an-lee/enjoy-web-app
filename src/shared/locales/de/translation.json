@@ -198,6 +198,7 @@
     "repeatAll": "Alle wiederholen",
     "continueLearning": "Weiter lernen",
     "mediaNotFound": "Medien nicht gefunden",
+    "loadingFailed": "Medien konnten nicht geladen werden",
     "dictationMode": "Diktat-Modus",
     "echoMode": "Nachsprech-Modus",
     "transcript": {
@@ -481,6 +482,13 @@
         "forceHint": "Erzwungener Download lädt alle Datensätze herunter und ignoriert inkrementelle Synchronisierung"
       }
     }
+  },
+  "fileAccess": {
+    "mediaNotAvailable": "Mediendatei nicht verfügbar. Bitte wählen Sie die Datei aus oder stellen Sie sicher, dass sie hochgeladen wurde.",
+    "fileNotFound": "Zugriff auf die Datei fehlgeschlagen. Die Datei wurde möglicherweise verschoben, gelöscht oder die Berechtigung wurde widerrufen.",
+    "permissionDenied": "Die Dateizugriffsberechtigung wurde verweigert. Bitte wählen Sie die Datei erneut aus, um den Zugriff zu gewähren.",
+    "permissionRequired": "Die Dateizugriffsberechtigung ist erforderlich. Bitte gewähren Sie den Zugriff, wenn Sie dazu aufgefordert werden, oder wählen Sie die Datei erneut aus.",
+    "fileAccessFailed": "Zugriff auf lokale Datei fehlgeschlagen. Die Datei wurde möglicherweise verschoben oder gelöscht."
   },
   "credits": {
     "title": "KI-Nutzung",

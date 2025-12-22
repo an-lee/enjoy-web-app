@@ -51,7 +51,7 @@ function getValue(obj: TranslationData, keyPath: string): any {
 }
 
 async function checkLocales() {
-  const localesDir = join(process.cwd(), "src", "locales");
+  const localesDir = join(process.cwd(), "src", "shared", "locales");
   const locales: Record<string, TranslationData> = {};
 
   // Read all locale files

@@ -198,6 +198,7 @@
     "repeatAll": "Repeat all",
     "continueLearning": "Continue Learning",
     "mediaNotFound": "Media not found",
+    "loadingFailed": "Failed to load media",
     "dictationMode": "Dictation mode",
     "echoMode": "Echo practice",
     "transcript": {
@@ -481,6 +482,13 @@
         "forceHint": "Force download will fetch all records, ignoring incremental sync"
       }
     }
+  },
+  "fileAccess": {
+    "mediaNotAvailable": "Media file not available. Please select the file or ensure it is uploaded.",
+    "fileNotFound": "Failed to access file. The file may have been moved, deleted, or permission was revoked.",
+    "permissionDenied": "File access permission was denied. Please select the file again to grant access.",
+    "permissionRequired": "File access permission is required. Please grant access when prompted, or select the file again.",
+    "fileAccessFailed": "Failed to access local file. The file may have been moved or deleted."
   },
   "credits": {
     "title": "AI Usage",

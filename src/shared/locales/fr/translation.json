@@ -198,6 +198,7 @@
     "repeatAll": "Répéter tout",
     "continueLearning": "Continuer à apprendre",
     "mediaNotFound": "Média non trouvé",
+    "loadingFailed": "Échec du chargement du média",
     "dictationMode": "Mode dictée",
     "echoMode": "Mode écho",
     "transcript": {
@@ -481,6 +482,13 @@
         "forceHint": "Le téléchargement forcé récupérera tous les enregistrements, en ignorant la synchronisation incrémentale"
       }
     }
+  },
+  "fileAccess": {
+    "mediaNotAvailable": "Fichier média non disponible. Veuillez sélectionner le fichier ou vous assurer qu'il est téléchargé.",
+    "fileNotFound": "Impossible d'accéder au fichier. Le fichier a peut-être été déplacé, supprimé ou l'autorisation a été révoquée.",
+    "permissionDenied": "L'autorisation d'accès au fichier a été refusée. Veuillez sélectionner à nouveau le fichier pour accorder l'accès.",
+    "permissionRequired": "L'autorisation d'accès au fichier est requise. Veuillez accorder l'accès lorsque vous y êtes invité, ou sélectionner à nouveau le fichier.",
+    "fileAccessFailed": "Impossible d'accéder au fichier local. Le fichier a peut-être été déplacé ou supprimé."
   },
   "credits": {
     "title": "Utilisation IA",

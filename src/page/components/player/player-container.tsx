@@ -11,10 +11,11 @@
  */
 
 import { useRef, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { usePlayerStore } from '@/page/stores/player'
 import { db } from '@/page/db'
 import { createLogger } from '@/shared/lib/utils'
-import { getMediaUrl } from '@/page/lib/file-access'
+import { getMediaUrl, FileAccessError } from '@/page/lib/file-access'
 import { useMediaElement, setDisplayTime } from '@/page/hooks/player'
 import { MiniPlayerBar } from './mini-player-bar'
 import { ExpandedPlayer } from './expanded-player'
@@ -31,6 +32,7 @@ const log = createLogger({ name: 'PlayerContainer' })
 // ============================================================================
 
 export function PlayerContainer() {
+  const { t } = useTranslation()
   const mode = usePlayerStore((state) => state.mode)
   const currentSession = usePlayerStore((state) => state.currentSession)
   const isPlaying = usePlayerStore((state) => state.isPlaying)
@@ -95,7 +97,14 @@ export function PlayerContainer() {
       } catch (err) {
         if (!isMounted) return
         log.error('Loading media failed:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load media')
+
+        // Handle FileAccessError with i18n
+        if (err instanceof FileAccessError) {
+          setError(t(err.code))
+        } else {
+          // Fallback for other errors
+          setError(t('player.loadingFailed'))
+        }
         setIsLoading(false)
       }
     }

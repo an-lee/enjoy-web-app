@@ -8,6 +8,41 @@
 import type { Video, Audio } from '@/page/types/db'
 
 // ============================================================================
+// Error Types
+// ============================================================================
+
+/**
+ * Standardized file access error with i18n key
+ */
+export class FileAccessError extends Error {
+  constructor(
+    public readonly code: string,
+    message: string,
+    public readonly originalError?: Error
+  ) {
+    super(message)
+    this.name = 'FileAccessError'
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, FileAccessError)
+    }
+  }
+}
+
+/**
+ * File access error codes for i18n translation
+ */
+export const FileAccessErrorCode = {
+  MEDIA_NOT_AVAILABLE: 'fileAccess.mediaNotAvailable',
+  FILE_NOT_FOUND: 'fileAccess.fileNotFound',
+  PERMISSION_DENIED: 'fileAccess.permissionDenied',
+  PERMISSION_REQUIRED: 'fileAccess.permissionRequired',
+  FILE_ACCESS_FAILED: 'fileAccess.fileAccessFailed',
+} as const
+
+export type FileAccessErrorCode = typeof FileAccessErrorCode[keyof typeof FileAccessErrorCode]
+
+// ============================================================================
 // Constants
 // ============================================================================
 
@@ -74,19 +109,22 @@ export async function getMediaUrl(media: Video | Audio): Promise<string> {
       const file = await getFileFromHandle(media.fileHandle)
       return URL.createObjectURL(file)
     } catch (error) {
-      // Re-throw permission errors as-is (they have specific messages)
-      if (error instanceof Error && error.message.includes('permission')) {
+      // Re-throw FileAccessError as-is (they have error codes for i18n)
+      if (error instanceof FileAccessError) {
         throw error
       }
-      // For other errors, provide a generic message
-      throw new Error(
-        'Failed to access local file. The file may have been moved or deleted.'
+      // For other errors, wrap in FileAccessError
+      throw new FileAccessError(
+        FileAccessErrorCode.FILE_ACCESS_FAILED,
+        'Failed to access local file. The file may have been moved or deleted.',
+        error instanceof Error ? error : undefined
       )
     }
   }
 
   // 4. No media available
-  throw new Error(
+  throw new FileAccessError(
+    FileAccessErrorCode.MEDIA_NOT_AVAILABLE,
     'Media file not available. Please select the file or ensure it is uploaded.'
   )
 }
@@ -190,8 +228,8 @@ export async function requestFileHandlePermission(
  * Ensure file handle has read permission, requesting if needed
  *
  * @param handle - File handle to ensure permission for
- * @returns Promise<true> if permission is granted, throws Error if denied
- * @throws Error if permission is denied
+ * @returns Promise<true> if permission is granted, throws FileAccessError if denied
+ * @throws FileAccessError if permission is denied
  */
 export async function ensureFileHandlePermission(
   handle: FileSystemFileHandle
@@ -204,7 +242,8 @@ export async function ensureFileHandlePermission(
   }
 
   if (currentStatus === 'denied') {
-    throw new Error(
+    throw new FileAccessError(
+      FileAccessErrorCode.PERMISSION_DENIED,
       'File access permission was denied. Please select the file again to grant access.'
     )
   }
@@ -216,7 +255,8 @@ export async function ensureFileHandlePermission(
     return true
   }
 
-  throw new Error(
+  throw new FileAccessError(
+    FileAccessErrorCode.PERMISSION_REQUIRED,
     'File access permission is required. Please grant access when prompted, or select the file again.'
   )
 }
@@ -274,8 +314,10 @@ export async function getFileFromHandle(
   try {
     return await handle.getFile()
   } catch (error) {
-    throw new Error(
-      'Failed to access file. The file may have been moved, deleted, or permission was revoked.'
+    throw new FileAccessError(
+      FileAccessErrorCode.FILE_NOT_FOUND,
+      'Failed to access file. The file may have been moved, deleted, or permission was revoked.',
+      error instanceof Error ? error : undefined
     )
   }
 }

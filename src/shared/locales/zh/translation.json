@@ -198,6 +198,7 @@
     "repeatAll": "列表循环",
     "continueLearning": "继续学习",
     "mediaNotFound": "媒体未找到",
+    "loadingFailed": "加载媒体失败",
     "dictationMode": "听写模式",
     "echoMode": "跟读模式",
     "transcript": {
@@ -481,6 +482,13 @@
         "forceHint": "强制下载将获取所有记录，忽略增量同步"
       }
     }
+  },
+  "fileAccess": {
+    "mediaNotAvailable": "媒体文件不可用。请选择文件或确保已上传。",
+    "fileNotFound": "无法访问文件。文件可能已被移动、删除或权限已被撤销。",
+    "permissionDenied": "文件访问权限被拒绝。请重新选择文件以授予访问权限。",
+    "permissionRequired": "需要文件访问权限。请在提示时授予访问权限，或重新选择文件。",
+    "fileAccessFailed": "无法访问本地文件。文件可能已被移动或删除。"
   },
   "credits": {
     "title": "AI 使用量",

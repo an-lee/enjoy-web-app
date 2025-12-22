@@ -198,6 +198,7 @@
     "repeatAll": "전체 반복",
     "continueLearning": "학습 계속하기",
     "mediaNotFound": "미디어를 찾을 수 없습니다",
+    "loadingFailed": "미디어 로드 실패",
     "dictationMode": "받아쓰기 모드",
     "echoMode": "따라 말하기",
     "transcript": {
@@ -481,6 +482,13 @@
         "forceHint": "강제 다운로드는 증분 동기화를 무시하고 모든 레코드를 가져옵니다"
       }
     }
+  },
+  "fileAccess": {
+    "mediaNotAvailable": "미디어 파일을 사용할 수 없습니다. 파일을 선택하거나 업로드되었는지 확인하세요.",
+    "fileNotFound": "파일에 액세스할 수 없습니다. 파일이 이동, 삭제되었거나 권한이 취소되었을 수 있습니다.",
+    "permissionDenied": "파일 액세스 권한이 거부되었습니다. 액세스 권한을 부여하려면 파일을 다시 선택하세요.",
+    "permissionRequired": "파일 액세스 권한이 필요합니다. 프롬프트가 표시되면 액세스 권한을 부여하거나 파일을 다시 선택하세요.",
+    "fileAccessFailed": "로컬 파일에 액세스할 수 없습니다. 파일이 이동되었거나 삭제되었을 수 있습니다."
   },
   "credits": {
     "title": "AI 사용량",
