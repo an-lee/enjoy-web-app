@@ -101,7 +101,7 @@ export function MediaCard({
           />
         ) : (
           <GenerativeCover
-            seed={item.audio?.aid || item.video?.vid || item.id}
+            seed={ item.id}
             type={isAudio ? 'audio' : 'video'}
             className="transition-transform duration-300 group-hover:scale-105"
           />
