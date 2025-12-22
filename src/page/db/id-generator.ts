@@ -24,11 +24,57 @@ const UUID_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
 // ============================================================================
 
 /**
+ * Chunk size for partial hashing (4MB)
+ */
+const HASH_CHUNK_SIZE = 4 * 1024 * 1024
+
+/**
  * Generate a SHA-256 hash from a Blob for use in UUID generation
+ *
+ * Performance optimization strategy:
+ * - Files < 4MB: Full hash
+ * - Files 4MB ~ 8MB: Hash first 4MB + last 4MB
+ * - Files > 8MB: Hash first 4MB + middle 4MB + last 4MB
  */
 export async function hashBlob(blob: Blob): Promise<string> {
-  const arrayBuffer = await blob.arrayBuffer()
-  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+  const size = blob.size
+  const chunkSize = HASH_CHUNK_SIZE
+
+  let chunks: Blob[]
+
+  if (size < chunkSize) {
+    // Small files: hash entire blob
+    chunks = [blob]
+  } else if (size <= chunkSize * 2) {
+    // Medium files (4MB ~ 8MB): hash first and last 4MB
+    const firstChunk = blob.slice(0, chunkSize)
+    const lastChunk = blob.slice(size - chunkSize)
+    chunks = [firstChunk, lastChunk]
+  } else {
+    // Large files (> 8MB): hash first, middle, and last 4MB
+    const firstChunk = blob.slice(0, chunkSize)
+    const middleOffset = Math.floor(size / 2) - chunkSize / 2
+    const middleChunk = blob.slice(middleOffset, middleOffset + chunkSize)
+    const lastChunk = blob.slice(size - chunkSize)
+    chunks = [firstChunk, middleChunk, lastChunk]
+  }
+
+  // Read all chunks in parallel
+  const arrayBuffers = await Promise.all(
+    chunks.map((chunk) => chunk.arrayBuffer())
+  )
+
+  // Combine all chunks into a single buffer for hashing
+  const totalLength = arrayBuffers.reduce((sum, buf) => sum + buf.byteLength, 0)
+  const combinedBuffer = new Uint8Array(totalLength)
+  let offset = 0
+  for (const buf of arrayBuffers) {
+    combinedBuffer.set(new Uint8Array(buf), offset)
+    offset += buf.byteLength
+  }
+
+  // Hash the combined buffer
+  const hashBuffer = await crypto.subtle.digest('SHA-256', combinedBuffer)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
