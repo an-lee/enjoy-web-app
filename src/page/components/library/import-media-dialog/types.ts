@@ -5,11 +5,7 @@
 export interface ImportMediaDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onImport: (
-    fileHandle: FileSystemFileHandle | null,
-    file: File,
-    metadata: MediaMetadata
-  ) => Promise<void>
+  onSuccess?: () => void
 }
 
 export interface MediaMetadata {

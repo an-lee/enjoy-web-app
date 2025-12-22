@@ -5,6 +5,7 @@
 import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
+import { toast } from 'sonner'
 import { createLogger } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 import {
@@ -16,10 +17,13 @@ import {
   DialogTitle,
 } from '@/page/components/ui/dialog'
 import { useSettingsStore } from '@/page/stores/settings'
+import { saveLocalAudio, saveLocalVideo } from '@/page/db'
+import { getFileHandleFromFile } from '@/page/lib/file-helpers'
 import { FileSelector } from './file-selector'
 import { MetadataForm } from './metadata-form'
 import { ErrorMessage } from './error-message'
 import { useFileSelection } from './use-file-selection'
+import { getMediaDuration } from './utils'
 import type { ImportMediaDialogProps } from './types'
 
 // ============================================================================
@@ -35,7 +39,7 @@ const log = createLogger({ name: 'ImportMediaDialog' })
 export function ImportMediaDialog({
   open,
   onOpenChange,
-  onImport,
+  onSuccess,
 }: ImportMediaDialogProps) {
   const { t } = useTranslation()
   const { learningLanguage } = useSettingsStore()
@@ -89,14 +93,64 @@ export function ImportMediaDialog({
     setError(null)
 
     try {
-      await onImport(selectedFileHandle, selectedFile, {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        language,
-      })
+      let finalFileHandle: FileSystemFileHandle
+
+      // If we have a FileSystemFileHandle from File System Access API, use it directly
+      if (selectedFileHandle) {
+        finalFileHandle = selectedFileHandle
+      } else {
+        // Convert File to FileSystemFileHandle (traditional file input)
+        // Note: This requires user interaction to save the file
+        const handle = await getFileHandleFromFile(selectedFile)
+        if (!handle) {
+          // User cancelled file save dialog - throw error to be handled by dialog
+          throw new Error(t('library.import.cancelled'))
+        }
+        finalFileHandle = handle
+      }
+
+      const isVideo = selectedFile.type.startsWith('video/')
+
+      // Use fileHandle to get duration to avoid ObjectURL locking issues with the original file
+      // This ensures we're using a fresh file instance from the handle
+      const duration = await getMediaDuration(finalFileHandle)
+
+      // Get a fresh file instance for hash calculation to avoid conflicts with ObjectURL
+      // We need to get it after duration calculation to avoid simultaneous file access
+      const fileForHash = await finalFileHandle.getFile()
+
+      // Pass the file object to avoid multiple getFile() calls which can cause permission issues
+      if (isVideo) {
+        await saveLocalVideo(finalFileHandle, {
+          title: title.trim(),
+          description: description.trim() || undefined,
+          language,
+          duration,
+        }, undefined, fileForHash)
+      } else {
+        await saveLocalAudio(finalFileHandle, {
+          title: title.trim(),
+          description: description.trim() || undefined,
+          language,
+          duration,
+        }, undefined, fileForHash)
+      }
+
+      toast.success(t('library.import.success'))
       handleOpenChange(false)
+      onSuccess?.()
     } catch (err) {
       log.error('Import failed:', err)
+      // Provide more specific error messages
+      if (err instanceof Error) {
+        if (err.name === 'NotReadableError' || err.message.includes('could not be read')) {
+          const errorMessage = t('library.import.fileAccessError', {
+            defaultValue: 'File access error. Please ensure the file is not moved or deleted, and try again.',
+          })
+          setError(errorMessage)
+          return
+        }
+      }
       // Show specific error message if available, otherwise show generic error
       const errorMessage =
         err instanceof Error ? err.message : t('library.import.failed')
@@ -110,8 +164,8 @@ export function ImportMediaDialog({
     title,
     description,
     language,
-    onImport,
     handleOpenChange,
+    onSuccess,
     setError,
     t,
   ])
