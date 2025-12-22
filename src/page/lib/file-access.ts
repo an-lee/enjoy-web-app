@@ -67,9 +67,18 @@ export async function getMediaUrl(media: Video | Audio): Promise<string> {
   // 3. Local file handle (for user-uploaded files)
   if (media.fileHandle) {
     try {
-      const file = await media.fileHandle.getFile()
+      // Check and request permission if needed
+      await ensureFileHandlePermission(media.fileHandle)
+
+      // Get file from handle
+      const file = await getFileFromHandle(media.fileHandle)
       return URL.createObjectURL(file)
     } catch (error) {
+      // Re-throw permission errors as-is (they have specific messages)
+      if (error instanceof Error && error.message.includes('permission')) {
+        throw error
+      }
+      // For other errors, provide a generic message
       throw new Error(
         'Failed to access local file. The file may have been moved or deleted.'
       )
@@ -126,6 +135,91 @@ export async function verifyFile(
 // ============================================================================
 // File Handle Helpers
 // ============================================================================
+
+/**
+ * Check and request permission for a file handle
+ *
+ * @param handle - File handle to check permission for
+ * @returns Promise<'granted' | 'denied' | 'prompt'> - Permission status
+ */
+export async function checkFileHandlePermission(
+  handle: FileSystemFileHandle
+): Promise<'granted' | 'denied' | 'prompt'> {
+  // Check if permission API is available
+  if (!('queryPermission' in handle)) {
+    // If API not available, assume permission is granted (legacy behavior)
+    return 'granted'
+  }
+
+  try {
+    // Check current permission status
+    const status = await (handle as any).queryPermission({ mode: 'read' })
+    return status
+  } catch (error) {
+    console.warn('Failed to query file handle permission:', error)
+    return 'prompt'
+  }
+}
+
+/**
+ * Request permission for a file handle
+ *
+ * @param handle - File handle to request permission for
+ * @returns Promise<'granted' | 'denied'> - Permission status after request
+ */
+export async function requestFileHandlePermission(
+  handle: FileSystemFileHandle
+): Promise<'granted' | 'denied'> {
+  // Check if permission API is available
+  if (!('requestPermission' in handle)) {
+    // If API not available, assume permission is granted (legacy behavior)
+    return 'granted'
+  }
+
+  try {
+    // Request permission
+    const status = await (handle as any).requestPermission({ mode: 'read' })
+    return status
+  } catch (error) {
+    console.warn('Failed to request file handle permission:', error)
+    return 'denied'
+  }
+}
+
+/**
+ * Ensure file handle has read permission, requesting if needed
+ *
+ * @param handle - File handle to ensure permission for
+ * @returns Promise<true> if permission is granted, throws Error if denied
+ * @throws Error if permission is denied
+ */
+export async function ensureFileHandlePermission(
+  handle: FileSystemFileHandle
+): Promise<true> {
+  // Check current permission
+  const currentStatus = await checkFileHandlePermission(handle)
+
+  if (currentStatus === 'granted') {
+    return true
+  }
+
+  if (currentStatus === 'denied') {
+    throw new Error(
+      'File access permission was denied. Please select the file again to grant access.'
+    )
+  }
+
+  // Permission is 'prompt', request it
+  const requestedStatus = await requestFileHandlePermission(handle)
+
+  if (requestedStatus === 'granted') {
+    return true
+  }
+
+  throw new Error(
+    'File access permission is required. Please grant access when prompted, or select the file again.'
+  )
+}
 
 /**
  * Create a file handle from a File object

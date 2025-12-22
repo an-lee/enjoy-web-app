@@ -24,7 +24,6 @@ import {
   LibraryFilters,
   LibraryPagination,
   LibraryEmptyState,
-  type MediaMetadata,
 } from '@/page/components/library'
 import {
   useLibrary,
