@@ -3,14 +3,18 @@ import { Icon } from '@iconify/react'
 import { Button } from '@/page/components/ui/button'
 import { Slider } from '@/page/components/ui/slider'
 import { cn } from '@/shared/lib/utils'
+import type { Audio } from '@/page/types/db'
+import { getMediaUrl } from '@/page/lib/file-access'
 
 interface AudioPlayerProps {
-  audioUrl: string
+  audio?: Audio
+  audioUrl?: string
   className?: string
 }
 
-export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
+export function AudioPlayer({ audio, audioUrl: providedAudioUrl, className }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(providedAudioUrl || null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -18,12 +22,52 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
   const [isMuted, setIsMuted] = useState(false)
   const [isVolumeOpen, setIsVolumeOpen] = useState(false)
 
+  // Create audio URL on demand (lazy loading) if Audio object is provided
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
+    // If audioUrl is provided directly, use it
+    if (providedAudioUrl) {
+      setAudioUrl(providedAudioUrl)
+      return
+    }
 
-    const updateTime = () => setCurrentTime(audio.currentTime)
-    const updateDuration = () => setDuration(audio.duration || 0)
+    // If Audio object is provided, create URL on demand
+    if (!audio) {
+      setAudioUrl(null)
+      return
+    }
+
+    let mounted = true
+    let url: string | null = null
+
+    getMediaUrl(audio)
+      .then((mediaUrl) => {
+        if (mounted) {
+          url = mediaUrl
+          setAudioUrl(mediaUrl)
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to create audio URL:', error)
+        if (mounted) {
+          setAudioUrl(null)
+        }
+      })
+
+    return () => {
+      mounted = false
+      if (url) {
+        URL.revokeObjectURL(url)
+      }
+    }
+  }, [audio?.id, audio?.mediaUrl, audio?.blob, audio?.fileHandle, providedAudioUrl])
+
+  // Audio event handlers
+  useEffect(() => {
+    const audioElement = audioRef.current
+    if (!audioElement || !audioUrl) return
+
+    const updateTime = () => setCurrentTime(audioElement.currentTime)
+    const updateDuration = () => setDuration(audioElement.duration || 0)
     const handlePlay = () => setIsPlaying(true)
     const handlePause = () => setIsPlaying(false)
     const handleEnded = () => {
@@ -31,18 +75,18 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
       setCurrentTime(0)
     }
 
-    audio.addEventListener('timeupdate', updateTime)
-    audio.addEventListener('loadedmetadata', updateDuration)
-    audio.addEventListener('play', handlePlay)
-    audio.addEventListener('pause', handlePause)
-    audio.addEventListener('ended', handleEnded)
+    audioElement.addEventListener('timeupdate', updateTime)
+    audioElement.addEventListener('loadedmetadata', updateDuration)
+    audioElement.addEventListener('play', handlePlay)
+    audioElement.addEventListener('pause', handlePause)
+    audioElement.addEventListener('ended', handleEnded)
 
     return () => {
-      audio.removeEventListener('timeupdate', updateTime)
-      audio.removeEventListener('loadedmetadata', updateDuration)
-      audio.removeEventListener('play', handlePlay)
-      audio.removeEventListener('pause', handlePause)
-      audio.removeEventListener('ended', handleEnded)
+      audioElement.removeEventListener('timeupdate', updateTime)
+      audioElement.removeEventListener('loadedmetadata', updateDuration)
+      audioElement.removeEventListener('play', handlePlay)
+      audioElement.removeEventListener('pause', handlePause)
+      audioElement.removeEventListener('ended', handleEnded)
     }
   }, [audioUrl])
 
@@ -82,6 +126,16 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  if (!audioUrl) {
+    return (
+      <div className={cn('space-y-3', className)}>
+        <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
+          Loading audio...
+        </div>
+      </div>
+    )
   }
 
   return (

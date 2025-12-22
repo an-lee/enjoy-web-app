@@ -158,7 +158,7 @@ export function HistoryItem({
                   )}
                 </Label>
                 <div className="space-y-3">
-                  {audios.map(({ audio, audioUrl }) => (
+                  {audios.map((audio) => (
                     <div key={audio.id} className="p-3 bg-background rounded-md">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -170,7 +170,7 @@ export function HistoryItem({
                           </span>
                         </div>
                       </div>
-                      <AudioPlayer audioUrl={audioUrl} />
+                      <AudioPlayer audio={audio} />
                     </div>
                   ))}
                 </div>

@@ -8,7 +8,7 @@
  * - Delete: useDeleteAudio
  */
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   db,
@@ -74,7 +74,7 @@ export interface UseAudiosByTranslationKeyOptions {
 }
 
 export interface UseAudiosByTranslationKeyReturn {
-  audios: AudioWithUrl[]
+  audios: Audio[]
   isLoading: boolean
   isError: boolean
   error: Error | null
@@ -96,28 +96,7 @@ async function createAudioUrl(audio: Audio | undefined | null): Promise<string |
   }
 }
 
-async function createAudioWithUrl(audio: Audio): Promise<AudioWithUrl | null> {
-  try {
-    const audioUrl = await getMediaUrl(audio)
-    return {
-      audio,
-      audioUrl,
-    }
-  } catch {
-    return null
-  }
-}
-
-async function createAudiosWithUrls(audios: Audio[]): Promise<AudioWithUrl[]> {
-  const results = await Promise.all(audios.map(createAudioWithUrl))
-  return results
-    .filter((item): item is AudioWithUrl => item !== null)
-    .sort((a, b) => {
-      const dateA = a.audio.createdAt || ''
-      const dateB = b.audio.createdAt || ''
-      return dateB.localeCompare(dateA) // Newest first
-    })
-}
+// Note: URL creation is now handled on-demand in AudioPlayer component for better performance
 
 // ============================================================================
 // Fetch Functions
@@ -280,52 +259,15 @@ export function useAudiosByTranslationKey(
     staleTime: 1000 * 30,
   })
 
-  const [audios, setAudios] = useState<AudioWithUrl[]>([])
-
   // Create a stable reference key based on audio IDs to prevent infinite loops
-  // This ensures useEffect only runs when the actual audio data changes, not just the array reference
-  const audioListKey = useMemo(() => {
-    return audioList.map(a => a.id).sort().join(',')
+  // This ensures we only update when the actual audio data changes, not just the array reference
+  const audios = useMemo(() => {
+    return [...audioList].sort((a, b) => {
+      const dateA = a.createdAt || ''
+      const dateB = b.createdAt || ''
+      return dateB.localeCompare(dateA) // Newest first
+    })
   }, [audioList])
-
-  // Track previous URLs for cleanup
-  const previousUrlsRef = useRef<string[]>([])
-  // Store audioList in a ref to access the latest value in useEffect
-  const audioListRef = useRef(audioList)
-  audioListRef.current = audioList
-
-  useEffect(() => {
-    let mounted = true
-    let urls: string[] = []
-
-    // Cleanup previous URLs
-    previousUrlsRef.current.forEach((url) => {
-      URL.revokeObjectURL(url)
-    })
-    previousUrlsRef.current = []
-
-    // Use ref to get the latest audioList value
-    createAudiosWithUrls(audioListRef.current).then((results) => {
-      if (mounted) {
-        urls = results.map((a) => a.audioUrl)
-        previousUrlsRef.current = urls
-        setAudios(results)
-      }
-    }).catch((error) => {
-      // Handle errors gracefully to prevent blocking
-      console.error('Failed to create audio URLs:', error)
-      if (mounted) {
-        setAudios([])
-      }
-    })
-
-    return () => {
-      mounted = false
-      urls.forEach((url) => {
-        URL.revokeObjectURL(url)
-      })
-    }
-  }, [audioListKey])
 
   const refetch = useCallback(async () => {
     await refetchQuery()

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Label } from '@/page/components/ui/label'
 import { Icon } from '@iconify/react'
@@ -17,18 +16,6 @@ export function AudioHistoryItem({
   onToggle,
 }: AudioHistoryItemProps) {
   const { t } = useTranslation()
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!audio.blob) return
-
-    const url = URL.createObjectURL(audio.blob)
-    setAudioUrl(url)
-
-    return () => {
-      URL.revokeObjectURL(url)
-    }
-  }, [audio.id, audio.blob])
 
   return (
     <div className="border rounded-md">
@@ -62,14 +49,12 @@ export function AudioHistoryItem({
               <p className="text-sm whitespace-pre-wrap">{audio.sourceText}</p>
             </div>
           )}
-          {audioUrl && (
-            <div className="space-y-1">
-              <Label className="text-xs font-medium text-muted-foreground">
-                {t('tts.generatedAudio')}
-              </Label>
-              <AudioPlayer audioUrl={audioUrl} />
-            </div>
-          )}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground">
+              {t('tts.generatedAudio')}
+            </Label>
+            <AudioPlayer audio={audio} />
+          </div>
         </div>
       )}
     </div>
