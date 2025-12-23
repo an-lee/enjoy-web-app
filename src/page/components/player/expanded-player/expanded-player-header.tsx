@@ -48,8 +48,8 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
     secondaryLanguage,
   } = useTranscriptDisplay()
 
-  // Retranscribe functionality
-  const { retranscribe, isTranscribing, progress: retranscribeProgress } = useRetranscribe({
+  // Retranscribe functionality (only for status, actual retranscribe is handled in RetranscribeDialog)
+  const { isTranscribing, progress: retranscribeProgress } = useRetranscribe({
     mediaRef,
   })
 
@@ -85,11 +85,6 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
   const handleRetranscribeClick = useCallback(() => {
     setShowConfirmDialog(true)
   }, [])
-
-  const handleConfirmRetranscribe = useCallback(() => {
-    setShowConfirmDialog(false)
-    retranscribe(primaryLanguage || undefined)
-  }, [retranscribe, primaryLanguage])
 
   // Handle secondary language change
   const handleSecondaryChange = useCallback(
@@ -369,8 +364,8 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
       <RetranscribeDialog
         open={showConfirmDialog}
         onOpenChange={setShowConfirmDialog}
-        onConfirm={handleConfirmRetranscribe}
         mediaDuration={mediaDuration}
+        mediaRef={mediaRef}
       />
     </header>
   )

@@ -2,14 +2,18 @@
  * RetranscribeDialog Component
  *
  * Confirmation dialog for retranscribing media with provider information and limitations.
+ * Handles retranscription logic internally using useRetranscribe hook.
  */
 
+import { useCallback, RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Link } from '@tanstack/react-router'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AIProvider } from '@/page/ai/types'
 import { usePlayerStore } from '@/page/stores/player'
+import { useRetranscribe } from '@/page/hooks/player'
+import { useTranscriptDisplay } from '@/page/hooks/player/use-transcript-display'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,18 +29,31 @@ import { Badge } from '@/page/components/ui/badge'
 interface RetranscribeDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: () => void
   mediaDuration: number
+  /** Optional ref to existing media element (audio or video) */
+  mediaRef?: RefObject<HTMLAudioElement | HTMLVideoElement | null>
 }
 
 export function RetranscribeDialog({
   open,
   onOpenChange,
-  onConfirm,
   mediaDuration,
+  mediaRef,
 }: RetranscribeDialogProps) {
   const { t } = useTranslation()
   const collapse = usePlayerStore((state) => state.collapse)
+
+  // Get primary language from transcript display hook
+  const { primaryLanguage } = useTranscriptDisplay()
+
+  // Get retranscribe functionality
+  const { retranscribe } = useRetranscribe({ mediaRef })
+
+  // Handle confirm retranscribe
+  const handleConfirm = useCallback(() => {
+    onOpenChange(false)
+    retranscribe(primaryLanguage || undefined)
+  }, [onOpenChange, retranscribe, primaryLanguage])
 
   // Get current ASR provider info
   const asrConfig = getAIServiceConfig('asr')
@@ -114,7 +131,7 @@ export function RetranscribeDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>
+          <AlertDialogAction onClick={handleConfirm}>
             {t('player.transcript.confirmRetranscribe.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>

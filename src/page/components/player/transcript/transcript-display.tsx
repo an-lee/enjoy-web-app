@@ -73,7 +73,6 @@ export function TranscriptDisplay({
     activeLineIndex,
     transcripts,
     availableTranscripts,
-    primaryLanguage,
     syncState,
   } = useTranscriptDisplay()
 
@@ -118,8 +117,8 @@ export function TranscriptDisplay({
   useAutoScroll(scrollTargetIndex, isPlaying, config, scrollAreaRef)
 
 
-  // Retranscribe functionality
-  const { retranscribe, isTranscribing, progress, progressPercent } = useRetranscribe({
+  // Retranscribe functionality (only for status, actual retranscribe is handled in RetranscribeDialog)
+  const { isTranscribing, progress, progressPercent } = useRetranscribe({
     mediaRef,
   })
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -134,12 +133,6 @@ export function TranscriptDisplay({
 
   // Get media duration for limitations
   const mediaDuration = currentSession?.duration || 0
-
-  // Handle retranscribe with confirmation
-  const handleConfirmRetranscribe = useCallback(() => {
-    setShowConfirmDialog(false)
-    retranscribe(primaryLanguage || undefined)
-  }, [retranscribe, primaryLanguage])
 
   // Handle transcribe button click
   const handleTranscribeClick = useCallback(() => {
@@ -178,8 +171,8 @@ export function TranscriptDisplay({
     <RetranscribeDialog
       open={showConfirmDialog}
       onOpenChange={setShowConfirmDialog}
-      onConfirm={handleConfirmRetranscribe}
       mediaDuration={mediaDuration}
+      mediaRef={mediaRef}
     />
   )
 
