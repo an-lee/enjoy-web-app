@@ -58,7 +58,16 @@ function extractTextFromTokens(tokens: VTTNode[]): string {
 /**
  * Strip all HTML tags and style codes from text (fallback method)
  *
+ * Uses browser native DOM API (textContent) for maximum reliability and zero dependencies.
+ * This is the most reliable approach as it:
+ * - Uses browser's built-in HTML parser (handles all edge cases)
+ * - Automatically decodes all HTML entities (named, numeric, hex)
+ * - Removes all HTML tags correctly
+ * - No external dependencies, maintained by browser vendors
+ * - Better performance than regexp or third-party libraries
+ *
  * Used when tokenizeVTTCue is not available or for formats that don't support it.
+ *
  * Removes:
  * - HTML tags: <font>, <b>, <i>, <u>, <c>, <v>, <ruby>, <rt>, etc.
  * - HTML entities: &nbsp;, &amp;, etc.
@@ -73,46 +82,35 @@ function stripHtmlAndStyles(text: string): string {
   let cleaned = text
 
   // Remove SSA/ASS style codes: {\an8}, {\pos(x,y)}, {\fad}, {\r}, etc.
+  // This is format-specific, so we keep the regexp for this
   cleaned = cleaned.replace(/\{[^}]*\}/g, '')
 
-  // Remove HTML tags (including attributes)
-  // Matches: <tag>, <tag attr="value">, </tag>, <tag/>
-  cleaned = cleaned.replace(/<[^>]+>/g, '')
-
-  // Decode common HTML entities
-  const entityMap: Record<string, string> = {
-    '&nbsp;': ' ',
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&apos;': "'",
-    '&nbsp': ' ',
-    '&amp': '&',
-    '&lt': '<',
-    '&gt': '>',
-    '&quot': '"',
-  }
-
-  // Replace named entities
-  for (const [entity, char] of Object.entries(entityMap)) {
-    cleaned = cleaned.replace(new RegExp(entity, 'gi'), char)
-  }
-
-  // Replace numeric entities: &#123; or &#x1F;
-  cleaned = cleaned.replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
-  cleaned = cleaned.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
-
-  // If in browser, use DOM for more accurate entity decoding
+  // Use browser native DOM API to strip HTML tags and decode entities
+  // This is the most reliable method - uses browser's built-in parser
   if (typeof document !== 'undefined') {
     try {
       const temp = document.createElement('div')
       temp.innerHTML = cleaned
-      cleaned = temp.textContent || temp.innerText || cleaned
+      // textContent automatically strips all HTML tags and decodes entities
+      cleaned = temp.textContent || temp.innerText || ''
     } catch {
-      // If DOM parsing fails, use the already cleaned text
+      // If DOM parsing fails (shouldn't happen in browser), fall back to regexp
+      // This is a safety net, but textContent should always work in browser
+      cleaned = cleaned.replace(/<[^>]+>/g, '')
     }
+  } else {
+    // Fallback for non-browser environments (shouldn't happen in our case)
+    // Remove HTML tags with regexp (less reliable, but works for simple cases)
+    cleaned = cleaned.replace(/<[^>]+>/g, '')
+    // Basic entity decoding (limited, but better than nothing)
+    cleaned = cleaned
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/g, "'")
   }
 
   // Clean up whitespace: normalize multiple spaces/newlines to single space
