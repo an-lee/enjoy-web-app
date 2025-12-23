@@ -11,6 +11,12 @@ export { TranscriptLines } from './transcript-lines'
 export { TranscriptLineItem } from './transcript-line-item'
 export { RetranscribeDialog } from './retranscribe-dialog'
 
+// State components
+export { TranscriptLoadingState } from './transcript-loading-state'
+export { TranscriptErrorState } from './transcript-error-state'
+export { TranscriptEmptyState } from './transcript-empty-state'
+export { TranscriptProgressIndicator } from './transcript-progress-indicator'
+
 // Types
 export type {
   TranscriptDisplayConfig,

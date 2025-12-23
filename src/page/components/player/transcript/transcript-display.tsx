@@ -10,20 +10,21 @@
  */
 
 import { useRef, useCallback, useState, useMemo, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Icon } from '@iconify/react'
 import { cn, createLogger } from '@/shared/lib/utils'
 import { usePlayerStore } from '@/page/stores/player'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AIProvider } from '@/page/ai/types'
 import { ScrollArea } from '@/page/components/ui/scroll-area'
-import { Progress } from '@/page/components/ui/progress'
 import { useDisplayTime, usePlayerControls, useRetranscribe, useEchoRegion, useEchoRegionManager } from '@/page/hooks/player'
 import { useTranscriptDisplay } from '../../../hooks/player/use-transcript-display'
 import { useAutoScroll } from '../../../hooks/player/use-auto-scroll'
 import { useUploadSubtitle } from '../../../hooks/player/use-upload-subtitle'
 import { TranscriptLines } from './transcript-lines'
 import { RetranscribeDialog } from './retranscribe-dialog'
+import { TranscriptLoadingState } from './transcript-loading-state'
+import { TranscriptErrorState } from './transcript-error-state'
+import { TranscriptEmptyState } from './transcript-empty-state'
+import { TranscriptProgressIndicator } from './transcript-progress-indicator'
 import { DEFAULT_TRANSCRIPT_CONFIG } from './types'
 import type {
   TranscriptDisplayProps,
@@ -46,7 +47,6 @@ export function TranscriptDisplay({
   className,
   config: configOverrides,
 }: TranscriptDisplayProps) {
-  const { t } = useTranslation()
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const currentSession = usePlayerStore((state) => state.currentSession)
   const activateEchoMode = usePlayerStore((state) => state.activateEchoMode)
@@ -129,9 +129,6 @@ export function TranscriptDisplay({
     isUploading: isUploadingSubtitle,
   } = useUploadSubtitle()
 
-  // Get current ASR provider info
-  const asrConfig = getAIServiceConfig('asr')
-
   // Get media duration for limitations
   const mediaDuration = currentSession?.duration || 0
 
@@ -166,201 +163,75 @@ export function TranscriptDisplay({
     [onSeek, echoModeActive, activateEchoMode]
   )
 
+  // Get current ASR provider info for progress indicator
+  const asrConfig = getAIServiceConfig('asr')
+  const showProgressIndicator = isTranscribing && asrConfig.provider === AIProvider.LOCAL && progressPercent !== null
+
+  // Determine if we should show empty state
+  const showEmptyState = availableTranscripts.length === 0 || lines.length === 0
+
+  // Render RetranscribeDialog at the top level so it's always available
+  const dialogElement = (
+    <RetranscribeDialog
+      open={showConfirmDialog}
+      onOpenChange={setShowConfirmDialog}
+      onConfirm={handleConfirmRetranscribe}
+      mediaDuration={mediaDuration}
+    />
+  )
+
   // Loading state
   if (transcripts.isLoading) {
     return (
-      <div
-        className={cn(
-          'flex flex-col items-center justify-center h-full',
-          className
-        )}
-      >
-        <Icon
-          icon="lucide:loader-2"
-          className="w-8 h-8 animate-spin text-muted-foreground"
-        />
-        <p className="mt-3 text-sm text-muted-foreground">
-          {t('common.loading')}
-        </p>
-      </div>
+      <>
+        {dialogElement}
+        <TranscriptLoadingState className={className} />
+      </>
     )
   }
 
   // Error state
   if (transcripts.error) {
     return (
-      <div
-        className={cn(
-          'flex flex-col items-center justify-center h-full text-center px-4',
-          className
-        )}
-      >
-        <Icon
-          icon="lucide:alert-circle"
-          className="w-8 h-8 text-destructive mb-3"
-        />
-        <p className="text-sm text-destructive">{transcripts.error}</p>
-      </div>
+      <>
+        {dialogElement}
+        <TranscriptErrorState className={className} error={transcripts.error} />
+      </>
     )
   }
 
-  // Empty state - show when no transcripts available
-  // Logic:
-  // 1. If syncing, show loading state
-  // 2. If sync completed and no transcripts, show empty state with upload/transcribe buttons
-  // 3. If transcribing, show progress (handled separately in main render)
-  const showEmptyState = availableTranscripts.length === 0
-
+  // Empty state - show when no transcripts available or no lines
   if (showEmptyState) {
-    // Show loading state while syncing
-    if (syncState.isSyncing) {
-      return (
-        <div
-          className={cn(
-            'flex flex-col items-center justify-center h-full text-center px-4',
-            className
-          )}
-        >
-          <Icon
-            icon="lucide:loader-2"
-            className="w-8 h-8 animate-spin text-primary mb-3"
-          />
-          <p className="text-sm text-muted-foreground">
-            {t('player.transcript.syncing', { defaultValue: 'Syncing transcripts from server...' })}
-          </p>
-        </div>
-      )
-    }
-
-    // Show empty state with action buttons after sync completes
     return (
-      <div
-        className={cn(
-          'flex flex-col items-center justify-center h-full text-center px-4',
-          className
-        )}
-      >
-        <Icon
-          icon="lucide:subtitles"
-          className="w-12 h-12 text-muted-foreground/40 mb-3"
+      <>
+        {dialogElement}
+        <TranscriptEmptyState
+          className={className}
+          isSyncing={syncState.isSyncing}
+          isTranscribing={isTranscribing}
+          isUploading={isUploadingSubtitle}
+          onUploadClick={triggerFileSelect}
+          onTranscribeClick={handleTranscribeClick}
+          transcribeProgress={progress}
+          fileInputRef={fileInputRef}
+          onFileSelect={handleFileSelect}
         />
-
-        <p className="text-sm text-muted-foreground mb-1">
-          {t('player.transcript.noTranscript')}
-        </p>
-        <p className="text-xs text-muted-foreground/60 mb-4">
-          {t('player.transcript.noTranscriptHint')}
-        </p>
-
-        {/* Action buttons */}
-        <div className="flex flex-col gap-2 w-full max-w-xs">
-          {/* Upload Subtitle Button */}
-          <div className="relative">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".srt,.vtt"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={triggerFileSelect}
-              disabled={isUploadingSubtitle || isTranscribing}
-              className={cn(
-                'w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors',
-                'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-              )}
-            >
-              {isUploadingSubtitle ? (
-                <>
-                  <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin" />
-                  <span>{t('common.loading')}</span>
-                </>
-              ) : (
-                <>
-                  <Icon icon="lucide:upload" className="w-4 h-4" />
-                  <span>{t('player.transcript.uploadSubtitle', { defaultValue: 'Upload Subtitle' })}</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Transcribe Button */}
-          <button
-            type="button"
-            onClick={handleTranscribeClick}
-            disabled={isTranscribing || isUploadingSubtitle}
-            className={cn(
-              'w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              'bg-primary text-primary-foreground hover:bg-primary/90',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-            )}
-          >
-            {isTranscribing ? (
-              <>
-                <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin" />
-                <span>{progress || t('player.transcript.retranscribing')}</span>
-              </>
-            ) : (
-              <>
-                <Icon icon="lucide:mic" className="w-4 h-4" />
-                <span>{t('player.transcript.generateTranscript', { defaultValue: 'Generate Transcript' })}</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+      </>
     )
   }
 
-  // Empty state if no lines provided
-  if (lines.length === 0) {
-    return (
-      <div
-        className={cn(
-          'flex flex-col items-center justify-center h-full text-center px-4',
-          className
-        )}
-      >
-        <Icon
-          icon="lucide:subtitles"
-          className="w-12 h-12 text-muted-foreground/40 mb-3"
-        />
-        <p className="text-sm text-muted-foreground">
-          {t('player.transcript.noTranscript')}
-        </p>
-      </div>
-    )
-  }
-
+  // Main content: transcript lines with progress indicator
   return (
     <div className={cn('flex flex-col h-full', className)}>
+      {dialogElement}
 
       {/* Progress indicator for local model */}
-      {isTranscribing && asrConfig.provider === AIProvider.LOCAL && progressPercent !== null && (
-        <div className="shrink-0 px-4 py-2 border-b bg-background/50">
-          <div className="flex items-center gap-2 mb-1">
-            <Icon icon="lucide:activity" className="w-3 h-3 text-primary" />
-            <span className="text-xs text-muted-foreground">{progress}</span>
-            {progressPercent !== null && (
-              <span className="text-xs text-muted-foreground ml-auto">{progressPercent}%</span>
-            )}
-          </div>
-          <Progress value={progressPercent} className="h-1" />
-        </div>
+      {showProgressIndicator && (
+        <TranscriptProgressIndicator
+          progress={progress}
+          progressPercent={progressPercent}
+        />
       )}
-
-      {/* Confirmation Dialog */}
-      <RetranscribeDialog
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        onConfirm={handleConfirmRetranscribe}
-        mediaDuration={mediaDuration}
-      />
 
       {/* Transcript lines */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
