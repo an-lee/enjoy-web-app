@@ -297,7 +297,19 @@
       "emptySubtitle": "字幕文件为空或无效",
       "uploadSuccess": "字幕上传成功",
       "uploadFailed": "上传字幕失败",
-      "invalidFileType": "请选择 .srt、.vtt、.ssa 或 .ass 文件"
+      "invalidFileType": "请选择 .srt、.vtt、.ssa 或 .ass 文件",
+      "progress": {
+        "loadingMedia": "正在加载媒体...",
+        "loadingVideoFromElement": "正在从元素加载视频...",
+        "extractingFromElement": "正在从媒体元素提取音频...",
+        "loadingFromDatabase": "正在从数据库加载媒体...",
+        "extractingWithFFmpeg": "正在使用 FFmpeg 提取音频...",
+        "extractingFromVideo": "正在从视频提取音频...",
+        "transcribing": "正在使用 ASR 识别...",
+        "saving": "正在保存字幕...",
+        "complete": "完成",
+        "error": "错误"
+      }
     }
   },
   "vocabulary": {

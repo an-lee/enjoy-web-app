@@ -297,7 +297,19 @@
       "emptySubtitle": "Le fichier de sous-titres est vide ou invalide",
       "uploadSuccess": "Sous-titres téléchargés avec succès",
       "uploadFailed": "Échec du téléchargement des sous-titres",
-      "invalidFileType": "Veuillez sélectionner un fichier .srt, .vtt, .ssa ou .ass"
+      "invalidFileType": "Veuillez sélectionner un fichier .srt, .vtt, .ssa ou .ass",
+      "progress": {
+        "loadingMedia": "Chargement des médias...",
+        "loadingVideoFromElement": "Chargement de la vidéo depuis l'élément...",
+        "extractingFromElement": "Extraction de l'audio depuis l'élément média...",
+        "loadingFromDatabase": "Chargement des médias depuis la base de données...",
+        "extractingWithFFmpeg": "Extraction de l'audio avec FFmpeg...",
+        "extractingFromVideo": "Extraction de l'audio de la vidéo...",
+        "transcribing": "Transcription avec ASR...",
+        "saving": "Enregistrement de la transcription...",
+        "complete": "Terminé",
+        "error": "Erreur"
+      }
     }
   },
   "vocabulary": {

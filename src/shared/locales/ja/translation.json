@@ -297,7 +297,19 @@
       "emptySubtitle": "字幕ファイルが空であるか無効です",
       "uploadSuccess": "字幕のアップロードに成功しました",
       "uploadFailed": "字幕のアップロードに失敗しました",
-      "invalidFileType": ".srt、.vtt、.ssa または .ass ファイルを選択してください"
+      "invalidFileType": ".srt、.vtt、.ssa または .ass ファイルを選択してください",
+      "progress": {
+        "loadingMedia": "メディアを読み込み中...",
+        "loadingVideoFromElement": "要素から動画を読み込み中...",
+        "extractingFromElement": "メディア要素から音声を抽出中...",
+        "loadingFromDatabase": "データベースからメディアを読み込み中...",
+        "extractingWithFFmpeg": "FFmpeg で音声を抽出中...",
+        "extractingFromVideo": "動画から音声を抽出中...",
+        "transcribing": "ASR で文字起こし中...",
+        "saving": "文字起こしを保存中...",
+        "complete": "完了",
+        "error": "エラー"
+      }
     }
   },
   "vocabulary": {

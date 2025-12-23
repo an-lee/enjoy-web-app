@@ -297,7 +297,19 @@
       "emptySubtitle": "Untertiteldatei ist leer oder ungültig",
       "uploadSuccess": "Untertitel erfolgreich hochgeladen",
       "uploadFailed": "Untertitel konnte nicht hochgeladen werden",
-      "invalidFileType": "Bitte wählen Sie eine .srt-, .vtt-, .ssa- oder .ass-Datei aus"
+      "invalidFileType": "Bitte wählen Sie eine .srt-, .vtt-, .ssa- oder .ass-Datei aus",
+      "progress": {
+        "loadingMedia": "Medien werden geladen...",
+        "loadingVideoFromElement": "Video wird vom Element geladen...",
+        "extractingFromElement": "Audio wird vom Medienelement extrahiert...",
+        "loadingFromDatabase": "Medien werden aus der Datenbank geladen...",
+        "extractingWithFFmpeg": "Audio wird mit FFmpeg extrahiert...",
+        "extractingFromVideo": "Audio wird aus Video extrahiert...",
+        "transcribing": "Wird mit ASR transkribiert...",
+        "saving": "Transkript wird gespeichert...",
+        "complete": "Abgeschlossen",
+        "error": "Fehler"
+      }
     }
   },
   "vocabulary": {

@@ -297,7 +297,19 @@
       "emptySubtitle": "O arquivo de legendas está vazio ou inválido",
       "uploadSuccess": "Legendas enviadas com sucesso",
       "uploadFailed": "Falha ao enviar legendas",
-      "invalidFileType": "Por favor, selecione um arquivo .srt, .vtt, .ssa ou .ass"
+      "invalidFileType": "Por favor, selecione um arquivo .srt, .vtt, .ssa ou .ass",
+      "progress": {
+        "loadingMedia": "Carregando mídia...",
+        "loadingVideoFromElement": "Carregando vídeo do elemento...",
+        "extractingFromElement": "Extraindo áudio do elemento de mídia...",
+        "loadingFromDatabase": "Carregando mídia do banco de dados...",
+        "extractingWithFFmpeg": "Extraindo áudio com FFmpeg...",
+        "extractingFromVideo": "Extraindo áudio do vídeo...",
+        "transcribing": "Transcrevendo com ASR...",
+        "saving": "Salvando transcrição...",
+        "complete": "Concluído",
+        "error": "Erro"
+      }
     }
   },
   "vocabulary": {

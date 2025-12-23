@@ -297,7 +297,19 @@
         "description": "Are you sure you want to delete this recording? This action cannot be undone.",
         "error": "Failed to delete recording"
       },
-      "playbackError": "Failed to play recording"
+      "playbackError": "Failed to play recording",
+      "progress": {
+        "loadingMedia": "Loading media...",
+        "loadingVideoFromElement": "Loading video from element...",
+        "extractingFromElement": "Extracting audio from media element...",
+        "loadingFromDatabase": "Loading media from database...",
+        "extractingWithFFmpeg": "Extracting audio with FFmpeg...",
+        "extractingFromVideo": "Extracting audio from video...",
+        "transcribing": "Transcribing with ASR...",
+        "saving": "Saving transcript...",
+        "complete": "Complete",
+        "error": "Error"
+      }
     }
   },
   "vocabulary": {
