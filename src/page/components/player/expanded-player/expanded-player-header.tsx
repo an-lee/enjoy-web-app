@@ -19,6 +19,7 @@ import { usePlayerStore } from '@/page/stores/player'
 import {
   useTranscriptDisplay,
   useRetranscribe,
+  useUploadSubtitle,
 } from '@/page/hooks/player'
 import { RetranscribeDialog, LANGUAGE_NAMES } from '../transcript'
 import { LanguageSelector } from '../shared'
@@ -48,6 +49,14 @@ export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps) {
 
   // Retranscribe functionality
   const { retranscribe, isTranscribing, progress: retranscribeProgress } = useRetranscribe()
+
+  // Upload subtitle functionality
+  const {
+    triggerFileSelect,
+    handleFileSelect,
+    fileInputRef,
+    isUploading: isUploadingSubtitle,
+  } = useUploadSubtitle()
 
   // Local state for dialogs
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -157,44 +166,87 @@ export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps) {
         </>
       )}
 
-      {/* Right: Retranscribe button (desktop only) and close button */}
+      {/* Right: Action buttons (desktop only) and close button */}
       <div
         className={cn(
           'flex items-center gap-2',
           availableTranscripts.length > 0 ? 'justify-end' : 'ml-auto'
         )}
       >
-        {/* Desktop: Retranscribe button in header */}
+        {/* Desktop: Action buttons in header */}
         {availableTranscripts.length > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRetranscribeClick}
-                disabled={isTranscribing || !currentSession}
-                className={cn(
-                  'hidden md:flex h-8 px-2 text-xs',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
-              >
-                {isTranscribing ? (
-                  <>
-                    <Icon icon="lucide:loader-2" className="w-3 h-3 animate-spin mr-1" />
-                    {retranscribeProgress || t('player.transcript.retranscribing')}
-                  </>
-                ) : (
-                  <>
-                    <Icon icon="lucide:refresh-cw" className="w-3 h-3 mr-1" />
-                    {t('player.transcript.retranscribe')}
-                  </>
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {t('player.transcript.retranscribe')}
-            </TooltipContent>
-          </Tooltip>
+          <>
+            {/* Upload Subtitle Button */}
+            <div className="relative hidden md:block">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".srt,.vtt,.ssa,.ass"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={triggerFileSelect}
+                    disabled={isUploadingSubtitle || isTranscribing || !currentSession}
+                    className={cn(
+                      'h-8 px-2 text-xs',
+                      'disabled:opacity-50 disabled:cursor-not-allowed'
+                    )}
+                  >
+                    {isUploadingSubtitle ? (
+                      <>
+                        <Icon icon="lucide:loader-2" className="w-3 h-3 animate-spin mr-1" />
+                        {t('common.loading')}
+                      </>
+                    ) : (
+                      <>
+                        <Icon icon="lucide:upload" className="w-3 h-3 mr-1" />
+                        {t('player.transcript.uploadSubtitle')}
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {t('player.transcript.uploadSubtitle')}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+
+            {/* Retranscribe Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRetranscribeClick}
+                  disabled={isTranscribing || isUploadingSubtitle || !currentSession}
+                  className={cn(
+                    'hidden md:flex h-8 px-2 text-xs',
+                    'disabled:opacity-50 disabled:cursor-not-allowed'
+                  )}
+                >
+                  {isTranscribing ? (
+                    <>
+                      <Icon icon="lucide:loader-2" className="w-3 h-3 animate-spin mr-1" />
+                      {retranscribeProgress || t('player.transcript.retranscribing')}
+                    </>
+                  ) : (
+                    <>
+                      <Icon icon="lucide:refresh-cw" className="w-3 h-3 mr-1" />
+                      {t('player.transcript.retranscribe')}
+                    </>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {t('player.transcript.retranscribe')}
+              </TooltipContent>
+            </Tooltip>
+          </>
         )}
 
         {/* Mobile: Drawer trigger button */}
@@ -231,31 +283,66 @@ export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps) {
                   onClear={handleClearSecondaryLanguage}
                 />
               </div>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  setDrawerOpen(false)
-                  handleRetranscribeClick()
-                }}
-                disabled={isTranscribing || !currentSession}
-                className={cn(
-                  'w-full',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
-              >
-                {isTranscribing ? (
-                  <>
-                    <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin mr-2" />
-                    {retranscribeProgress || t('player.transcript.retranscribing')}
-                  </>
-                ) : (
-                  <>
-                    <Icon icon="lucide:refresh-cw" className="w-4 h-4 mr-2" />
-                    {t('player.transcript.retranscribe')}
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-col gap-2">
+                {/* Upload Subtitle Button */}
+                <div className="relative">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".srt,.vtt,.ssa,.ass"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={triggerFileSelect}
+                    disabled={isUploadingSubtitle || isTranscribing || !currentSession}
+                    className={cn(
+                      'w-full',
+                      'disabled:opacity-50 disabled:cursor-not-allowed'
+                    )}
+                  >
+                    {isUploadingSubtitle ? (
+                      <>
+                        <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin mr-2" />
+                        {t('common.loading')}
+                      </>
+                    ) : (
+                      <>
+                        <Icon icon="lucide:upload" className="w-4 h-4 mr-2" />
+                        {t('player.transcript.uploadSubtitle')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {/* Retranscribe Button */}
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    setDrawerOpen(false)
+                    handleRetranscribeClick()
+                  }}
+                  disabled={isTranscribing || isUploadingSubtitle || !currentSession}
+                  className={cn(
+                    'w-full',
+                    'disabled:opacity-50 disabled:cursor-not-allowed'
+                  )}
+                >
+                  {isTranscribing ? (
+                    <>
+                      <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin mr-2" />
+                      {retranscribeProgress || t('player.transcript.retranscribing')}
+                    </>
+                  ) : (
+                    <>
+                      <Icon icon="lucide:refresh-cw" className="w-4 h-4 mr-2" />
+                      {t('player.transcript.retranscribe')}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </DrawerContent>
         </Drawer>

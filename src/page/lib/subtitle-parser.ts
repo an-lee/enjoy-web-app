@@ -16,7 +16,7 @@
  */
 
 import type { TranscriptLine } from '@/page/types/db'
-import type { ParsedCaptionsResult } from 'media-captions'
+import type { ParsedCaptionsResult, VTTNode, VTTextNode } from 'media-captions'
 
 /**
  * Dynamically import media-captions to avoid SSR issues
@@ -27,6 +27,132 @@ async function getMediaCaptions() {
     throw new Error('Subtitle parsing is only available in the browser')
   }
   return await import('media-captions')
+}
+
+/**
+ * Extract plain text from VTT tokens recursively
+ *
+ * Uses media-captions' tokenizeVTTCue to properly extract text nodes,
+ * which handles VTT format correctly. For other formats (SSA/ASS),
+ * falls back to manual HTML stripping.
+ *
+ * @param tokens - VTT tokens from tokenizeVTTCue
+ * @returns Plain text extracted from all text nodes
+ */
+function extractTextFromTokens(tokens: VTTNode[]): string {
+  const textParts: string[] = []
+
+  for (const token of tokens) {
+    if (token.type === 'text') {
+      // This is a text node - extract the data
+      textParts.push((token as VTTextNode).data)
+    } else if ('children' in token && token.children) {
+      // This is a block node - recursively extract text from children
+      textParts.push(extractTextFromTokens(token.children))
+    }
+  }
+
+  return textParts.join('')
+}
+
+/**
+ * Strip all HTML tags and style codes from text (fallback method)
+ *
+ * Used when tokenizeVTTCue is not available or for formats that don't support it.
+ * Removes:
+ * - HTML tags: <font>, <b>, <i>, <u>, <c>, <v>, <ruby>, <rt>, etc.
+ * - HTML entities: &nbsp;, &amp;, etc.
+ * - SSA/ASS style codes: {\an8}, {\pos}, etc.
+ *
+ * @param text - Text that may contain HTML tags and style codes
+ * @returns Plain text without any formatting
+ */
+function stripHtmlAndStyles(text: string): string {
+  if (!text) return ''
+
+  let cleaned = text
+
+  // Remove SSA/ASS style codes: {\an8}, {\pos(x,y)}, {\fad}, {\r}, etc.
+  cleaned = cleaned.replace(/\{[^}]*\}/g, '')
+
+  // Remove HTML tags (including attributes)
+  // Matches: <tag>, <tag attr="value">, </tag>, <tag/>
+  cleaned = cleaned.replace(/<[^>]+>/g, '')
+
+  // Decode common HTML entities
+  const entityMap: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'",
+    '&nbsp': ' ',
+    '&amp': '&',
+    '&lt': '<',
+    '&gt': '>',
+    '&quot': '"',
+  }
+
+  // Replace named entities
+  for (const [entity, char] of Object.entries(entityMap)) {
+    cleaned = cleaned.replace(new RegExp(entity, 'gi'), char)
+  }
+
+  // Replace numeric entities: &#123; or &#x1F;
+  cleaned = cleaned.replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
+  cleaned = cleaned.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+
+  // If in browser, use DOM for more accurate entity decoding
+  if (typeof document !== 'undefined') {
+    try {
+      const temp = document.createElement('div')
+      temp.innerHTML = cleaned
+      cleaned = temp.textContent || temp.innerText || cleaned
+    } catch {
+      // If DOM parsing fails, use the already cleaned text
+    }
+  }
+
+  // Clean up whitespace: normalize multiple spaces/newlines to single space
+  cleaned = cleaned.replace(/\s+/g, ' ').trim()
+
+  return cleaned
+}
+
+/**
+ * Get plain text from a VTTCue
+ *
+ * Uses media-captions' tokenizeVTTCue for VTT format (which properly handles
+ * VTT tags), and falls back to manual stripping for other formats.
+ *
+ * @param cue - VTTCue object from media-captions
+ * @param mediaCaptions - The media-captions module (dynamically imported)
+ * @returns Plain text without any formatting
+ */
+async function getPlainTextFromCue(
+  cue: any,
+  mediaCaptions: any
+): Promise<string> {
+  // Try using tokenizeVTTCue for proper VTT parsing
+  // This is the recommended way to extract text from VTT cues
+  if (mediaCaptions.tokenizeVTTCue && typeof mediaCaptions.tokenizeVTTCue === 'function') {
+    try {
+      const tokens = mediaCaptions.tokenizeVTTCue(cue)
+      const plainText = extractTextFromTokens(tokens)
+      if (plainText.trim()) {
+        return plainText.trim()
+      }
+    } catch {
+      // If tokenization fails, fall back to manual stripping
+    }
+  }
+
+  // Fallback: use cue.text and manually strip HTML
+  // This handles cases where tokenizeVTTCue is not available or fails
+  const text = cue.text || ''
+  return stripHtmlAndStyles(text)
 }
 
 /**
@@ -81,18 +207,23 @@ export async function parseSubtitleFile(file: File): Promise<TranscriptLine[]> {
     throw new Error('Subtitle file contains no valid cues')
   }
 
-  // Convert to TranscriptLine format
-  const timeline: TranscriptLine[] = result.cues.map((cue) => {
-    // Extract plain text from cue
-    // media-captions automatically strips HTML tags and provides plain text
-    const text = cue.text.trim()
+  // Get media-captions module once for all cues
+  const mediaCaptions = await getMediaCaptions()
 
-    return {
-      text,
-      start: Math.round(cue.startTime * 1000), // Convert seconds to milliseconds
-      duration: Math.round((cue.endTime - cue.startTime) * 1000), // Convert to milliseconds
-    }
-  })
+  // Convert to TranscriptLine format
+  const timeline: TranscriptLine[] = await Promise.all(
+    result.cues.map(async (cue) => {
+      // Extract plain text from cue using media-captions' tokenizeVTTCue
+      // This properly handles VTT format tags and extracts only text nodes
+      const text = await getPlainTextFromCue(cue, mediaCaptions)
+
+      return {
+        text,
+        start: Math.round(cue.startTime * 1000), // Convert seconds to milliseconds
+        duration: Math.round((cue.endTime - cue.startTime) * 1000), // Convert to milliseconds
+      }
+    })
+  )
 
   return timeline
 }
@@ -124,11 +255,19 @@ export async function parseSubtitleFromResponse(
     throw new Error('Subtitle file contains no valid cues')
   }
 
-  const timeline: TranscriptLine[] = result.cues.map((cue) => ({
-    text: cue.text.trim(),
-    start: Math.round(cue.startTime * 1000),
-    duration: Math.round((cue.endTime - cue.startTime) * 1000),
-  }))
+  const mediaCaptions = await getMediaCaptions()
+  const timeline: TranscriptLine[] = await Promise.all(
+    result.cues.map(async (cue) => {
+      // Extract plain text from cue using media-captions' tokenizeVTTCue
+      const text = await getPlainTextFromCue(cue, mediaCaptions)
+
+      return {
+        text,
+        start: Math.round(cue.startTime * 1000),
+        duration: Math.round((cue.endTime - cue.startTime) * 1000),
+      }
+    })
+  )
 
   return timeline
 }
