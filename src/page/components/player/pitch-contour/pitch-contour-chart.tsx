@@ -44,7 +44,7 @@ export function PitchContourChart({
     yourWaveform: string
     yourPitch: string
   }
-  /** Current playback time relative to region start (in seconds), undefined to hide progress */
+  /** Current playback time relative to region start (in milliseconds), undefined to hide progress */
   currentTimeRelative?: number
   /** Visibility controls for different chart elements */
   visibility?: PitchContourVisibility
@@ -109,7 +109,9 @@ export function PitchContourChart({
     ) {
       return data
     }
-    const progressEnd = Math.min(currentTimeRelative, maxTime)
+    // Convert currentTimeRelative from milliseconds to seconds to match data point time units
+    const progressEndSeconds = currentTimeRelative / 1000
+    const progressEnd = Math.min(progressEndSeconds, maxTime)
     // Add progress background value to each data point
     return data.map((point) => ({
       ...point,
