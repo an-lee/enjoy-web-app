@@ -28,41 +28,43 @@ export function usePlayerControls() {
     echoStartTime,
     activateEchoMode,
     deactivateEchoMode,
-    _mediaControls,
+    getMediaControls,
   } = usePlayerStore()
   const { lines, activeLineIndex } = useTranscriptDisplay()
 
   // Seek to a specific time (basic action)
-  // Uses registered media controls which handle echo window constraints
+  // Uses media controls which handle echo window constraints
   const seek = useCallback(
     (time: number) => {
-      if (!_mediaControls) {
-        log.warn('Media controls not registered, cannot seek')
+      const controls = getMediaControls()
+      if (!controls) {
+        log.warn('Media controls not available, cannot seek')
         return
       }
-      _mediaControls.seek(time)
+      controls.seek(time)
     },
-    [_mediaControls]
+    [getMediaControls]
   )
 
   // Toggle play/pause (basic action)
   const togglePlay = useCallback(() => {
-    if (!_mediaControls) {
-      log.warn('Media controls not registered, cannot toggle play')
+    const controls = getMediaControls()
+    if (!controls) {
+      log.warn('Media controls not available, cannot toggle play')
       return
     }
 
-    const isPaused = _mediaControls.isPaused()
+    const isPaused = controls.isPaused()
     log.debug('togglePlay', { isPaused })
 
     if (isPaused) {
-      _mediaControls.play().catch((err) => {
+      controls.play().catch((err) => {
         log.warn('play() blocked:', err)
       })
     } else {
-      _mediaControls.pause()
+      controls.pause()
     }
-  }, [_mediaControls])
+  }, [getMediaControls])
 
   // Previous line handler
   const handlePrevLine = useCallback(() => {
@@ -106,8 +108,9 @@ export function usePlayerControls() {
 
   // Replay current line handler
   const handleReplayLine = useCallback(() => {
-    if (!_mediaControls) {
-      log.warn('Media controls not registered, cannot replay')
+    const controls = getMediaControls()
+    if (!controls) {
+      log.warn('Media controls not available, cannot replay')
       return
     }
 
@@ -125,12 +128,12 @@ export function usePlayerControls() {
     }
 
     // Always start playing
-    if (_mediaControls.isPaused()) {
-      _mediaControls.play().catch((err) => {
+    if (controls.isPaused()) {
+      controls.play().catch((err) => {
         log.warn('play() blocked:', err)
       })
     }
-  }, [lines, activeLineIndex, seek, echoModeActive, echoStartTime, _mediaControls])
+  }, [lines, activeLineIndex, seek, echoModeActive, echoStartTime, getMediaControls])
 
   // Echo mode toggle handler
   const handleEchoMode = useCallback(() => {

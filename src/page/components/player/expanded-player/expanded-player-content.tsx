@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Button } from '@/page/components/ui/button'
@@ -24,7 +24,7 @@ interface ExpandedPlayerContentProps {
 
 export function ExpandedPlayerContent({}: ExpandedPlayerContentProps = {}) {
   const { t } = useTranslation()
-  const { currentSession, mode, registerMediaRef, unregisterMediaRef } = usePlayerStore()
+  const { currentSession, mode } = usePlayerStore()
   const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null)
   const [isReady, setIsReady] = useState(false)
 
@@ -59,13 +59,8 @@ export function ExpandedPlayerContent({}: ExpandedPlayerContentProps = {}) {
     mode,
   })
 
-  // Register mediaRef to store so other components (like ExpandedPlayerHeader) can access it
-  useEffect(() => {
-    registerMediaRef(mediaRef)
-    return () => {
-      unregisterMediaRef()
-    }
-  }, [registerMediaRef, unregisterMediaRef, mediaRef])
+  // Note: mediaRef is automatically registered to store by useMediaElement hook
+  // No need to register it again here
 
   if (!currentSession) return null
 

@@ -34,10 +34,6 @@ export interface UseMediaElementOptions {
 }
 
 export interface UseMediaElementReturn {
-  /** Seek to a specific time (in seconds) */
-  handleSeek: (time: number) => void
-  /** Toggle play/pause */
-  handleTogglePlay: () => void
   /** Time update event handler */
   handleTimeUpdate: (e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => void
   /** Media ended event handler */
@@ -60,8 +56,8 @@ export function useMediaElement({
     echoModeActive,
     echoStartTime,
     echoEndTime,
-    registerMediaControls,
-    unregisterMediaControls,
+    registerMediaRef,
+    unregisterMediaRef,
   } = usePlayerStore()
 
   const lastStoreUpdateRef = useRef(0)
@@ -75,45 +71,9 @@ export function useMediaElement({
     durationSeconds: currentSession?.duration,
   })
 
-  // Handle seek from progress bar or line navigation
-  const handleSeek = useCallback(
-    (time: number) => {
-      const el = mediaRef.current
-      if (!el) return
-
-      const nextTime = echoWindow ? clampSeekTimeToEchoWindow(time, echoWindow) : time
-      el.currentTime = nextTime
-      setDisplayTime(nextTime)
-      updateProgress(nextTime)
-    },
-    [mediaRef, echoWindow, updateProgress]
-  )
-
-  // Handle toggle play
-  const handleTogglePlay = useCallback(() => {
-    const el = mediaRef.current
-    log.debug('handleTogglePlay', { hasElement: !!el, paused: el?.paused })
-
-    if (!el) {
-      log.warn('No media element!')
-      return
-    }
-
-    if (el.paused) {
-      el.play()
-        .then(() => {
-          log.debug('play() resolved')
-          setPlaying(true)
-        })
-        .catch((err) => {
-          log.warn('play() blocked:', err)
-        })
-    } else {
-      el.pause()
-      setPlaying(false)
-      updateProgress(el.currentTime)
-    }
-  }, [mediaRef, setPlaying, updateProgress])
+  // Note: handleSeek and handleTogglePlay are not returned from this hook
+  // They are available through usePlayerControls() hook which uses store.getMediaControls()
+  // This avoids duplication and ensures all controls go through the store
 
   // Handle time update events
   const handleTimeUpdate = useCallback(
@@ -263,59 +223,18 @@ export function useMediaElement({
     lastStoreUpdateRef.current = Date.now()
   }, [echoWindow, mediaRef, updateProgress])
 
-  // Store the latest echoWindow in a ref for use in registered controls
-  const echoWindowRef = useRef(echoWindow)
+  // Register media ref to the store for use by other components (e.g., hotkeys)
   useEffect(() => {
-    echoWindowRef.current = echoWindow
-  }, [echoWindow])
-
-  // Register media controls to the store for use by other components (e.g., hotkeys)
-  useEffect(() => {
-    const controls = {
-      seek: (time: number) => {
-        const el = mediaRef.current
-        if (!el) return
-        const currentEchoWindow = echoWindowRef.current
-        const nextTime = currentEchoWindow
-          ? clampSeekTimeToEchoWindow(time, currentEchoWindow)
-          : time
-        el.currentTime = nextTime
-        setDisplayTime(nextTime)
-        updateProgress(nextTime)
-      },
-      play: async () => {
-        const el = mediaRef.current
-        if (!el) return
-        await el.play()
-        setPlaying(true)
-      },
-      pause: () => {
-        const el = mediaRef.current
-        if (!el) return
-        el.pause()
-        setPlaying(false)
-        updateProgress(el.currentTime)
-      },
-      getCurrentTime: () => {
-        return mediaRef.current?.currentTime ?? 0
-      },
-      isPaused: () => {
-        return mediaRef.current?.paused ?? true
-      },
-    }
-
-    registerMediaControls(controls)
-    log.debug('Media controls registered to store')
+    registerMediaRef(mediaRef)
+    log.debug('Media ref registered to store')
 
     return () => {
-      unregisterMediaControls()
-      log.debug('Media controls unregistered from store')
+      unregisterMediaRef()
+      log.debug('Media ref unregistered from store')
     }
-  }, [mediaRef, setPlaying, updateProgress, registerMediaControls, unregisterMediaControls])
+  }, [mediaRef, registerMediaRef, unregisterMediaRef])
 
   return {
-    handleSeek,
-    handleTogglePlay,
     handleTimeUpdate,
     handleEnded,
     handleCanPlay,

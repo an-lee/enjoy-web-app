@@ -21,6 +21,12 @@ import { syncTranscriptsForTarget } from '@/page/db/services/sync-manager'
 import type { TargetType } from '@/page/types/db'
 import { createLogger } from '@/shared/lib/utils'
 import { queryClient } from '@/page/router'
+import { setDisplayTime } from '@/page/hooks/player/use-display-time'
+import {
+  clampSeekTimeToEchoWindow,
+  normalizeEchoWindow,
+  type EchoWindow,
+} from '@/page/components/player/echo'
 
 // ============================================================================
 // Logger
@@ -123,14 +129,14 @@ interface PlayerState {
   echoEndTime: number
 
   // ============================================================================
-  // Media Controls (internal - registered by PlayerContainer)
+  // Media Controls (internal - uses _mediaRef)
   // ============================================================================
 
   /** Media element ref (internal use only) */
   _mediaRef: RefObject<HTMLAudioElement | HTMLVideoElement | null> | null
 
-  /** Media control functions (internal use only) */
-  _mediaControls: {
+  /** Get media control functions (computed from _mediaRef and state) */
+  getMediaControls: () => {
     seek: (time: number) => void
     play: () => Promise<void>
     pause: () => void
@@ -221,18 +227,6 @@ interface PlayerState {
   // ============================================================================
   // Media Controls Actions
   // ============================================================================
-
-  /** Register media control functions */
-  registerMediaControls: (controls: {
-    seek: (time: number) => void
-    play: () => Promise<void>
-    pause: () => void
-    getCurrentTime: () => number
-    isPaused: () => boolean
-  }) => void
-
-  /** Unregister media control functions */
-  unregisterMediaControls: () => void
 
   /** Register media element ref */
   registerMediaRef: (ref: RefObject<HTMLAudioElement | HTMLVideoElement | null>) => void
@@ -349,16 +343,8 @@ export const usePlayerStore = create<PlayerState>()(
       echoStartTime: -1,
       echoEndTime: -1,
 
-      // Media ref and controls (registered by player components)
+      // Media ref (registered by player components)
       _mediaRef: null as RefObject<HTMLAudioElement | HTMLVideoElement | null> | null,
-
-      _mediaControls: null as {
-        seek: (time: number) => void
-        play: () => Promise<void>
-        pause: () => void
-        getCurrentTime: () => number
-        isPaused: () => boolean
-      } | null,
 
       // Recording controls (registered by ShadowRecording component)
       _recordingControls: null as {
@@ -744,14 +730,44 @@ export const usePlayerStore = create<PlayerState>()(
       },
 
       // Media Controls Actions
-      registerMediaControls: (controls) => {
-        set({ _mediaControls: controls })
-        log.debug('Media controls registered')
-      },
+      getMediaControls: () => {
+        const state = get()
+        const el = state._mediaRef?.current
+        if (!el) return null
 
-      unregisterMediaControls: () => {
-        set({ _mediaControls: null })
-        log.debug('Media controls unregistered')
+        // Calculate echo window if echo mode is active
+        const echoWindow: EchoWindow | null = normalizeEchoWindow({
+          active: state.echoModeActive,
+          startTimeSeconds: state.echoStartTime,
+          endTimeSeconds: state.echoEndTime,
+          durationSeconds: state.currentSession?.duration,
+        })
+
+        return {
+          seek: (time: number) => {
+            const nextTime = echoWindow
+              ? clampSeekTimeToEchoWindow(time, echoWindow)
+              : time
+            el.currentTime = nextTime
+            setDisplayTime(nextTime)
+            state.updateProgress(nextTime)
+          },
+          play: async () => {
+            await el.play()
+            state.setPlaying(true)
+          },
+          pause: () => {
+            el.pause()
+            state.setPlaying(false)
+            state.updateProgress(el.currentTime)
+          },
+          getCurrentTime: () => {
+            return el.currentTime
+          },
+          isPaused: () => {
+            return el.paused
+          },
+        }
       },
 
       registerMediaRef: (ref) => {
