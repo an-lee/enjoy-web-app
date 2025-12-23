@@ -29,7 +29,8 @@
     "plugins": "插件",
     "youtube": "YouTube",
     "podcast": "播客",
-    "noSearchResults": "未找到结果"
+    "noSearchResults": "未找到结果",
+    "taskManager": "任务管理器"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -552,5 +553,39 @@
       "llm": "大语言模型",
       "assessment": "发音评估"
     }
+  },
+  "task": {
+    "manager": {
+      "title": "任务管理器",
+      "description": "监控和管理所有 Web Workers 及其任务"
+    }
+  },
+  "worker": {
+    "noWorkers": "没有注册的 worker",
+    "noTasks": "没有任务",
+    "noActiveTasks": "没有活动任务",
+    "activeTasks": "活动任务",
+    "completedTasks": "已完成任务",
+    "failedTasks": "失败",
+    "allWorkers": "所有 Workers",
+    "task": {
+      "pending": "待处理",
+      "running": "运行中",
+      "completed": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消",
+      "cancel": "取消",
+      "completedAt": "已完成",
+      "runningFor": "运行中"
+    },
+    "status": {
+      "idle": "空闲",
+      "initializing": "初始化中",
+      "ready": "就绪",
+      "running": "运行中",
+      "error": "错误",
+      "terminated": "已终止"
+    },
+    "never": "从未"
   }
 }

@@ -29,7 +29,8 @@
     "plugins": "플러그인",
     "youtube": "YouTube",
     "podcast": "팟캐스트",
-    "noSearchResults": "결과를 찾을 수 없습니다"
+    "noSearchResults": "결과를 찾을 수 없습니다",
+    "taskManager": "작업 관리자"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -552,5 +553,39 @@
       "llm": "LLM",
       "assessment": "평가"
     }
+  },
+  "task": {
+    "manager": {
+      "title": "작업 관리자",
+      "description": "모든 Web Worker와 작업을 모니터링 및 관리"
+    }
+  },
+  "worker": {
+    "noWorkers": "등록된 워커가 없습니다",
+    "noTasks": "작업이 없습니다",
+    "noActiveTasks": "활성 작업이 없습니다",
+    "activeTasks": "활성 작업",
+    "completedTasks": "완료된 작업",
+    "failedTasks": "실패",
+    "allWorkers": "모든 워커",
+    "task": {
+      "pending": "대기 중",
+      "running": "실행 중",
+      "completed": "완료",
+      "failed": "실패",
+      "cancelled": "취소됨",
+      "cancel": "취소",
+      "completedAt": "완료",
+      "runningFor": "실행 중"
+    },
+    "status": {
+      "idle": "유휴",
+      "initializing": "초기화 중",
+      "ready": "준비됨",
+      "running": "실행 중",
+      "error": "오류",
+      "terminated": "종료됨"
+    },
+    "never": "없음"
   }
 }

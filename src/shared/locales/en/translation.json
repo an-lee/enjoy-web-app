@@ -29,7 +29,8 @@
     "plugins": "Plugins",
     "youtube": "YouTube",
     "podcast": "Podcast",
-    "noSearchResults": "No results found"
+    "noSearchResults": "No results found",
+    "taskManager": "Task Manager"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -552,5 +553,39 @@
       "llm": "LLM",
       "assessment": "Assessment"
     }
+  },
+  "task": {
+    "manager": {
+      "title": "Task Manager",
+      "description": "Monitor and manage all Web Workers and their tasks"
+    }
+  },
+  "worker": {
+    "noWorkers": "No workers registered",
+    "noTasks": "No tasks",
+    "noActiveTasks": "No active tasks",
+    "activeTasks": "Active Tasks",
+    "completedTasks": "Completed Tasks",
+    "failedTasks": "Failed",
+    "allWorkers": "All Workers",
+    "task": {
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "cancel": "Cancel",
+      "completedAt": "Completed",
+      "runningFor": "Running"
+    },
+    "status": {
+      "idle": "Idle",
+      "initializing": "Initializing",
+      "ready": "Ready",
+      "running": "Running",
+      "error": "Error",
+      "terminated": "Terminated"
+    },
+    "never": "Never"
   }
 }

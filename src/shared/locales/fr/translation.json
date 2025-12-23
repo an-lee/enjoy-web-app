@@ -29,7 +29,8 @@
     "plugins": "Plugins",
     "youtube": "YouTube",
     "podcast": "Podcast",
-    "noSearchResults": "Aucun résultat trouvé"
+    "noSearchResults": "Aucun résultat trouvé",
+    "taskManager": "Gestionnaire de Tâches"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -552,5 +553,39 @@
       "llm": "LLM",
       "assessment": "Évaluation"
     }
+  },
+  "task": {
+    "manager": {
+      "title": "Gestionnaire de Tâches",
+      "description": "Surveiller et gérer tous les Web Workers et leurs tâches"
+    }
+  },
+  "worker": {
+    "noWorkers": "Aucun worker enregistré",
+    "noTasks": "Aucune tâche",
+    "noActiveTasks": "Aucune tâche active",
+    "activeTasks": "Tâches Actives",
+    "completedTasks": "Tâches Terminées",
+    "failedTasks": "Échouées",
+    "allWorkers": "Tous les Workers",
+    "task": {
+      "pending": "En Attente",
+      "running": "En Cours",
+      "completed": "Terminée",
+      "failed": "Échouée",
+      "cancelled": "Annulée",
+      "cancel": "Annuler",
+      "completedAt": "Terminée",
+      "runningFor": "En Cours"
+    },
+    "status": {
+      "idle": "Inactif",
+      "initializing": "Initialisation",
+      "ready": "Prêt",
+      "running": "En Cours",
+      "error": "Erreur",
+      "terminated": "Terminé"
+    },
+    "never": "Jamais"
   }
 }

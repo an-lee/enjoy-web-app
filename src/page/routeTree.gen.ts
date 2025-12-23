@@ -9,9 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WorkerMonitorRouteImport } from './routes/worker-monitor'
 import { Route as VoiceSynthesisRouteImport } from './routes/voice-synthesis'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
+import { Route as TaskManagerRouteImport } from './routes/task-manager'
 import { Route as SyncRouteImport } from './routes/sync'
 import { Route as SmartTranslationRouteImport } from './routes/smart-translation'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -20,11 +20,6 @@ import { Route as LibraryRouteImport } from './routes/library'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as IndexRouteImport } from './routes/index'
 
-const WorkerMonitorRoute = WorkerMonitorRouteImport.update({
-  id: '/worker-monitor',
-  path: '/worker-monitor',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const VoiceSynthesisRoute = VoiceSynthesisRouteImport.update({
   id: '/voice-synthesis',
   path: '/voice-synthesis',
@@ -33,6 +28,11 @@ const VoiceSynthesisRoute = VoiceSynthesisRouteImport.update({
 const VocabularyRoute = VocabularyRouteImport.update({
   id: '/vocabulary',
   path: '/vocabulary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TaskManagerRoute = TaskManagerRouteImport.update({
+  id: '/task-manager',
+  path: '/task-manager',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SyncRoute = SyncRouteImport.update({
@@ -79,9 +79,9 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
   '/sync': typeof SyncRoute
+  '/task-manager': typeof TaskManagerRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
-  '/worker-monitor': typeof WorkerMonitorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,9 +91,9 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
   '/sync': typeof SyncRoute
+  '/task-manager': typeof TaskManagerRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
-  '/worker-monitor': typeof WorkerMonitorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,9 +104,9 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/smart-translation': typeof SmartTranslationRoute
   '/sync': typeof SyncRoute
+  '/task-manager': typeof TaskManagerRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
-  '/worker-monitor': typeof WorkerMonitorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,9 +118,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/smart-translation'
     | '/sync'
+    | '/task-manager'
     | '/vocabulary'
     | '/voice-synthesis'
-    | '/worker-monitor'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -130,9 +130,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/smart-translation'
     | '/sync'
+    | '/task-manager'
     | '/vocabulary'
     | '/voice-synthesis'
-    | '/worker-monitor'
   id:
     | '__root__'
     | '/'
@@ -142,9 +142,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/smart-translation'
     | '/sync'
+    | '/task-manager'
     | '/vocabulary'
     | '/voice-synthesis'
-    | '/worker-monitor'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,20 +155,13 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SmartTranslationRoute: typeof SmartTranslationRoute
   SyncRoute: typeof SyncRoute
+  TaskManagerRoute: typeof TaskManagerRoute
   VocabularyRoute: typeof VocabularyRoute
   VoiceSynthesisRoute: typeof VoiceSynthesisRoute
-  WorkerMonitorRoute: typeof WorkerMonitorRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/worker-monitor': {
-      id: '/worker-monitor'
-      path: '/worker-monitor'
-      fullPath: '/worker-monitor'
-      preLoaderRoute: typeof WorkerMonitorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/voice-synthesis': {
       id: '/voice-synthesis'
       path: '/voice-synthesis'
@@ -181,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/vocabulary'
       fullPath: '/vocabulary'
       preLoaderRoute: typeof VocabularyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/task-manager': {
+      id: '/task-manager'
+      path: '/task-manager'
+      fullPath: '/task-manager'
+      preLoaderRoute: typeof TaskManagerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sync': {
@@ -243,9 +243,9 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SmartTranslationRoute: SmartTranslationRoute,
   SyncRoute: SyncRoute,
+  TaskManagerRoute: TaskManagerRoute,
   VocabularyRoute: VocabularyRoute,
   VoiceSynthesisRoute: VoiceSynthesisRoute,
-  WorkerMonitorRoute: WorkerMonitorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -293,7 +293,7 @@ function WorkerCard({ worker }: { worker: StandardWorkerStatus }) {
 // Main Panel
 // ============================================================================
 
-export function WorkerMonitorPanel() {
+export function TaskManagerPanel() {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'all' | 'active'>('active')
 
@@ -356,10 +356,10 @@ export function WorkerMonitorPanel() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">
-          {t('worker.monitor.title', { defaultValue: 'Worker Monitor' })}
+          {t('task.manager.title', { defaultValue: 'Task Manager' })}
         </h1>
         <p className="text-muted-foreground">
-          {t('worker.monitor.description', {
+          {t('task.manager.description', {
             defaultValue: 'Monitor and manage all Web Workers and their tasks',
           })}
         </p>

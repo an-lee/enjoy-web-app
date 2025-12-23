@@ -61,8 +61,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconCloud,
     },
     {
-      title: t("common.workerMonitor", { defaultValue: "Worker Monitor" }),
-      url: "/worker-monitor",
+      title: t("common.taskManager", { defaultValue: "Task Manager" }),
+      url: "/task-manager",
       icon: IconActivity,
     },
     {

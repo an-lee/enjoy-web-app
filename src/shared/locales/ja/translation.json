@@ -29,7 +29,8 @@
     "plugins": "プラグイン",
     "youtube": "YouTube",
     "podcast": "ポッドキャスト",
-    "noSearchResults": "結果が見つかりません"
+    "noSearchResults": "結果が見つかりません",
+    "taskManager": "タスクマネージャー"
   },
   "header": {
     "title": "Enjoy Echo"
@@ -552,5 +553,39 @@
       "llm": "LLM",
       "assessment": "評価"
     }
+  },
+  "task": {
+    "manager": {
+      "title": "タスクマネージャー",
+      "description": "すべてのWeb Workerとそのタスクを監視および管理"
+    }
+  },
+  "worker": {
+    "noWorkers": "登録されているワーカーがありません",
+    "noTasks": "タスクがありません",
+    "noActiveTasks": "アクティブなタスクがありません",
+    "activeTasks": "アクティブなタスク",
+    "completedTasks": "完了したタスク",
+    "failedTasks": "失敗",
+    "allWorkers": "すべてのワーカー",
+    "task": {
+      "pending": "保留中",
+      "running": "実行中",
+      "completed": "完了",
+      "failed": "失敗",
+      "cancelled": "キャンセル済み",
+      "cancel": "キャンセル",
+      "completedAt": "完了",
+      "runningFor": "実行中"
+    },
+    "status": {
+      "idle": "アイドル",
+      "initializing": "初期化中",
+      "ready": "準備完了",
+      "running": "実行中",
+      "error": "エラー",
+      "terminated": "終了"
+    },
+    "never": "なし"
   }
 }
