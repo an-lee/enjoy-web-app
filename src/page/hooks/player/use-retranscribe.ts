@@ -499,6 +499,9 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
           onProgress?.('Loading media from database...', 5)
 
           // Get media blob from IndexedDB
+          // Declare video variable in outer scope for later use
+          let video: import('@/page/types/db').Video | undefined
+
           if (currentSession.mediaType === 'audio') {
             log.debug('Loading audio from database', { mediaId: currentSession.mediaId })
             const audio = await getCurrentDatabase().audios.get(currentSession.mediaId)
@@ -539,7 +542,7 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
             targetId = currentSession.mediaId
           } else {
             log.debug('Loading video from database', { mediaId: currentSession.mediaId })
-            const video = await getCurrentDatabase().videos.get(currentSession.mediaId)
+            video = await getCurrentDatabase().videos.get(currentSession.mediaId)
             if (!video) {
               log.error('Video not found in database', { mediaId: currentSession.mediaId })
               throw new Error('Video not found')
@@ -560,8 +563,11 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
               log.debug('Video fetched from server', { size: blob.size })
             }
             // Priority 2: Local file handle (for user-uploaded files)
+            // Note: We keep video object reference to use fileHandle directly for WORKERSFS
             else if (video.fileHandle) {
-              log.debug('Using file handle for video')
+              log.debug('Using file handle for video (will use for WORKERSFS if supported)')
+              // For WORKERSFS, we'll pass fileHandle directly to extractAudio
+              // For fallback MediaRecorder, we may need blob, so get it now
               blob = await video.fileHandle.getFile()
               log.debug('Video loaded from file handle', { size: blob.size })
             } else {
@@ -579,16 +585,26 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
               videoBlob = blob
             }
 
-            if (!videoBlob) {
-              log.error('No video blob available for extraction')
-              throw new Error('No video blob available for extraction')
+            // Get video fileHandle if available (for WORKERSFS support)
+            const videoFileHandle = video?.fileHandle
+
+            if (!videoBlob && !videoFileHandle) {
+              log.error('No video blob or fileHandle available for extraction')
+              throw new Error('No video blob or fileHandle available for extraction')
             }
 
-            log.debug('Processing video file', { size: videoBlob.size, type: videoBlob.type })
+            log.debug('Processing video file', {
+              hasBlob: !!videoBlob,
+              hasFileHandle: !!videoFileHandle,
+              blobSize: videoBlob?.size,
+              blobType: videoBlob?.type,
+            })
             // Priority 1: Try FFmpeg.wasm (fast, no playback needed)
             // Always try FFmpeg first for video files (it will validate file size internally)
+            // If fileHandle is available, use it directly for WORKERSFS support
             log.debug('Attempting FFmpeg.wasm extraction for video', {
-              size: videoBlob.size,
+              size: videoBlob?.size || 'unknown (using fileHandle)',
+              hasFileHandle: !!videoFileHandle,
               limit: MAX_RECOMMENDED_FILE_SIZE,
             })
             setProgress('Extracting audio with FFmpeg...')
@@ -596,8 +612,13 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
 
             try {
               const ffmpegService = getFFmpegService()
-              log.debug('Calling FFmpeg service to extract audio')
-              const ffmpegResult = await ffmpegService.extractAudio(videoBlob, (progress) => {
+              log.debug('Calling FFmpeg service to extract audio', {
+                source: videoFileHandle ? 'fileHandle (WORKERSFS)' : 'blob (MEMFS)',
+              })
+
+              // Pass fileHandle if available (for WORKERSFS), otherwise pass blob (for MEMFS)
+              const videoSource = videoFileHandle || videoBlob!
+              const ffmpegResult = await ffmpegService.extractAudio(videoSource, (progress) => {
                 // FFmpeg progress: 0-100, map to 10-80 (audio extraction phase)
                 const mappedProgress = 10 + (progress * 0.7) // 10% to 80%
                 setProgressPercent(mappedProgress)
@@ -607,7 +628,8 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
               if (ffmpegResult.success && ffmpegResult.audioBlob) {
                 audioBlob = ffmpegResult.audioBlob
                 log.info('Audio extracted successfully with FFmpeg', {
-                  originalSize: videoBlob.size,
+                  filesystem: ffmpegResult.filesystem,
+                  originalSize: videoBlob?.size || 'unknown',
                   audioSize: audioBlob.size,
                 })
               } else {
@@ -621,7 +643,7 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
             }
 
             // If FFmpeg failed or file is too large, check if we should use MediaRecorder
-            if (!audioBlob && videoBlob.size > MAX_RECOMMENDED_FILE_SIZE) {
+            if (!audioBlob && videoBlob && videoBlob.size > MAX_RECOMMENDED_FILE_SIZE) {
               log.debug('File size exceeds FFmpeg limit, using MediaRecorder', {
                 size: videoBlob.size,
                 limit: MAX_RECOMMENDED_FILE_SIZE,
@@ -639,9 +661,10 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
 
                 try {
                   const videoElement = mediaRef.current as HTMLVideoElement
-                  audioBlob = await extractAudioFromMediaElement(videoElement)
+                  const extractedBlob = await extractAudioFromMediaElement(videoElement)
+                  audioBlob = extractedBlob
                   log.info('Audio extracted successfully with MediaRecorder from element', {
-                    audioSize: audioBlob.size,
+                    audioSize: extractedBlob.size,
                   })
                 } catch (error) {
                   log.warn('Failed to extract from video element, trying blob approach:', error)
@@ -650,16 +673,17 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
               }
 
               // Fallback: create new video element from blob
-              if (!audioBlob) {
+              if (!audioBlob && videoBlob) {
                 log.debug('Using MediaRecorder with video blob')
                 setProgress('Extracting audio from video...')
                 onProgress?.('Extracting audio from video...', 10)
 
                 try {
-                  audioBlob = await extractAudioFromVideo(videoBlob)
+                  const extractedBlob = await extractAudioFromVideo(videoBlob)
+                  audioBlob = extractedBlob
                   log.info('Audio extracted successfully with MediaRecorder from blob', {
                     originalSize: videoBlob.size,
-                    audioSize: audioBlob.size,
+                    audioSize: extractedBlob.size,
                   })
                 } catch (error) {
                   // Fallback: try to use video blob directly if extraction fails
@@ -670,9 +694,18 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
             }
           } else {
             // Audio file: use directly
+            if (!blob) {
+              log.error('No audio blob available')
+              throw new Error('No audio blob available')
+            }
             log.debug('Using audio file directly', { size: blob.size, type: blob.type })
             audioBlob = blob
           }
+        }
+
+        if (!audioBlob) {
+          log.error('No audio blob available for transcription')
+          throw new Error('No audio blob available for transcription')
         }
 
         log.info('Starting ASR transcription', {

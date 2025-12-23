@@ -8,6 +8,8 @@
  * - Lazy loading: Only loads FFmpeg when needed
  * - Local dependencies: Core files loaded from node_modules
  * - File size validation: Checks file size before processing
+ * - WORKERSFS support: For large files with fileHandle (no memory limit)
+ * - MEMFS fallback: For files without fileHandle or unsupported browsers
  * - Error handling: Graceful fallback to MediaRecorder approach
  */
 
@@ -51,16 +53,22 @@ const log = createLogger({ name: 'FFmpegService' })
 // ============================================================================
 
 /**
- * Recommended maximum file size for FFmpeg.wasm processing
+ * Recommended maximum file size for MEMFS processing
  * Files larger than this may cause memory issues in browsers
  */
 const MAX_RECOMMENDED_FILE_SIZE = 500 * 1024 * 1024 // 500MB
 
 /**
- * Maximum file size that FFmpeg.wasm can attempt to process
- * Files larger than this will be rejected
+ * Maximum file size that MEMFS can attempt to process
+ * Files larger than this will be rejected when using MEMFS
  */
-const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024 // 2GB
+const MAX_MEMFS_FILE_SIZE = 2 * 1024 * 1024 * 1024 // 2GB
+
+/**
+ * Maximum file size for WORKERSFS (theoretical limit, actual limit depends on browser/system)
+ * WORKERSFS can handle much larger files as it doesn't load into memory
+ */
+const MAX_WORKERSFS_FILE_SIZE = 32 * 1024 * 1024 * 1024 // 32GB (same as quicksplit)
 
 /**
  * Core files are now loaded from local node_modules dependencies
@@ -86,7 +94,16 @@ export interface ExtractAudioResult {
   success: boolean
   audioBlob?: Blob
   error?: string
+  filesystem?: 'MEMFS' | 'WORKERSFS' // Which filesystem was used
 }
+
+/**
+ * Input source for audio extraction
+ * Can be either a Blob (for MEMFS) or FileSystemFileHandle (for WORKERSFS)
+ */
+export type AudioExtractionSource =
+  | { type: 'blob'; blob: Blob }
+  | { type: 'fileHandle'; fileHandle: FileSystemFileHandle }
 
 // ============================================================================
 // FFmpeg Service Class
@@ -109,6 +126,32 @@ class FFmpegService {
    */
   private isSharedArrayBufferAvailable(): boolean {
     return typeof SharedArrayBuffer !== 'undefined'
+  }
+
+  /**
+   * Check if File System Access API is available (required for WORKERSFS)
+   */
+  private isFileSystemAccessAvailable(): boolean {
+    return 'showOpenFilePicker' in window && typeof FileSystemFileHandle !== 'undefined'
+  }
+
+  /**
+   * Check if WORKERSFS is supported and should be used
+   * Also checks if WORKERSFS is actually available in the loaded FFmpeg instance
+   */
+  private async shouldUseWORKERSFS(source: AudioExtractionSource): Promise<boolean> {
+    // Only use WORKERSFS if:
+    // 1. Source is fileHandle
+    // 2. Browser supports File System Access API
+    // 3. FFmpeg instance supports WORKERSFS (need to check after loading)
+    if (source.type === 'fileHandle' && this.isFileSystemAccessAvailable()) {
+      // Ensure FFmpeg is loaded to check WORKERSFS availability
+      if (!this.ffmpeg) {
+        await this.load()
+      }
+      return this.isWORKERSFSAvailable()
+    }
+    return false
   }
 
   /**
@@ -248,19 +291,22 @@ class FFmpegService {
 
   /**
    * Validate file size before processing
+   * Different limits for MEMFS vs WORKERSFS
    */
-  private validateFileSize(fileSize: number): { valid: boolean; error?: string } {
-    if (fileSize > MAX_FILE_SIZE) {
+  private validateFileSize(fileSize: number, useWORKERSFS: boolean): { valid: boolean; error?: string } {
+    const maxSize = useWORKERSFS ? MAX_WORKERSFS_FILE_SIZE : MAX_MEMFS_FILE_SIZE
+
+    if (fileSize > maxSize) {
       return {
         valid: false,
-        error: `File size (${(fileSize / 1024 / 1024).toFixed(2)}MB) exceeds maximum limit (${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+        error: `File size (${(fileSize / 1024 / 1024).toFixed(2)}MB) exceeds maximum limit (${maxSize / 1024 / 1024}MB) for ${useWORKERSFS ? 'WORKERSFS' : 'MEMFS'}`,
       }
     }
 
-    if (fileSize > this.maxFileSize) {
+    if (!useWORKERSFS && fileSize > this.maxFileSize) {
       return {
         valid: true,
-        error: `File size (${(fileSize / 1024 / 1024).toFixed(2)}MB) exceeds recommended limit (${this.maxFileSize / 1024 / 1024}MB). Processing may be slow or fail.`,
+        error: `File size (${(fileSize / 1024 / 1024).toFixed(2)}MB) exceeds recommended limit (${this.maxFileSize / 1024 / 1024}MB). Processing may be slow or fail. Consider using a browser that supports File System Access API for better performance.`,
       }
     }
 
@@ -268,24 +314,93 @@ class FFmpegService {
   }
 
   /**
-   * Extract audio from video blob using FFmpeg.wasm
+   * Check if WORKERSFS is actually available and can be used
+   * Based on quicksplit implementation: uses mount() method, not mountFileSystem()
+   */
+  private isWORKERSFSAvailable(): boolean {
+    if (!this.ffmpeg) {
+      return false
+    }
+    // Check if mount method exists (the correct API for WORKERSFS)
+    return typeof (this.ffmpeg as any).mount === 'function' &&
+           typeof (this.ffmpeg as any).createDir === 'function'
+  }
+
+  /**
+   * Extract audio from video using FFmpeg.wasm
+   * Supports both Blob (MEMFS) and FileSystemFileHandle (WORKERSFS)
    *
-   * @param videoBlob - Video file blob
+   * @param source - Video source (Blob or FileSystemFileHandle)
    * @param onProgress - Optional progress callback (0-100)
    * @returns Audio blob
    */
   async extractAudio(
-    videoBlob: Blob,
+    source: Blob | FileSystemFileHandle,
     onProgress?: (progress: number) => void
   ): Promise<ExtractAudioResult> {
+    // Normalize source to AudioExtractionSource
+    let extractionSource: AudioExtractionSource =
+      source instanceof Blob
+        ? { type: 'blob', blob: source }
+        : { type: 'fileHandle', fileHandle: source }
+
+    // Get file size
+    let fileSize: number
+    let fileType: string
+    if (extractionSource.type === 'blob') {
+      fileSize = extractionSource.blob.size
+      fileType = extractionSource.blob.type
+    } else {
+      try {
+        const file = await extractionSource.fileHandle.getFile()
+        fileSize = file.size
+        fileType = file.type
+      } catch (error) {
+        log.error('Failed to get file from handle:', error)
+        return {
+          success: false,
+          error: `Failed to access file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        }
+      }
+    }
+
+    // Determine which filesystem to use
+    // Check WORKERSFS availability (async because we may need to load FFmpeg first)
+    let useWORKERSFS = false
+    try {
+      useWORKERSFS = await this.shouldUseWORKERSFS(extractionSource)
+    } catch (error) {
+      log.warn('Failed to check WORKERSFS availability, falling back to MEMFS:', error)
+      useWORKERSFS = false
+    }
+
     log.info('Starting audio extraction with FFmpeg', {
-      blobSize: videoBlob.size,
-      blobType: videoBlob.type,
+      fileSize,
+      fileType,
+      useWORKERSFS,
       isLoaded: this.isLoaded(),
+      sourceType: extractionSource.type,
     })
 
-    // Validate file size
-    const sizeValidation = this.validateFileSize(videoBlob.size)
+    // If WORKERSFS is not available but we have fileHandle, convert to blob for MEMFS
+    if (extractionSource.type === 'fileHandle' && !useWORKERSFS) {
+      log.info('WORKERSFS not available, converting fileHandle to blob for MEMFS')
+      try {
+        const file = await extractionSource.fileHandle.getFile()
+        extractionSource = { type: 'blob', blob: file }
+        fileSize = file.size
+        fileType = file.type
+      } catch (error) {
+        log.error('Failed to convert fileHandle to blob:', error)
+        return {
+          success: false,
+          error: `Failed to access file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        }
+      }
+    }
+
+    // Validate file size (after potential conversion)
+    const sizeValidation = this.validateFileSize(fileSize, useWORKERSFS)
     if (!sizeValidation.valid) {
       log.error('File size validation failed', { error: sizeValidation.error })
       return {
@@ -297,6 +412,31 @@ class FFmpegService {
     if (sizeValidation.error) {
       log.warn('File size warning:', sizeValidation.error)
     }
+
+    // Route to appropriate extraction method
+    if (useWORKERSFS && extractionSource.type === 'fileHandle') {
+      return this.extractAudioWithWORKERSFS(extractionSource.fileHandle, fileSize, fileType, onProgress)
+    } else if (extractionSource.type === 'blob') {
+      return this.extractAudioWithMEMFS(extractionSource.blob, fileSize, fileType, onProgress)
+    } else {
+      // This should not happen, but handle gracefully
+      return {
+        success: false,
+        error: 'Invalid source type for audio extraction',
+      }
+    }
+  }
+
+  /**
+   * Extract audio using MEMFS (memory-based file system)
+   * For files without fileHandle or unsupported browsers
+   */
+  private async extractAudioWithMEMFS(
+    videoBlob: Blob,
+    fileSize: number,
+    _fileType: string,
+    onProgress?: (progress: number) => void
+  ): Promise<ExtractAudioResult> {
 
     try {
       // Ensure FFmpeg is loaded
@@ -432,23 +572,236 @@ class FFmpegService {
         ? Math.round((audioBlob.size / (192 * 1024 / 8)) * 10) / 10 // rough estimate for AAC
         : 0
 
-      log.info('Audio extraction completed:', {
-        originalSize: videoBlob.size,
+      log.info('Audio extraction completed (MEMFS):', {
+        originalSize: fileSize,
         audioSize: audioBlob.size,
         estimatedDurationSeconds,
         audioType: audioBlob.type,
-        sizeRatio: videoBlob.size > 0 ? ((audioBlob.size / videoBlob.size) * 100).toFixed(2) + '%' : 'N/A',
+        sizeRatio: fileSize > 0 ? ((audioBlob.size / fileSize) * 100).toFixed(2) + '%' : 'N/A',
       })
 
       return {
         success: true,
         audioBlob,
+        filesystem: 'MEMFS',
       }
     } catch (error) {
-      log.error('Failed to extract audio with FFmpeg:', error)
+      log.error('Failed to extract audio with FFmpeg (MEMFS):', error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error during audio extraction',
+        filesystem: 'MEMFS',
+      }
+    }
+  }
+
+  /**
+   * Extract audio using WORKERSFS (worker-based file system)
+   * For large files with fileHandle - no memory limit
+   * Based on quicksplit implementation: https://github.com/pavloshargan/quicksplit
+   */
+  private async extractAudioWithWORKERSFS(
+    fileHandle: FileSystemFileHandle,
+    fileSize: number,
+    fileType: string,
+    onProgress?: (progress: number) => void
+  ): Promise<ExtractAudioResult> {
+    log.info('Starting audio extraction with WORKERSFS', {
+      fileSize,
+      fileType,
+    })
+
+    const inputDir = '/input'
+    const outputDir = '/output'
+    let inputFile: File | null = null
+    let inputFilePath = ''
+    let outputFilePath = ''
+
+    try {
+      // Ensure FFmpeg is loaded
+      if (!this.ffmpeg) {
+        log.info('FFmpeg not loaded, loading now...')
+        await this.load()
+        log.info('FFmpeg loaded successfully')
+      } else {
+        log.debug('FFmpeg already loaded')
+      }
+
+      if (!this.ffmpeg) {
+        log.error('Failed to initialize FFmpeg')
+        throw new Error('Failed to initialize FFmpeg')
+      }
+
+      // Check if WORKERSFS is available
+      if (!this.isWORKERSFSAvailable()) {
+        log.warn('WORKERSFS not available, falling back to MEMFS')
+        const file = await fileHandle.getFile()
+        return this.extractAudioWithMEMFS(file, fileSize, fileType, onProgress)
+      }
+
+      // Get file from handle
+      inputFile = await fileHandle.getFile()
+      inputFilePath = `${inputDir}/${inputFile.name}`
+      outputFilePath = `${outputDir}/output-${Date.now()}.aac`
+
+      // Set up progress callback if provided
+      const progressCallback = onProgress
+        ? ({ progress }: { progress: number }) => {
+            // progress is 0-1, convert to 0-100
+            onProgress(progress * 100)
+          }
+        : undefined
+
+      if (progressCallback) {
+        this.ffmpeg.on('progress', progressCallback)
+      }
+
+      log.debug('Extracting audio from video (WORKERSFS):', {
+        fileSize,
+        inputFilePath,
+        outputFilePath,
+      })
+
+      // Create directories
+      log.debug('Creating directories for WORKERSFS')
+      await (this.ffmpeg as any).createDir(inputDir).catch(() => {
+        // Directory might already exist, ignore error
+      })
+      await (this.ffmpeg as any).createDir(outputDir).catch(() => {
+        // Directory might already exist, ignore error
+      })
+
+      // Mount WORKERSFS with the file
+      // Based on quicksplit: mount('WORKERFS', { files: [File] }, mountPoint)
+      log.debug('Mounting WORKERSFS with file', { inputDir, fileName: inputFile.name })
+      await (this.ffmpeg as any).mount('WORKERFS', { files: [inputFile] }, inputDir)
+
+      onProgress?.(10)
+
+      // Extract audio using FFmpeg
+      // Use the mounted path for input file
+      log.debug('Starting FFmpeg audio extraction (codec copy)', {
+        inputFilePath,
+        outputFilePath,
+      })
+      try {
+        const exitCode = await this.ffmpeg.exec([
+          '-i', inputFilePath,
+          '-vn', // disable video
+          '-map', '0:a:0', // map first audio stream explicitly
+          '-acodec', 'copy', // copy audio codec (no re-encoding)
+          '-avoid_negative_ts', 'make_zero', // handle timestamp issues
+          outputFilePath
+        ])
+        log.debug('FFmpeg codec copy completed', { exitCode })
+      } catch (copyError) {
+        log.warn('Audio codec copy failed, trying AAC encoding:', copyError)
+        log.debug('Starting FFmpeg audio extraction (AAC encoding)')
+        const exitCode = await this.ffmpeg.exec([
+          '-i', inputFilePath,
+          '-vn', // disable video
+          '-map', '0:a:0', // map first audio stream explicitly
+          '-acodec', 'aac', // encode to AAC
+          '-b:a', '192k', // audio bitrate
+          '-avoid_negative_ts', 'make_zero', // handle timestamp issues
+          outputFilePath
+        ])
+        log.debug('FFmpeg AAC encoding completed', { exitCode })
+      }
+
+      onProgress?.(90)
+
+      // Read output file from FFmpeg virtual file system
+      log.debug('Reading output file from WORKERSFS', { outputFilePath })
+      const audioData = await this.ffmpeg.readFile(outputFilePath)
+      log.debug('Output file read from WORKERSFS', {
+        dataType: audioData instanceof Uint8Array ? 'Uint8Array' : typeof audioData,
+        dataSize: audioData instanceof Uint8Array ? audioData.length : 'unknown',
+      })
+
+      // Clean up: unmount and delete directories
+      log.debug('Cleaning up WORKERSFS')
+      try {
+        await (this.ffmpeg as any).deleteFile(outputFilePath).catch(() => {
+          // File might not exist, ignore
+        })
+        await (this.ffmpeg as any).unmount(inputDir).catch(() => {
+          // Might not be mounted, ignore
+        })
+        await (this.ffmpeg as any).deleteDir(inputDir).catch(() => {
+          // Directory might not exist, ignore
+        })
+        await (this.ffmpeg as any).deleteDir(outputDir).catch(() => {
+          // Directory might not exist, ignore
+        })
+        log.debug('WORKERSFS cleaned up')
+      } catch (cleanupError) {
+        log.warn('Error during WORKERSFS cleanup:', cleanupError)
+      }
+
+      // Convert to Blob
+      let audioArray: Uint8Array
+      if (audioData instanceof Uint8Array) {
+        audioArray = new Uint8Array(audioData)
+      } else if (typeof audioData === 'string') {
+        audioArray = new TextEncoder().encode(audioData)
+      } else {
+        audioArray = new Uint8Array(audioData as ArrayLike<number>)
+      }
+      const audioBlob = new Blob([audioArray as BlobPart], { type: 'audio/aac' })
+
+      // Remove progress callback
+      if (progressCallback) {
+        this.ffmpeg.off('progress', progressCallback)
+      }
+
+      onProgress?.(100)
+
+      const estimatedDurationSeconds = audioBlob.size > 0
+        ? Math.round((audioBlob.size / (192 * 1024 / 8)) * 10) / 10
+        : 0
+
+      log.info('Audio extraction completed (WORKERSFS):', {
+        originalSize: fileSize,
+        audioSize: audioBlob.size,
+        estimatedDurationSeconds,
+        audioType: audioBlob.type,
+        sizeRatio: fileSize > 0 ? ((audioBlob.size / fileSize) * 100).toFixed(2) + '%' : 'N/A',
+      })
+
+      return {
+        success: true,
+        audioBlob,
+        filesystem: 'WORKERSFS',
+      }
+    } catch (error) {
+      log.error('Failed to extract audio with FFmpeg (WORKERSFS):', error)
+
+      // Cleanup on error
+      try {
+        if (this.ffmpeg) {
+          await (this.ffmpeg as any).unmount(inputDir).catch(() => {})
+          await (this.ffmpeg as any).deleteDir(inputDir).catch(() => {})
+          await (this.ffmpeg as any).deleteDir(outputDir).catch(() => {})
+        }
+      } catch (cleanupError) {
+        log.warn('Error during cleanup after failure:', cleanupError)
+      }
+
+      // Try fallback to MEMFS if possible
+      if (inputFile) {
+        log.info('Attempting fallback to MEMFS after WORKERSFS failure')
+        try {
+          return await this.extractAudioWithMEMFS(inputFile, fileSize, fileType, onProgress)
+        } catch (fallbackError) {
+          log.error('MEMFS fallback also failed:', fallbackError)
+        }
+      }
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error during audio extraction',
+        filesystem: 'WORKERSFS',
       }
     }
   }
@@ -457,20 +810,23 @@ class FFmpegService {
    * Get file extension from blob type or name
    */
   private getFileExtension(blob: Blob): string {
-    // Try to get extension from MIME type
-    const mimeType = blob.type
-    if (mimeType) {
-      const mimeToExt: Record<string, string> = {
-        'video/mp4': 'mp4',
-        'video/webm': 'webm',
-        'video/ogg': 'ogg',
-        'video/quicktime': 'mov',
-        'video/x-msvideo': 'avi',
-      }
+    return this.getFileExtensionFromType(blob.type)
+  }
 
-      if (mimeToExt[mimeType]) {
-        return mimeToExt[mimeType]
-      }
+  /**
+   * Get file extension from MIME type
+   */
+  private getFileExtensionFromType(mimeType: string): string {
+    const mimeToExt: Record<string, string> = {
+      'video/mp4': 'mp4',
+      'video/webm': 'webm',
+      'video/ogg': 'ogg',
+      'video/quicktime': 'mov',
+      'video/x-msvideo': 'avi',
+    }
+
+    if (mimeType && mimeToExt[mimeType]) {
+      return mimeToExt[mimeType]
     }
 
     // Default to mp4
@@ -525,5 +881,5 @@ export async function cleanupFFmpegService(): Promise<void> {
 // ============================================================================
 
 export { FFmpegService }
-export { MAX_RECOMMENDED_FILE_SIZE, MAX_FILE_SIZE }
+export { MAX_RECOMMENDED_FILE_SIZE, MAX_MEMFS_FILE_SIZE as MAX_FILE_SIZE, MAX_WORKERSFS_FILE_SIZE }
 
