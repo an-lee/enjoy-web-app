@@ -237,6 +237,7 @@
       },
       "confirmTranscribe": {
         "title": "Neu-Transkription bestätigen",
+        "description": "Überprüfen Sie den Transkriptionsanbieter und eventuelle Einschränkungen, bevor Sie beginnen.",
         "currentProvider": "Aktueller Anbieter",
         "changeSettings": "In Einstellungen ändern",
         "limitations": "Einschränkungen",

@@ -237,6 +237,7 @@
       },
       "confirmTranscribe": {
         "title": "再認識の確認",
+        "description": "開始前に文字起こしプロバイダーと制限事項を確認してください。",
         "currentProvider": "現在のプロバイダー",
         "changeSettings": "設定で変更",
         "limitations": "制限事項",

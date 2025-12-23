@@ -237,6 +237,7 @@
       },
       "confirmTranscribe": {
         "title": "Confirmer la Transcription",
+        "description": "Vérifiez le fournisseur de transcription et les limitations éventuelles avant de commencer.",
         "currentProvider": "Fournisseur Actuel",
         "changeSettings": "Modifier dans les Paramètres",
         "limitations": "Limitations",

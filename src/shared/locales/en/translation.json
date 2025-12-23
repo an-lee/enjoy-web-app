@@ -244,6 +244,7 @@
       },
       "confirmTranscribe": {
         "title": "Confirm Transcription",
+        "description": "Review the transcription provider and any limitations before starting.",
         "currentProvider": "Current Provider",
         "changeSettings": "Change in Settings",
         "limitations": "Limitations",

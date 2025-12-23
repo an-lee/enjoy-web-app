@@ -235,6 +235,7 @@
       },
       "confirmTranscribe": {
         "title": "确认重新识别",
+        "description": "在开始之前，请查看识别提供商和任何限制说明。",
         "currentProvider": "当前提供商",
         "changeSettings": "在设置中修改",
         "limitations": "限制说明",
