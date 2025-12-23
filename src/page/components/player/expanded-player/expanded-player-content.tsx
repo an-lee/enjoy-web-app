@@ -2,6 +2,12 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Button } from '@/page/components/ui/button'
 import { TranscriptDisplay } from '../transcript'
+import { ExpandedPlayerControls } from './expanded-player-controls'
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from '@/page/components/ui/resizable'
 import { createLogger } from '@/shared/lib/utils'
 import { FileAccessErrorCode } from '@/page/lib/file-access'
 
@@ -82,39 +88,49 @@ export function ExpandedPlayerContent({
           )}
         </div>
       ) : isVideo ? (
-        /* Video mode: Actual video player on top, transcript below */
-        <div className="flex-1 flex flex-col">
-          <div className="shrink-0 flex items-center justify-center p-4">
-            <div className="w-full max-w-3xl aspect-video bg-black rounded-xl overflow-hidden">
-              {mediaUrl && mediaRef ? (
-                <video
-                  key={`video-expanded-${mediaUrl}`}
-                  ref={mediaRef as React.RefObject<HTMLVideoElement>}
-                  src={mediaUrl}
-                  onTimeUpdate={onTimeUpdate}
-                  onEnded={onEnded}
-                  onCanPlay={onCanPlay}
-                  onWaiting={() => log.debug('buffering...')}
-                  onStalled={() => log.warn('stalled!')}
-                  onError={onError}
-                  playsInline
-                  preload="auto"
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
+        /* Video mode: Left-right layout with resizable panels */
+        <ResizablePanelGroup orientation="horizontal" className="flex-1 min-h-0">
+          {/* Left panel: Video player */}
+          <ResizablePanel defaultSize={60} minSize={40} className="flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-4 min-h-0">
+              <div className="w-full h-full max-w-full bg-black rounded-xl overflow-hidden flex items-center justify-center">
+                {mediaUrl && mediaRef ? (
+                  <video
+                    key={`video-expanded-${mediaUrl}`}
+                    ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                    src={mediaUrl}
+                    onTimeUpdate={onTimeUpdate}
+                    onEnded={onEnded}
+                    onCanPlay={onCanPlay}
+                    onWaiting={() => log.debug('buffering...')}
+                    onStalled={() => log.warn('stalled!')}
+                    onError={onError}
+                    playsInline
+                    preload="auto"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
                   <Icon icon="lucide:video" className="w-16 h-16 text-muted-foreground/50" />
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-          {/* Transcript below video - centered with max width */}
-          <div className="flex-1 min-h-0 border-t flex justify-center">
-            <div className="w-full max-w-3xl">
+          </ResizablePanel>
+
+          {/* Resizable handle */}
+          <ResizableHandle withHandle />
+
+          {/* Right panel: Transcript and controls - min width matches Chrome sidepanel (340px) */}
+          <ResizablePanel defaultSize={40} minSize="340px" className="flex flex-col border-l min-w-[340px]">
+            {/* Transcript section - takes available space */}
+            <div className="flex-1 min-h-0">
               <TranscriptDisplay className="h-full" mediaRef={mediaRef} />
             </div>
-          </div>
-        </div>
+            {/* Controls section - fixed at bottom */}
+            <div className="shrink-0 border-t">
+              <ExpandedPlayerControls />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       ) : (
         /* Audio mode: Centered transcript for optimal reading */
         <div className="flex-1 flex justify-center">

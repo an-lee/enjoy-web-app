@@ -65,7 +65,8 @@ export function ExpandedPlayer({
           onReselectFile={onReselectFile}
         />
 
-        <ExpandedPlayerControls />
+        {/* Controls: Only show at bottom for audio mode (video mode has controls in right panel) */}
+        {!isVideo && <ExpandedPlayerControls />}
       </div>
     </TooltipProvider>
   )

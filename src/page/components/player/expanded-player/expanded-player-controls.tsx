@@ -55,7 +55,7 @@ export function ExpandedPlayerControls({}: ExpandedPlayerControlsProps) {
 
   return (
     <footer className="shrink-0 bg-background border-t">
-      <div className="max-w-3xl mx-auto px-4 py-4 md:px-6">
+      <div className="max-w-3xl mx-auto px-4 py-4">
         {/* Row 1: Progress bar with time */}
         <div className="flex items-center gap-3 mb-4">
           <span className="text-xs text-muted-foreground tabular-nums w-12 text-right shrink-0">
