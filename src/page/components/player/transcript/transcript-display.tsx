@@ -16,14 +16,15 @@ import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AIProvider } from '@/page/ai/types'
 import { ScrollArea } from '@/page/components/ui/scroll-area'
 import { useDisplayTime, usePlayerControls, useEchoRegion, useEchoRegionManager } from '@/page/hooks/player'
-import { useTranscriptDisplay } from '../../../hooks/player/use-transcript-display'
-import { useAutoScroll } from '../../../hooks/player/use-auto-scroll'
+import { useTranscriptDisplay } from '@/page/hooks/player/use-transcript-display'
+import { useAutoScroll } from '@/page/hooks/player/use-auto-scroll'
 import { TranscriptLines } from './transcript-lines'
 import { TranscribeDialog } from './transcribe-dialog'
 import { TranscriptLoadingState } from './transcript-loading-state'
 import { TranscriptErrorState } from './transcript-error-state'
 import { TranscriptEmptyState } from './transcript-empty-state'
 import { TranscriptProgressIndicator } from './transcript-progress-indicator'
+import { getTranscriptLineId } from './constants'
 import { DEFAULT_TRANSCRIPT_CONFIG } from './types'
 import type {
   TranscriptDisplayProps,
@@ -98,21 +99,24 @@ export function TranscriptDisplay({
     echoEndLineIndex,
   } = useEchoRegion()
 
-  // Auto-scroll to active line
-  const scrollTargetIndex = useMemo(() => {
-    // In echo mode, we want playback UX to keep the echo region in view.
-    // If activeLineIndex is momentarily unknown (e.g., timestamp gaps), we fall back to the echo start line.
+  // Auto-scroll target: when echo mode is active, scroll to the entire echo region
+  const { scrollTargetLineId, scrollTargetEndLineId } = useMemo(() => {
+    // In echo mode, we want to keep the entire echo region in view
     if (echoModeActive && echoStartLineIndex >= 0 && echoEndLineIndex >= echoStartLineIndex) {
-      if (activeLineIndex < 0) return echoStartLineIndex
-      if (activeLineIndex < echoStartLineIndex) return echoStartLineIndex
-      if (activeLineIndex > echoEndLineIndex) return echoEndLineIndex
-      return activeLineIndex
+      return {
+        scrollTargetLineId: getTranscriptLineId(echoStartLineIndex),
+        scrollTargetEndLineId: getTranscriptLineId(echoEndLineIndex),
+      }
     }
 
-    return activeLineIndex
+    // Normal mode: scroll to the active line only
+    return {
+      scrollTargetLineId: activeLineIndex >= 0 ? getTranscriptLineId(activeLineIndex) : null,
+      scrollTargetEndLineId: undefined,
+    }
   }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, activeLineIndex])
 
-  useAutoScroll(scrollTargetIndex, isPlaying, config, scrollAreaRef)
+  useAutoScroll(scrollTargetLineId, isPlaying, config, scrollAreaRef, scrollTargetEndLineId)
 
 
   // Transcribe state from store (shared across all components)

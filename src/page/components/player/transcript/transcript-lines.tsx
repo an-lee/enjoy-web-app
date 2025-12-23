@@ -12,6 +12,7 @@ import { ShadowReadingPanel } from '../shadow-reading/shadow-reading-panel'
 import { useEchoRegion } from '@/page/hooks/player'
 import { useRecordingsByTarget } from '@/page/hooks/queries'
 import { usePlayerStore } from '@/page/stores/player'
+import { getTranscriptLineId } from './constants'
 import type { TranscriptLineState } from './types'
 import type { TargetType } from '@/page/types/db'
 
@@ -124,6 +125,7 @@ function TranscriptLinesComponent({
         return (
           <div
             key={line.index}
+            id={getTranscriptLineId(line.index)}
             data-line-index={line.index}
             className={cn(
               'relative',
