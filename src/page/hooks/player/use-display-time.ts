@@ -6,9 +6,9 @@
  *
  * Design rationale:
  * - Display time updates very frequently (4-10 times per second via timeupdate events)
- * - Player store's updateProgress is throttled to every 2 seconds (for persistence)
- * - If displayTime were in player store, it would cause frequent re-renders of
- *   PlayerContainer and all components using usePlayerStore, even with selectors
+ * - Player session store's updateProgress is throttled to every 2 seconds (for persistence)
+ * - If displayTime were in player stores, it would cause frequent re-renders of
+ *   PlayerContainer and all components using player stores, even with selectors
  * - This separate store ensures only components that need displayTime re-render
  *
  * This is a performance optimization that follows React best practices for
