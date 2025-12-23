@@ -83,12 +83,27 @@ export function shouldBreakAtPosition(
   }
 
   // PRIORITY 2: If we have >= preferredWordsPerSegment words, be aggressive about breaking
+  // But also check if breaking here would leave too few words for the next segment
   if (currentWordCount >= SEGMENTATION_CONFIG.preferredWordsPerSegment) {
     const isPause = word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold
     const isBadBreakWord = NO_BREAK_WORDS.has(word.text.toLowerCase().trim())
 
     // Don't break on pause if it's a bad break word (unless very long pause)
     const validPause = isPause && (!isBadBreakWord || word.gapAfter >= SEGMENTATION_CONFIG.longPauseThreshold)
+
+    // Check how many words would remain after this break
+    const remainingWords = words.length - currentIndex - 1
+
+    // If breaking here would leave very few words (< 2), and we're not at max length,
+    // consider delaying the break to create more balanced segments
+    if (remainingWords < 2 && currentWordCount < SEGMENTATION_CONFIG.maxWordsPerSegment - 1) {
+      // Only break if there's a very strong signal (sentence end or strong punctuation)
+      if (word.isSentenceEnd || (word.punctuationWeight >= 6 && !word.isAbbreviation)) {
+        return true
+      }
+      // Otherwise, delay breaking to accumulate more words
+      return false
+    }
 
     if (
       word.punctuationWeight > 0 ||

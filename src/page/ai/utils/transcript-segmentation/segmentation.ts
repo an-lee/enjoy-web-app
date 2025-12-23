@@ -47,8 +47,155 @@ function groupWordsIntoSentences(words: WordWithMetadata[]): WordWithMetadata[][
 }
 
 /**
+ * Find the best break point near a target position
+ * Looks for punctuation, pauses, and meaning group boundaries within a search window
+ *
+ * @param sentenceWords - Words in the sentence
+ * @param targetIndex - Target index for ideal break point
+ * @param searchWindow - Number of words to search before and after target
+ * @returns Best break point index, or -1 if none found
+ */
+function findBestBreakNearTarget(
+  sentenceWords: WordWithMetadata[],
+  targetIndex: number,
+  searchWindow: number = 3
+): number {
+  const startIndex = Math.max(0, targetIndex - searchWindow)
+  const endIndex = Math.min(sentenceWords.length - 1, targetIndex + searchWindow)
+
+  let bestIndex = -1
+  let bestScore = 0
+
+  for (let i = startIndex; i <= endIndex; i++) {
+    const word = sentenceWords[i]
+    let score = 0
+
+    // Prefer punctuation breaks
+    if (word.punctuationWeight > 0 && !word.isAbbreviation) {
+      score += word.punctuationWeight * 3
+    }
+
+    // Prefer meaning group boundaries
+    if (word.isAtMeaningGroupBoundary) {
+      score += 5
+    }
+
+    // Prefer pause breaks
+    if (word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold) {
+      score += 3
+    }
+
+    // Prefer positions closer to target
+    const distance = Math.abs(i - targetIndex)
+    score += Math.max(0, searchWindow - distance)
+
+    // Avoid breaking at "bad break words" unless there's punctuation
+    const isBadBreakWord = word.text.toLowerCase().trim() === 'of' ||
+      word.text.toLowerCase().trim() === 'the' ||
+      word.text.toLowerCase().trim() === 'a' ||
+      word.text.toLowerCase().trim() === 'an'
+    if (isBadBreakWord && !word.punctuationWeight && word.gapAfter < SEGMENTATION_CONFIG.pauseThreshold) {
+      score -= 5
+    }
+
+    // Avoid breaking inside meaning groups
+    if (word.isInMeaningGroup && !word.isAtMeaningGroupBoundary) {
+      score -= 3
+    }
+
+    if (score > bestScore) {
+      bestScore = score
+      bestIndex = i
+    }
+  }
+
+  return bestIndex
+}
+
+/**
+ * Intelligently segment a long sentence into evenly-sized segments
+ * Prioritizes creating segments of similar length
+ *
+ * @param sentenceWords - Words in a long sentence
+ * @returns Array of word segments
+ */
+function segmentLongSentenceEvenly(
+  sentenceWords: WordWithMetadata[]
+): WordSegment[] {
+  const totalWords = sentenceWords.length
+  const preferredWords = SEGMENTATION_CONFIG.preferredWordsPerSegment
+
+  // Calculate ideal number of segments
+  const idealSegmentCount = Math.ceil(totalWords / preferredWords)
+  const wordsPerSegment = Math.ceil(totalWords / idealSegmentCount)
+
+  const segments: WordSegment[] = []
+  let currentIndex = 0
+
+  for (let segmentNum = 0; segmentNum < idealSegmentCount; segmentNum++) {
+    const isLastSegment = segmentNum === idealSegmentCount - 1
+
+    if (isLastSegment) {
+      // Last segment: take all remaining words
+      const remainingWords = sentenceWords.slice(currentIndex)
+      if (remainingWords.length > 0) {
+        segments.push({ words: remainingWords })
+      }
+      break
+    }
+
+    // Calculate target break point for this segment
+    const targetBreakIndex = currentIndex + wordsPerSegment - 1
+
+    // Find the best break point near the target
+    const bestBreakIndex = findBestBreakNearTarget(sentenceWords, targetBreakIndex, 4)
+
+    let actualBreakIndex: number
+    if (bestBreakIndex >= 0 && bestBreakIndex >= currentIndex) {
+      actualBreakIndex = bestBreakIndex
+    } else {
+      // Fallback: use target or find any reasonable break point
+      actualBreakIndex = Math.min(targetBreakIndex, sentenceWords.length - 1)
+      
+      // Try to find any break point in the range
+      for (let i = Math.max(currentIndex + 1, actualBreakIndex - 2); i <= Math.min(actualBreakIndex + 2, sentenceWords.length - 1); i++) {
+        const word = sentenceWords[i]
+        if (word.punctuationWeight > 0 || word.isAtMeaningGroupBoundary || word.gapAfter >= SEGMENTATION_CONFIG.pauseThreshold) {
+          actualBreakIndex = i
+          break
+        }
+      }
+    }
+
+    // Ensure we don't create segments that are too short
+    const segmentLength = actualBreakIndex - currentIndex + 1
+    if (segmentLength < 2 && segmentNum < idealSegmentCount - 1) {
+      // If segment would be too short, try to extend it
+      const minLength = Math.min(3, wordsPerSegment - 1)
+      actualBreakIndex = Math.min(currentIndex + minLength, sentenceWords.length - 1)
+    }
+
+    // Create segment
+    const segmentWords = sentenceWords.slice(currentIndex, actualBreakIndex + 1)
+    if (segmentWords.length > 0) {
+      segments.push({ words: segmentWords })
+    }
+
+    currentIndex = actualBreakIndex + 1
+
+    // Safety check: prevent infinite loop
+    if (currentIndex >= sentenceWords.length) {
+      break
+    }
+  }
+
+  return segments
+}
+
+/**
  * Segment words within a single sentence
  * Handles long sentences by breaking at punctuation, pauses, and meaning groups
+ * For very long sentences, uses intelligent even segmentation
  *
  * @param sentenceWords - Words in a single sentence
  * @param allWords - All words (for context in break detection)
@@ -64,6 +211,14 @@ function segmentSentence(
     return []
   }
 
+  // For very long sentences (more than 2x maxWordsPerSegment), use even segmentation
+  const isVeryLongSentence = sentenceWords.length > SEGMENTATION_CONFIG.maxWordsPerSegment * 2
+
+  if (isVeryLongSentence) {
+    return segmentLongSentenceEvenly(sentenceWords)
+  }
+
+  // For shorter sentences, use the original incremental approach
   const segments: WordSegment[] = []
   let currentSegment: WordWithMetadata[] = []
   let currentWordCount = 0

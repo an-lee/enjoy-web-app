@@ -988,5 +988,99 @@ describe('convertToTranscriptFormat', () => {
       expect(allWords[0].text).toBe('-start')
     })
   })
+
+  describe('Even Segmentation for Long Sentences', () => {
+    it('should segment long sentences into evenly-sized segments', () => {
+      // Example from user feedback: long sentence that should be evenly split
+      const text =
+        'It takes advantage of the fact that specific forms of breathing play us into a state of deep relaxation by slowing our heart rate down.'
+      const words = text.split(' ')
+      const timings: RawWordTiming[] = words.map((word, i) => ({
+        text: word,
+        startTime: i * 0.3,
+        endTime: i * 0.3 + 0.3,
+      }))
+
+      const result = convertToTranscriptFormat(text, timings, 'en')
+      const segmentTexts = result.timeline.map((seg) => seg.text.trim())
+
+      // Should have multiple segments (long sentence)
+      expect(result.timeline.length).toBeGreaterThan(2)
+
+      // Calculate word counts for each segment
+      const wordCounts = segmentTexts.map((seg) => seg.split(/\s+/).length)
+
+      // All segments should have reasonable length (not too short, not too long)
+      wordCounts.forEach((count) => {
+        expect(count).toBeGreaterThanOrEqual(2) // At least 2 words
+        expect(count).toBeLessThanOrEqual(12) // At most maxWordsPerSegment
+      })
+
+      // Segments should be relatively evenly sized
+      // The difference between min and max should not be too large
+      const minCount = Math.min(...wordCounts)
+      const maxCount = Math.max(...wordCounts)
+      const difference = maxCount - minCount
+
+      // For a long sentence, segments should be relatively balanced
+      // Allow some variation but not extreme differences
+      expect(difference).toBeLessThanOrEqual(6) // Max difference of 6 words
+
+      // Verify all words are present
+      const allText = segmentTexts.join(' ')
+      words.forEach((word) => {
+        expect(allText).toContain(word.replace(/[.,!?;:]/g, ''))
+      })
+    })
+
+    it('should avoid creating very short segments (1-2 words) in the middle of long sentences', () => {
+      const text =
+        'This is a very long sentence that contains many words and should be split into multiple segments of roughly equal length to provide a better reading experience.'
+      const words = text.split(' ')
+      const timings: RawWordTiming[] = words.map((word, i) => ({
+        text: word,
+        startTime: i * 0.2,
+        endTime: i * 0.2 + 0.2,
+      }))
+
+      const result = convertToTranscriptFormat(text, timings, 'en')
+      const segmentTexts = result.timeline.map((seg) => seg.text.trim())
+      const wordCounts = segmentTexts.map((seg) => seg.split(/\s+/).length)
+
+      // Check middle segments (not first, not last) should not be too short
+      for (let i = 1; i < wordCounts.length - 1; i++) {
+        expect(wordCounts[i]).toBeGreaterThanOrEqual(3) // Middle segments should have at least 3 words
+      }
+    })
+
+    it('should prioritize even segmentation over strict break point adherence for very long sentences', () => {
+      // A very long sentence (more than 2x maxWordsPerSegment = 24 words)
+      const text =
+        'The quick brown fox jumps over the lazy dog and then continues running through the forest while the sun shines brightly overhead creating beautiful patterns of light and shadow.'
+      const words = text.split(' ')
+      expect(words.length).toBeGreaterThan(24) // Ensure it's a very long sentence
+
+      const timings: RawWordTiming[] = words.map((word, i) => ({
+        text: word,
+        startTime: i * 0.15,
+        endTime: i * 0.15 + 0.15,
+      }))
+
+      const result = convertToTranscriptFormat(text, timings, 'en')
+      const segmentTexts = result.timeline.map((seg) => seg.text.trim())
+      const wordCounts = segmentTexts.map((seg) => seg.split(/\s+/).length)
+
+      // Should have multiple segments
+      expect(result.timeline.length).toBeGreaterThan(3)
+
+      // Segments should be relatively balanced
+      const avgCount = wordCounts.reduce((a, b) => a + b, 0) / wordCounts.length
+      wordCounts.forEach((count) => {
+        // Each segment should be within reasonable range of average
+        expect(count).toBeGreaterThanOrEqual(Math.max(2, avgCount - 4))
+        expect(count).toBeLessThanOrEqual(Math.min(12, avgCount + 4))
+      })
+    })
+  })
 })
 
