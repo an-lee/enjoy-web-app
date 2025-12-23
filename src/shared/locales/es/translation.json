@@ -214,6 +214,21 @@
       "syncing": "Sincronizando transcripciones del servidor...",
       "generateTranscript": "Generar Transcripción",
       "retranscribing": "Transcribiendo...",
+      "retranscribeSuccess": "La transcripción se ha regenerado exitosamente",
+      "retranscribeErrors": {
+        "audioNotFound": "Archivo de audio no encontrado. Por favor, recargue el medio.",
+        "videoNotFound": "Archivo de video no encontrado. Por favor, recargue el medio.",
+        "mediaNotFound": "Archivo multimedia no encontrado. Por favor, recargue el medio.",
+        "mediaNotReady": "El medio no está listo. Por favor, espere a que se cargue completamente.",
+        "noAudioTrack": "No se encontró pista de audio en el archivo multimedia.",
+        "corsError": "No se puede acceder al archivo multimedia debido a restricciones de seguridad del navegador.",
+        "asrFailed": "El reconocimiento de voz falló. Por favor, inténtelo de nuevo o revise su configuración.",
+        "ffmpegFailed": "La extracción de audio falló. Por favor, inténtelo de nuevo.",
+        "mediaRecorderFailed": "La captura de audio falló. Su navegador puede no soportar esta función.",
+        "networkError": "Ocurrió un error de red. Por favor, verifique su conexión e inténtelo de nuevo.",
+        "fileTooLarge": "El archivo es demasiado grande para procesar. Por favor, pruebe con un archivo más pequeño.",
+        "generic": "No se pudo re-transcribir el medio. Por favor, inténtelo de nuevo."
+      },
       "provider": {
         "enjoy": "Enjoy AI",
         "local": "Modelo Local",

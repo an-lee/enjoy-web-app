@@ -212,6 +212,21 @@
       "noTranscriptHint": "字幕将自动生成或可手动导入",
       "retranscribe": "重新识别",
       "retranscribing": "识别中...",
+      "retranscribeSuccess": "字幕已成功重新生成",
+      "retranscribeErrors": {
+        "audioNotFound": "未找到音频文件。请重新加载媒体。",
+        "videoNotFound": "未找到视频文件。请重新加载媒体。",
+        "mediaNotFound": "未找到媒体文件。请重新加载媒体。",
+        "mediaNotReady": "媒体尚未就绪。请等待其完全加载。",
+        "noAudioTrack": "在媒体文件中未找到音轨。",
+        "corsError": "由于浏览器安全限制，无法访问媒体文件。",
+        "asrFailed": "语音识别失败。请重试或检查您的设置。",
+        "ffmpegFailed": "音频提取失败。请重试。",
+        "mediaRecorderFailed": "音频捕获失败。您的浏览器可能不支持此功能。",
+        "networkError": "发生网络错误。请检查您的连接并重试。",
+        "fileTooLarge": "文件太大，无法处理。请尝试较小的文件。",
+        "generic": "重新识别媒体失败。请重试。"
+      },
       "provider": {
         "enjoy": "Enjoy AI",
         "local": "本地模型",

@@ -214,6 +214,21 @@
       "syncing": "Synchronisation des transcriptions depuis le serveur...",
       "generateTranscript": "Générer la Transcription",
       "retranscribing": "Transcription en cours...",
+      "retranscribeSuccess": "La transcription a été régénérée avec succès",
+      "retranscribeErrors": {
+        "audioNotFound": "Fichier audio introuvable. Veuillez recharger le média.",
+        "videoNotFound": "Fichier vidéo introuvable. Veuillez recharger le média.",
+        "mediaNotFound": "Fichier multimédia introuvable. Veuillez recharger le média.",
+        "mediaNotReady": "Le média n'est pas prêt. Veuillez attendre qu'il soit complètement chargé.",
+        "noAudioTrack": "Aucune piste audio trouvée dans le fichier multimédia.",
+        "corsError": "Impossible d'accéder au fichier multimédia en raison des restrictions de sécurité du navigateur.",
+        "asrFailed": "La reconnaissance vocale a échoué. Veuillez réessayer ou vérifier vos paramètres.",
+        "ffmpegFailed": "L'extraction audio a échoué. Veuillez réessayer.",
+        "mediaRecorderFailed": "La capture audio a échoué. Votre navigateur peut ne pas supporter cette fonctionnalité.",
+        "networkError": "Une erreur réseau s'est produite. Veuillez vérifier votre connexion et réessayer.",
+        "fileTooLarge": "Le fichier est trop volumineux pour être traité. Veuillez essayer un fichier plus petit.",
+        "generic": "Impossible de re-transcrire le média. Veuillez réessayer."
+      },
       "provider": {
         "enjoy": "Enjoy AI",
         "local": "Modèle Local",

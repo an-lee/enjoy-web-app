@@ -214,6 +214,21 @@
       "syncing": "Transkripte werden vom Server synchronisiert...",
       "generateTranscript": "Transkript generieren",
       "retranscribing": "Transkribiere...",
+      "retranscribeSuccess": "Transkript wurde erfolgreich neu generiert",
+      "retranscribeErrors": {
+        "audioNotFound": "Audiodatei nicht gefunden. Bitte laden Sie die Medien neu.",
+        "videoNotFound": "Videodatei nicht gefunden. Bitte laden Sie die Medien neu.",
+        "mediaNotFound": "Mediendatei nicht gefunden. Bitte laden Sie die Medien neu.",
+        "mediaNotReady": "Medien sind nicht bereit. Bitte warten Sie, bis sie vollständig geladen sind.",
+        "noAudioTrack": "Kein Audiotrack in der Mediendatei gefunden.",
+        "corsError": "Auf Mediendatei kann aufgrund von Browsersicherheitseinschränkungen nicht zugegriffen werden.",
+        "asrFailed": "Spracherkennung fehlgeschlagen. Bitte versuchen Sie es erneut oder überprüfen Sie Ihre Einstellungen.",
+        "ffmpegFailed": "Audioextraktion fehlgeschlagen. Bitte versuchen Sie es erneut.",
+        "mediaRecorderFailed": "Audioaufnahme fehlgeschlagen. Ihr Browser unterstützt diese Funktion möglicherweise nicht.",
+        "networkError": "Netzwerkfehler aufgetreten. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+        "fileTooLarge": "Datei ist zu groß zum Verarbeiten. Bitte versuchen Sie es mit einer kleineren Datei.",
+        "generic": "Medien konnten nicht neu transkribiert werden. Bitte versuchen Sie es erneut."
+      },
       "provider": {
         "enjoy": "Enjoy AI",
         "local": "Lokales Modell",

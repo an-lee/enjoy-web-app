@@ -214,6 +214,21 @@
       "syncing": "Sincronizando transcrições do servidor...",
       "generateTranscript": "Gerar Transcrição",
       "retranscribing": "Transcrevendo...",
+      "retranscribeSuccess": "A transcrição foi regenerada com sucesso",
+      "retranscribeErrors": {
+        "audioNotFound": "Arquivo de áudio não encontrado. Por favor, recarregue a mídia.",
+        "videoNotFound": "Arquivo de vídeo não encontrado. Por favor, recarregue a mídia.",
+        "mediaNotFound": "Arquivo de mídia não encontrado. Por favor, recarregue a mídia.",
+        "mediaNotReady": "A mídia não está pronta. Por favor, aguarde até que esteja totalmente carregada.",
+        "noAudioTrack": "Nenhuma faixa de áudio encontrada no arquivo de mídia.",
+        "corsError": "Não é possível acessar o arquivo de mídia devido a restrições de segurança do navegador.",
+        "asrFailed": "O reconhecimento de voz falhou. Por favor, tente novamente ou verifique suas configurações.",
+        "ffmpegFailed": "A extração de áudio falhou. Por favor, tente novamente.",
+        "mediaRecorderFailed": "A captura de áudio falhou. Seu navegador pode não suportar este recurso.",
+        "networkError": "Ocorreu um erro de rede. Por favor, verifique sua conexão e tente novamente.",
+        "fileTooLarge": "O arquivo é muito grande para processar. Por favor, tente com um arquivo menor.",
+        "generic": "Falha ao re-transcrever a mídia. Por favor, tente novamente."
+      },
       "provider": {
         "enjoy": "Enjoy AI",
         "local": "Modelo Local",

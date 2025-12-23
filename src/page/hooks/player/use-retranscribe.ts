@@ -8,6 +8,7 @@
 
 import { useState, useCallback, RefObject } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { usePlayerStore } from '@/page/stores/player'
 import { getCurrentDatabase } from '@/page/db'
 import { asrService } from '@/page/ai/services/asr'
@@ -22,6 +23,88 @@ import type { TranscriptInput, TargetType } from '@/page/types/db'
 // ============================================================================
 
 const log = createLogger({ name: 'useRetranscribe' })
+
+// ============================================================================
+// Error Messages Helper
+// ============================================================================
+
+/**
+ * Get user-friendly error message for retranscription errors
+ */
+function getRetranscriptionErrorMessage(error: unknown, t: (key: string, options?: any) => string): string {
+  const errorMessage = error instanceof Error ? error.message : String(error)
+
+  // Map common error messages to user-friendly translations
+  if (errorMessage.includes('not found') || errorMessage.includes('not available')) {
+    if (errorMessage.includes('Audio') || errorMessage.includes('audio')) {
+      return t('player.transcript.retranscribeErrors.audioNotFound', {
+        defaultValue: 'Audio file not found. Please try reloading the media.',
+      })
+    }
+    if (errorMessage.includes('Video') || errorMessage.includes('video')) {
+      return t('player.transcript.retranscribeErrors.videoNotFound', {
+        defaultValue: 'Video file not found. Please try reloading the media.',
+      })
+    }
+    return t('player.transcript.retranscribeErrors.mediaNotFound', {
+      defaultValue: 'Media file not found. Please try reloading the media.',
+    })
+  }
+
+  if (errorMessage.includes('not ready') || errorMessage.includes('not ready')) {
+    return t('player.transcript.retranscribeErrors.mediaNotReady', {
+      defaultValue: 'Media is not ready. Please wait for it to load completely.',
+    })
+  }
+
+  if (errorMessage.includes('No audio track') || errorMessage.includes('no audio track')) {
+    return t('player.transcript.retranscribeErrors.noAudioTrack', {
+      defaultValue: 'No audio track found in the media file.',
+    })
+  }
+
+  if (errorMessage.includes('CORS') || errorMessage.includes('cors')) {
+    return t('player.transcript.retranscribeErrors.corsError', {
+      defaultValue: 'Unable to access media file due to browser security restrictions.',
+    })
+  }
+
+  if (errorMessage.includes('ASR') || errorMessage.includes('transcription')) {
+    return t('player.transcript.retranscribeErrors.asrFailed', {
+      defaultValue: 'Speech recognition failed. Please try again or check your settings.',
+    })
+  }
+
+  if (errorMessage.includes('FFmpeg') || errorMessage.includes('ffmpeg')) {
+    return t('player.transcript.retranscribeErrors.ffmpegFailed', {
+      defaultValue: 'Audio extraction failed. Please try again.',
+    })
+  }
+
+  if (errorMessage.includes('MediaRecorder') || errorMessage.includes('MediaRecorder')) {
+    return t('player.transcript.retranscribeErrors.mediaRecorderFailed', {
+      defaultValue: 'Audio capture failed. Your browser may not support this feature.',
+    })
+  }
+
+  if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
+    return t('player.transcript.retranscribeErrors.networkError', {
+      defaultValue: 'Network error occurred. Please check your connection and try again.',
+    })
+  }
+
+  if (errorMessage.includes('file size') || errorMessage.includes('too large')) {
+    return t('player.transcript.retranscribeErrors.fileTooLarge', {
+      defaultValue: 'File is too large to process. Please try a smaller file.',
+    })
+  }
+
+  // Default error message
+  return t('player.transcript.retranscribeErrors.generic', {
+    defaultValue: 'Failed to retranscribe media. Please try again.',
+    error: errorMessage,
+  })
+}
 
 /**
  * Extract audio from media element using MediaRecorder API
@@ -408,6 +491,7 @@ export interface UseRetranscribeOptions {
 
 export function useRetranscribe(options?: UseRetranscribeOptions) {
   const { mediaRef } = options || {}
+  const { t } = useTranslation()
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
   const [progressPercent, setProgressPercent] = useState<number | null>(null)
@@ -425,7 +509,7 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
 
       if (!currentSession) {
         log.error('No current session available')
-        toast.error('No media is currently playing')
+        toast.error(t('player.transcript.noMedia', { defaultValue: 'No media is currently playing' }))
         return
       }
 
@@ -879,7 +963,7 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
         setIsTranscribing(false)
         onProgress?.('Complete', 100)
 
-        toast.success('Transcript has been regenerated successfully')
+        toast.success(t('player.transcript.retranscribeSuccess', { defaultValue: 'Transcript has been regenerated successfully' }))
       } catch (error) {
         log.error('Retranscription failed:', error)
         setProgress(null)
@@ -887,12 +971,12 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
         setIsTranscribing(false)
         onProgress?.('Error', undefined)
 
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to retranscribe media'
+        // Show user-friendly error message (if not already shown)
+        const errorMessage = getRetranscriptionErrorMessage(error, t)
         toast.error(errorMessage)
       }
     },
-    [currentSession, createTranscript]
+    [currentSession, createTranscript, t]
   )
 
   return {
