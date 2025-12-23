@@ -274,7 +274,14 @@
         "description": "Êtes-vous sûr de vouloir supprimer cet enregistrement ? Cette action est irréversible.",
         "error": "Échec de la suppression de l'enregistrement"
       },
-      "playbackError": "Échec de la lecture de l'enregistrement"
+      "playbackError": "Échec de la lecture de l'enregistrement",
+      "uploadSubtitle": "Télécharger les sous-titres",
+      "uploadSubtitleHint": "Téléchargez un fichier .srt ou .vtt",
+      "noMedia": "Aucun média n'est actuellement en cours de lecture",
+      "emptySubtitle": "Le fichier de sous-titres est vide ou invalide",
+      "uploadSuccess": "Sous-titres téléchargés avec succès",
+      "uploadFailed": "Échec du téléchargement des sous-titres",
+      "invalidFileType": "Veuillez sélectionner un fichier .srt, .vtt, .ssa ou .ass"
     }
   },
   "vocabulary": {

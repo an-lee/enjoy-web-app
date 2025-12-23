@@ -274,7 +274,14 @@
         "description": "이 녹음을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
         "error": "녹음 삭제에 실패했습니다"
       },
-      "playbackError": "녹음 재생에 실패했습니다"
+      "playbackError": "녹음 재생에 실패했습니다",
+      "uploadSubtitle": "자막 업로드",
+      "uploadSubtitleHint": ".srt 또는 .vtt 파일을 업로드하세요",
+      "noMedia": "현재 재생 중인 미디어가 없습니다",
+      "emptySubtitle": "자막 파일이 비어 있거나 유효하지 않습니다",
+      "uploadSuccess": "자막이 성공적으로 업로드되었습니다",
+      "uploadFailed": "자막 업로드에 실패했습니다",
+      "invalidFileType": ".srt, .vtt, .ssa 또는 .ass 파일을 선택해주세요"
     }
   },
   "vocabulary": {

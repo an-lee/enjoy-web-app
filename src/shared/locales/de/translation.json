@@ -274,7 +274,14 @@
         "description": "Sind Sie sicher, dass Sie diese Aufnahme löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
         "error": "Aufnahme konnte nicht gelöscht werden"
       },
-      "playbackError": "Aufnahme konnte nicht abgespielt werden"
+      "playbackError": "Aufnahme konnte nicht abgespielt werden",
+      "uploadSubtitle": "Untertitel hochladen",
+      "uploadSubtitleHint": "Laden Sie eine .srt- oder .vtt-Datei hoch",
+      "noMedia": "Es wird derzeit kein Medium abgespielt",
+      "emptySubtitle": "Untertiteldatei ist leer oder ungültig",
+      "uploadSuccess": "Untertitel erfolgreich hochgeladen",
+      "uploadFailed": "Untertitel konnte nicht hochgeladen werden",
+      "invalidFileType": "Bitte wählen Sie eine .srt-, .vtt-, .ssa- oder .ass-Datei aus"
     }
   },
   "vocabulary": {

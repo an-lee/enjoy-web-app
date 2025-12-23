@@ -274,7 +274,14 @@
       },
       "playbackError": "播放录音失败",
       "syncing": "正在从服务器同步字幕...",
-      "generateTranscript": "生成字幕"
+      "generateTranscript": "生成字幕",
+      "uploadSubtitle": "上传字幕",
+      "uploadSubtitleHint": "上传 .srt 或 .vtt 文件",
+      "noMedia": "当前没有正在播放的媒体",
+      "emptySubtitle": "字幕文件为空或无效",
+      "uploadSuccess": "字幕上传成功",
+      "uploadFailed": "上传字幕失败",
+      "invalidFileType": "请选择 .srt、.vtt、.ssa 或 .ass 文件"
     }
   },
   "vocabulary": {

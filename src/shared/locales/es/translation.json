@@ -274,7 +274,14 @@
         "description": "¿Está seguro de que desea eliminar esta grabación? Esta acción no se puede deshacer.",
         "error": "Error al eliminar la grabación"
       },
-      "playbackError": "Error al reproducir la grabación"
+      "playbackError": "Error al reproducir la grabación",
+      "uploadSubtitle": "Subir subtítulos",
+      "uploadSubtitleHint": "Sube un archivo .srt o .vtt",
+      "noMedia": "No hay ningún medio reproduciéndose actualmente",
+      "emptySubtitle": "El archivo de subtítulos está vacío o es inválido",
+      "uploadSuccess": "Subtítulos subidos exitosamente",
+      "uploadFailed": "Error al subir subtítulos",
+      "invalidFileType": "Por favor selecciona un archivo .srt, .vtt, .ssa o .ass"
     }
   },
   "vocabulary": {

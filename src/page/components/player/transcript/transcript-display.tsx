@@ -21,6 +21,7 @@ import { Progress } from '@/page/components/ui/progress'
 import { useDisplayTime, usePlayerControls, useRetranscribe, useEchoRegion, useEchoRegionManager } from '@/page/hooks/player'
 import { useTranscriptDisplay } from '../../../hooks/player/use-transcript-display'
 import { useAutoScroll } from '../../../hooks/player/use-auto-scroll'
+import { useUploadSubtitle } from '../../../hooks/player/use-upload-subtitle'
 import { TranscriptLines } from './transcript-lines'
 import { RetranscribeDialog } from './retranscribe-dialog'
 import { DEFAULT_TRANSCRIPT_CONFIG } from './types'
@@ -116,9 +117,17 @@ export function TranscriptDisplay({
   useAutoScroll(scrollTargetIndex, isPlaying, config, scrollAreaRef)
 
 
-  // Retranscribe functionality - only used if managing state internally
+  // Retranscribe functionality
   const { retranscribe, isTranscribing, progress, progressPercent } = useRetranscribe()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+
+  // Upload subtitle functionality
+  const {
+    triggerFileSelect,
+    handleFileSelect,
+    fileInputRef,
+    isUploading: isUploadingSubtitle,
+  } = useUploadSubtitle()
 
   // Get current ASR provider info
   const asrConfig = getAIServiceConfig('asr')
@@ -126,11 +135,16 @@ export function TranscriptDisplay({
   // Get media duration for limitations
   const mediaDuration = currentSession?.duration || 0
 
-  // Handle retranscribe with confirmation - only if managing state internally
+  // Handle retranscribe with confirmation
   const handleConfirmRetranscribe = useCallback(() => {
     setShowConfirmDialog(false)
     retranscribe(primaryLanguage || undefined)
   }, [retranscribe, primaryLanguage])
+
+  // Handle transcribe button click
+  const handleTranscribeClick = useCallback(() => {
+    setShowConfirmDialog(true)
+  }, [])
 
   // Handle line click
   const handleLineClick = useCallback(
@@ -190,8 +204,35 @@ export function TranscriptDisplay({
     )
   }
 
-  // Empty state
-  if (availableTranscripts.length === 0) {
+  // Empty state - show when no transcripts available
+  // Logic:
+  // 1. If syncing, show loading state
+  // 2. If sync completed and no transcripts, show empty state with upload/transcribe buttons
+  // 3. If transcribing, show progress (handled separately in main render)
+  const showEmptyState = availableTranscripts.length === 0
+
+  if (showEmptyState) {
+    // Show loading state while syncing
+    if (syncState.isSyncing) {
+      return (
+        <div
+          className={cn(
+            'flex flex-col items-center justify-center h-full text-center px-4',
+            className
+          )}
+        >
+          <Icon
+            icon="lucide:loader-2"
+            className="w-8 h-8 animate-spin text-primary mb-3"
+          />
+          <p className="text-sm text-muted-foreground">
+            {t('player.transcript.syncing', { defaultValue: 'Syncing transcripts from server...' })}
+          </p>
+        </div>
+      )
+    }
+
+    // Show empty state with action buttons after sync completes
     return (
       <div
         className={cn(
@@ -204,46 +245,56 @@ export function TranscriptDisplay({
           className="w-12 h-12 text-muted-foreground/40 mb-3"
         />
 
-        {/* Show sync status if syncing */}
-        {syncState.isSyncing && (
-          <>
-            <Icon
-              icon="lucide:loader-2"
-              className="w-6 h-6 animate-spin text-primary mb-2"
+        <p className="text-sm text-muted-foreground mb-1">
+          {t('player.transcript.noTranscript')}
+        </p>
+        <p className="text-xs text-muted-foreground/60 mb-4">
+          {t('player.transcript.noTranscriptHint')}
+        </p>
+
+        {/* Action buttons */}
+        <div className="flex flex-col gap-2 w-full max-w-xs">
+          {/* Upload Subtitle Button */}
+          <div className="relative">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".srt,.vtt"
+              onChange={handleFileSelect}
+              className="hidden"
             />
-            <p className="text-sm text-muted-foreground mb-1">
-              {t('player.transcript.syncing', { defaultValue: 'Syncing transcripts from server...' })}
-            </p>
-          </>
-        )}
+            <button
+              type="button"
+              onClick={triggerFileSelect}
+              disabled={isUploadingSubtitle || isTranscribing}
+              className={cn(
+                'w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors',
+                'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+            >
+              {isUploadingSubtitle ? (
+                <>
+                  <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin" />
+                  <span>{t('common.loading')}</span>
+                </>
+              ) : (
+                <>
+                  <Icon icon="lucide:upload" className="w-4 h-4" />
+                  <span>{t('player.transcript.uploadSubtitle', { defaultValue: 'Upload Subtitle' })}</span>
+                </>
+              )}
+            </button>
+          </div>
 
-        {/* Show error if sync failed */}
-        {syncState.hasSynced && syncState.error && !syncState.isSyncing && (
-          <p className="text-sm text-destructive mb-3">
-            {syncState.error}
-          </p>
-        )}
-
-        {/* Show no transcript message */}
-        {!syncState.isSyncing && (
-          <>
-            <p className="text-sm text-muted-foreground">
-              {t('player.transcript.noTranscript')}
-            </p>
-            <p className="text-xs text-muted-foreground/60 mt-1">
-              {t('player.transcript.noTranscriptHint')}
-            </p>
-          </>
-        )}
-
-        {/* Show generate transcript button if sync completed and still no transcripts */}
-        {syncState.hasSynced && !syncState.isSyncing && availableTranscripts.length === 0 && (
+          {/* Transcribe Button */}
           <button
             type="button"
-            onClick={handleConfirmRetranscribe}
-            disabled={isTranscribing}
+            onClick={handleTranscribeClick}
+            disabled={isTranscribing || isUploadingSubtitle}
             className={cn(
-              'mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              'w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors',
               'bg-primary text-primary-foreground hover:bg-primary/90',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
@@ -261,7 +312,7 @@ export function TranscriptDisplay({
               </>
             )}
           </button>
-        )}
+        </div>
       </div>
     )
   }

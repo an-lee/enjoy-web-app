@@ -274,7 +274,14 @@
         "description": "Tem certeza de que deseja excluir esta gravação? Esta ação não pode ser desfeita.",
         "error": "Falha ao excluir gravação"
       },
-      "playbackError": "Falha ao reproduzir gravação"
+      "playbackError": "Falha ao reproduzir gravação",
+      "uploadSubtitle": "Enviar legendas",
+      "uploadSubtitleHint": "Envie um arquivo .srt ou .vtt",
+      "noMedia": "Nenhuma mídia está sendo reproduzida no momento",
+      "emptySubtitle": "O arquivo de legendas está vazio ou inválido",
+      "uploadSuccess": "Legendas enviadas com sucesso",
+      "uploadFailed": "Falha ao enviar legendas",
+      "invalidFileType": "Por favor, selecione um arquivo .srt, .vtt, .ssa ou .ass"
     }
   },
   "vocabulary": {

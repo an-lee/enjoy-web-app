@@ -274,7 +274,14 @@
         "description": "この録音を削除してもよろしいですか？この操作は元に戻せません。",
         "error": "録音の削除に失敗しました"
       },
-      "playbackError": "録音の再生に失敗しました"
+      "playbackError": "録音の再生に失敗しました",
+      "uploadSubtitle": "字幕をアップロード",
+      "uploadSubtitleHint": ".srt または .vtt ファイルをアップロード",
+      "noMedia": "現在再生中のメディアがありません",
+      "emptySubtitle": "字幕ファイルが空であるか無効です",
+      "uploadSuccess": "字幕のアップロードに成功しました",
+      "uploadFailed": "字幕のアップロードに失敗しました",
+      "invalidFileType": ".srt、.vtt、.ssa または .ass ファイルを選択してください"
     }
   },
   "vocabulary": {
