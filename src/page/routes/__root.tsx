@@ -27,7 +27,6 @@ import {
 import { Toaster } from '@/page/components/ui/sonner'
 import { PlayerContainer } from '@/page/components/player'
 import { AppHotkeysProvider, HotkeysHelpModal, useAppHotkey } from '@/page/components/hotkeys'
-import { WorkerMonitorFloating } from '@/page/components/worker-monitor'
 import { useAuthStore, usePlayerStore } from '@/page/stores'
 import { initDatabaseWithCleanup, initSyncManager, switchDatabase } from '@/page/db'
 
@@ -380,8 +379,6 @@ function RootComponent() {
           </SidebarProvider>
         )}
 
-          {/* Global Worker Monitor - floating window (dev mode only) */}
-          {isHydrated && !isLoginPage && import.meta.env.DEV && <WorkerMonitorFloating />}
 
           {/* Hotkeys Help Modal */}
           <HotkeysHelpModal

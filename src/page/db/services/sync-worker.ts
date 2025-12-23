@@ -6,6 +6,7 @@
  */
 
 import { useWorkerStatusStore } from '@/page/stores/worker-status'
+import { WorkerTaskManager } from '@/page/lib/workers/worker-task-manager'
 
 // Worker context
 let workerContext: Worker | null = null
@@ -173,37 +174,36 @@ export function terminateSyncWorker(): void {
  * Send message to sync worker and wait for response
  */
 function sendToWorker(message: SyncWorkerMessage): Promise<SyncWorkerResponse> {
-  const store = useWorkerStatusStore.getState()
-  store.updateWorkerStatus(WORKER_ID, 'running')
-  store.incrementTask(WORKER_ID, 'active')
+  const taskManager = new WorkerTaskManager({
+    workerId: WORKER_ID,
+    workerType: 'sync',
+    metadata: {
+      type: message.type,
+      entityType: message.entityType,
+    },
+  })
 
-  return new Promise((resolve, reject) => {
-    const worker = getSyncWorker()
-    const messageId = `${Date.now()}-${Math.random()}`
+  return taskManager.execute(async (taskId) => {
+    return new Promise<SyncWorkerResponse>((resolve, reject) => {
+      const worker = getSyncWorker()
 
-    const handler = (e: MessageEvent<SyncWorkerResponse>) => {
-      if (e.data.id === messageId) {
-        worker.removeEventListener('message', handler)
+      const handler = (e: MessageEvent<SyncWorkerResponse>) => {
+        if (e.data.id === taskId) {
+          worker.removeEventListener('message', handler)
 
-        if (e.data.type === 'error') {
-          store.incrementTask(WORKER_ID, 'failed')
-          store.updateWorkerError(WORKER_ID, e.data.error || 'Unknown error')
-          reject(new Error(e.data.error || 'Unknown error'))
-        } else {
-          store.incrementTask(WORKER_ID, 'completed')
-          resolve(e.data)
-        }
-
-        // Update status to ready if no active tasks
-        const currentStatus = store.getWorkerStatus(WORKER_ID)
-        if (currentStatus && currentStatus.activeTasks === 0) {
-          store.updateWorkerStatus(WORKER_ID, 'ready')
+          if (e.data.type === 'error') {
+            const store = useWorkerStatusStore.getState()
+            store.updateWorkerError(WORKER_ID, e.data.error || 'Unknown error')
+            reject(new Error(e.data.error || 'Unknown error'))
+          } else {
+            resolve(e.data)
+          }
         }
       }
-    }
 
-    worker.addEventListener('message', handler)
-    worker.postMessage({ ...message, id: messageId })
+      worker.addEventListener('message', handler)
+      worker.postMessage({ ...message, id: taskId })
+    })
   })
 }
 

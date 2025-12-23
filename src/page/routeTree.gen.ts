@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkerMonitorRouteImport } from './routes/worker-monitor'
 import { Route as VoiceSynthesisRouteImport } from './routes/voice-synthesis'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as SyncRouteImport } from './routes/sync'
@@ -19,6 +20,11 @@ import { Route as LibraryRouteImport } from './routes/library'
 import { Route as CreditsRouteImport } from './routes/credits'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WorkerMonitorRoute = WorkerMonitorRouteImport.update({
+  id: '/worker-monitor',
+  path: '/worker-monitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VoiceSynthesisRoute = VoiceSynthesisRouteImport.update({
   id: '/voice-synthesis',
   path: '/voice-synthesis',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/sync': typeof SyncRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
+  '/worker-monitor': typeof WorkerMonitorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/sync': typeof SyncRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
+  '/worker-monitor': typeof WorkerMonitorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/sync': typeof SyncRoute
   '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
+  '/worker-monitor': typeof WorkerMonitorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/sync'
     | '/vocabulary'
     | '/voice-synthesis'
+    | '/worker-monitor'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/sync'
     | '/vocabulary'
     | '/voice-synthesis'
+    | '/worker-monitor'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/sync'
     | '/vocabulary'
     | '/voice-synthesis'
+    | '/worker-monitor'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,10 +157,18 @@ export interface RootRouteChildren {
   SyncRoute: typeof SyncRoute
   VocabularyRoute: typeof VocabularyRoute
   VoiceSynthesisRoute: typeof VoiceSynthesisRoute
+  WorkerMonitorRoute: typeof WorkerMonitorRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/worker-monitor': {
+      id: '/worker-monitor'
+      path: '/worker-monitor'
+      fullPath: '/worker-monitor'
+      preLoaderRoute: typeof WorkerMonitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/voice-synthesis': {
       id: '/voice-synthesis'
       path: '/voice-synthesis'
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   SyncRoute: SyncRoute,
   VocabularyRoute: VocabularyRoute,
   VoiceSynthesisRoute: VoiceSynthesisRoute,
+  WorkerMonitorRoute: WorkerMonitorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

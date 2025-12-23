@@ -6,6 +6,7 @@
 
 import type { MonoPcmSegment } from '../segment'
 import { useWorkerStatusStore } from '@/page/stores/worker-status'
+import { WorkerTaskManager } from '@/page/lib/workers/worker-task-manager'
 
 // ============================================================================
 // Types
@@ -24,7 +25,6 @@ interface DecodeTask {
 class AudioAnalysisWorkerManager {
   private worker: Worker | null = null
   private tasks = new Map<string, DecodeTask>()
-  private taskIdCounter = 0
   private isWebCodecsSupported: boolean | null = null
   private readonly workerId = 'audio-analysis-worker'
   private readonly workerName = 'Audio Analysis Worker'
@@ -65,10 +65,8 @@ class AudioAnalysisWorkerManager {
         this.tasks.delete(response.taskId)
 
         if (response.type === 'result') {
-          store.incrementTask(this.workerId, 'completed')
           task.resolve(response.data)
         } else if (response.type === 'error') {
-          store.incrementTask(this.workerId, 'failed')
           store.updateWorkerError(this.workerId, response.error || 'Unknown error')
           task.reject(new Error(response.error || 'Unknown error'))
         }
@@ -135,29 +133,33 @@ class AudioAnalysisWorkerManager {
       throw new Error('Failed to initialize audio analysis worker')
     }
 
-    const store = useWorkerStatusStore.getState()
-    const taskId = `task-${++this.taskIdCounter}`
-
-    store.updateWorkerStatus(this.workerId, 'running')
-    store.incrementTask(this.workerId, 'active')
-
-    return new Promise<MonoPcmSegment>((resolve, reject) => {
-      this.tasks.set(taskId, { taskId, resolve, reject })
-
-      // Send decode message
-      this.worker!.postMessage({
-        type: 'decode',
-        taskId,
-        blob,
+    const taskManager = new WorkerTaskManager({
+      workerId: this.workerId,
+      workerType: 'audio-analysis',
+      metadata: {
+        blobSize: blob.size,
         startTimeSeconds,
         endTimeSeconds,
         useWebCodecs: this.isWebCodecsSupported ?? false,
+      },
+    })
+
+    return taskManager.execute(async (taskId) => {
+      return new Promise<MonoPcmSegment>((resolve, reject) => {
+        this.tasks.set(taskId, { taskId, resolve, reject })
+
+        // Send decode message
+        this.worker!.postMessage({
+          type: 'decode',
+          taskId,
+          blob,
+          startTimeSeconds,
+          endTimeSeconds,
+          useWebCodecs: this.isWebCodecsSupported ?? false,
+        })
+      }).finally(() => {
+        this.tasks.delete(taskId)
       })
-    }).finally(() => {
-      // Update status to ready if no active tasks
-      if (this.tasks.size === 0) {
-        store.updateWorkerStatus(this.workerId, 'ready')
-      }
     })
   }
 

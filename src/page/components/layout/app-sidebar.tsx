@@ -11,6 +11,7 @@ import {
   IconBrandYoutube,
   IconCast,
   IconCloud,
+  IconActivity,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/page/components/layout/nav-main"
@@ -58,6 +59,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("common.sync"),
       url: "/sync",
       icon: IconCloud,
+    },
+    {
+      title: t("common.workerMonitor", { defaultValue: "Worker Monitor" }),
+      url: "/worker-monitor",
+      icon: IconActivity,
     },
     {
       title: t("common.settings"),

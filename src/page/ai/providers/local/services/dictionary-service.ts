@@ -8,6 +8,7 @@ import { useLocalModelsStore } from '@/page/stores/local-models'
 import { getDictionaryWorker } from '../workers/worker-manager'
 import { DEFAULT_SMART_TRANSLATION_MODEL } from '../constants'
 import type { LocalDictionaryResult } from '../types'
+import { WorkerTaskManager } from '@/page/lib/workers/worker-task-manager'
 
 /**
  * Lookup word in dictionary using generative model
@@ -62,45 +63,59 @@ export async function lookup(
 
   // Lookup using dictionary worker
   const worker = getDictionaryWorker()
-  const taskId = `dictionary-${Date.now()}-${Math.random()}`
 
-  return new Promise<LocalDictionaryResult>((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Dictionary lookup timeout'))
-    }, 300000) // 5 minutes timeout
+  const taskManager = new WorkerTaskManager({
+    workerId: 'smart-dictionary-worker',
+    workerType: 'smart-dictionary',
+    metadata: {
+      word,
+      sourceLanguage,
+      targetLanguage,
+      model: modelName,
+      hasContext: !!context,
+    },
+  })
 
-    const messageHandler = (event: MessageEvent) => {
-      const { type, data, taskId: responseTaskId } = event.data
-
-      if (type === 'result' && responseTaskId === taskId) {
-        clearTimeout(timeout)
+  return taskManager.execute(async (taskId) => {
+    return new Promise<LocalDictionaryResult>((resolve, reject) => {
+      const timeout = setTimeout(() => {
         worker.removeEventListener('message', messageHandler)
+        reject(new Error('Dictionary lookup timeout'))
+      }, 300000) // 5 minutes timeout
 
-        resolve({
-          word: data.word || word,
-          definitions: data.definitions || [],
-          contextualExplanation: data.contextualExplanation,
-        })
-      } else if (type === 'error' && responseTaskId === taskId) {
-        clearTimeout(timeout)
-        worker.removeEventListener('message', messageHandler)
-        reject(new Error(data.message || 'Dictionary lookup failed'))
+      const messageHandler = (event: MessageEvent) => {
+        const { type, data, taskId: responseTaskId } = event.data
+
+        if (type === 'result' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+
+          resolve({
+            word: data.word || word,
+            definitions: data.definitions || [],
+            contextualExplanation: data.contextualExplanation,
+          })
+        } else if (type === 'error' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          reject(new Error(data.message || 'Dictionary lookup failed'))
+        }
       }
-    }
 
-    worker.addEventListener('message', messageHandler)
+      worker.addEventListener('message', messageHandler)
 
-    // Send lookup request
-    worker.postMessage({
-      type: 'lookup',
-      data: {
-        word,
-        context,
-        srcLang: sourceLanguage,
-        tgtLang: targetLanguage,
-        model: modelName,
-        taskId,
-      },
+      // Send lookup request
+      worker.postMessage({
+        type: 'lookup',
+        data: {
+          word,
+          context,
+          srcLang: sourceLanguage,
+          tgtLang: targetLanguage,
+          model: modelName,
+          taskId,
+        },
+      })
     })
   })
 }

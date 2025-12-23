@@ -9,6 +9,7 @@ import { useLocalModelsStore } from '@/page/stores/local-models'
 import { getSmartTranslationWorker } from '../workers/worker-manager'
 import { DEFAULT_SMART_TRANSLATION_MODEL } from '../constants'
 import type { LocalTranslationResult } from '../types'
+import { WorkerTaskManager } from '@/page/lib/workers/worker-task-manager'
 
 /**
  * Smart translate text using generative model with style support
@@ -65,83 +66,83 @@ export async function smartTranslate(
 
   // Translate using worker
   const worker = getSmartTranslationWorker()
-  const taskId = `smart-translation-${Date.now()}-${Math.random()}`
 
-  return new Promise<LocalTranslationResult>((resolve, reject) => {
-    // Handle abort signal
-    const abortHandler = () => {
-      clearTimeout(timeout)
-      worker.removeEventListener('message', messageHandler)
-      // Send cancel message to worker
-      worker.postMessage({
-        type: 'cancel',
-        data: { taskId },
-      })
-      reject(new Error('Request was cancelled'))
-    }
-
-    if (signal) {
-      if (signal.aborted) {
-        reject(new Error('Request was cancelled'))
-        return
-      }
-      signal.addEventListener('abort', abortHandler)
-    }
-
-    const timeout = setTimeout(() => {
-      if (signal) {
-        signal.removeEventListener('abort', abortHandler)
-      }
-      worker.removeEventListener('message', messageHandler)
-      reject(new Error('Smart translation timeout'))
-    }, 300000) // 5 minutes timeout
-
-    const messageHandler = (event: MessageEvent) => {
-      const { type, data, taskId: responseTaskId } = event.data
-
-      if (type === 'result' && responseTaskId === taskId) {
-        clearTimeout(timeout)
-        if (signal) {
-          signal.removeEventListener('abort', abortHandler)
-        }
-        worker.removeEventListener('message', messageHandler)
-
-        resolve({
-          translatedText: data.translatedText || '',
-          sourceLanguage: data.sourceLanguage || sourceLanguage,
-          targetLanguage: data.targetLanguage || targetLanguage,
+  const taskManager = new WorkerTaskManager({
+    workerId: 'smart-translation-worker',
+    workerType: 'smart-translation',
+    metadata: {
+      text: text.substring(0, 50), // Store first 50 chars for reference
+      sourceLanguage,
+      targetLanguage,
+      style,
+      model: modelName,
+    },
+    onCancel: () => {
+      const taskId = taskManager.getTaskId()
+      if (taskId) {
+        worker.postMessage({
+          type: 'cancel',
+          data: { taskId },
         })
-      } else if (type === 'error' && responseTaskId === taskId) {
-        clearTimeout(timeout)
-        if (signal) {
-          signal.removeEventListener('abort', abortHandler)
-        }
-        worker.removeEventListener('message', messageHandler)
-        reject(new Error(data.message || 'Smart translation failed'))
-      } else if (type === 'cancelled' && responseTaskId === taskId) {
-        clearTimeout(timeout)
-        if (signal) {
-          signal.removeEventListener('abort', abortHandler)
-        }
-        worker.removeEventListener('message', messageHandler)
-        reject(new Error('Request was cancelled'))
       }
+    },
+  })
+
+  // Handle abort signal
+  if (signal) {
+    if (signal.aborted) {
+      throw new Error('Request was cancelled')
     }
+    signal.addEventListener('abort', () => {
+      taskManager.cancel()
+    })
+  }
 
-    worker.addEventListener('message', messageHandler)
+  return taskManager.execute(async (taskId) => {
+    return new Promise<LocalTranslationResult>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        worker.removeEventListener('message', messageHandler)
+        reject(new Error('Smart translation timeout'))
+      }, 300000) // 5 minutes timeout
 
-    // Send translation request
-    worker.postMessage({
-      type: 'translate',
-      data: {
-        text,
-        srcLang: sourceLanguage,
-        tgtLang: targetLanguage,
-        style,
-        customPrompt,
-        model: modelName,
-        taskId,
-      },
+      const messageHandler = (event: MessageEvent) => {
+        const { type, data, taskId: responseTaskId } = event.data
+
+        if (type === 'result' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+
+          resolve({
+            translatedText: data.translatedText || '',
+            sourceLanguage: data.sourceLanguage || sourceLanguage,
+            targetLanguage: data.targetLanguage || targetLanguage,
+          })
+        } else if (type === 'error' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          reject(new Error(data.message || 'Smart translation failed'))
+        } else if (type === 'cancelled' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          reject(new Error('Request was cancelled'))
+        }
+      }
+
+      worker.addEventListener('message', messageHandler)
+
+      // Send translation request
+      worker.postMessage({
+        type: 'translate',
+        data: {
+          text,
+          srcLang: sourceLanguage,
+          tgtLang: targetLanguage,
+          style,
+          customPrompt,
+          model: modelName,
+          taskId,
+        },
+      })
     })
   })
 }

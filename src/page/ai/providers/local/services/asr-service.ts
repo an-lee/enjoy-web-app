@@ -14,6 +14,7 @@ import { DEFAULT_ASR_MODEL } from '../constants'
 import type { LocalASRResult } from '../types'
 import { convertToTranscriptFormat } from '../../../utils/transcript-segmentation'
 import type { TranscriptLine } from '@/page/types/db/transcript'
+import { WorkerTaskManager } from '@/page/lib/workers/worker-task-manager'
 
 /**
  * Transcribe audio using local ASR model
@@ -69,108 +70,120 @@ export async function transcribe(
 
   // Transcribe using worker
   const worker = getASRWorker()
-  const taskId = `asr-${Date.now()}-${Math.random()}`
 
-  return new Promise<LocalASRResult>((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Transcription timeout'))
-    }, 300000) // 5 minutes timeout
+  const taskManager = new WorkerTaskManager({
+    workerId: 'asr-worker',
+    workerType: 'asr',
+    metadata: {
+      language,
+      model: modelName,
+      audioSize: audioBlob.size,
+    },
+  })
 
-    const messageHandler = (event: MessageEvent) => {
-      const { type, data, taskId: responseTaskId } = event.data
-
-      if (type === 'result' && responseTaskId === taskId) {
-        clearTimeout(timeout)
+  return taskManager.execute(async (taskId) => {
+    return new Promise<LocalASRResult>((resolve, reject) => {
+      const timeout = setTimeout(() => {
         worker.removeEventListener('message', messageHandler)
+        reject(new Error('Transcription timeout'))
+      }, 300000) // 5 minutes timeout
 
-        // Process chunks: chunks are word-level timestamps
-        const wordChunks = data.chunks || []
+      const messageHandler = (event: MessageEvent) => {
+        const { type, data, taskId: responseTaskId } = event.data
 
-        // Debug: Log chunks time range
-        if (wordChunks.length > 0) {
-          const firstChunk = wordChunks[0]
-          const lastChunk = wordChunks[wordChunks.length - 1]
-          const firstTime = firstChunk?.timestamp?.[0] || 0
-          const lastTime = lastChunk?.timestamp?.[1] || 0
-          const totalDuration = lastTime - firstTime
+        if (type === 'result' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
 
-          log.debug('[ASRService] Chunks time range:', {
-            chunksCount: wordChunks.length,
-            firstChunkTime: firstTime,
-            lastChunkTime: lastTime,
-            totalDurationSeconds: totalDuration,
-            firstChunkText: firstChunk?.text?.substring(0, 50),
-            lastChunkText: lastChunk?.text?.substring(0, 50),
-          })
+          // Process chunks: chunks are word-level timestamps
+          const wordChunks = data.chunks || []
 
-          // Warn if duration seems truncated
-          if (totalDuration < 60 && wordChunks.length > 10) {
-            log.warn('[ASRService] WARNING: Chunks duration seems short compared to expected audio duration!', {
-              chunksDuration: totalDuration,
+          // Debug: Log chunks time range
+          if (wordChunks.length > 0) {
+            const firstChunk = wordChunks[0]
+            const lastChunk = wordChunks[wordChunks.length - 1]
+            const firstTime = firstChunk?.timestamp?.[0] || 0
+            const lastTime = lastChunk?.timestamp?.[1] || 0
+            const totalDuration = lastTime - firstTime
+
+            log.debug('[ASRService] Chunks time range:', {
               chunksCount: wordChunks.length,
+              firstChunkTime: firstTime,
+              lastChunkTime: lastTime,
+              totalDurationSeconds: totalDuration,
+              firstChunkText: firstChunk?.text?.substring(0, 50),
+              lastChunkText: lastChunk?.text?.substring(0, 50),
             })
+
+            // Warn if duration seems truncated
+            if (totalDuration < 60 && wordChunks.length > 10) {
+              log.warn('[ASRService] WARNING: Chunks duration seems short compared to expected audio duration!', {
+                chunksDuration: totalDuration,
+                chunksCount: wordChunks.length,
+              })
+            }
           }
+
+          // Legacy segments format (for backward compatibility)
+          const segments = wordChunks.map((chunk: any) => ({
+            text: chunk.text || '',
+            start: chunk.timestamp?.[0] || 0,
+            end: chunk.timestamp?.[1] || 0,
+          }))
+
+          // Convert word chunks to segment + word nested structure using intelligent segmentation
+          // Convert ASR chunks format to RawWordTiming format (times in seconds)
+          const rawTimings = wordChunks.map((chunk: any) => ({
+            text: chunk.text || '',
+            startTime: chunk.timestamp?.[0] || 0,
+            endTime: chunk.timestamp?.[1] || 0,
+          }))
+
+          // Use intelligent segmentation to create segments with nested word timeline
+          const transcript = convertToTranscriptFormat(
+            data.text || '',
+            rawTimings,
+            language
+          )
+
+          // Convert TTSTranscriptItem[] to TranscriptLine[]
+          // Both formats are compatible, but we need to ensure type consistency
+          const timeline: TranscriptLine[] = transcript.timeline.map((item) => ({
+            text: item.text,
+            start: item.start,
+            duration: item.duration,
+            timeline: item.timeline?.map((word) => ({
+              text: word.text,
+              start: word.start,
+              duration: word.duration,
+            })),
+          }))
+
+          resolve({
+            text: data.text || '',
+            segments,
+            timeline,
+            language: language,
+          })
+        } else if (type === 'error' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          reject(new Error(data.message || 'Transcription failed'))
         }
-
-        // Legacy segments format (for backward compatibility)
-        const segments = wordChunks.map((chunk: any) => ({
-          text: chunk.text || '',
-          start: chunk.timestamp?.[0] || 0,
-          end: chunk.timestamp?.[1] || 0,
-        }))
-
-        // Convert word chunks to segment + word nested structure using intelligent segmentation
-        // Convert ASR chunks format to RawWordTiming format (times in seconds)
-        const rawTimings = wordChunks.map((chunk: any) => ({
-          text: chunk.text || '',
-          startTime: chunk.timestamp?.[0] || 0,
-          endTime: chunk.timestamp?.[1] || 0,
-        }))
-
-        // Use intelligent segmentation to create segments with nested word timeline
-        const transcript = convertToTranscriptFormat(
-          data.text || '',
-          rawTimings,
-          language
-        )
-
-        // Convert TTSTranscriptItem[] to TranscriptLine[]
-        // Both formats are compatible, but we need to ensure type consistency
-        const timeline: TranscriptLine[] = transcript.timeline.map((item) => ({
-          text: item.text,
-          start: item.start,
-          duration: item.duration,
-          timeline: item.timeline?.map((word) => ({
-            text: word.text,
-            start: word.start,
-            duration: word.duration,
-          })),
-        }))
-
-        resolve({
-          text: data.text || '',
-          segments,
-          timeline,
-          language: language,
-        })
-      } else if (type === 'error' && responseTaskId === taskId) {
-        clearTimeout(timeout)
-        worker.removeEventListener('message', messageHandler)
-        reject(new Error(data.message || 'Transcription failed'))
       }
-    }
 
-    worker.addEventListener('message', messageHandler)
+      worker.addEventListener('message', messageHandler)
 
-    // Send transcription request
-    worker.postMessage({
-      type: 'transcribe',
-      data: {
-        audioData,
-        language,
-        model: modelName,
-        taskId,
-      },
+      // Send transcription request
+      worker.postMessage({
+        type: 'transcribe',
+        data: {
+          audioData,
+          language,
+          model: modelName,
+          taskId,
+        },
+      })
     })
   })
 }

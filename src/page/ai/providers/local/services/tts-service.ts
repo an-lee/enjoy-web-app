@@ -9,6 +9,7 @@ import type { LocalTTSResult, LocalTTSTranscript } from '../types'
 import { useLocalModelsStore } from '@/page/stores/local-models'
 import { getTTSWorker } from '../workers/worker-manager'
 import { DEFAULT_TTS_MODEL } from '../constants'
+import { WorkerTaskManager } from '@/page/lib/workers/worker-task-manager'
 
 /**
  * Synthesize speech from text using local TTS model
@@ -82,92 +83,91 @@ export async function synthesize(
 
   // Synthesize using TTS worker
   const worker = getTTSWorker()
-  const taskId = `tts-${Date.now()}-${Math.random()}`
 
-  return new Promise<LocalTTSResult>((resolve, reject) => {
-    // Handle abort signal
-    const abortHandler = () => {
-      clearTimeout(timeout)
-      worker.removeEventListener('message', messageHandler)
-      // Send cancel message to worker
+  const taskManager = new WorkerTaskManager({
+    workerId: 'tts-worker',
+    workerType: 'tts',
+    metadata: {
+      text: trimmedText.substring(0, 50), // Store first 50 chars for reference
+      language,
+      voice,
+      model: modelName,
+    },
+    onCancel: () => {
+      const taskId = taskManager.getTaskId()
+      if (taskId) {
+        worker.postMessage({
+          type: 'cancel',
+          data: { taskId },
+        })
+      }
+    },
+  })
+
+  // Handle abort signal
+  if (signal) {
+    if (signal.aborted) {
+      throw new Error('Request was cancelled')
+    }
+    signal.addEventListener('abort', () => {
+      taskManager.cancel()
+    })
+  }
+
+  return taskManager.execute(async (taskId) => {
+    return new Promise<LocalTTSResult>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        worker.removeEventListener('message', messageHandler)
+        reject(new Error('TTS synthesis timeout'))
+      }, 300000) // 5 minutes timeout
+
+      const messageHandler = (event: MessageEvent) => {
+        const { type, data, taskId: responseTaskId } = event.data
+
+        if (type === 'result' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+
+          // Convert ArrayBuffer back to Blob
+          const audioBlob = new Blob([data.audioArrayBuffer], { type: 'audio/wav' })
+
+          // Build result with optional transcript
+          const result: LocalTTSResult = {
+            audioBlob,
+            format: data.format || 'wav',
+            duration: data.duration,
+          }
+
+          // Add transcript if available (from timestamped model)
+          if (data.transcript) {
+            result.transcript = data.transcript as LocalTTSTranscript
+          }
+
+          resolve(result)
+        } else if (type === 'error' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          reject(new Error(data.message || 'TTS synthesis failed'))
+        } else if (type === 'cancelled' && responseTaskId === taskId) {
+          clearTimeout(timeout)
+          worker.removeEventListener('message', messageHandler)
+          reject(new Error('Request was cancelled'))
+        }
+      }
+
+      worker.addEventListener('message', messageHandler)
+
+      // Send synthesize request with validated text
       worker.postMessage({
-        type: 'cancel',
-        data: { taskId },
+        type: 'synthesize',
+        data: {
+          text: trimmedText,
+          language,
+          voice,
+          model: modelName,
+          taskId,
+        },
       })
-      reject(new Error('Request was cancelled'))
-    }
-
-    if (signal) {
-      if (signal.aborted) {
-        reject(new Error('Request was cancelled'))
-        return
-      }
-      signal.addEventListener('abort', abortHandler)
-    }
-
-    const timeout = setTimeout(() => {
-      if (signal) {
-        signal.removeEventListener('abort', abortHandler)
-      }
-      worker.removeEventListener('message', messageHandler)
-      reject(new Error('TTS synthesis timeout'))
-    }, 300000) // 5 minutes timeout
-
-    const messageHandler = (event: MessageEvent) => {
-      const { type, data, taskId: responseTaskId } = event.data
-
-      if (type === 'result' && responseTaskId === taskId) {
-        clearTimeout(timeout)
-        if (signal) {
-          signal.removeEventListener('abort', abortHandler)
-        }
-        worker.removeEventListener('message', messageHandler)
-
-        // Convert ArrayBuffer back to Blob
-        const audioBlob = new Blob([data.audioArrayBuffer], { type: 'audio/wav' })
-
-        // Build result with optional transcript
-        const result: LocalTTSResult = {
-          audioBlob,
-          format: data.format || 'wav',
-          duration: data.duration,
-        }
-
-        // Add transcript if available (from timestamped model)
-        if (data.transcript) {
-          result.transcript = data.transcript as LocalTTSTranscript
-        }
-
-        resolve(result)
-      } else if (type === 'error' && responseTaskId === taskId) {
-        clearTimeout(timeout)
-        if (signal) {
-          signal.removeEventListener('abort', abortHandler)
-        }
-        worker.removeEventListener('message', messageHandler)
-        reject(new Error(data.message || 'TTS synthesis failed'))
-      } else if (type === 'cancelled' && responseTaskId === taskId) {
-        clearTimeout(timeout)
-        if (signal) {
-          signal.removeEventListener('abort', abortHandler)
-        }
-        worker.removeEventListener('message', messageHandler)
-        reject(new Error('Request was cancelled'))
-      }
-    }
-
-    worker.addEventListener('message', messageHandler)
-
-    // Send synthesize request with validated text
-    worker.postMessage({
-      type: 'synthesize',
-      data: {
-        text: trimmedText,
-        language,
-        voice,
-        model: modelName,
-        taskId,
-      },
     })
   })
 }
