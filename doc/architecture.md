@@ -214,7 +214,7 @@ The Web App is deployed as a **Cloudflare Worker** (not Pages), providing a unif
 
 ### Request Routing Flow
 
-```
+```text
 Request → Cloudflare Worker
   ├─ /api/* → Hono API Handler → JSON Response
   ├─ Static Assets (JS/CSS/images) → Workers Assets → File Response
@@ -238,3 +238,26 @@ The deployment is configured via `wrangler.jsonc`:
 - **SSR Support**: Full server-side rendering capabilities
 
 For detailed API Worker setup and usage, see [API Worker Integration Guide](./api-worker-integration.md).
+
+## 6. Web Workers Architecture
+
+The application uses **Web Workers** extensively to offload CPU-intensive tasks from the main thread, ensuring a responsive UI during heavy computations. All workers are managed through a centralized **Worker Status Store** (`useWorkerStatusStore`) that provides standardized status tracking and monitoring.
+
+**Worker Types**:
+
+- `audio-analysis`: Audio decoding and analysis (WebCodecs / Web Audio API)
+- `asr`: Automatic Speech Recognition using Whisper (transformers.js)
+- `smart-translation`: LLM-based style-aware translation (transformers.js)
+- `smart-dictionary`: Contextual dictionary lookup (transformers.js)
+- `tts`: Text-to-Speech synthesis (Kokoro TTS)
+- `sync`: Network sync operations (Fetch API)
+
+**Key Features**:
+
+- Centralized status management via Zustand store
+- Standardized lifecycle tracking (idle → initializing → ready → running)
+- Task management with concurrent task tracking
+- Progress reporting for long-running operations
+- Unified error handling with detailed error information
+
+For detailed information about worker implementation, lifecycle, message protocols, and best practices, see [Web Workers Architecture](./worker-architecture.md).

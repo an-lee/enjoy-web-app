@@ -256,6 +256,8 @@ const audioBlob = await client.synthesizeSpeech("Hello world");
 - **Model Management**: Initialization, caching, and loading state tracking
 - **No Network**: Fully offline-capable
 
+**Worker Management**: All Local provider services run in Web Workers managed by the centralized Worker Status Store. See [Web Workers Architecture](./worker-architecture.md) for detailed information about worker implementation, lifecycle, and status management.
+
 ## Core Abstractions
 
 ### Configuration Management

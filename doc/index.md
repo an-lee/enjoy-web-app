@@ -22,6 +22,8 @@ This documentation guides the development of the **Web App** and its integration
    - Core algorithms, practice loops, data synchronization, and local ASR strategy.
 7. [API Worker Integration](./api-worker-integration.md)
    - Hono API Worker setup, usage, and Cloudflare Workers integration guide.
+8. [Web Workers Architecture](./worker-architecture.md)
+   - Web Workers design, implementation details, lifecycle, and status management.
 
 ## Core Development Principles
 
