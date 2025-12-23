@@ -111,7 +111,7 @@ export function ExpandedPlayerContent({
           {/* Transcript below video - centered with max width */}
           <div className="flex-1 min-h-0 border-t flex justify-center">
             <div className="w-full max-w-3xl">
-              <TranscriptDisplay className="h-full" />
+              <TranscriptDisplay className="h-full" mediaRef={mediaRef} />
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@ export function ExpandedPlayerContent({
         /* Audio mode: Centered transcript for optimal reading */
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-3xl">
-            <TranscriptDisplay className="h-full" />
+            <TranscriptDisplay className="h-full" mediaRef={mediaRef} />
           </div>
         </div>
       )}

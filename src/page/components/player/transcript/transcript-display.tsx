@@ -46,6 +46,7 @@ const log = createLogger({ name: 'TranscriptDisplay' })
 export function TranscriptDisplay({
   className,
   config: configOverrides,
+  mediaRef,
 }: TranscriptDisplayProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const currentSession = usePlayerStore((state) => state.currentSession)
@@ -118,7 +119,9 @@ export function TranscriptDisplay({
 
 
   // Retranscribe functionality
-  const { retranscribe, isTranscribing, progress, progressPercent } = useRetranscribe()
+  const { retranscribe, isTranscribing, progress, progressPercent } = useRetranscribe({
+    mediaRef,
+  })
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   // Upload subtitle functionality

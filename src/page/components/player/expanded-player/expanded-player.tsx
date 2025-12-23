@@ -48,7 +48,7 @@ export function ExpandedPlayer({
           className
         )}
       >
-        <ExpandedPlayerHeader />
+        <ExpandedPlayerHeader mediaRef={mediaRef} />
 
         <ExpandedPlayerContent
           isLoading={isLoading}

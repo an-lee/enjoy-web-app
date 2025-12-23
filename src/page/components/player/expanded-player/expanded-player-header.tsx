@@ -25,10 +25,11 @@ import { RetranscribeDialog, LANGUAGE_NAMES } from '../transcript'
 import { LanguageSelector } from '../shared'
 
 interface ExpandedPlayerHeaderProps {
-  // No props needed - component gets all data from hooks
+  /** Optional ref to existing media element (audio or video) */
+  mediaRef?: React.RefObject<HTMLAudioElement | HTMLVideoElement | null>
 }
 
-export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps) {
+export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
   const { t } = useTranslation()
 
   // Get player state from store
@@ -48,7 +49,9 @@ export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps) {
   } = useTranscriptDisplay()
 
   // Retranscribe functionality
-  const { retranscribe, isTranscribing, progress: retranscribeProgress } = useRetranscribe()
+  const { retranscribe, isTranscribing, progress: retranscribeProgress } = useRetranscribe({
+    mediaRef,
+  })
 
   // Upload subtitle functionality
   const {

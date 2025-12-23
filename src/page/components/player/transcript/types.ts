@@ -4,6 +4,7 @@
  * Types for transcript display component configuration and state management.
  */
 
+import type React from 'react'
 import type { Transcript, TranscriptLine } from '@/page/types/db'
 
 // ============================================================================
@@ -99,6 +100,8 @@ export interface TranscriptDisplayProps {
   className?: string
   /** Display configuration */
   config?: Partial<TranscriptDisplayConfig>
+  /** Optional ref to existing media element (audio or video) */
+  mediaRef?: React.RefObject<HTMLAudioElement | HTMLVideoElement | null>
 }
 
 /**

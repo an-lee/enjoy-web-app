@@ -3,9 +3,10 @@
  *
  * Handles retranscription of media using ASR service.
  * Supports both audio and video media types.
+ * Can use existing media element if provided, otherwise falls back to blob-based approach.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, RefObject } from 'react'
 import { toast } from 'sonner'
 import { usePlayerStore } from '@/page/stores/player'
 import { getCurrentDatabase } from '@/page/db'
@@ -15,8 +16,125 @@ import { useCreateTranscript } from '@/page/hooks/queries'
 import type { TranscriptInput, TargetType } from '@/page/types/db'
 
 /**
+ * Extract audio from media element using MediaRecorder API
+ * This captures the audio output from an existing HTMLMediaElement
+ */
+async function extractAudioFromMediaElement(
+  mediaElement: HTMLAudioElement | HTMLVideoElement
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    // Check if element is ready
+    if (mediaElement.readyState < 2) {
+      // HAVE_CURRENT_DATA - need at least some data loaded
+      reject(new Error('Media element not ready'))
+      return
+    }
+
+    let mediaRecorder: MediaRecorder | null = null
+    const chunks: Blob[] = []
+
+    try {
+      // Use captureStream if available (Chrome/Edge)
+      let stream: MediaStream
+      if ('captureStream' in mediaElement && typeof mediaElement.captureStream === 'function') {
+        stream = mediaElement.captureStream()
+      } else {
+        // Fallback: use AudioContext to capture audio
+        const audioContext = new AudioContext()
+        const source = audioContext.createMediaElementSource(mediaElement)
+        const destination = audioContext.createMediaStreamDestination()
+        source.connect(destination)
+        stream = destination.stream
+
+        // Store audioContext for cleanup
+        ;(mediaElement as any)._retranscribeAudioContext = audioContext
+      }
+
+      // Find audio track
+      const audioTracks = stream.getAudioTracks()
+      if (audioTracks.length === 0) {
+        reject(new Error('No audio track found in media element'))
+        return
+      }
+
+      // Create MediaRecorder with audio track only
+      const audioStream = new MediaStream(audioTracks)
+      mediaRecorder = new MediaRecorder(audioStream, {
+        mimeType: 'audio/webm;codecs=opus',
+      })
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' })
+        // Cleanup AudioContext if we created one
+        const audioContext = (mediaElement as any)._retranscribeAudioContext
+        if (audioContext) {
+          audioContext.close()
+          delete (mediaElement as any)._retranscribeAudioContext
+        }
+        resolve(audioBlob)
+      }
+
+      mediaRecorder.onerror = () => {
+        const audioContext = (mediaElement as any)._retranscribeAudioContext
+        if (audioContext) {
+          audioContext.close()
+          delete (mediaElement as any)._retranscribeAudioContext
+        }
+        reject(new Error('MediaRecorder error'))
+      }
+
+      // Save current time and playback state
+      const wasPlaying = !mediaElement.paused
+      const currentTime = mediaElement.currentTime
+
+      // Reset to start and play
+      mediaElement.currentTime = 0
+      mediaRecorder.start()
+
+      const playPromise = mediaElement.play()
+      if (playPromise) {
+        playPromise.catch((err) => {
+          console.warn('Failed to play media for recording:', err)
+        })
+      }
+
+      // Stop when media ends
+      const handleEnded = () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop()
+        }
+        // Restore playback state
+        mediaElement.currentTime = currentTime
+        if (wasPlaying) {
+          mediaElement.play().catch(() => {
+            // Ignore play errors on restore
+          })
+        }
+        mediaElement.removeEventListener('ended', handleEnded)
+      }
+
+      mediaElement.addEventListener('ended', handleEnded)
+    } catch (error) {
+      const audioContext = (mediaElement as any)._retranscribeAudioContext
+      if (audioContext) {
+        audioContext.close()
+        delete (mediaElement as any)._retranscribeAudioContext
+      }
+      reject(error)
+    }
+  })
+}
+
+/**
  * Extract audio from video blob using MediaRecorder API
  * This creates a video element, captures its audio track, and records it
+ * Used as fallback when media element is not available
  */
 async function extractAudioFromVideo(videoBlob: Blob): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -106,7 +224,16 @@ function convertASRSegmentsToTimeline(
   }))
 }
 
-export function useRetranscribe() {
+export interface UseRetranscribeOptions {
+  /**
+   * Optional ref to existing media element (audio or video)
+   * If provided, will use this element directly instead of loading from blob
+   */
+  mediaRef?: RefObject<HTMLAudioElement | HTMLVideoElement | null>
+}
+
+export function useRetranscribe(options?: UseRetranscribeOptions) {
+  const { mediaRef } = options || {}
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
   const [progressPercent, setProgressPercent] = useState<number | null>(null)
@@ -126,69 +253,93 @@ export function useRetranscribe() {
       onProgress?.('Loading media...')
 
       try {
-        // Get media blob from IndexedDB
-        let blob: Blob | undefined
-        let targetType: TargetType
-        let targetId: string
+        let targetType: TargetType | undefined
+        let targetId: string | undefined
+        let audioBlob: Blob | undefined
 
-        if (currentSession.mediaType === 'audio') {
-          const audio = await getCurrentDatabase().audios.get(currentSession.mediaId)
-          if (!audio) throw new Error('Audio not found')
+        // Priority 1: Use existing media element if available
+        if (mediaRef?.current) {
+          const mediaElement = mediaRef.current
+          setProgress('Extracting audio from media element...')
+          onProgress?.('Extracting audio from media element...', 10)
 
-          // Priority 1: Direct blob (for TTS-generated audio)
-          if (audio.blob) {
-            blob = audio.blob
+          try {
+            audioBlob = await extractAudioFromMediaElement(mediaElement)
+            targetType = currentSession.mediaType === 'video' ? 'Video' : 'Audio'
+            targetId = currentSession.mediaId
+          } catch (error) {
+            console.warn('Failed to extract audio from media element, falling back to blob:', error)
+            // Fall through to blob-based approach
           }
-          // Priority 2: Server URL (for synced media)
-          else if (audio.mediaUrl) {
-            const response = await fetch(audio.mediaUrl)
-            if (!response.ok) {
-              throw new Error(`Failed to fetch audio from server: ${response.statusText}`)
-            }
-            blob = await response.blob()
-          }
-          // Priority 3: Local file handle (for user-uploaded files)
-          else if (audio.fileHandle) {
-            blob = await audio.fileHandle.getFile()
-          } else {
-            throw new Error('Audio file not available (no blob, mediaUrl, or fileHandle)')
-          }
-          targetType = 'Audio'
-          targetId = currentSession.mediaId
-        } else {
-          const video = await getCurrentDatabase().videos.get(currentSession.mediaId)
-          if (!video) throw new Error('Video not found')
-
-          // Priority 1: Server URL (for synced media)
-          if (video.mediaUrl) {
-            const response = await fetch(video.mediaUrl)
-            if (!response.ok) {
-              throw new Error(`Failed to fetch video from server: ${response.statusText}`)
-            }
-            blob = await response.blob()
-          }
-          // Priority 2: Local file handle (for user-uploaded files)
-          else if (video.fileHandle) {
-            blob = await video.fileHandle.getFile()
-          } else {
-            throw new Error('Video file not available (no mediaUrl or fileHandle)')
-          }
-          targetType = 'Video'
-          targetId = currentSession.mediaId
         }
 
-        setProgress('Extracting audio...')
-        onProgress?.('Extracting audio...', 10)
+        // Priority 2: Fallback to blob-based approach
+        if (!audioBlob || !targetType || !targetId) {
+          setProgress('Loading media from database...')
+          onProgress?.('Loading media from database...', 5)
 
-        // Extract audio if it's a video
-        let audioBlob: Blob = blob
-        if (currentSession.mediaType === 'video') {
-          try {
-            audioBlob = await extractAudioFromVideo(blob)
-          } catch (error) {
-            // Fallback: try to use video blob directly if extraction fails
-            console.warn('Failed to extract audio from video, using video blob directly:', error)
-            audioBlob = blob
+          // Get media blob from IndexedDB
+          let blob: Blob | undefined
+
+          if (currentSession.mediaType === 'audio') {
+            const audio = await getCurrentDatabase().audios.get(currentSession.mediaId)
+            if (!audio) throw new Error('Audio not found')
+
+            // Priority 1: Direct blob (for TTS-generated audio)
+            if (audio.blob) {
+              blob = audio.blob
+            }
+            // Priority 2: Server URL (for synced media)
+            else if (audio.mediaUrl) {
+              const response = await fetch(audio.mediaUrl)
+              if (!response.ok) {
+                throw new Error(`Failed to fetch audio from server: ${response.statusText}`)
+              }
+              blob = await response.blob()
+            }
+            // Priority 3: Local file handle (for user-uploaded files)
+            else if (audio.fileHandle) {
+              blob = await audio.fileHandle.getFile()
+            } else {
+              throw new Error('Audio file not available (no blob, mediaUrl, or fileHandle)')
+            }
+            targetType = 'Audio'
+            targetId = currentSession.mediaId
+          } else {
+            const video = await getCurrentDatabase().videos.get(currentSession.mediaId)
+            if (!video) throw new Error('Video not found')
+
+            // Priority 1: Server URL (for synced media)
+            if (video.mediaUrl) {
+              const response = await fetch(video.mediaUrl)
+              if (!response.ok) {
+                throw new Error(`Failed to fetch video from server: ${response.statusText}`)
+              }
+              blob = await response.blob()
+            }
+            // Priority 2: Local file handle (for user-uploaded files)
+            else if (video.fileHandle) {
+              blob = await video.fileHandle.getFile()
+            } else {
+              throw new Error('Video file not available (no mediaUrl or fileHandle)')
+            }
+            targetType = 'Video'
+            targetId = currentSession.mediaId
+          }
+
+          setProgress('Extracting audio...')
+          onProgress?.('Extracting audio...', 10)
+
+          // Extract audio if it's a video
+          audioBlob = blob
+          if (currentSession.mediaType === 'video') {
+            try {
+              audioBlob = await extractAudioFromVideo(blob)
+            } catch (error) {
+              // Fallback: try to use video blob directly if extraction fails
+              console.warn('Failed to extract audio from video, using video blob directly:', error)
+              audioBlob = blob
+            }
           }
         }
 
@@ -237,6 +388,14 @@ export function useRetranscribe() {
           ]
         } else {
           timeline = convertASRSegmentsToTimeline(segments)
+        }
+
+        // Ensure we have all required values
+        if (!audioBlob) {
+          throw new Error('Failed to obtain audio data for transcription')
+        }
+        if (!targetType || !targetId) {
+          throw new Error('Failed to determine target type or ID')
         }
 
         setProgress('Saving transcript...')
