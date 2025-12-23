@@ -103,8 +103,11 @@ export {
   // Query keys
   recordingQueryKeys,
   // Query hooks (Read)
+  useRecordingsByTarget,
   useRecordingsByEchoRegion,
   // Types
+  type UseRecordingsByTargetOptions,
+  type UseRecordingsByTargetReturn,
   type UseRecordingsByEchoRegionOptions,
   type UseRecordingsByEchoRegionReturn,
 } from './use-recording-queries'

@@ -213,11 +213,12 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
       // Close the dialog
       setShowDeleteDialog(false)
 
-      // Invalidate the recordings query to trigger refetch
+      // Invalidate recordings queries to trigger refetch
       // Calculate the echo region from recording's reference times
       const startTime = Math.round(recording.referenceStart)
       const endTime = Math.round(recording.referenceStart + recording.referenceDuration)
 
+      // Invalidate byEchoRegion query (for ShadowRecordingList)
       await queryClient.invalidateQueries({
         queryKey: recordingQueryKeys.byEchoRegion(
           recording.targetType,
@@ -226,6 +227,11 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
           startTime,
           endTime
         ),
+      })
+
+      // Invalidate byTarget query (for transcript line recording counts)
+      await queryClient.invalidateQueries({
+        queryKey: recordingQueryKeys.byTarget(recording.targetType, recording.targetId),
       })
     } catch (error) {
       log.error('Failed to delete recording:', error)

@@ -4,7 +4,7 @@
 
 import { useMemo, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getRecordingsByEchoRegion } from '@/page/db'
+import { getRecordingsByEchoRegion, getRecordingsByTarget } from '@/page/db'
 import type { Recording, TargetType } from '@/page/types/db'
 
 // ============================================================================
@@ -14,6 +14,8 @@ import type { Recording, TargetType } from '@/page/types/db'
 export const recordingQueryKeys = {
   all: ['recording'] as const,
   detail: (id: string) => [...recordingQueryKeys.all, 'detail', id] as const,
+  byTarget: (targetType: TargetType, targetId: string) =>
+    [...recordingQueryKeys.all, 'byTarget', targetType, targetId] as const,
   byEchoRegion: (
     targetType: TargetType,
     targetId: string,
@@ -35,6 +37,70 @@ export const recordingQueryKeys = {
 // ============================================================================
 // Query Hooks
 // ============================================================================
+
+export interface UseRecordingsByTargetOptions {
+  targetType: TargetType | null
+  targetId: string | null
+  enabled?: boolean
+}
+
+export interface UseRecordingsByTargetReturn {
+  /** All recordings for the target media */
+  recordings: Recording[]
+  isLoading: boolean
+  isError: boolean
+  error: Error | null
+  refetch: () => Promise<void>
+}
+
+/**
+ * Hook for fetching all recordings for a target media (Video or Audio).
+ * Returns raw Recording objects.
+ */
+export function useRecordingsByTarget(
+  options: UseRecordingsByTargetOptions
+): UseRecordingsByTargetReturn {
+  const { targetType, targetId, enabled = true } = options
+
+  // Build query key only when targetType and targetId are available
+  // This prevents unnecessary query cache entries and re-renders
+  const queryKey = useMemo(() => {
+    if (!targetType || !targetId) {
+      return null
+    }
+    return recordingQueryKeys.byTarget(targetType, targetId)
+  }, [targetType, targetId])
+
+  const {
+    data: recordingList = [],
+    isLoading,
+    isError,
+    error,
+    refetch: refetchQuery,
+  } = useQuery({
+    queryKey: queryKey ?? ['recording', 'byTarget', 'disabled'],
+    queryFn: () => {
+      if (!targetType || !targetId || !queryKey) {
+        return Promise.resolve([])
+      }
+      return getRecordingsByTarget(targetType, targetId)
+    },
+    enabled: enabled && !!targetType && !!targetId && !!queryKey,
+    staleTime: 1000 * 30,
+  })
+
+  const refetch = useCallback(async () => {
+    await refetchQuery()
+  }, [refetchQuery])
+
+  return {
+    recordings: recordingList,
+    isLoading,
+    isError,
+    error: error as Error | null,
+    refetch,
+  }
+}
 
 export interface UseRecordingsByEchoRegionOptions {
   targetType: TargetType

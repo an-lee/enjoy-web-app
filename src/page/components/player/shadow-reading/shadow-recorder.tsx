@@ -122,16 +122,25 @@ export function ShadowRecorder() {
       const recordingId = await recordingRepository.save(recordingInput)
       log.debug('Recording saved', { recordingId, duration })
 
-      // Invalidate recordings query to trigger refetch in ShadowRecordingList
+      // Invalidate recordings queries to trigger refetch
       // Query key uses milliseconds rounded to integers
+      const roundedStartTime = Math.round(startTime * 1000)
+      const roundedEndTime = Math.round(endTime * 1000)
+
+      // Invalidate byEchoRegion query (for ShadowRecordingList)
       await queryClient.invalidateQueries({
         queryKey: recordingQueryKeys.byEchoRegion(
           targetType,
           targetId,
           language,
-          Math.round(startTime * 1000),
-          Math.round(endTime * 1000)
+          roundedStartTime,
+          roundedEndTime
         ),
+      })
+
+      // Invalidate byTarget query (for transcript line recording counts)
+      await queryClient.invalidateQueries({
+        queryKey: recordingQueryKeys.byTarget(targetType, targetId),
       })
     } catch (err: any) {
       const errorMsg = `Failed to save recording: ${err?.message || 'Unknown error'}`

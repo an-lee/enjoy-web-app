@@ -7,6 +7,7 @@
 
 import { memo, useMemo } from 'react'
 import { cn, formatTime } from '@/shared/lib/utils'
+import { Icon } from '@iconify/react'
 import { useDisplayTime } from '@/page/hooks/player/use-display-time'
 import { usePlayerStore } from '@/page/stores/player'
 import type { TranscriptLineState } from './types'
@@ -17,12 +18,15 @@ interface TranscriptLineItemProps {
   onLineClick?: (line: TranscriptLineState) => void
   /** Optional action area content (rendered on the right side of the header) */
   actionArea?: React.ReactNode
+  /** Number of recordings that overlap with this line */
+  recordingCount?: number
 }
 
 export const TranscriptLineItem = memo(function TranscriptLineItem({
   line,
   onLineClick,
   actionArea,
+  recordingCount = 0,
 }: TranscriptLineItemProps) {
   // Get current time directly from hook (no prop drilling needed)
   const currentTimeSeconds = useDisplayTime()
@@ -105,13 +109,13 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
 
   const content = (
     <>
-      {/* Header row with timestamp and action area */}
+      {/* Header row with timestamp, recording count, and action area */}
       <div className="flex items-center justify-between mb-1.5">
         {/* Timestamp on the left */}
         <span
           className={cn(
             'text-xs font-mono tabular-nums transition-colors duration-300',
-            isInEchoRegion && 'text-(--highlight-active-foreground)/70',
+            isInEchoRegion && 'text-highlight-active-foreground/70',
             !isInEchoRegion && isActive && 'text-primary/80',
             !isInEchoRegion && !isActive && 'text-muted-foreground/70'
           )}
@@ -119,12 +123,47 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
           {formatTime(line.startTimeSeconds)}
         </span>
 
-        {/* Action area on the right */}
-        {actionArea && (
-          <div className="flex items-center gap-1">
-            {actionArea}
-          </div>
-        )}
+        {/* Right side: recording count and action area */}
+        <div className="flex items-center gap-2">
+          {/* Recording count indicator */}
+          {recordingCount > 0 && (
+            <div
+              className={cn(
+                'flex items-center gap-1 px-1.5 py-0.5 rounded-md transition-colors duration-300',
+                isInEchoRegion && 'bg-highlight-active/20',
+                !isInEchoRegion && 'bg-muted/50'
+              )}
+              title={`${recordingCount} recording${recordingCount > 1 ? 's' : ''}`}
+            >
+              <Icon
+                icon="lucide:mic"
+                className={cn(
+                  'w-3 h-3 transition-colors duration-300',
+                  isInEchoRegion && 'text-highlight-active-foreground/80',
+                  !isInEchoRegion && isActive && 'text-primary/70',
+                  !isInEchoRegion && !isActive && 'text-muted-foreground/70'
+                )}
+              />
+              <span
+                className={cn(
+                  'text-xs font-medium tabular-nums transition-colors duration-300',
+                  isInEchoRegion && 'text-highlight-active-foreground/80',
+                  !isInEchoRegion && isActive && 'text-primary/70',
+                  !isInEchoRegion && !isActive && 'text-muted-foreground/70'
+                )}
+              >
+                {recordingCount}
+              </span>
+            </div>
+          )}
+
+          {/* Action area */}
+          {actionArea && (
+            <div className="flex items-center gap-1">
+              {actionArea}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Primary text */}
@@ -144,7 +183,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
         <p
           className={cn(
             'mt-1.5 text-sm leading-relaxed transition-all duration-300',
-            isInEchoRegion && 'text-(--highlight-active-foreground)/80',
+            isInEchoRegion && 'text-highlight-active-foreground/80',
             !isInEchoRegion && isActive && 'text-primary/70',
             !isInEchoRegion && !isActive && 'text-muted-foreground'
           )}

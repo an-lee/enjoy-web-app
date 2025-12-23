@@ -10,7 +10,10 @@ import { TranscriptLineItem } from './transcript-line-item'
 import { EchoRegionControls } from '../echo/echo-region-controls'
 import { ShadowReadingPanel } from '../shadow-reading/shadow-reading-panel'
 import { useEchoRegion } from '@/page/hooks/player'
+import { useRecordingsByTarget } from '@/page/hooks/queries'
+import { usePlayerStore } from '@/page/stores/player'
 import type { TranscriptLineState } from './types'
+import type { TargetType } from '@/page/types/db'
 
 interface TranscriptLinesProps {
   lines: TranscriptLineState[]
@@ -29,6 +32,59 @@ function TranscriptLinesComponent({
     echoStartTime,
     echoEndTime,
   } = useEchoRegion()
+
+  // Get current media info for fetching recordings
+  const currentSession = usePlayerStore((state) => state.currentSession)
+  const { targetType, targetId } = useMemo<{
+    targetType: TargetType | null
+    targetId: string | null
+  }>(() => {
+    if (!currentSession) {
+      return { targetType: null, targetId: null }
+    }
+    return {
+      targetType: (currentSession.mediaType === 'video' ? 'Video' : 'Audio') as TargetType,
+      targetId: currentSession.mediaId,
+    }
+  }, [currentSession?.mediaType, currentSession?.mediaId])
+
+  // Fetch all recordings for current media
+  const { recordings } = useRecordingsByTarget({
+    targetType,
+    targetId,
+    enabled: !!targetType && !!targetId,
+  })
+
+  // Calculate recording counts for each line
+  // Optimized: Pre-convert line times to milliseconds once to avoid repeated conversions
+  const lineRecordingCounts = useMemo(() => {
+    const counts = new Map<number, number>()
+
+    // Pre-convert recordings end times to avoid repeated calculations
+    const recordingsWithEndTimes = recordings.map((recording) => ({
+      recording,
+      startMs: recording.referenceStart,
+      endMs: recording.referenceStart + recording.referenceDuration,
+    }))
+
+    lines.forEach((line) => {
+      // Convert once per line instead of per recording
+      const lineStartMs = line.startTimeSeconds * 1000
+      const lineEndMs = line.endTimeSeconds * 1000
+
+      // Count overlapping recordings using pre-calculated values
+      let count = 0
+      for (const { startMs, endMs } of recordingsWithEndTimes) {
+        // Two ranges overlap if: max(start1, start2) < min(end1, end2)
+        if (Math.max(startMs, lineStartMs) < Math.min(endMs, lineEndMs)) {
+          count++
+        }
+      }
+      counts.set(line.index, count)
+    })
+
+    return counts
+  }, [lines, recordings])
 
   // Get reference text from echo region lines
   const referenceText = useMemo(() => {
@@ -85,6 +141,7 @@ function TranscriptLinesComponent({
             <TranscriptLineItem
               line={line}
               onLineClick={onLineClick}
+              recordingCount={lineRecordingCounts.get(line.index) ?? 0}
             />
 
             {/* Echo region bottom controls - shown below the last line of echo region */}
