@@ -2,18 +2,26 @@
  * MiniPlayerBar - Compact player bar that appears at the bottom of the screen
  *
  * Minimal design with essential controls only.
+ *
+ * This component manages its own media loading and playback for mini/hidden modes.
+ * When `hidden` prop is true, only the media element is rendered (no UI).
  */
 
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
-import { cn, formatTime } from '@/shared/lib/utils'
+import { cn, formatTime, createLogger } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 import { Slider } from '@/page/components/ui/slider'
 import { usePlayerStore } from '@/page/stores/player'
 import { GenerativeCover } from '@/page/components/library/generative-cover'
-import { useDisplayTime, usePlayerControls } from '@/page/hooks/player'
+import { useDisplayTime, usePlayerControls, useMediaElement } from '@/page/hooks/player'
+import { useMediaLoader } from '@/page/hooks/player/use-media-loader'
+import { usePlaybackSync } from '@/page/hooks/player/use-playback-sync'
 import { useSidebar } from '@/page/components/ui/sidebar'
 import { useIsMobile } from '@/page/hooks/use-mobile'
+
+const log = createLogger({ name: 'MiniPlayerBar' })
 
 // ============================================================================
 // Types
@@ -21,25 +29,102 @@ import { useIsMobile } from '@/page/hooks/use-mobile'
 
 interface MiniPlayerBarProps {
   className?: string
+  /** If true, only render media element without UI (for hidden mode) */
+  hidden?: boolean
 }
 
 // ============================================================================
 // Component
 // ============================================================================
 
-export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
+export function MiniPlayerBar({ className, hidden = false }: MiniPlayerBarProps) {
   const { t } = useTranslation()
   const displayTime = useDisplayTime()
   const isMobile = useIsMobile()
   const { state: sidebarState, open: sidebarOpen } = useSidebar()
+  const mode = usePlayerStore((state) => state.mode)
 
   // Player state
   const { currentSession, isPlaying, expand, hide } = usePlayerStore()
+
+  // Media element and loading logic
+  const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null)
+  const [isReady, setIsReady] = useState(false)
+
+  // Load media from IndexedDB
+  const { mediaUrl } = useMediaLoader()
+
+  // Get media element handlers
+  const {
+    handleTimeUpdate,
+    handleEnded,
+    handleCanPlay,
+    handleLoadError,
+  } = useMediaElement({
+    mediaRef,
+    onReady: setIsReady,
+    onError: (errorMsg) => {
+      log.error('Media element error:', errorMsg)
+    },
+  })
+
+  // Sync playback state
+  usePlaybackSync({
+    mediaRef,
+    isReady,
+    mode,
+  })
 
   // Get all player controls from unified hook
   const controls = usePlayerControls()
 
   if (!currentSession) return null
+
+  const isVideo = currentSession.mediaType === 'video'
+
+  // For hidden mode, only render media element
+  if (hidden) {
+    return (
+      <>
+        {mediaUrl && (
+          <>
+            {isVideo ? (
+              <div className="hidden">
+                <video
+                  key={`video-hidden-${currentSession.mediaId}`}
+                  ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                  src={mediaUrl}
+                  onTimeUpdate={handleTimeUpdate}
+                  onEnded={handleEnded}
+                  onCanPlay={handleCanPlay}
+                  onWaiting={() => log.debug('buffering...')}
+                  onStalled={() => log.warn('stalled!')}
+                  onError={handleLoadError}
+                  playsInline
+                  preload="auto"
+                />
+              </div>
+            ) : (
+              <div className="hidden">
+                <audio
+                  key={`audio-hidden-${currentSession.mediaId}`}
+                  ref={mediaRef as React.RefObject<HTMLAudioElement>}
+                  src={mediaUrl}
+                  onTimeUpdate={handleTimeUpdate}
+                  onEnded={handleEnded}
+                  onCanPlay={handleCanPlay}
+                  onWaiting={() => log.debug('buffering...')}
+                  onStalled={() => log.warn('stalled!')}
+                  onError={handleLoadError}
+                  preload="auto"
+                />
+              </div>
+            )}
+          </>
+        )}
+      </>
+    )
+  }
 
   const progress =
     currentSession.duration > 0
@@ -156,6 +241,44 @@ export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
           </Button>
         </div>
       </div>
+
+      {/* Media element - hidden for audio, visible container for video (but video itself is hidden in mini mode) */}
+      {mediaUrl && (
+        <>
+          {isVideo ? (
+            <div className="hidden">
+              <video
+                key={`video-mini-${currentSession.mediaId}`}
+                ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                src={mediaUrl}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                onCanPlay={handleCanPlay}
+                onWaiting={() => log.debug('buffering...')}
+                onStalled={() => log.warn('stalled!')}
+                onError={handleLoadError}
+                playsInline
+                preload="auto"
+              />
+            </div>
+          ) : (
+            <div className="hidden">
+              <audio
+                key={`audio-mini-${currentSession.mediaId}`}
+                ref={mediaRef as React.RefObject<HTMLAudioElement>}
+                src={mediaUrl}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                onCanPlay={handleCanPlay}
+                onWaiting={() => log.debug('buffering...')}
+                onStalled={() => log.warn('stalled!')}
+                onError={handleLoadError}
+                preload="auto"
+              />
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

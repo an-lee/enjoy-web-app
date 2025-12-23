@@ -31,7 +31,7 @@ const log = createLogger({ name: 'player-store' })
 // Types
 // ============================================================================
 
-export type PlayerMode = 'hidden' | 'mini' | 'expanded'
+export type PlayerMode =  'mini' | 'expanded'
 
 /**
  * Playback session - represents a media being played
@@ -317,7 +317,7 @@ export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
       // Initial UI state
-      mode: 'hidden',
+      mode: 'expanded',
       isPlaying: false,
       isTranscribing: false,
       transcribeProgress: null,
@@ -528,7 +528,7 @@ export const usePlayerStore = create<PlayerState>()(
         set({
           currentSession: null,
           currentEchoSessionId: null,
-          mode: 'hidden',
+          mode: 'expanded',
           isPlaying: false,
           echoModeActive: false,
           echoStartLineIndex: -1,
