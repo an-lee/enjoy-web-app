@@ -17,22 +17,29 @@
  * The segmentation process consists of several stages:
  *
  * 1. **Metadata Enrichment** (`word-metadata.ts`):
+ *    - Merges hyphenated words (e.g., "non", "-sleep" -> "non-sleep")
  *    - Converts raw word timings to milliseconds
  *    - Detects punctuation, abbreviations, numbers
  *    - Identifies sentence boundaries
  *    - Detects entities and meaning groups (English only, using Compromise.js)
  *
- * 2. **Segmentation** (`segmentation.ts`):
- *    - Iterates through words and uses break detection to determine segment boundaries
- *    - Handles force-break scenarios when segments get too long
+ * 2. **Sentence Grouping** (`segmentation.ts`):
+ *    - First groups words into sentences based on sentence-ending punctuation
+ *    - Ensures segmentation respects sentence boundaries
  *
- * 3. **Break Detection** (`break-detection.ts`):
+ * 3. **Sentence Segmentation** (`segmentation.ts`):
+ *    - Segments each sentence independently
+ *    - For long sentences, breaks at punctuation, pauses, and meaning groups
+ *    - Uses break detection to find optimal break points within sentences
+ *
+ * 4. **Break Detection** (`break-detection.ts`):
  *    - Calculates break scores based on multiple factors
  *    - Considers punctuation, pauses, meaning groups, and semantic coherence
  *    - Implements priority-based break decisions
  *
- * 4. **Segment Merging** (`merge-segments.ts`):
- *    - Post-processes segments to merge very short ones
+ * 5. **Segment Merging** (`merge-segments.ts`):
+ *    - Post-processes segments to merge very short ones (especially single-word segments)
+ *    - For very short segments, merges if time gap is very small (< 100ms)
  *    - Respects audio pauses and punctuation boundaries
  *
  * ## Usage
@@ -78,11 +85,19 @@ import {
 /**
  * Convert raw word timings to TranscriptLine format
  * Intelligently segments text based on:
+ * - Sentence boundaries (first groups by punctuation-based sentence endings)
  * - Audio pauses (breathing points)
- * - Punctuation marks
+ * - Punctuation marks (within sentences)
  * - Word count (optimal for follow-along reading)
  * - Multilingual sentence boundaries (using Intl.Segmenter when available)
  * - Meaning groups (意群) for semantic coherence (English only)
+ * - Hyphenated words (merges words starting with '-' into previous word)
+ *
+ * Algorithm flow:
+ * 1. First groups words into sentences based on sentence-ending punctuation
+ * 2. Then segments each sentence independently
+ * 3. For long sentences, breaks at punctuation, pauses, and meaning groups
+ * 4. Finally merges very short segments if time gap is very small
  *
  * All times are converted to milliseconds (integer)
  *

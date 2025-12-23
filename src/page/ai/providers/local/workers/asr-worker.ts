@@ -194,8 +194,6 @@ self.addEventListener('message', async (event: MessageEvent<ASRWorkerMessage>) =
             fullChunk: chunk, // Complete chunk object
           }))
 
-          log.debug('Chunks details:', chunksInfo)
-
           // Log time range summary
           if (chunksInfo.length > 0) {
             const firstChunk = chunksInfo[0]

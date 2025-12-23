@@ -908,5 +908,85 @@ describe('convertToTranscriptFormat', () => {
       expect(combined).toContain('nationwide')
     })
   })
+
+  describe('Hyphenated Words', () => {
+    it('should merge words starting with "-" into previous word', () => {
+      // Example: "non", "-sleep", "-deep", "-rest" should become "non-sleep-deep-rest"
+      const text = 'non-sleep-deep-rest'
+      const timings: RawWordTiming[] = [
+        { text: 'non', startTime: 0.0, endTime: 0.3 },
+        { text: '-sleep', startTime: 0.3, endTime: 0.7 },
+        { text: '-deep', startTime: 0.7, endTime: 1.0 },
+        { text: '-rest', startTime: 1.0, endTime: 1.3 },
+      ]
+
+      const result = convertToTranscriptFormat(text, timings)
+      const allWords = result.timeline.flatMap((seg) => seg.timeline || [])
+
+      // Should merge all hyphenated parts into one word
+      const mergedWord = allWords.find((w) => w.text.includes('non'))
+      expect(mergedWord).toBeDefined()
+      expect(mergedWord?.text).toBe('non-sleep-deep-rest')
+    })
+
+    it('should handle single hyphenated word', () => {
+      const text = 'pre-existing'
+      const timings: RawWordTiming[] = [
+        { text: 'pre', startTime: 0.0, endTime: 0.3 },
+        { text: '-existing', startTime: 0.3, endTime: 0.8 },
+      ]
+
+      const result = convertToTranscriptFormat(text, timings)
+      const allWords = result.timeline.flatMap((seg) => seg.timeline || [])
+
+      const mergedWord = allWords.find((w) => w.text.includes('pre'))
+      expect(mergedWord).toBeDefined()
+      expect(mergedWord?.text).toBe('pre-existing')
+    })
+
+    it('should handle hyphenated word in sentence context', () => {
+      const text = 'This is a non-sleep-deep-rest state.'
+      const timings: RawWordTiming[] = [
+        { text: 'This', startTime: 0.0, endTime: 0.2 },
+        { text: 'is', startTime: 0.3, endTime: 0.4 },
+        { text: 'a', startTime: 0.5, endTime: 0.6 },
+        { text: 'non', startTime: 0.7, endTime: 1.0 },
+        { text: '-sleep', startTime: 1.0, endTime: 1.4 },
+        { text: '-deep', startTime: 1.4, endTime: 1.7 },
+        { text: '-rest', startTime: 1.7, endTime: 2.0 },
+        { text: 'state', startTime: 2.1, endTime: 2.5 },
+        { text: '.', startTime: 2.5, endTime: 2.6 },
+      ]
+
+      const result = convertToTranscriptFormat(text, timings)
+      const allWords = result.timeline.flatMap((seg) => seg.timeline || [])
+
+      // Should merge hyphenated parts
+      const mergedWord = allWords.find((w) => w.text.includes('non'))
+      expect(mergedWord).toBeDefined()
+      expect(mergedWord?.text).toBe('non-sleep-deep-rest')
+
+      // Should preserve other words
+      const thisWord = allWords.find((w) => w.text === 'This')
+      expect(thisWord).toBeDefined()
+      const stateWord = allWords.find((w) => w.text === 'state')
+      expect(stateWord).toBeDefined()
+    })
+
+    it('should handle word starting with "-" at the beginning (edge case)', () => {
+      // Edge case: if first word starts with '-', keep it as is
+      const text = '-start'
+      const timings: RawWordTiming[] = [
+        { text: '-start', startTime: 0.0, endTime: 0.5 },
+      ]
+
+      const result = convertToTranscriptFormat(text, timings)
+      const allWords = result.timeline.flatMap((seg) => seg.timeline || [])
+
+      // Should keep the word as is (no previous word to merge with)
+      expect(allWords.length).toBeGreaterThan(0)
+      expect(allWords[0].text).toBe('-start')
+    })
+  })
 })
 

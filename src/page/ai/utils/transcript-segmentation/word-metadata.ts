@@ -18,6 +18,51 @@ import { isSentenceBoundary } from '../multilingual-segmenter'
 import { detectAbbreviationsEnhanced } from '../compromise-helper'
 
 /**
+ * Merge words that start with '-' into the previous word
+ * Example: "non", "-sleep", "-deep", "-rest" -> "non-sleep-deep-rest"
+ *
+ * @param rawTimings - Raw word timings from TTS provider
+ * @returns Merged raw timings
+ */
+function mergeHyphenatedWords(rawTimings: RawWordTiming[]): RawWordTiming[] {
+  if (rawTimings.length === 0) {
+    return rawTimings
+  }
+
+  const merged: RawWordTiming[] = []
+  let i = 0
+
+  while (i < rawTimings.length) {
+    const current = rawTimings[i]
+
+    // Check if this word starts with '-'
+    if (current.text.trim().startsWith('-')) {
+      // Merge with previous word if exists
+      if (merged.length > 0) {
+        const prev = merged[merged.length - 1]
+        // Merge text (remove space between)
+        const mergedText = prev.text.trim() + current.text.trim()
+        // Merge timing: start from previous word's start, end at current word's end
+        merged[merged.length - 1] = {
+          text: mergedText,
+          startTime: prev.startTime,
+          endTime: current.endTime,
+        }
+      } else {
+        // If it's the first word and starts with '-', keep it as is (edge case)
+        merged.push(current)
+      }
+    } else {
+      merged.push(current)
+    }
+
+    i++
+  }
+
+  return merged
+}
+
+/**
  * Convert raw word timings to words with enriched metadata
  *
  * @param text - Original text that was synthesized
@@ -36,15 +81,18 @@ export function enrichWordMetadata(
 ): WordWithMetadata[] {
   const isEnglish = language?.startsWith('en') ?? false
 
-  return rawTimings.map((raw, index) => {
+  // Step 0: Merge hyphenated words (e.g., "non", "-sleep" -> "non-sleep")
+  const mergedTimings = mergeHyphenatedWords(rawTimings)
+
+  return mergedTimings.map((raw, index) => {
     const start = Math.round(raw.startTime * 1000)
     const end = Math.round(raw.endTime * 1000)
     const duration = end - start
 
     // Calculate gap after this word
     const gapAfter =
-      index < rawTimings.length - 1
-        ? Math.round(rawTimings[index + 1].startTime * 1000) - end
+      index < mergedTimings.length - 1
+        ? Math.round(mergedTimings[index + 1].startTime * 1000) - end
         : 0
 
     // Extract punctuation after this word from the original text

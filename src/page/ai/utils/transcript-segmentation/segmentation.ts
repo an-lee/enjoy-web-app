@@ -2,6 +2,7 @@
  * Word Segmentation Logic
  *
  * Segments words into optimal chunks for language learning follow-along reading.
+ * First groups words by sentences (based on punctuation), then segments within each sentence.
  * Handles the main segmentation loop and force-break scenarios when segments get too long.
  */
 
@@ -10,14 +11,56 @@ import { SEGMENTATION_CONFIG } from './constants'
 import { shouldBreakAtPosition, findBestBreakPointInSegment } from './break-detection'
 
 /**
- * Segment words into optimal chunks for language learning
- * Uses break detection to find the best break points
+ * Group words into sentences based on sentence-ending punctuation
  *
  * @param words - All words with enriched metadata
- * @returns Array of word segments
+ * @returns Array of sentence groups (each is an array of words)
  */
-export function segmentWords(words: WordWithMetadata[]): WordSegment[] {
+function groupWordsIntoSentences(words: WordWithMetadata[]): WordWithMetadata[][] {
   if (words.length === 0) {
+    return []
+  }
+
+  const sentences: WordWithMetadata[][] = []
+  let currentSentence: WordWithMetadata[] = []
+
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i]
+    currentSentence.push(word)
+
+    // Check if this word ends a sentence
+    if (word.isSentenceEnd) {
+      // Finalize current sentence
+      if (currentSentence.length > 0) {
+        sentences.push([...currentSentence])
+        currentSentence = []
+      }
+    }
+  }
+
+  // Add remaining words as final sentence (if any)
+  if (currentSentence.length > 0) {
+    sentences.push(currentSentence)
+  }
+
+  return sentences
+}
+
+/**
+ * Segment words within a single sentence
+ * Handles long sentences by breaking at punctuation, pauses, and meaning groups
+ *
+ * @param sentenceWords - Words in a single sentence
+ * @param allWords - All words (for context in break detection)
+ * @param sentenceStartIndex - Starting index of this sentence in allWords
+ * @returns Array of word segments for this sentence
+ */
+function segmentSentence(
+  sentenceWords: WordWithMetadata[],
+  allWords: WordWithMetadata[],
+  sentenceStartIndex: number
+): WordSegment[] {
+  if (sentenceWords.length === 0) {
     return []
   }
 
@@ -25,13 +68,14 @@ export function segmentWords(words: WordWithMetadata[]): WordSegment[] {
   let currentSegment: WordWithMetadata[] = []
   let currentWordCount = 0
 
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i]
+  for (let i = 0; i < sentenceWords.length; i++) {
+    const word = sentenceWords[i]
+    const globalIndex = sentenceStartIndex + i
     currentSegment.push(word)
     currentWordCount++
 
-    // Check if we should break here
-    const shouldBreak = shouldBreakAtPosition(words, i, currentWordCount)
+    // Check if we should break here (within sentence)
+    const shouldBreak = shouldBreakAtPosition(allWords, globalIndex, currentWordCount)
 
     if (shouldBreak) {
       // Finalize current segment
@@ -42,12 +86,12 @@ export function segmentWords(words: WordWithMetadata[]): WordSegment[] {
       }
     } else if (
       currentWordCount >= SEGMENTATION_CONFIG.maxWordsPerSegment &&
-      i < words.length - 1
+      i < sentenceWords.length - 1
     ) {
       // If we're just over the soft max, prefer slightly overflowing to reach
       // a nearby strong boundary (sentence end / meaning-group boundary).
       // This avoids splitting fixed semantic units like "wasn't bad enough."
-      if (shouldDelayForceBreak(words, i, currentWordCount)) {
+      if (shouldDelayForceBreak(allWords, globalIndex, currentWordCount)) {
         continue
       }
 
@@ -85,6 +129,34 @@ export function segmentWords(words: WordWithMetadata[]): WordSegment[] {
   }
 
   return segments
+}
+
+/**
+ * Segment words into optimal chunks for language learning
+ * First groups words by sentences, then segments within each sentence
+ *
+ * @param words - All words with enriched metadata
+ * @returns Array of word segments
+ */
+export function segmentWords(words: WordWithMetadata[]): WordSegment[] {
+  if (words.length === 0) {
+    return []
+  }
+
+  // Step 1: Group words into sentences based on sentence-ending punctuation
+  const sentences = groupWordsIntoSentences(words)
+
+  // Step 2: Segment each sentence independently
+  const allSegments: WordSegment[] = []
+  let wordIndex = 0
+
+  for (const sentence of sentences) {
+    const sentenceSegments = segmentSentence(sentence, words, wordIndex)
+    allSegments.push(...sentenceSegments)
+    wordIndex += sentence.length
+  }
+
+  return allSegments
 }
 
 /**
