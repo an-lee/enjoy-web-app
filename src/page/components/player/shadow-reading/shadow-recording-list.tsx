@@ -5,7 +5,7 @@
  * Handles data fetching, selection, and integrates with RecordingPlayer for playback.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { RecordingPlayer } from './recording-player'
 import {
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/page/components/ui/select'
 import { useRecordingsByEchoRegion } from '@/page/hooks/queries'
-import type { TargetType } from '@/page/types/db'
+import type { TargetType, Recording } from '@/page/types/db'
 
 interface ShadowRecordingListProps {
   /** Type of target (Audio or Video) */
@@ -33,6 +33,8 @@ interface ShadowRecordingListProps {
   enabled?: boolean
   /** Optional CSS class name */
   className?: string
+  /** Callback when selected recording changes */
+  onSelectedRecordingChange?: (recording: Recording | null) => void
 }
 
 export function ShadowRecordingList({
@@ -43,6 +45,7 @@ export function ShadowRecordingList({
   endTime,
   enabled = true,
   className,
+  onSelectedRecordingChange,
 }: ShadowRecordingListProps) {
   const { t } = useTranslation()
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -78,6 +81,13 @@ export function ShadowRecordingList({
       setSelectedIndex(index)
     }
   }
+
+  // Notify parent when selected recording changes
+  useEffect(() => {
+    if (onSelectedRecordingChange) {
+      onSelectedRecordingChange(selectedRecording)
+    }
+  }, [selectedRecording, onSelectedRecordingChange])
 
   // Don't render if required props missing, loading, or no recordings
   if (!hasRequiredProps || isLoading || recordings.length === 0) {

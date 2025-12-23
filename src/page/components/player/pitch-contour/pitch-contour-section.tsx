@@ -11,24 +11,28 @@ import { Icon } from '@iconify/react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 import { usePlayerStore } from '@/page/stores/player'
-import type { EchoRegionAnalysisResult } from '@/page/lib/audio/echo-region-analysis'
+import type { EchoRegionAnalysisResult, EchoRegionSeriesPoint } from '@/page/lib/audio/echo-region-analysis'
 import {
   analyzeEchoRegionFromBlob,
   loadMediaBlobForSession,
 } from '@/page/lib/audio/echo-region-analysis'
 import { PitchContourChart, type PitchContourVisibility } from './pitch-contour-chart'
 import { PitchContourControls } from './pitch-contour-controls'
+import type { Recording } from '@/page/types/db'
 
 interface PitchContourSectionProps {
   startTime: number
   endTime: number
   currentTimeRelative?: number
+  /** Selected user recording to display pitch contour for comparison */
+  selectedRecording?: Recording | null
 }
 
 export function PitchContourSection({
   startTime,
   endTime,
   currentTimeRelative,
+  selectedRecording,
 }: PitchContourSectionProps) {
   const { t } = useTranslation()
   const currentSession = usePlayerStore((s) => s.currentSession)
@@ -37,12 +41,15 @@ export function PitchContourSection({
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const [analysis, setAnalysis] = useState<EchoRegionAnalysisResult | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [userAnalysis, setUserAnalysis] = useState<EchoRegionAnalysisResult | null>(null)
+  const [userAnalysisError, setUserAnalysisError] = useState<string | null>(null)
   const [visibility, setVisibility] = useState<PitchContourVisibility>({
     showWaveform: true,
     showReference: true,
     showUser: true,
   })
   const cacheRef = useRef<Map<string, EchoRegionAnalysisResult>>(new Map())
+  const userCacheRef = useRef<Map<string, EchoRegionAnalysisResult>>(new Map())
 
   const cacheKey = useMemo(() => {
     if (!currentSession) return null
@@ -51,6 +58,11 @@ export function PitchContourSection({
     const e = Math.round(endTime * 1000)
     return `${currentSession.mediaType}:${currentSession.mediaId}:${s}-${e}`
   }, [currentSession, startTime, endTime])
+
+  const userCacheKey = useMemo(() => {
+    if (!selectedRecording?.blob) return null
+    return `recording:${selectedRecording.id}`
+  }, [selectedRecording])
 
   const runAnalysis = async () => {
     if (!currentSession) {
@@ -90,6 +102,101 @@ export function PitchContourSection({
     }
   }
 
+  const runUserAnalysis = async () => {
+    if (!selectedRecording?.blob || !userCacheKey) {
+      setUserAnalysis(null)
+      setUserAnalysisError(null)
+      return
+    }
+
+    const cached = userCacheRef.current.get(userCacheKey)
+    if (cached) {
+      setUserAnalysis(cached)
+      return
+    }
+
+    setUserAnalysisError(null)
+
+    try {
+      // Analyze the entire recording (from 0 to duration)
+      // The recording duration is in milliseconds, convert to seconds
+      const durationSeconds = selectedRecording.duration / 1000
+      const res = await analyzeEchoRegionFromBlob({
+        blob: selectedRecording.blob,
+        startTimeSeconds: 0,
+        endTimeSeconds: durationSeconds,
+      })
+      userCacheRef.current.set(userCacheKey, res)
+      setUserAnalysis(res)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to analyze user recording'
+      setUserAnalysisError(msg)
+      setUserAnalysis(null)
+    }
+  }
+
+  // Merge reference and user analysis data
+  const mergedAnalysis = useMemo(() => {
+    if (!analysis) return null
+    if (!userAnalysis || !selectedRecording) {
+      return analysis
+    }
+
+    // Reference duration in seconds
+    const refDuration = endTime - startTime
+    // User recording duration in seconds
+    const userDuration = selectedRecording.duration / 1000
+
+    // Create a deep copy of analysis points to avoid mutating the original
+    const mergedPoints: EchoRegionSeriesPoint[] = analysis.points.map((point) => ({
+      ...point,
+    }))
+
+    // Create a map of reference points by time
+    const refMap = new Map<number, EchoRegionSeriesPoint>()
+    mergedPoints.forEach((point) => {
+      refMap.set(point.t, point)
+    })
+
+    // Map user recording points to reference time scale
+    // User recording is scaled to match reference duration
+    const scale = refDuration / userDuration
+
+    userAnalysis.points.forEach((userPoint) => {
+      // Map user time to reference time scale
+      const mappedTime = userPoint.t * scale
+      // Find the closest reference point
+      const refPoint = refMap.get(mappedTime)
+      if (refPoint) {
+        // Merge user data into reference point
+        refPoint.ampUser = userPoint.ampRef
+        refPoint.pitchUserHz = userPoint.pitchRefHz
+      } else {
+        // If no exact match, find nearest point
+        let nearestTime = Infinity
+        let nearestPoint: EchoRegionSeriesPoint | undefined = undefined
+        refMap.forEach((point, time) => {
+          const diff = Math.abs(time - mappedTime)
+          if (diff < nearestTime) {
+            nearestTime = diff
+            nearestPoint = point
+          }
+        })
+        if (nearestPoint !== undefined && nearestTime < 0.1) {
+          // Only merge if within 0.1 seconds
+          const point = nearestPoint as EchoRegionSeriesPoint
+          point.ampUser = userPoint.ampRef
+          point.pitchUserHz = userPoint.pitchRefHz
+        }
+      }
+    })
+
+    return {
+      ...analysis,
+      points: mergedPoints,
+    }
+  }, [analysis, userAnalysis, selectedRecording, startTime, endTime])
+
   useEffect(() => {
     if (!isExpanded) return
 
@@ -110,6 +217,30 @@ export function PitchContourSection({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isExpanded, cacheKey])
+
+  // Analyze user recording when selected
+  useEffect(() => {
+    if (!isExpanded || !selectedRecording) {
+      setUserAnalysis(null)
+      setUserAnalysisError(null)
+      return
+    }
+
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        await runUserAnalysis()
+      } finally {
+        if (cancelled) return
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isExpanded, selectedRecording?.id, userCacheKey])
 
   return (
     <div className="border border-(--highlight-active-foreground)/20 rounded-lg overflow-hidden">
@@ -164,10 +295,15 @@ export function PitchContourSection({
             </div>
           )}
 
-          {status === 'ready' && analysis && (
+          {status === 'ready' && mergedAnalysis && (
             <div className="grid gap-3">
+              {userAnalysisError && (
+                <div className="text-xs text-destructive/80">
+                  {t('player.transcript.pitchContourUserAnalysisError')}: {userAnalysisError}
+                </div>
+              )}
               <PitchContourChart
-                data={analysis.points}
+                data={mergedAnalysis.points}
                 className="w-full h-[200px]"
                 currentTimeRelative={currentTimeRelative}
                 visibility={visibility}
@@ -181,12 +317,12 @@ export function PitchContourSection({
               <PitchContourControls
                 visibility={visibility}
                 onVisibilityChange={setVisibility}
-                analysis={analysis}
+                analysis={mergedAnalysis}
               />
               <div className="text-xs text-(--highlight-active-foreground)/60 text-center">
                 {t('player.transcript.pitchContourMeta', {
-                  sampleRate: Math.round(analysis.meta.sampleRate),
-                  essentiaVersion: analysis.meta.essentiaVersion ?? 'unknown',
+                  sampleRate: Math.round(mergedAnalysis.meta.sampleRate),
+                  essentiaVersion: mergedAnalysis.meta.essentiaVersion ?? 'unknown',
                 })}
               </div>
             </div>

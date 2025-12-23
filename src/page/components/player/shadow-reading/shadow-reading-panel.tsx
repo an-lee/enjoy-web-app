@@ -6,7 +6,7 @@
  * Styled with soft purple tone to distinguish from Echo Region.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDisplayTime } from '@/page/hooks/player'
 import { ShadowReadingPanelHeader } from './shadow-reading-panel-header'
@@ -14,7 +14,7 @@ import { PitchContourSection } from '../pitch-contour'
 import { ShadowRecorder } from './shadow-recorder'
 import { ShadowRecordingList } from './shadow-recording-list'
 import { usePlayerStore } from '@/page/stores/player'
-import { TargetType } from '@/page/types/db'
+import type { TargetType, Recording } from '@/page/types/db'
 
 interface ShadowReadingPanelProps {
   startTime: number // seconds
@@ -36,6 +36,7 @@ export function ShadowReadingPanel({
   }, [currentSession])
   const targetId = currentSession?.mediaId || ''
   const language = currentSession?.language || 'en'
+  const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null)
 
   // Calculate relative time for progress indicator (0 to duration)
   const currentTimeRelative = useMemo(() => {
@@ -59,6 +60,7 @@ export function ShadowReadingPanel({
           startTime={startTime}
           endTime={endTime}
           currentTimeRelative={currentTimeRelative}
+          selectedRecording={selectedRecording}
         />
 
         <ShadowRecordingList
@@ -67,6 +69,7 @@ export function ShadowReadingPanel({
           language={language}
           startTime={startTime * 1000}
           endTime={endTime * 1000}
+          onSelectedRecordingChange={setSelectedRecording}
         />
 
         <ShadowRecorder />
