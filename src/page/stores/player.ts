@@ -69,6 +69,15 @@ interface PlayerState {
   /** Whether media is currently playing */
   isPlaying: boolean
 
+  /** Whether transcription is currently in progress */
+  isTranscribing: boolean
+
+  /** Transcription progress message */
+  transcribeProgress: string | null
+
+  /** Transcription progress percentage (0-100) */
+  transcribeProgressPercent: number | null
+
   // ============================================================================
   // Session State
   // ============================================================================
@@ -252,6 +261,19 @@ interface PlayerState {
 
   /** Toggle recording playback (play/pause) */
   toggleRecordingPlayback: () => void
+
+  // ============================================================================
+  // Transcription Actions
+  // ============================================================================
+
+  /** Set transcription state */
+  setTranscribing: (isTranscribing: boolean) => void
+
+  /** Set transcription progress */
+  setTranscribeProgress: (progress: string | null, percent?: number | null) => void
+
+  /** Clear transcription state */
+  clearTranscribeState: () => void
 }
 
 // ============================================================================
@@ -296,6 +318,9 @@ export const usePlayerStore = create<PlayerState>()(
       // Initial UI state
       mode: 'hidden',
       isPlaying: false,
+      isTranscribing: false,
+      transcribeProgress: null,
+      transcribeProgressPercent: null,
 
       // Initial session state
       currentSession: null,
@@ -504,6 +529,10 @@ export const usePlayerStore = create<PlayerState>()(
           echoEndLineIndex: -1,
           echoStartTime: -1,
           echoEndTime: -1,
+          // Clear transcription state when session is cleared
+          isTranscribing: false,
+          transcribeProgress: null,
+          transcribeProgressPercent: null,
         })
       },
 
@@ -754,6 +783,26 @@ export const usePlayerStore = create<PlayerState>()(
         }
         _recordingPlayerControls.togglePlayback()
         log.debug('Recording playback toggled via shortcut')
+      },
+
+      // Transcription Actions
+      setTranscribing: (isTranscribing: boolean) => {
+        set({ isTranscribing })
+      },
+
+      setTranscribeProgress: (progress: string | null, percent?: number | null) => {
+        set({
+          transcribeProgress: progress,
+          transcribeProgressPercent: percent ?? null,
+        })
+      },
+
+      clearTranscribeState: () => {
+        set({
+          isTranscribing: false,
+          transcribeProgress: null,
+          transcribeProgressPercent: null,
+        })
       },
     }),
     {

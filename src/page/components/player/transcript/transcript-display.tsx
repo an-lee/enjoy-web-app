@@ -15,10 +15,9 @@ import { usePlayerStore } from '@/page/stores/player'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AIProvider } from '@/page/ai/types'
 import { ScrollArea } from '@/page/components/ui/scroll-area'
-import { useDisplayTime, usePlayerControls, useTranscribe, useEchoRegion, useEchoRegionManager } from '@/page/hooks/player'
+import { useDisplayTime, usePlayerControls, useEchoRegion, useEchoRegionManager } from '@/page/hooks/player'
 import { useTranscriptDisplay } from '../../../hooks/player/use-transcript-display'
 import { useAutoScroll } from '../../../hooks/player/use-auto-scroll'
-import { useUploadSubtitle } from '../../../hooks/player/use-upload-subtitle'
 import { TranscriptLines } from './transcript-lines'
 import { TranscribeDialog } from './transcribe-dialog'
 import { TranscriptLoadingState } from './transcript-loading-state'
@@ -73,7 +72,6 @@ export function TranscriptDisplay({
     activeLineIndex,
     transcripts,
     availableTranscripts,
-    syncState,
   } = useTranscriptDisplay()
 
   // Track previous activeLineIndex to only log when it changes
@@ -117,27 +115,14 @@ export function TranscriptDisplay({
   useAutoScroll(scrollTargetIndex, isPlaying, config, scrollAreaRef)
 
 
-  // Transcribe functionality (only for status, actual transcribe is handled in TranscribeDialog)
-  const { isTranscribing, progress, progressPercent } = useTranscribe({
-    mediaRef,
-  })
+  // Transcribe state from store (shared across all components)
+  const isTranscribing = usePlayerStore((state) => state.isTranscribing)
+  const progress = usePlayerStore((state) => state.transcribeProgress)
+  const progressPercent = usePlayerStore((state) => state.transcribeProgressPercent)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-
-  // Upload subtitle functionality
-  const {
-    triggerFileSelect,
-    handleFileSelect,
-    fileInputRef,
-    isUploading: isUploadingSubtitle,
-  } = useUploadSubtitle()
 
   // Get media duration for limitations
   const mediaDuration = currentSession?.duration || 0
-
-  // Handle transcribe button click
-  const handleTranscribeClick = useCallback(() => {
-    setShowConfirmDialog(true)
-  }, [])
 
   // Handle line click
   const handleLineClick = useCallback(
@@ -201,17 +186,7 @@ export function TranscriptDisplay({
     return (
       <>
         {dialogElement}
-        <TranscriptEmptyState
-          className={className}
-          isSyncing={syncState.isSyncing}
-          isTranscribing={isTranscribing}
-          isUploading={isUploadingSubtitle}
-          onUploadClick={triggerFileSelect}
-          onTranscribeClick={handleTranscribeClick}
-          transcribeProgress={progress}
-          fileInputRef={fileInputRef}
-          onFileSelect={handleFileSelect}
-        />
+        <TranscriptEmptyState className={className} mediaRef={mediaRef} />
       </>
     )
   }

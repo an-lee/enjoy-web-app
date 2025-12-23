@@ -6,7 +6,7 @@
  * Can use existing media element if provided, otherwise falls back to blob-based approach.
  */
 
-import { useState, useCallback, RefObject } from 'react'
+import { useCallback, RefObject } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { usePlayerStore } from '@/page/stores/player'
@@ -492,10 +492,13 @@ export interface UseTranscribeOptions {
 export function useTranscribe(options?: UseTranscribeOptions) {
   const { mediaRef } = options || {}
   const { t } = useTranslation()
-  const [isTranscribing, setIsTranscribing] = useState(false)
-  const [progress, setProgress] = useState<string | null>(null)
-  const [progressPercent, setProgressPercent] = useState<number | null>(null)
   const currentSession = usePlayerStore((state) => state.currentSession)
+  const isTranscribing = usePlayerStore((state) => state.isTranscribing)
+  const progress = usePlayerStore((state) => state.transcribeProgress)
+  const progressPercent = usePlayerStore((state) => state.transcribeProgressPercent)
+  const setTranscribing = usePlayerStore((state) => state.setTranscribing)
+  const setTranscribeProgress = usePlayerStore((state) => state.setTranscribeProgress)
+  const clearTranscribeState = usePlayerStore((state) => state.clearTranscribeState)
   const createTranscript = useCreateTranscript()
 
   const transcribe = useCallback(
@@ -513,9 +516,8 @@ export function useTranscribe(options?: UseTranscribeOptions) {
         return
       }
 
-      setIsTranscribing(true)
-      setProgress('Loading media...')
-      setProgressPercent(null)
+      setTranscribing(true)
+      setTranscribeProgress('Loading media...', null)
       onProgress?.('Loading media...')
 
       try {
@@ -533,7 +535,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
         if (mediaRef?.current && preferFFmpeg) {
           const videoElement = mediaRef.current as HTMLVideoElement
           log.debug('Video file detected, attempting to get blob from video element src')
-          setProgress('Loading video from element...')
+          setTranscribeProgress('Loading video from element...', 5)
           onProgress?.('Loading video from element...', 5)
 
           try {
@@ -558,7 +560,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
         if (mediaRef?.current && !preferFFmpeg && !audioBlob) {
           const mediaElement = mediaRef.current
           log.debug('Using existing media element for extraction (audio file)')
-          setProgress('Extracting audio from media element...')
+          setTranscribeProgress('Extracting audio from media element...', 10)
           onProgress?.('Extracting audio from media element...', 10)
 
           try {
@@ -579,7 +581,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
         let blob: Blob | undefined
         if (!audioBlob || !targetType || !targetId) {
           log.debug('Loading media from database')
-          setProgress('Loading media from database...')
+          setTranscribeProgress('Loading media from database...', 5)
           onProgress?.('Loading media from database...', 5)
 
           // Get media blob from IndexedDB
@@ -691,7 +693,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
               hasFileHandle: !!videoFileHandle,
               limit: MAX_RECOMMENDED_FILE_SIZE,
             })
-            setProgress('Extracting audio with FFmpeg...')
+            setTranscribeProgress('Extracting audio with FFmpeg...', 10)
             onProgress?.('Extracting audio with FFmpeg...', 10)
 
             try {
@@ -705,7 +707,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
               const ffmpegResult = await ffmpegService.extractAudio(videoSource, (progress) => {
                 // FFmpeg progress: 0-100, map to 10-80 (audio extraction phase)
                 const mappedProgress = 10 + (progress * 0.7) // 10% to 80%
-                setProgressPercent(mappedProgress)
+                setTranscribeProgress('Extracting audio with FFmpeg...', mappedProgress)
                 onProgress?.('Extracting audio with FFmpeg...', mappedProgress)
               })
 
@@ -740,7 +742,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
               // Try to use media element if available (faster than creating new video element)
               if (mediaRef?.current && currentSession.mediaType === 'video') {
                 log.debug('Using MediaRecorder with existing video element')
-                setProgress('Extracting audio from video...')
+                setTranscribeProgress('Extracting audio from video...', 10)
                 onProgress?.('Extracting audio from video...', 10)
 
                 try {
@@ -759,7 +761,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
               // Fallback: create new video element from blob
               if (!audioBlob && videoBlob) {
                 log.debug('Using MediaRecorder with video blob')
-                setProgress('Extracting audio from video...')
+                setTranscribeProgress('Extracting audio from video...', 10)
                 onProgress?.('Extracting audio from video...', 10)
 
                 try {
@@ -799,7 +801,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
           targetId,
         })
 
-        setProgress('Transcribing with ASR...')
+        setTranscribeProgress('Transcribing with ASR...', 20)
         onProgress?.('Transcribing with ASR...', 20)
 
         // Get ASR configuration
@@ -813,7 +815,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
         if (config.provider === 'local') {
           // For local model, we'll listen to worker progress events
           // This will be handled by the ASR service if it supports progress callbacks
-          setProgressPercent(20)
+          setTranscribeProgress('Transcribing with ASR...', 20)
         }
 
         // Determine language (use provided language, session language, or undefined for auto-detect)
@@ -906,8 +908,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
           timelineCount: timeline.length,
         })
 
-        setProgress('Saving transcript...')
-        setProgressPercent(90)
+        setTranscribeProgress('Saving transcript...', 90)
         onProgress?.('Saving transcript...', 90)
 
         // Create transcript input
@@ -958,17 +959,13 @@ export function useTranscribe(options?: UseTranscribeOptions) {
         }
 
         log.info('Transcription completed successfully')
-        setProgress(null)
-        setProgressPercent(null)
-        setIsTranscribing(false)
+        clearTranscribeState()
         onProgress?.('Complete', 100)
 
         toast.success(t('player.transcript.transcribeSuccess', { defaultValue: 'Transcript has been regenerated successfully' }))
       } catch (error) {
         log.error('Transcription failed:', error)
-        setProgress(null)
-        setProgressPercent(null)
-        setIsTranscribing(false)
+        clearTranscribeState()
         onProgress?.('Error', undefined)
 
         // Show user-friendly error message (if not already shown)
@@ -976,7 +973,7 @@ export function useTranscribe(options?: UseTranscribeOptions) {
         toast.error(errorMessage)
       }
     },
-    [currentSession, createTranscript, t]
+    [currentSession, createTranscript, t, setTranscribing, setTranscribeProgress, clearTranscribeState]
   )
 
   return {

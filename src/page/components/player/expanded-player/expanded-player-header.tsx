@@ -18,7 +18,6 @@ import {
 import { usePlayerStore } from '@/page/stores/player'
 import {
   useTranscriptDisplay,
-  useTranscribe,
   useUploadSubtitle,
 } from '@/page/hooks/player'
 import { TranscribeDialog, LANGUAGE_NAMES } from '../transcript'
@@ -48,10 +47,9 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
     secondaryLanguage,
   } = useTranscriptDisplay()
 
-  // Transcribe functionality (only for status, actual transcribe is handled in TranscribeDialog)
-  const { isTranscribing, progress: transcribeProgress } = useTranscribe({
-    mediaRef,
-  })
+  // Transcribe state from store (shared across all components)
+  const isTranscribing = usePlayerStore((state) => state.isTranscribing)
+  const transcribeProgress = usePlayerStore((state) => state.transcribeProgress)
 
   // Upload subtitle functionality
   const {
