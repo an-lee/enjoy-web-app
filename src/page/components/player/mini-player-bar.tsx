@@ -3,8 +3,7 @@
  *
  * Minimal design with essential controls only.
  *
- * This component manages its own media loading and playback for mini/hidden modes.
- * When `hidden` prop is true, only the media element is rendered (no UI).
+ * This component manages its own media loading and playback for mini mode.
  */
 
 import { useRef, useState } from 'react'
@@ -29,15 +28,13 @@ const log = createLogger({ name: 'MiniPlayerBar' })
 
 interface MiniPlayerBarProps {
   className?: string
-  /** If true, only render media element without UI (for hidden mode) */
-  hidden?: boolean
 }
 
 // ============================================================================
 // Component
 // ============================================================================
 
-export function MiniPlayerBar({ className, hidden = false }: MiniPlayerBarProps) {
+export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
   const { t } = useTranslation()
   const displayTime = useDisplayTime()
   const isMobile = useIsMobile()
@@ -81,50 +78,6 @@ export function MiniPlayerBar({ className, hidden = false }: MiniPlayerBarProps)
   if (!currentSession) return null
 
   const isVideo = currentSession.mediaType === 'video'
-
-  // For hidden mode, only render media element
-  if (hidden) {
-    return (
-      <>
-        {mediaUrl && (
-          <>
-            {isVideo ? (
-              <div className="hidden">
-                <video
-                  key={`video-hidden-${currentSession.mediaId}`}
-                  ref={mediaRef as React.RefObject<HTMLVideoElement>}
-                  src={mediaUrl}
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={handleEnded}
-                  onCanPlay={handleCanPlay}
-                  onWaiting={() => log.debug('buffering...')}
-                  onStalled={() => log.warn('stalled!')}
-                  onError={handleLoadError}
-                  playsInline
-                  preload="auto"
-                />
-              </div>
-            ) : (
-              <div className="hidden">
-                <audio
-                  key={`audio-hidden-${currentSession.mediaId}`}
-                  ref={mediaRef as React.RefObject<HTMLAudioElement>}
-                  src={mediaUrl}
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={handleEnded}
-                  onCanPlay={handleCanPlay}
-                  onWaiting={() => log.debug('buffering...')}
-                  onStalled={() => log.warn('stalled!')}
-                  onError={handleLoadError}
-                  preload="auto"
-                />
-              </div>
-            )}
-          </>
-        )}
-      </>
-    )
-  }
 
   const progress =
     currentSession.duration > 0

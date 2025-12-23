@@ -21,7 +21,7 @@ export interface UsePlaybackSyncOptions {
   /** Whether media is ready for playback */
   isReady: boolean
   /** Current player mode */
-  mode: 'hidden' | 'mini' | 'expanded'
+  mode: 'mini' | 'expanded'
 }
 
 export function usePlaybackSync({

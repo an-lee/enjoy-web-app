@@ -24,11 +24,12 @@ import { TranscribeDialog, LANGUAGE_NAMES } from '../transcript'
 import { LanguageSelector } from '../shared'
 
 interface ExpandedPlayerHeaderProps {
-  /** Optional ref to existing media element (audio or video) */
-  mediaRef?: React.RefObject<HTMLAudioElement | HTMLVideoElement | null>
+  // No props needed - mediaRef is accessed from store
 }
 
-export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
+export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps = {}) {
+  // Get mediaRef from store
+  const mediaRef = usePlayerStore((state) => state._mediaRef)
   const { t } = useTranslation()
 
   // Get player state from store
@@ -363,7 +364,7 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
         open={showConfirmDialog}
         onOpenChange={setShowConfirmDialog}
         mediaDuration={mediaDuration}
-        mediaRef={mediaRef}
+        mediaRef={mediaRef || undefined}
       />
     </header>
   )

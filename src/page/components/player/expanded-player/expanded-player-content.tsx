@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Button } from '@/page/components/ui/button'
@@ -10,48 +11,65 @@ import {
 } from '@/page/components/ui/resizable'
 import { createLogger } from '@/shared/lib/utils'
 import { FileAccessErrorCode } from '@/page/lib/file-access'
+import { usePlayerStore } from '@/page/stores/player'
+import { useMediaElement } from '@/page/hooks/player'
+import { useMediaLoader } from '@/page/hooks/player/use-media-loader'
+import { usePlaybackSync } from '@/page/hooks/player/use-playback-sync'
 
 const log = createLogger({ name: 'ExpandedPlayerContent' })
 
 interface ExpandedPlayerContentProps {
-  /** Whether media is loading */
-  isLoading?: boolean
-  /** Error message if loading failed */
-  error?: string | null
-  /** Error code for determining action buttons */
-  errorCode?: string | null
-  /** Whether it's a video */
-  isVideo?: boolean
-  /** Media element ref (for video display) */
-  mediaRef?: React.RefObject<HTMLVideoElement | HTMLAudioElement | null>
-  /** Media URL (for video display) */
-  mediaUrl?: string | null
-  /** Media event handlers */
-  onTimeUpdate?: (e: React.SyntheticEvent<HTMLVideoElement>) => void
-  onEnded?: () => void
-  onCanPlay?: (e: React.SyntheticEvent<HTMLVideoElement>) => void
-  onError?: (e: React.SyntheticEvent<HTMLVideoElement>) => void
-  /** Retry handler for permission errors */
-  onRetry?: () => void
-  /** Reselect file handler for file not found errors */
-  onReselectFile?: () => void
+  // No props needed - component manages its own state and registers mediaRef to store
 }
 
-export function ExpandedPlayerContent({
-  isLoading,
-  error,
-  errorCode,
-  isVideo,
-  mediaRef,
-  mediaUrl,
-  onTimeUpdate,
-  onEnded,
-  onCanPlay,
-  onError,
-  onRetry,
-  onReselectFile,
-}: ExpandedPlayerContentProps) {
+export function ExpandedPlayerContent({}: ExpandedPlayerContentProps = {}) {
   const { t } = useTranslation()
+  const { currentSession, mode, registerMediaRef, unregisterMediaRef } = usePlayerStore()
+  const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null)
+  const [isReady, setIsReady] = useState(false)
+
+  // Load media from IndexedDB
+  const {
+    mediaUrl,
+    isLoading,
+    error,
+    errorCode,
+    handleRetry,
+    handleReselectFile,
+  } = useMediaLoader()
+
+  // Get media element handlers
+  const {
+    handleTimeUpdate,
+    handleEnded,
+    handleCanPlay,
+    handleLoadError,
+  } = useMediaElement({
+    mediaRef,
+    onReady: setIsReady,
+    onError: (errorMsg) => {
+      log.error('Media element error:', errorMsg)
+    },
+  })
+
+  // Sync playback state
+  usePlaybackSync({
+    mediaRef,
+    isReady,
+    mode,
+  })
+
+  // Register mediaRef to store so other components (like ExpandedPlayerHeader) can access it
+  useEffect(() => {
+    registerMediaRef(mediaRef)
+    return () => {
+      unregisterMediaRef()
+    }
+  }, [registerMediaRef, unregisterMediaRef, mediaRef])
+
+  if (!currentSession) return null
+
+  const isVideo = currentSession.mediaType === 'video'
 
   // Determine which action button to show based on error code
   const showRetryButton =
@@ -72,14 +90,14 @@ export function ExpandedPlayerContent({
           <p className="text-sm text-center max-w-md">{error}</p>
           {(showRetryButton || showReselectButton) && (
             <div className="flex gap-3 mt-2">
-              {showRetryButton && onRetry && (
-                <Button onClick={onRetry} variant="default" size="sm">
+              {showRetryButton && handleRetry && (
+                <Button onClick={handleRetry} variant="default" size="sm">
                   <Icon icon="lucide:refresh-cw" className="w-4 h-4 mr-2" />
                   {t('player.retry')}
                 </Button>
               )}
-              {showReselectButton && onReselectFile && (
-                <Button onClick={onReselectFile} variant="default" size="sm">
+              {showReselectButton && handleReselectFile && (
+                <Button onClick={handleReselectFile} variant="default" size="sm">
                   <Icon icon="lucide:file-up" className="w-4 h-4 mr-2" />
                   {t('player.reselectFile')}
                 </Button>
@@ -99,12 +117,12 @@ export function ExpandedPlayerContent({
                     key={`video-expanded-${mediaUrl}`}
                     ref={mediaRef as React.RefObject<HTMLVideoElement>}
                     src={mediaUrl}
-                    onTimeUpdate={onTimeUpdate}
-                    onEnded={onEnded}
-                    onCanPlay={onCanPlay}
+                    onTimeUpdate={handleTimeUpdate}
+                    onEnded={handleEnded}
+                    onCanPlay={handleCanPlay}
                     onWaiting={() => log.debug('buffering...')}
                     onStalled={() => log.warn('stalled!')}
-                    onError={onError}
+                    onError={handleLoadError}
                     playsInline
                     preload="auto"
                     className="w-full h-full object-contain"
@@ -139,7 +157,26 @@ export function ExpandedPlayerContent({
           </div>
         </div>
       )}
-    </main>
+
+        {/* Audio element: Always render in hidden div for audio mode */}
+        {/* Video element is rendered above in video mode */}
+        {!isVideo && mediaUrl && (
+          <div className="hidden">
+            <audio
+              key={`audio-expanded-${currentSession.mediaId}`}
+              ref={mediaRef as React.RefObject<HTMLAudioElement>}
+              src={mediaUrl}
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={handleEnded}
+              onCanPlay={handleCanPlay}
+              onWaiting={() => log.debug('buffering...')}
+              onStalled={() => log.warn('stalled!')}
+              onError={handleLoadError}
+              preload="auto"
+            />
+          </div>
+        )}
+      </main>
   )
 }
 

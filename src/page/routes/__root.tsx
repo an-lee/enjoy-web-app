@@ -173,7 +173,7 @@ function RootComponent() {
 
   // Safely get player mode - only use store hook after hydration (client-side)
   // In SSR, use default value to avoid hook errors
-  const [playerMode, setPlayerMode] = useState<'hidden' | 'mini' | 'expanded'>('hidden')
+  const [playerMode, setPlayerMode] = useState<'mini' | 'expanded'>('mini')
 
   // Mark as hydrated after mount
   // This is the key to avoiding hydration mismatches

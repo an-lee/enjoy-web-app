@@ -187,7 +187,7 @@ describe('Player Store with EchoSession Integration', () => {
 
     // Reset store to initial state
     usePlayerStore.setState({
-      mode: 'hidden',
+      mode: 'mini',
       isPlaying: false,
       currentSession: null,
       currentEchoSessionId: null,
@@ -212,7 +212,7 @@ describe('Player Store with EchoSession Integration', () => {
   describe('Initial State', () => {
     it('should have correct default values', () => {
       const state = usePlayerStore.getState()
-      expect(state.mode).toBe('hidden')
+      expect(state.mode).toBe('mini')
       expect(state.isPlaying).toBe(false)
       expect(state.currentSession).toBeNull()
       expect(state.currentEchoSessionId).toBeNull()
@@ -575,7 +575,7 @@ describe('Player Store with EchoSession Integration', () => {
       const state = usePlayerStore.getState()
       expect(state.currentSession).toBeNull()
       expect(state.currentEchoSessionId).toBeNull()
-      expect(state.mode).toBe('hidden')
+      expect(state.mode).toBe('mini')
       expect(state.isPlaying).toBe(false)
       expect(state.echoModeActive).toBe(false)
     })
@@ -752,7 +752,7 @@ describe('Player Store with EchoSession Integration', () => {
       usePlayerStore.getState().hide()
 
       const state = usePlayerStore.getState()
-      expect(state.mode).toBe('hidden')
+      expect(state.mode).toBe('mini')
       expect(state.currentSession).toBeNull()
       expect(state.isPlaying).toBe(false)
     })

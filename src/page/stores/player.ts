@@ -8,6 +8,7 @@
  * - Automatic persistence via EchoSession in database
  */
 
+import type { RefObject } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { LibraryMedia } from '@/page/hooks/queries'
@@ -31,7 +32,7 @@ const log = createLogger({ name: 'player-store' })
 // Types
 // ============================================================================
 
-export type PlayerMode =  'mini' | 'expanded'
+export type PlayerMode = 'mini' | 'expanded'
 
 /**
  * Playback session - represents a media being played
@@ -64,7 +65,7 @@ interface PlayerState {
   // UI State
   // ============================================================================
 
-  /** Current player mode: hidden (no media), mini (bar), expanded (full) */
+  /** Current player mode: mini (bar), expanded (full) */
   mode: PlayerMode
 
   /** Whether media is currently playing */
@@ -124,6 +125,9 @@ interface PlayerState {
   // ============================================================================
   // Media Controls (internal - registered by PlayerContainer)
   // ============================================================================
+
+  /** Media element ref (internal use only) */
+  _mediaRef: RefObject<HTMLAudioElement | HTMLVideoElement | null> | null
 
   /** Media control functions (internal use only) */
   _mediaControls: {
@@ -230,6 +234,12 @@ interface PlayerState {
   /** Unregister media control functions */
   unregisterMediaControls: () => void
 
+  /** Register media element ref */
+  registerMediaRef: (ref: RefObject<HTMLAudioElement | HTMLVideoElement | null>) => void
+
+  /** Unregister media element ref */
+  unregisterMediaRef: () => void
+
   // ============================================================================
   // Recording Actions
   // ============================================================================
@@ -317,7 +327,7 @@ export const usePlayerStore = create<PlayerState>()(
   persist(
     (set, get) => ({
       // Initial UI state
-      mode: 'expanded',
+      mode: 'mini',
       isPlaying: false,
       isTranscribing: false,
       transcribeProgress: null,
@@ -339,7 +349,9 @@ export const usePlayerStore = create<PlayerState>()(
       echoStartTime: -1,
       echoEndTime: -1,
 
-      // Media controls (registered by PlayerContainer component)
+      // Media ref and controls (registered by player components)
+      _mediaRef: null as RefObject<HTMLAudioElement | HTMLVideoElement | null> | null,
+
       _mediaControls: null as {
         seek: (time: number) => void
         play: () => Promise<void>
@@ -528,7 +540,7 @@ export const usePlayerStore = create<PlayerState>()(
         set({
           currentSession: null,
           currentEchoSessionId: null,
-          mode: 'expanded',
+          mode: 'mini',
           isPlaying: false,
           echoModeActive: false,
           echoStartLineIndex: -1,
@@ -740,6 +752,16 @@ export const usePlayerStore = create<PlayerState>()(
       unregisterMediaControls: () => {
         set({ _mediaControls: null })
         log.debug('Media controls unregistered')
+      },
+
+      registerMediaRef: (ref) => {
+        set({ _mediaRef: ref })
+        log.debug('Media ref registered')
+      },
+
+      unregisterMediaRef: () => {
+        set({ _mediaRef: null })
+        log.debug('Media ref unregistered')
       },
 
       // Recording Actions

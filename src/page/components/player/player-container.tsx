@@ -31,7 +31,7 @@ export function PlayerContainer() {
       {/* Player hotkeys - active when player is visible (mini or expanded) */}
       <PlayerHotkeys />
 
-      {/* Mini player bar - shown in mini mode, or hidden for hidden mode */}
+      {/* Mini player bar - shown in mini mode */}
       {/* MiniPlayerBar now manages its own media loading and playback */}
       {mode === 'mini' && <MiniPlayerBar />}
 
