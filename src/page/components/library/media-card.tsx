@@ -74,9 +74,13 @@ export function MediaCard({
     onPlay?.(item)
   }, [item, onPlay])
 
-  const handleDelete = useCallback(() => {
-    onDelete?.(item)
-  }, [item, onDelete])
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation() // Prevent triggering the card's onClick
+      onDelete?.(item)
+    },
+    [item, onDelete]
+  )
 
   const isAudio = item.type === 'audio'
 
@@ -167,12 +171,20 @@ export function MediaCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handlePlay}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation() // Prevent event bubbling to card
+                  handlePlay()
+                }}
+              >
                 <Icon icon="lucide:play" className="w-4 h-4 mr-2" />
                 {t('library.play')}
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={handleDelete}
+                onClick={(e) => {
+                  e.stopPropagation() // Prevent event bubbling to card
+                  handleDelete(e)
+                }}
                 className="text-destructive focus:text-destructive"
                 disabled={isDeleting}
               >

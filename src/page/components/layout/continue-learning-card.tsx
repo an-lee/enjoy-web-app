@@ -82,19 +82,28 @@ async function echoSessionToLibraryMedia(
 }
 
 /**
- * Get the most recent active EchoSession
+ * Get the most recent active EchoSession with valid media
+ * Filters out sessions where the media has been deleted
  */
 async function getMostRecentActiveSession(): Promise<EchoSession | null> {
   const sessions = await getActiveEchoSessions()
   if (sessions.length === 0) return null
 
-  // Sort by lastActiveAt descending and return the first one
+  // Sort by lastActiveAt descending
   const sorted = sessions.sort(
     (a, b) =>
       new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime()
   )
 
-  return sorted[0]
+  // Find the first session with valid media
+  for (const session of sorted) {
+    const media = await echoSessionToLibraryMedia(session)
+    if (media) {
+      return session
+    }
+  }
+
+  return null
 }
 
 /**

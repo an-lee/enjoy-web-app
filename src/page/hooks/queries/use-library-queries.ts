@@ -231,7 +231,11 @@ export function useDeleteLibraryItem() {
       }
     },
     onSuccess: () => {
+      // Invalidate library queries
       queryClient.invalidateQueries({ queryKey: libraryQueryKeys.all })
+      // Invalidate continue learning card queries
+      queryClient.invalidateQueries({ queryKey: ['most-recent-echo-session'] })
+      queryClient.invalidateQueries({ queryKey: ['continue-learning-media'] })
     },
   })
 }
