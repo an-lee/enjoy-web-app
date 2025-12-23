@@ -138,7 +138,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
               <Icon
                 icon="lucide:mic"
                 className={cn(
-                  'w-3 h-3 transition-colors duration-300',
+                  'w-4 h-4 transition-colors duration-300',
                   isInEchoRegion && 'text-highlight-active-foreground/80',
                   !isInEchoRegion && isActive && 'text-primary/70',
                   !isInEchoRegion && !isActive && 'text-muted-foreground/70'
