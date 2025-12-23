@@ -19,7 +19,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -76,7 +75,7 @@ export function TranscribeDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('player.transcript.confirmTranscribe.title')}</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-4">
+          <div className="space-y-4 text-sm text-muted-foreground">
             {/* Provider Info */}
             <div className="flex items-center justify-between gap-3 py-2 border-b">
               <div className="flex items-center gap-2">
@@ -127,7 +126,7 @@ export function TranscribeDialog({
                 </ul>
               </div>
             )}
-          </AlertDialogDescription>
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
