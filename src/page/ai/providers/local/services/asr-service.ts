@@ -3,6 +3,9 @@
  * Handles automatic speech recognition using local models
  */
 
+import { createLogger } from '@/shared/lib/utils'
+const log = createLogger({ name: 'ASRService' })
+
 import type { LocalModelConfig } from '../../../types'
 import { useLocalModelsStore } from '@/page/stores/local-models'
 import { getASRWorker } from '../workers/worker-manager'
@@ -82,6 +85,32 @@ export async function transcribe(
 
         // Process chunks: chunks are word-level timestamps
         const wordChunks = data.chunks || []
+
+        // Debug: Log chunks time range
+        if (wordChunks.length > 0) {
+          const firstChunk = wordChunks[0]
+          const lastChunk = wordChunks[wordChunks.length - 1]
+          const firstTime = firstChunk?.timestamp?.[0] || 0
+          const lastTime = lastChunk?.timestamp?.[1] || 0
+          const totalDuration = lastTime - firstTime
+
+          log.debug('[ASRService] Chunks time range:', {
+            chunksCount: wordChunks.length,
+            firstChunkTime: firstTime,
+            lastChunkTime: lastTime,
+            totalDurationSeconds: totalDuration,
+            firstChunkText: firstChunk?.text?.substring(0, 50),
+            lastChunkText: lastChunk?.text?.substring(0, 50),
+          })
+
+          // Warn if duration seems truncated
+          if (totalDuration < 60 && wordChunks.length > 10) {
+            log.warn('[ASRService] WARNING: Chunks duration seems short compared to expected audio duration!', {
+              chunksDuration: totalDuration,
+              chunksCount: wordChunks.length,
+            })
+          }
+        }
 
         // Legacy segments format (for backward compatibility)
         const segments = wordChunks.map((chunk: any) => ({

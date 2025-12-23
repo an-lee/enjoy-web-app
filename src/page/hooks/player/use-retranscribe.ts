@@ -725,12 +725,32 @@ export function useRetranscribe(options?: UseRetranscribeOptions) {
         }
 
         const { text, segments, timeline: asrTimeline, language: detectedLanguage } = asrResult.data
+
+        // Calculate timeline duration for debugging
+        let maxTimelineTime = 0
+        if (asrTimeline && asrTimeline.length > 0) {
+          maxTimelineTime = Math.max(...asrTimeline.map(t => (t.start || 0) + (t.duration || 0)))
+        } else if (segments && segments.length > 0) {
+          maxTimelineTime = Math.max(...segments.map(s => s.end || 0))
+        }
+
         log.info('ASR transcription completed', {
           textLength: text.length,
           segmentsCount: segments?.length || 0,
           timelineCount: asrTimeline?.length || 0,
+          maxTimelineTimeSeconds: maxTimelineTime,
           detectedLanguage,
+          audioSize: audioBlob.size,
         })
+
+        // Warn if timeline seems truncated
+        if (maxTimelineTime > 0 && maxTimelineTime < 60) {
+          log.warn('Timeline duration seems short - possible truncation?', {
+            maxTimelineTimeSeconds: maxTimelineTime,
+            audioSize: audioBlob.size,
+            estimatedAudioDuration: Math.round((audioBlob.size / (192 * 1024 / 8)) * 10) / 10,
+          })
+        }
 
         // If no segments, create a single segment from the full text
         let timeline: Array<{ text: string; start: number; duration: number }>

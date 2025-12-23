@@ -347,19 +347,39 @@ class FFmpegService {
       // -i: input file
       // -vn: disable video
       // -acodec copy: copy audio codec (fast, no re-encoding)
+      // -map 0:a:0: map first audio stream (ensures we get the audio track)
+      // -avoid_negative_ts make_zero: handle timestamp issues
       // If copy fails, fallback to aac encoding
       log.debug('Starting FFmpeg audio extraction (codec copy)', {
         inputFileName,
         outputFileName,
       })
       try {
-        const exitCode = await this.ffmpeg.exec(['-i', inputFileName, '-vn', '-acodec', 'copy', outputFileName])
+        // Use -map 0:a:0 to explicitly map the first audio stream
+        // This ensures we extract the complete audio track
+        const exitCode = await this.ffmpeg.exec([
+          '-i', inputFileName,
+          '-vn', // disable video
+          '-map', '0:a:0', // map first audio stream explicitly
+          '-acodec', 'copy', // copy audio codec (no re-encoding)
+          '-avoid_negative_ts', 'make_zero', // handle timestamp issues
+          outputFileName
+        ])
         log.debug('FFmpeg codec copy completed', { exitCode })
       } catch (copyError) {
         log.warn('Audio codec copy failed, trying AAC encoding:', copyError)
         // Fallback: encode to AAC
+        // Use -map 0:a:0 to explicitly map the first audio stream
         log.debug('Starting FFmpeg audio extraction (AAC encoding)')
-        const exitCode = await this.ffmpeg.exec(['-i', inputFileName, '-vn', '-acodec', 'aac', '-b:a', '192k', outputFileName])
+        const exitCode = await this.ffmpeg.exec([
+          '-i', inputFileName,
+          '-vn', // disable video
+          '-map', '0:a:0', // map first audio stream explicitly
+          '-acodec', 'aac', // encode to AAC
+          '-b:a', '192k', // audio bitrate
+          '-avoid_negative_ts', 'make_zero', // handle timestamp issues
+          outputFileName
+        ])
         log.debug('FFmpeg AAC encoding completed', { exitCode })
       }
 
@@ -405,9 +425,19 @@ class FFmpegService {
 
       onProgress?.(100)
 
-      log.debug('Audio extraction completed:', {
+      // Log audio extraction results with estimated duration
+      // For AAC at 192kbps: ~24KB per second, for copy: varies by codec
+      // This is just for logging/debugging, not exact calculation
+      const estimatedDurationSeconds = audioBlob.size > 0
+        ? Math.round((audioBlob.size / (192 * 1024 / 8)) * 10) / 10 // rough estimate for AAC
+        : 0
+
+      log.info('Audio extraction completed:', {
         originalSize: videoBlob.size,
         audioSize: audioBlob.size,
+        estimatedDurationSeconds,
+        audioType: audioBlob.type,
+        sizeRatio: videoBlob.size > 0 ? ((audioBlob.size / videoBlob.size) * 100).toFixed(2) + '%' : 'N/A',
       })
 
       return {

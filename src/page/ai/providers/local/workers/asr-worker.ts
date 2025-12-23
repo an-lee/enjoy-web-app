@@ -149,8 +149,11 @@ self.addEventListener('message', async (event: MessageEvent<ASRWorkerMessage>) =
         const transcriber = await ASRPipelineSingleton.getInstance(modelName)
 
         // Prepare options
+        // chunk_length_s: Enable chunking for long audio (30 seconds per chunk)
+        // This is critical for processing audio longer than 30 seconds
         const options: any = {
           return_timestamps: 'word',
+          chunk_length_s: 30, // Process in 30-second chunks and merge results
         }
         if (data.language) {
           options.language = data.language
@@ -164,6 +167,7 @@ self.addEventListener('message', async (event: MessageEvent<ASRWorkerMessage>) =
           audioDuration: `${(data.audioData.length / 16000).toFixed(2)}s`,
           options,
           taskId: data?.taskId,
+          chunkingEnabled: true, // chunk_length_s is set
         })
 
         // Run transcription
@@ -180,7 +184,7 @@ self.addEventListener('message', async (event: MessageEvent<ASRWorkerMessage>) =
 
         // Debug: Log detailed chunk information
         if (result.chunks && Array.isArray(result.chunks)) {
-          log.debug('Chunks details:', result.chunks.map((chunk: any, index: number) => ({
+          const chunksInfo = result.chunks.map((chunk: any, index: number) => ({
             index,
             text: chunk.text,
             timestamp: chunk.timestamp,
@@ -188,7 +192,32 @@ self.addEventListener('message', async (event: MessageEvent<ASRWorkerMessage>) =
             end: chunk.timestamp?.[1],
             duration: chunk.timestamp ? (chunk.timestamp[1] - chunk.timestamp[0]) : undefined,
             fullChunk: chunk, // Complete chunk object
-          })))
+          }))
+
+          log.debug('Chunks details:', chunksInfo)
+
+          // Log time range summary
+          if (chunksInfo.length > 0) {
+            const firstChunk = chunksInfo[0]
+            const lastChunk = chunksInfo[chunksInfo.length - 1]
+            const timeRange = {
+              start: firstChunk.start || 0,
+              end: lastChunk.end || 0,
+              duration: (lastChunk.end || 0) - (firstChunk.start || 0),
+              chunksCount: chunksInfo.length,
+            }
+            log.info('Chunks time range summary:', timeRange)
+
+            // Warn if duration seems truncated compared to input audio
+            const inputDuration = data.audioData.length / 16000
+            if (timeRange.duration < inputDuration * 0.5) {
+              log.warn('WARNING: Chunks duration is significantly shorter than input audio!', {
+                chunksDuration: timeRange.duration,
+                inputDuration,
+                ratio: (timeRange.duration / inputDuration * 100).toFixed(1) + '%',
+              })
+            }
+          }
         }
 
         // Send result back to main thread
