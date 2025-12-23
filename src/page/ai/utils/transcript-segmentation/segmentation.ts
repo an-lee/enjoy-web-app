@@ -156,7 +156,7 @@ function segmentLongSentenceEvenly(
     } else {
       // Fallback: use target or find any reasonable break point
       actualBreakIndex = Math.min(targetBreakIndex, sentenceWords.length - 1)
-      
+
       // Try to find any break point in the range
       for (let i = Math.max(currentIndex + 1, actualBreakIndex - 2); i <= Math.min(actualBreakIndex + 2, sentenceWords.length - 1); i++) {
         const word = sentenceWords[i]
