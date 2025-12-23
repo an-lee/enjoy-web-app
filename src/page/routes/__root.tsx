@@ -171,7 +171,10 @@ function RootComponent() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const [isHotkeysHelpOpen, setIsHotkeysHelpOpen] = useState(false)
-  const playerMode = usePlayerStore((state) => state.mode)
+
+  // Safely get player mode - only use store hook after hydration (client-side)
+  // In SSR, use default value to avoid hook errors
+  const [playerMode, setPlayerMode] = useState<'hidden' | 'mini' | 'expanded'>('hidden')
 
   // Mark as hydrated after mount
   // This is the key to avoiding hydration mismatches
@@ -179,12 +182,43 @@ function RootComponent() {
     // Small delay to ensure React hydration is complete and i18n is initialized
     const timer = setTimeout(() => {
       setIsHydrated(true)
+      // After hydration, subscribe to player store to get current mode
+      // This is safe because we're now on the client side
+      // Get initial value immediately
+      setPlayerMode(usePlayerStore.getState().mode)
+
+      // Subscribe to mode changes
+      // zustand subscribe: store.subscribe(callback) where callback receives (state, prevState)
+      const unsubscribe = usePlayerStore.subscribe((state) => {
+        setPlayerMode(state.mode)
+      })
+
+      return () => {
+        clearTimeout(timer)
+        unsubscribe()
+      }
     }, 150)
     return () => clearTimeout(timer)
   }, [])
 
-  // Get current user from auth store
-  const currentUser = useAuthStore((state) => state.user)
+  // Safely get current user - only use store hook after hydration (client-side)
+  // In SSR, use null to avoid hook errors
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null)
+
+  // Subscribe to auth store after hydration
+  useEffect(() => {
+    if (!isHydrated) return
+
+    // Get initial value immediately
+    setCurrentUser(useAuthStore.getState().user)
+
+    // Subscribe to user changes
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      setCurrentUser(state.user)
+    })
+
+    return () => unsubscribe()
+  }, [isHydrated])
 
   // Initialize database and sync manager after hydration
   useEffect(() => {

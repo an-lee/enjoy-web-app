@@ -92,6 +92,19 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
+    // FFmpeg.wasm configuration (following official example)
+    // https://github.com/ffmpegwasm/ffmpeg.wasm/blob/main/apps/react-vite-app/vite.config.ts
+    optimizeDeps: {
+      exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+    },
+    server: {
+      headers: {
+        // Required for SharedArrayBuffer support (needed for multi-threaded FFmpeg)
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+      },
+    },
     // Expose environment variables to client
     define: {
       // Expose API_BASE_URL to client code via import.meta.env.API_BASE_URL
