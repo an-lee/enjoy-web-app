@@ -19,6 +19,7 @@ import {
 import { syncTranscriptsForTarget } from '@/page/db/services/sync-manager'
 import type { TargetType } from '@/page/types/db'
 import { createLogger } from '@/shared/lib/utils'
+import { queryClient } from '@/page/router'
 
 // ============================================================================
 // Logger
@@ -472,6 +473,11 @@ export const usePlayerStore = create<PlayerState>()(
             echoSessionId,
             currentTime: echoSession.currentTime,
           })
+
+          // Invalidate continue learning card queries since we just loaded a new media
+          // This ensures the card updates to show the new session or hides if this is now the active session
+          queryClient.invalidateQueries({ queryKey: ['most-recent-echo-session'] })
+          queryClient.invalidateQueries({ queryKey: ['continue-learning-media'] })
 
           // Sync transcripts for this target in background (non-blocking)
           syncTranscriptsForTarget(targetType, media.id, { background: true }).catch((error) => {
