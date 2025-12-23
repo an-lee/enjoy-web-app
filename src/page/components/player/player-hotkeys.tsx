@@ -7,18 +7,19 @@
 
 import { useRef, useEffect } from 'react'
 import { useAppHotkey } from '@/page/components/hotkeys'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
+import { usePlayerEchoStore } from '@/page/stores/player/player-echo-store'
+import { usePlayerSettingsStore } from '@/page/stores/player/player-settings-store'
+import { usePlayerRecordingStore } from '@/page/stores/player/player-recording-store'
 import { useEchoRegionOperations, usePlayerControls, useTranscriptDisplay } from '@/page/hooks/player'
 
 export function PlayerHotkeys() {
-  const {
-    collapse,
-    expand,
-    mode,
-    echoModeActive,
-    playbackRate,
-    setPlaybackRate,
-  } = usePlayerStore()
+  const collapse = usePlayerUIStore((s) => s.collapse)
+  const expand = usePlayerUIStore((s) => s.expand)
+  const mode = usePlayerUIStore((s) => s.mode)
+  const echoModeActive = usePlayerEchoStore((s) => s.echoModeActive)
+  const playbackRate = usePlayerSettingsStore((s) => s.playbackRate)
+  const setPlaybackRate = usePlayerSettingsStore((s) => s.setPlaybackRate)
 
   // Get all player controls from unified hook
   const controls = usePlayerControls()
@@ -150,7 +151,8 @@ export function PlayerHotkeys() {
   )
 
   // Toggle recording (R)
-  const { toggleRecording, toggleRecordingPlayback } = usePlayerStore()
+  const toggleRecording = usePlayerRecordingStore((s) => s.toggleRecording)
+  const toggleRecordingPlayback = usePlayerRecordingStore((s) => s.toggleRecordingPlayback)
   const toggleRecordingRef = useRef(toggleRecording)
   const toggleRecordingPlaybackRef = useRef(toggleRecordingPlayback)
   useEffect(() => {

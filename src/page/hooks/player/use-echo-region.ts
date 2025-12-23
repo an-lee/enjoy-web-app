@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useEffect } from 'react'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerEchoStore } from '@/page/stores/player/player-echo-store'
 import type { TranscriptLineState } from '../../components/player/transcript/types'
 
 // ============================================================================
@@ -66,12 +66,12 @@ export function findLineIndexByTime(
  * Can be safely called from multiple components - all state is centralized in the store.
  */
 export function useEchoRegion() {
-  const echoModeActive = usePlayerStore((s) => s.echoModeActive)
-  const echoStartLineIndex = usePlayerStore((s) => s.echoStartLineIndex)
-  const echoEndLineIndex = usePlayerStore((s) => s.echoEndLineIndex)
-  const echoStartTime = usePlayerStore((s) => s.echoStartTime)
-  const echoEndTime = usePlayerStore((s) => s.echoEndTime)
-  const updateEchoRegion = usePlayerStore((s) => s.updateEchoRegion)
+  const echoModeActive = usePlayerEchoStore((s) => s.echoModeActive)
+  const echoStartLineIndex = usePlayerEchoStore((s) => s.echoStartLineIndex)
+  const echoEndLineIndex = usePlayerEchoStore((s) => s.echoEndLineIndex)
+  const echoStartTime = usePlayerEchoStore((s) => s.echoStartTime)
+  const echoEndTime = usePlayerEchoStore((s) => s.echoEndTime)
+  const updateEchoRegion = usePlayerEchoStore((s) => s.updateEchoRegion)
 
   return {
     echoModeActive,

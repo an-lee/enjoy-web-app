@@ -9,7 +9,8 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/shared/lib/utils'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { useLoadMedia } from '@/page/hooks/player/use-load-media'
 import { getActiveEchoSessions, getVideoById, getAudioById } from '@/page/db'
 import type { LibraryMedia } from '@/page/hooks/queries'
 import type { EchoSession } from '@/page/types/db'
@@ -120,7 +121,8 @@ function formatProgress(currentTime: number, duration: number): number {
 
 export function ContinueLearningCard({ className }: ContinueLearningCardProps) {
   const { t } = useTranslation()
-  const { currentSession, loadMedia } = usePlayerStore()
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
+  const loadMediaMutation = useLoadMedia()
 
   // Query most recent active EchoSession
   // Note: Hooks must be called before any conditional returns
@@ -156,7 +158,7 @@ export function ContinueLearningCard({ className }: ContinueLearningCardProps) {
 
   const handleContinue = async () => {
     try {
-      await loadMedia(media)
+      await loadMediaMutation.mutateAsync(media)
     } catch (error) {
       log.error('Failed to load media for continue learning:', error)
     }

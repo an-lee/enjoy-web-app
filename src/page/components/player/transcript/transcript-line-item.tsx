@@ -9,7 +9,7 @@ import { memo, useMemo } from 'react'
 import { cn, formatTime } from '@/shared/lib/utils'
 import { Icon } from '@iconify/react'
 import { useDisplayTime } from '@/page/hooks/player/use-display-time'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerEchoStore } from '@/page/stores/player/player-echo-store'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLineItemProps {
@@ -42,9 +42,9 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   const isPast = currentTimeSeconds >= line.endTimeSeconds
 
   // Get echo region state directly from store (no prop drilling needed)
-  const echoModeActive = usePlayerStore((state) => state.echoModeActive)
-  const echoStartLineIndex = usePlayerStore((state) => state.echoStartLineIndex)
-  const echoEndLineIndex = usePlayerStore((state) => state.echoEndLineIndex)
+  const echoModeActive = usePlayerEchoStore((s) => s.echoModeActive)
+  const echoStartLineIndex = usePlayerEchoStore((s) => s.echoStartLineIndex)
+  const echoEndLineIndex = usePlayerEchoStore((s) => s.echoEndLineIndex)
 
   // Compute echo region state locally
   const isInEchoRegion = useMemo(() => {

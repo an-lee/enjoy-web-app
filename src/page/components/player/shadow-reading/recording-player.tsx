@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/page/components/ui/alert-dialog'
 import { toast } from 'sonner'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerRecordingStore } from '@/page/stores/player/player-recording-store'
 import { deleteRecording } from '@/page/db'
 import { recordingQueryKeys } from '@/page/hooks/queries'
 import { cn, createLogger } from '@/shared/lib/utils'
@@ -252,11 +252,11 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
   }, [isPlaying, handlePlayPause])
 
   // Register controls with player store for keyboard shortcuts
-  const registerRecordingPlayerControls = usePlayerStore(
-    (state) => state.registerRecordingPlayerControls
+  const registerRecordingPlayerControls = usePlayerRecordingStore(
+    (s) => s.registerRecordingPlayerControls
   )
-  const unregisterRecordingPlayerControls = usePlayerStore(
-    (state) => state.unregisterRecordingPlayerControls
+  const unregisterRecordingPlayerControls = usePlayerRecordingStore(
+    (s) => s.unregisterRecordingPlayerControls
   )
 
   useEffect(() => {

@@ -11,7 +11,7 @@ import { EchoRegionControls } from '../echo/echo-region-controls'
 import { ShadowReadingPanel } from '../shadow-reading/shadow-reading-panel'
 import { useEchoRegion } from '@/page/hooks/player'
 import { useRecordingsByTarget } from '@/page/hooks/queries'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import { getTranscriptLineId } from './constants'
 import type { TranscriptLineState } from './types'
 import type { TargetType } from '@/page/types/db'
@@ -35,7 +35,7 @@ function TranscriptLinesComponent({
   } = useEchoRegion()
 
   // Get current media info for fetching recordings
-  const currentSession = usePlayerStore((state) => state.currentSession)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
   const { targetType, targetId } = useMemo<{
     targetType: TargetType | null
     targetId: string | null

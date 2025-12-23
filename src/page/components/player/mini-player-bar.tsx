@@ -6,19 +6,21 @@
  * This component manages its own media loading and playback for mini mode.
  */
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn, formatTime, createLogger } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
 import { Slider } from '@/page/components/ui/slider'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import { GenerativeCover } from '@/page/components/library/generative-cover'
 import { useDisplayTime, usePlayerControls, useMediaElement } from '@/page/hooks/player'
 import { useMediaLoader } from '@/page/hooks/player/use-media-loader'
 import { usePlaybackSync } from '@/page/hooks/player/use-playback-sync'
 import { useSidebar } from '@/page/components/ui/sidebar'
 import { useIsMobile } from '@/page/hooks/use-mobile'
+import { usePlayerMedia } from '@/page/components/player/player-media-context'
 
 const log = createLogger({ name: 'MiniPlayerBar' })
 
@@ -39,17 +41,45 @@ export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
   const displayTime = useDisplayTime()
   const isMobile = useIsMobile()
   const { state: sidebarState, open: sidebarOpen } = useSidebar()
-  const mode = usePlayerStore((state) => state.mode)
+  const mode = usePlayerUIStore((s) => s.mode)
 
   // Player state
-  const { currentSession, isPlaying, expand, hide } = usePlayerStore()
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
+  const isPlaying = usePlayerUIStore((s) => s.isPlaying)
+  const expand = usePlayerUIStore((s) => s.expand)
+  const hide = usePlayerUIStore((s) => s.hide)
 
   // Media element and loading logic
   const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null)
+  const { registerMediaRef, unregisterMediaRef } = usePlayerMedia()
   const [isReady, setIsReady] = useState(false)
 
   // Load media from IndexedDB
   const { mediaUrl } = useMediaLoader()
+
+  // Register media ref with context
+  useEffect(() => {
+    registerMediaRef(mediaRef)
+    return () => {
+      unregisterMediaRef()
+    }
+    // Only register once on mount, unregister on unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Re-register when media element is created (when mediaUrl changes and element exists)
+  useEffect(() => {
+    // Use a small delay to ensure the element is actually attached to the DOM
+    if (mediaUrl) {
+      const timer = setTimeout(() => {
+        if (mediaRef.current) {
+          registerMediaRef(mediaRef)
+        }
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaUrl])
 
   // Get media element handlers
   const {

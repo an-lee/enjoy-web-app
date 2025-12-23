@@ -15,7 +15,10 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/page/components/ui/drawer'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
+import { usePlayerTranscriptionStore } from '@/page/stores/player/player-transcription-store'
+import { usePlayerMedia } from '@/page/components/player/player-media-context'
 import {
   useTranscriptDisplay,
   useUploadSubtitle,
@@ -28,16 +31,14 @@ interface ExpandedPlayerHeaderProps {
 }
 
 export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps = {}) {
-  // Get mediaRef from store
-  const mediaRef = usePlayerStore((state) => state._mediaRef)
+  // Get mediaRef from context
+  const { mediaRef } = usePlayerMedia()
   const { t } = useTranslation()
 
-  // Get player state from store
-  const {
-    currentSession,
-    collapse,
-    hide,
-  } = usePlayerStore()
+  // Get player state from stores
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
+  const collapse = usePlayerUIStore((s) => s.collapse)
+  const hide = usePlayerUIStore((s) => s.hide)
 
   // Get transcript data and state management
   const {
@@ -49,8 +50,8 @@ export function ExpandedPlayerHeader({}: ExpandedPlayerHeaderProps = {}) {
   } = useTranscriptDisplay()
 
   // Transcribe state from store (shared across all components)
-  const isTranscribing = usePlayerStore((state) => state.isTranscribing)
-  const transcribeProgress = usePlayerStore((state) => state.transcribeProgress)
+  const isTranscribing = usePlayerTranscriptionStore((s) => s.isTranscribing)
+  const transcribeProgress = usePlayerTranscriptionStore((s) => s.transcribeProgress)
 
   // Upload subtitle functionality
   const {

@@ -9,7 +9,8 @@
 import { useCallback, RefObject } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerTranscriptionStore } from '@/page/stores/player/player-transcription-store'
 import { getCurrentDatabase } from '@/page/db'
 import { asrService } from '@/page/ai/services/asr'
 import { getAIServiceConfig } from '@/page/ai/core/config'
@@ -492,13 +493,13 @@ export interface UseTranscribeOptions {
 export function useTranscribe(options?: UseTranscribeOptions) {
   const { mediaRef } = options || {}
   const { t } = useTranslation()
-  const currentSession = usePlayerStore((state) => state.currentSession)
-  const isTranscribing = usePlayerStore((state) => state.isTranscribing)
-  const progress = usePlayerStore((state) => state.transcribeProgress)
-  const progressPercent = usePlayerStore((state) => state.transcribeProgressPercent)
-  const setTranscribing = usePlayerStore((state) => state.setTranscribing)
-  const setTranscribeProgress = usePlayerStore((state) => state.setTranscribeProgress)
-  const clearTranscribeState = usePlayerStore((state) => state.clearTranscribeState)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
+  const isTranscribing = usePlayerTranscriptionStore((s) => s.isTranscribing)
+  const progress = usePlayerTranscriptionStore((s) => s.transcribeProgress)
+  const progressPercent = usePlayerTranscriptionStore((s) => s.transcribeProgressPercent)
+  const setTranscribing = usePlayerTranscriptionStore((s) => s.setTranscribing)
+  const setTranscribeProgress = usePlayerTranscriptionStore((s) => s.setTranscribeProgress)
+  const clearTranscribeState = usePlayerTranscriptionStore((s) => s.clearTranscribeState)
   const createTranscript = useCreateTranscript()
 
   const transcribe = useCallback(

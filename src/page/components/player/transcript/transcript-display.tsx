@@ -11,7 +11,10 @@
 
 import { useRef, useCallback, useState, useMemo, useEffect } from 'react'
 import { cn, createLogger } from '@/shared/lib/utils'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerEchoStore } from '@/page/stores/player/player-echo-store'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
+import { usePlayerTranscriptionStore } from '@/page/stores/player/player-transcription-store'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AIProvider } from '@/page/ai/types'
 import { ScrollArea } from '@/page/components/ui/scroll-area'
@@ -49,9 +52,9 @@ export function TranscriptDisplay({
   mediaRef,
 }: TranscriptDisplayProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
-  const currentSession = usePlayerStore((state) => state.currentSession)
-  const activateEchoMode = usePlayerStore((state) => state.activateEchoMode)
-  const isPlaying = usePlayerStore((state) => state.isPlaying)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
+  const activateEchoMode = usePlayerEchoStore((s) => s.activateEchoMode)
+  const isPlaying = usePlayerUIStore((s) => s.isPlaying)
 
   // Get real-time display time from the external store
   const currentTime = useDisplayTime()
@@ -120,9 +123,9 @@ export function TranscriptDisplay({
 
 
   // Transcribe state from store (shared across all components)
-  const isTranscribing = usePlayerStore((state) => state.isTranscribing)
-  const progress = usePlayerStore((state) => state.transcribeProgress)
-  const progressPercent = usePlayerStore((state) => state.transcribeProgressPercent)
+  const isTranscribing = usePlayerTranscriptionStore((s) => s.isTranscribing)
+  const progress = usePlayerTranscriptionStore((s) => s.transcribeProgress)
+  const progressPercent = usePlayerTranscriptionStore((s) => s.transcribeProgressPercent)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   // Get media duration for limitations

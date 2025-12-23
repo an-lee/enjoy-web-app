@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import { getCurrentDatabase, updateVideo, updateAudio } from '@/page/db'
 import { getMediaUrl, FileAccessError, verifyFile } from '@/page/lib/file-access'
 import { selectFileWithHandle } from '@/page/lib/file-helpers'
@@ -36,7 +36,7 @@ export interface UseMediaLoaderReturn {
 
 export function useMediaLoader(): UseMediaLoaderReturn {
   const { t } = useTranslation()
-  const currentSession = usePlayerStore((state) => state.currentSession)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
 
   const [mediaUrl, setMediaUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)

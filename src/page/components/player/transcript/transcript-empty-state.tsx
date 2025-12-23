@@ -9,7 +9,8 @@ import { useState, RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn } from '@/shared/lib/utils'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerTranscriptionStore } from '@/page/stores/player/player-transcription-store'
 import { useTranscriptDisplay } from '@/page/hooks/player/use-transcript-display'
 import { useUploadSubtitle } from '@/page/hooks/player/use-upload-subtitle'
 import { TranscribeDialog } from './transcribe-dialog'
@@ -25,7 +26,7 @@ export function TranscriptEmptyState({
   mediaRef,
 }: TranscriptEmptyStateProps) {
   const { t } = useTranslation()
-  const currentSession = usePlayerStore((state) => state.currentSession)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
   const mediaDuration = currentSession?.duration || 0
 
   // Get sync state from transcript display hook
@@ -33,8 +34,8 @@ export function TranscriptEmptyState({
   const isSyncing = syncState.isSyncing
 
   // Get transcribe state from store
-  const isTranscribing = usePlayerStore((state) => state.isTranscribing)
-  const transcribeProgress = usePlayerStore((state) => state.transcribeProgress)
+  const isTranscribing = usePlayerTranscriptionStore((s) => s.isTranscribing)
+  const transcribeProgress = usePlayerTranscriptionStore((s) => s.transcribeProgress)
 
   // Get upload subtitle functionality
   const {

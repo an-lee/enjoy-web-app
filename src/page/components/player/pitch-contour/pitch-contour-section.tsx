@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/page/components/ui/button'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import type { EchoRegionAnalysisResult, EchoRegionSeriesPoint } from '@/page/lib/audio/echo-region-analysis'
 import {
   analyzeEchoRegionFromBlob,
@@ -35,7 +35,7 @@ export function PitchContourSection({
   selectedRecording,
 }: PitchContourSectionProps) {
   const { t } = useTranslation()
-  const currentSession = usePlayerStore((s) => s.currentSession)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
 
   const [isExpanded, setIsExpanded] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')

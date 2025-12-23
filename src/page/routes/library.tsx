@@ -32,7 +32,7 @@ import {
   type MediaType,
   type LibraryMedia,
 } from '@/page/hooks/queries'
-import { usePlayerStore } from '@/page/stores'
+import { useLoadMedia } from '@/page/hooks/player/use-load-media'
 
 // ============================================================================
 // Route Configuration
@@ -93,19 +93,19 @@ function Library() {
     setCurrentPage(1) // Reset to first page on filter change
   }, [])
 
-  // Player store
-  const loadMedia = usePlayerStore((state) => state.loadMedia)
+  // Load media mutation
+  const loadMediaMutation = useLoadMedia()
 
   const handlePlay = useCallback(
     async (item: LibraryMedia) => {
       try {
-        await loadMedia(item)
+        await loadMediaMutation.mutateAsync(item)
       } catch (error) {
         log.error('Failed to load media:', error)
         toast.error(t('library.loadFailed'))
       }
     },
-    [loadMedia, t]
+    [loadMediaMutation, t]
   )
 
   const handleDelete = useCallback(

@@ -13,7 +13,7 @@ import { ShadowReadingPanelHeader } from './shadow-reading-panel-header'
 import { PitchContourSection } from '../pitch-contour'
 import { ShadowRecorder } from './shadow-recorder'
 import { ShadowRecordingList } from './shadow-recording-list'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import type { TargetType, Recording } from '@/page/types/db'
 
 interface ShadowReadingPanelProps {
@@ -29,7 +29,7 @@ export function ShadowReadingPanel({
   const { t } = useTranslation()
   const duration = (endTime - startTime) * 1000 // Convert to milliseconds
   const displayTime = useDisplayTime()
-  const currentSession = usePlayerStore((state) => state.currentSession)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
   const targetType: TargetType | null = useMemo(() => {
     if (!currentSession) return null
     return currentSession.mediaType === 'audio' ? 'Audio' : 'Video'

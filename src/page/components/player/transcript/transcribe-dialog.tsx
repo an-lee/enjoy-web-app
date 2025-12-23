@@ -11,7 +11,7 @@ import { Icon } from '@iconify/react'
 import { Link } from '@tanstack/react-router'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AIProvider } from '@/page/ai/types'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
 import { useTranscribe } from '@/page/hooks/player'
 import { useTranscriptDisplay } from '@/page/hooks/player/use-transcript-display'
 import {
@@ -41,7 +41,7 @@ export function TranscribeDialog({
   mediaRef,
 }: TranscribeDialogProps) {
   const { t } = useTranslation()
-  const collapse = usePlayerStore((state) => state.collapse)
+  const collapse = usePlayerUIStore((s) => s.collapse)
 
   // Get primary language from transcript display hook
   const { primaryLanguage } = useTranscriptDisplay()

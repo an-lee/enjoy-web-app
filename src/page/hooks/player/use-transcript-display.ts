@@ -8,7 +8,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranscriptsByTarget } from '@/page/hooks/queries'
 import { useTranscriptSync } from '@/page/hooks/player/use-transcript-sync'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import type { Transcript, TargetType } from '@/page/types/db'
 import type {
   TranscriptLineState,
@@ -104,7 +104,7 @@ function alignTranscripts(
 export function useTranscriptDisplay(
 ): UseTranscriptDisplayReturn {
   const currentTimeSeconds = useDisplayTime();
-  const currentSession = usePlayerStore((state) => state.currentSession)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
 
   // Selected languages
   const [primaryLanguage, setPrimaryLanguageState] = useState<string | null>(

@@ -12,7 +12,10 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerEchoStore } from '@/page/stores/player/player-echo-store'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
+import { usePlayerSettingsStore } from '@/page/stores/player/player-settings-store'
 import { setDisplayTime } from '@/page/hooks/player/use-display-time'
 import {
   clampSeekTimeToEchoWindow,
@@ -49,16 +52,12 @@ export function useMediaElement({
   onReady,
   onError,
 }: UseMediaElementOptions): UseMediaElementReturn {
-  const {
-    currentSession,
-    setPlaying,
-    updateProgress,
-    echoModeActive,
-    echoStartTime,
-    echoEndTime,
-    registerMediaRef,
-    unregisterMediaRef,
-  } = usePlayerStore()
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
+  const updateProgress = usePlayerSessionStore((s) => s.updateProgress)
+  const echoModeActive = usePlayerEchoStore((s) => s.echoModeActive)
+  const echoStartTime = usePlayerEchoStore((s) => s.echoStartTime)
+  const echoEndTime = usePlayerEchoStore((s) => s.echoEndTime)
+  const setPlaying = usePlayerUIStore((s) => s.setPlaying)
 
   const lastStoreUpdateRef = useRef(0)
   const hasRestoredPositionRef = useRef(false)
@@ -151,14 +150,14 @@ export function useMediaElement({
         onReady?.(true)
 
         // Restore playback position if needed
-        const session = usePlayerStore.getState().currentSession
+        const session = usePlayerSessionStore.getState().currentSession
         if (session && session.currentTime > 0) {
           log.debug('Restoring position to:', session.currentTime)
-          const state = usePlayerStore.getState()
+          const echoState = usePlayerEchoStore.getState()
           const maybeWindow = normalizeEchoWindow({
-            active: state.echoModeActive,
-            startTimeSeconds: state.echoStartTime,
-            endTimeSeconds: state.echoEndTime,
+            active: echoState.echoModeActive,
+            startTimeSeconds: echoState.echoStartTime,
+            endTimeSeconds: echoState.echoEndTime,
             durationSeconds: session.duration,
           })
           const restoredTime = maybeWindow
@@ -169,9 +168,9 @@ export function useMediaElement({
         }
 
         // Sync volume and playback rate
-        const state = usePlayerStore.getState()
-        el.volume = state.volume
-        el.playbackRate = state.playbackRate
+        const settings = usePlayerSettingsStore.getState()
+        el.volume = settings.volume
+        el.playbackRate = settings.playbackRate
       }
     },
     [onReady]
@@ -223,16 +222,8 @@ export function useMediaElement({
     lastStoreUpdateRef.current = Date.now()
   }, [echoWindow, mediaRef, updateProgress])
 
-  // Register media ref to the store for use by other components (e.g., hotkeys)
-  useEffect(() => {
-    registerMediaRef(mediaRef)
-    log.debug('Media ref registered to store')
-
-    return () => {
-      unregisterMediaRef()
-      log.debug('Media ref unregistered from store')
-    }
-  }, [mediaRef, registerMediaRef, unregisterMediaRef])
+  // Note: Media ref registration is now handled by PlayerMediaProvider
+  // Components should use usePlayerMedia() hook to access media controls
 
   return {
     handleTimeUpdate,

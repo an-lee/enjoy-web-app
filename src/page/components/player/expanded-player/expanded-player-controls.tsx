@@ -4,7 +4,10 @@ import { Icon } from '@iconify/react'
 import { cn, formatTime } from '@/shared/lib/utils'
 import { formatHotkeyAsKbd } from '@/page/lib/format-hotkey'
 import { useHotkeyBinding } from '@/page/stores/hotkeys'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
+import { usePlayerSettingsStore } from '@/page/stores/player/player-settings-store'
+import { usePlayerEchoStore } from '@/page/stores/player/player-echo-store'
 import { useDisplayTime, usePlayerControls } from '@/page/hooks/player'
 import { Button } from '@/page/components/ui/button'
 import { Slider } from '@/page/components/ui/slider'
@@ -24,16 +27,14 @@ export function ExpandedPlayerControls({}: ExpandedPlayerControlsProps) {
   const { t } = useTranslation()
   const displayTime = useDisplayTime()
 
-  // Get player state from store
-  const {
-    currentSession,
-    isPlaying,
-    volume,
-    playbackRate,
-    echoModeActive,
-    setVolume,
-    setPlaybackRate,
-  } = usePlayerStore()
+  // Get player state from stores
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
+  const isPlaying = usePlayerUIStore((s) => s.isPlaying)
+  const volume = usePlayerSettingsStore((s) => s.volume)
+  const playbackRate = usePlayerSettingsStore((s) => s.playbackRate)
+  const echoModeActive = usePlayerEchoStore((s) => s.echoModeActive)
+  const setVolume = usePlayerSettingsStore((s) => s.setVolume)
+  const setPlaybackRate = usePlayerSettingsStore((s) => s.setPlaybackRate)
 
   // Get all player controls from unified hook
   const controls = usePlayerControls()

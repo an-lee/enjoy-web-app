@@ -7,7 +7,7 @@
 
 import { HotkeysProvider as RHHProvider, useHotkeysContext } from 'react-hotkeys-hook'
 import { useEffect, type ReactNode } from 'react'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
 import { createLogger } from '@/shared/lib/utils'
 
 const log = createLogger({ name: 'HotkeysScope' })
@@ -29,7 +29,7 @@ interface AppHotkeysProviderProps {
  */
 function ScopeManager() {
   const { enableScope, disableScope, activeScopes } = useHotkeysContext()
-  const playerMode = usePlayerStore((state) => state.mode)
+  const playerMode = usePlayerUIStore((s) => s.mode)
 
   // Log active scopes on mount
   useEffect(() => {

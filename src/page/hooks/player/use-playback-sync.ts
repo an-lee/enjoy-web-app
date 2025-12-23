@@ -10,7 +10,9 @@
  */
 
 import { useEffect } from 'react'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
+import { usePlayerSettingsStore } from '@/page/stores/player/player-settings-store'
 import { createLogger } from '@/shared/lib/utils'
 
 const log = createLogger({ name: 'usePlaybackSync' })
@@ -29,11 +31,11 @@ export function usePlaybackSync({
   isReady,
   mode,
 }: UsePlaybackSyncOptions): void {
-  const isPlaying = usePlayerStore((state) => state.isPlaying)
-  const volume = usePlayerStore((state) => state.volume)
-  const playbackRate = usePlayerStore((state) => state.playbackRate)
-  const setPlaying = usePlayerStore((state) => state.setPlaying)
-  const currentSession = usePlayerStore((state) => state.currentSession)
+  const isPlaying = usePlayerUIStore((s) => s.isPlaying)
+  const volume = usePlayerSettingsStore((s) => s.volume)
+  const playbackRate = usePlayerSettingsStore((s) => s.playbackRate)
+  const setPlaying = usePlayerUIStore((s) => s.setPlaying)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
 
   // Sync volume with media element
   useEffect(() => {

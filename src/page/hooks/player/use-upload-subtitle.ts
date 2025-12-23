@@ -7,14 +7,14 @@
 import { useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import { useCreateTranscript } from '@/page/hooks/queries'
 import { parseSubtitleFile } from '@/page/lib/subtitle-parser'
 import type { TranscriptInput, TargetType } from '@/page/types/db'
 
 export function useUploadSubtitle() {
   const { t } = useTranslation()
-  const currentSession = usePlayerStore((state) => state.currentSession)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
   const createTranscript = useCreateTranscript()
   const fileInputRef = useRef<HTMLInputElement>(null)
 

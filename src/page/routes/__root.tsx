@@ -27,7 +27,8 @@ import {
 import { Toaster } from '@/page/components/ui/sonner'
 import { PlayerContainer } from '@/page/components/player'
 import { AppHotkeysProvider, HotkeysHelpModal, useAppHotkey } from '@/page/components/hotkeys'
-import { useAuthStore, usePlayerStore } from '@/page/stores'
+import { useAuthStore } from '@/page/stores'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
 import { initDatabaseWithCleanup, initSyncManager, switchDatabase } from '@/page/db'
 
 // ============================================================================
@@ -184,11 +185,11 @@ function RootComponent() {
       // After hydration, subscribe to player store to get current mode
       // This is safe because we're now on the client side
       // Get initial value immediately
-      setPlayerMode(usePlayerStore.getState().mode)
+      setPlayerMode(usePlayerUIStore.getState().mode)
 
       // Subscribe to mode changes
       // zustand subscribe: store.subscribe(callback) where callback receives (state, prevState)
-      const unsubscribe = usePlayerStore.subscribe((state) => {
+      const unsubscribe = usePlayerUIStore.subscribe((state) => {
         setPlayerMode(state.mode)
       })
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Icon } from '@iconify/react'
 import { Button } from '@/page/components/ui/button'
@@ -11,10 +11,12 @@ import {
 } from '@/page/components/ui/resizable'
 import { createLogger } from '@/shared/lib/utils'
 import { FileAccessErrorCode } from '@/page/lib/file-access'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerUIStore } from '@/page/stores/player/player-ui-store'
 import { useMediaElement } from '@/page/hooks/player'
 import { useMediaLoader } from '@/page/hooks/player/use-media-loader'
 import { usePlaybackSync } from '@/page/hooks/player/use-playback-sync'
+import { usePlayerMedia } from '@/page/components/player/player-media-context'
 
 const log = createLogger({ name: 'ExpandedPlayerContent' })
 
@@ -24,8 +26,10 @@ interface ExpandedPlayerContentProps {
 
 export function ExpandedPlayerContent({}: ExpandedPlayerContentProps = {}) {
   const { t } = useTranslation()
-  const { currentSession, mode } = usePlayerStore()
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
+  const mode = usePlayerUIStore((s) => s.mode)
   const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement | null>(null)
+  const { registerMediaRef, unregisterMediaRef } = usePlayerMedia()
   const [isReady, setIsReady] = useState(false)
 
   // Load media from IndexedDB
@@ -37,6 +41,30 @@ export function ExpandedPlayerContent({}: ExpandedPlayerContentProps = {}) {
     handleRetry,
     handleReselectFile,
   } = useMediaLoader()
+
+  // Register media ref with context
+  useEffect(() => {
+    registerMediaRef(mediaRef)
+    return () => {
+      unregisterMediaRef()
+    }
+    // Only register once on mount, unregister on unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Re-register when media element is created (when mediaUrl changes and element exists)
+  useEffect(() => {
+    // Use a small delay to ensure the element is actually attached to the DOM
+    if (mediaUrl) {
+      const timer = setTimeout(() => {
+        if (mediaRef.current) {
+          registerMediaRef(mediaRef)
+        }
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mediaUrl])
 
   // Get media element handlers
   const {

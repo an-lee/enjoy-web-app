@@ -9,7 +9,9 @@ import { useMemo, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { Icon } from '@iconify/react'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
+import { usePlayerEchoStore } from '@/page/stores/player/player-echo-store'
+import { usePlayerRecordingStore } from '@/page/stores/player/player-recording-store'
 import { useTranscriptDisplay, useEchoRegion, useRecorder } from '@/page/hooks/player'
 import { recordingQueryKeys } from '@/page/hooks/queries'
 import { RecordButton } from './record-button'
@@ -27,11 +29,11 @@ export function ShadowRecorder() {
   const canvasRef = useRef<HTMLDivElement>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Get echo region data from player store
-  const echoStartTime = usePlayerStore((state) => state.echoStartTime)
-  const echoEndTime = usePlayerStore((state) => state.echoEndTime)
-  const echoModeActive = usePlayerStore((state) => state.echoModeActive)
-  const currentSession = usePlayerStore((state) => state.currentSession)
+  // Get echo region data from stores
+  const echoStartTime = usePlayerEchoStore((s) => s.echoStartTime)
+  const echoEndTime = usePlayerEchoStore((s) => s.echoEndTime)
+  const echoModeActive = usePlayerEchoStore((s) => s.echoModeActive)
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
 
   // Get transcript lines for reference text calculation
   const { lines } = useTranscriptDisplay()
@@ -174,11 +176,11 @@ export function ShadowRecorder() {
 
   // Register recording controls with player store for keyboard shortcuts
   // Use individual selectors to get stable function references
-  const registerRecordingControls = usePlayerStore(
-    (state) => state.registerRecordingControls
+  const registerRecordingControls = usePlayerRecordingStore(
+    (s) => s.registerRecordingControls
   )
-  const unregisterRecordingControls = usePlayerStore(
-    (state) => state.unregisterRecordingControls
+  const unregisterRecordingControls = usePlayerRecordingStore(
+    (s) => s.unregisterRecordingControls
   )
 
   // Register controls only once on mount - use refs to avoid re-triggering

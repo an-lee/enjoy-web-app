@@ -10,7 +10,7 @@
 
 import { TooltipProvider } from '@/page/components/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
-import { usePlayerStore } from '@/page/stores/player'
+import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import { ExpandedPlayerHeader } from './expanded-player-header'
 import { ExpandedPlayerContent } from './expanded-player-content'
 import { ExpandedPlayerControls } from './expanded-player-controls'
@@ -21,7 +21,7 @@ import type { ExpandedPlayerProps } from './types'
 // ============================================================================
 
 export function ExpandedPlayer({ className }: ExpandedPlayerProps = {}) {
-  const { currentSession } = usePlayerStore()
+  const currentSession = usePlayerSessionStore((s) => s.currentSession)
 
   if (!currentSession) return null
 
