@@ -68,7 +68,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   const isInteractive = typeof onClick === 'function'
 
   const containerClassName = cn(
-    'group w-full text-left px-4 py-2.5 transition-all duration-300',
+    'group w-full text-left px-4 py-1.5 transition-all duration-300',
     isInteractive && 'cursor-pointer',
     (!isInteractive || shouldAllowTextSelection) && 'cursor-text select-text',
     isInteractive &&
