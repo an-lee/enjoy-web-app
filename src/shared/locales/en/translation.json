@@ -211,12 +211,12 @@
       "selectLanguage": "Select",
       "noTranscript": "No transcript available",
       "noTranscriptHint": "Upload a subtitle file or generate a transcript using AI",
-      "retranscribe": "Retranscribe",
+      "transcribe": "Transcribe",
       "syncing": "Syncing transcripts from server...",
       "generateTranscript": "Generate Transcript",
-      "retranscribing": "Transcribing...",
-      "retranscribeSuccess": "Transcript has been regenerated successfully",
-      "retranscribeErrors": {
+      "transcribing": "Transcribing...",
+      "transcribeSuccess": "Transcript has been regenerated successfully",
+      "transcribeErrors": {
         "audioNotFound": "Audio file not found. Please try reloading the media.",
         "videoNotFound": "Video file not found. Please try reloading the media.",
         "mediaNotFound": "Media file not found. Please try reloading the media.",
@@ -228,7 +228,7 @@
         "mediaRecorderFailed": "Audio capture failed. Your browser may not support this feature.",
         "networkError": "Network error occurred. Please check your connection and try again.",
         "fileTooLarge": "File is too large to process. Please try a smaller file.",
-        "generic": "Failed to retranscribe media. Please try again."
+        "generic": "Failed to transcribe media. Please try again."
       },
       "uploadSubtitle": "Upload Subtitle",
       "uploadSubtitleHint": "Upload a .srt or .vtt file",
@@ -242,8 +242,8 @@
         "local": "Local Model",
         "byok": "Bring Your Own Key"
       },
-      "confirmRetranscribe": {
-        "title": "Confirm Retranscription",
+      "confirmTranscribe": {
+        "title": "Confirm Transcription",
         "currentProvider": "Current Provider",
         "changeSettings": "Change in Settings",
         "limitations": "Limitations",

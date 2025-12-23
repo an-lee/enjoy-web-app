@@ -211,12 +211,12 @@
       "selectLanguage": "Auswählen",
       "noTranscript": "Kein Transkript verfügbar",
       "noTranscriptHint": "Transkripte werden automatisch generiert oder können importiert werden",
-      "retranscribe": "Neu transkribieren",
+      "transcribe": "Neu transkribieren",
       "syncing": "Transkripte werden vom Server synchronisiert...",
       "generateTranscript": "Transkript generieren",
-      "retranscribing": "Transkribiere...",
-      "retranscribeSuccess": "Transkript wurde erfolgreich neu generiert",
-      "retranscribeErrors": {
+      "transcribing": "Transkribiere...",
+      "transcribeSuccess": "Transkript wurde erfolgreich neu generiert",
+      "transcribeErrors": {
         "audioNotFound": "Audiodatei nicht gefunden. Bitte laden Sie die Medien neu.",
         "videoNotFound": "Videodatei nicht gefunden. Bitte laden Sie die Medien neu.",
         "mediaNotFound": "Mediendatei nicht gefunden. Bitte laden Sie die Medien neu.",
@@ -235,7 +235,7 @@
         "local": "Lokales Modell",
         "byok": "Eigener Schlüssel"
       },
-      "confirmRetranscribe": {
+      "confirmTranscribe": {
         "title": "Neu-Transkription bestätigen",
         "currentProvider": "Aktueller Anbieter",
         "changeSettings": "In Einstellungen ändern",

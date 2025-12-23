@@ -18,10 +18,10 @@ import {
 import { usePlayerStore } from '@/page/stores/player'
 import {
   useTranscriptDisplay,
-  useRetranscribe,
+  useTranscribe,
   useUploadSubtitle,
 } from '@/page/hooks/player'
-import { RetranscribeDialog, LANGUAGE_NAMES } from '../transcript'
+import { TranscribeDialog, LANGUAGE_NAMES } from '../transcript'
 import { LanguageSelector } from '../shared'
 
 interface ExpandedPlayerHeaderProps {
@@ -48,8 +48,8 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
     secondaryLanguage,
   } = useTranscriptDisplay()
 
-  // Retranscribe functionality (only for status, actual retranscribe is handled in RetranscribeDialog)
-  const { isTranscribing, progress: retranscribeProgress } = useRetranscribe({
+  // Transcribe functionality (only for status, actual transcribe is handled in TranscribeDialog)
+  const { isTranscribing, progress: transcribeProgress } = useTranscribe({
     mediaRef,
   })
 
@@ -81,8 +81,8 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
     [languageOptions, primaryLanguage]
   )
 
-  // Handle retranscribe with confirmation
-  const handleRetranscribeClick = useCallback(() => {
+  // Handle transcribe with confirmation
+  const handleTranscribeClick = useCallback(() => {
     setShowConfirmDialog(true)
   }, [])
 
@@ -214,13 +214,13 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
               </Tooltip>
             </div>
 
-            {/* Retranscribe Button */}
+            {/* Transcribe Button */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleRetranscribeClick}
+                  onClick={handleTranscribeClick}
                   disabled={isTranscribing || isUploadingSubtitle || !currentSession}
                   className={cn(
                     'hidden md:flex h-8 px-2 text-xs',
@@ -230,18 +230,18 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
                   {isTranscribing ? (
                     <>
                       <Icon icon="lucide:loader-2" className="w-3 h-3 animate-spin mr-1" />
-                      {retranscribeProgress || t('player.transcript.retranscribing')}
+                      {transcribeProgress || t('player.transcript.transcribing')}
                     </>
                   ) : (
                     <>
                       <Icon icon="lucide:refresh-cw" className="w-3 h-3 mr-1" />
-                      {t('player.transcript.retranscribe')}
+                      {t('player.transcript.transcribe')}
                     </>
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                {t('player.transcript.retranscribe')}
+                {t('player.transcript.transcribe')}
               </TooltipContent>
             </Tooltip>
           </>
@@ -314,13 +314,13 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
                     )}
                   </Button>
                 </div>
-                {/* Retranscribe Button */}
+                {/* Transcribe Button */}
                 <Button
                   variant="default"
                   size="sm"
                   onClick={() => {
                     setDrawerOpen(false)
-                    handleRetranscribeClick()
+                    handleTranscribeClick()
                   }}
                   disabled={isTranscribing || isUploadingSubtitle || !currentSession}
                   className={cn(
@@ -331,12 +331,12 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
                   {isTranscribing ? (
                     <>
                       <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin mr-2" />
-                      {retranscribeProgress || t('player.transcript.retranscribing')}
+                      {transcribeProgress || t('player.transcript.transcribing')}
                     </>
                   ) : (
                     <>
                       <Icon icon="lucide:refresh-cw" className="w-4 h-4 mr-2" />
-                      {t('player.transcript.retranscribe')}
+                      {t('player.transcript.transcribe')}
                     </>
                   )}
                 </Button>
@@ -360,8 +360,8 @@ export function ExpandedPlayerHeader({ mediaRef }: ExpandedPlayerHeaderProps) {
         </Tooltip>
       </div>
 
-      {/* Retranscribe Dialog */}
-      <RetranscribeDialog
+      {/* Transcribe Dialog */}
+      <TranscribeDialog
         open={showConfirmDialog}
         onOpenChange={setShowConfirmDialog}
         mediaDuration={mediaDuration}

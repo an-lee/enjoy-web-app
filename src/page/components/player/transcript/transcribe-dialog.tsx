@@ -1,8 +1,8 @@
 /**
- * RetranscribeDialog Component
+ * TranscribeDialog Component
  *
- * Confirmation dialog for retranscribing media with provider information and limitations.
- * Handles retranscription logic internally using useRetranscribe hook.
+ * Confirmation dialog for transcribing media with provider information and limitations.
+ * Handles transcription logic internally using useTranscribe hook.
  */
 
 import { useCallback, RefObject } from 'react'
@@ -12,7 +12,7 @@ import { Link } from '@tanstack/react-router'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AIProvider } from '@/page/ai/types'
 import { usePlayerStore } from '@/page/stores/player'
-import { useRetranscribe } from '@/page/hooks/player'
+import { useTranscribe } from '@/page/hooks/player'
 import { useTranscriptDisplay } from '@/page/hooks/player/use-transcript-display'
 import {
   AlertDialog,
@@ -26,7 +26,7 @@ import {
 } from '@/page/components/ui/alert-dialog'
 import { Badge } from '@/page/components/ui/badge'
 
-interface RetranscribeDialogProps {
+interface TranscribeDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   mediaDuration: number
@@ -34,26 +34,26 @@ interface RetranscribeDialogProps {
   mediaRef?: RefObject<HTMLAudioElement | HTMLVideoElement | null>
 }
 
-export function RetranscribeDialog({
+export function TranscribeDialog({
   open,
   onOpenChange,
   mediaDuration,
   mediaRef,
-}: RetranscribeDialogProps) {
+}: TranscribeDialogProps) {
   const { t } = useTranslation()
   const collapse = usePlayerStore((state) => state.collapse)
 
   // Get primary language from transcript display hook
   const { primaryLanguage } = useTranscriptDisplay()
 
-  // Get retranscribe functionality
-  const { retranscribe } = useRetranscribe({ mediaRef })
+  // Get transcribe functionality
+  const { transcribe } = useTranscribe({ mediaRef })
 
-  // Handle confirm retranscribe
+  // Handle confirm transcribe
   const handleConfirm = useCallback(() => {
     onOpenChange(false)
-    retranscribe(primaryLanguage || undefined)
-  }, [onOpenChange, retranscribe, primaryLanguage])
+    transcribe(primaryLanguage || undefined)
+  }, [onOpenChange, transcribe, primaryLanguage])
 
   // Get current ASR provider info
   const asrConfig = getAIServiceConfig('asr')
@@ -75,14 +75,14 @@ export function RetranscribeDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('player.transcript.confirmRetranscribe.title')}</AlertDialogTitle>
+          <AlertDialogTitle>{t('player.transcript.confirmTranscribe.title')}</AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
             {/* Provider Info */}
             <div className="flex items-center justify-between gap-3 py-2 border-b">
               <div className="flex items-center gap-2">
                 <Icon icon="lucide:settings-2" className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {t('player.transcript.confirmRetranscribe.currentProvider')}
+                  {t('player.transcript.confirmTranscribe.currentProvider')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -107,19 +107,19 @@ export function RetranscribeDialog({
                 <div className="flex items-center gap-2">
                   <Icon icon="lucide:info" className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-medium">
-                    {t('player.transcript.confirmRetranscribe.limitations')}
+                    {t('player.transcript.confirmTranscribe.limitations')}
                   </span>
                 </div>
                 <ul className="text-sm space-y-1.5 ml-6 list-disc text-muted-foreground">
                   {asrConfig.provider === AIProvider.LOCAL && (
-                    <li>{t('player.transcript.confirmRetranscribe.limitation.local')}</li>
+                    <li>{t('player.transcript.confirmTranscribe.limitation.local')}</li>
                   )}
                   {asrConfig.provider === AIProvider.ENJOY && (
-                    <li>{t('player.transcript.confirmRetranscribe.limitation.enjoy')}</li>
+                    <li>{t('player.transcript.confirmTranscribe.limitation.enjoy')}</li>
                   )}
                   {durationMinutes > 30 && (
                     <li>
-                      {t('player.transcript.confirmRetranscribe.limitation.longDuration', {
+                      {t('player.transcript.confirmTranscribe.limitation.longDuration', {
                         minutes: durationMinutes,
                       })}
                     </li>
@@ -132,7 +132,7 @@ export function RetranscribeDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm}>
-            {t('player.transcript.confirmRetranscribe.confirm')}
+            {t('player.transcript.confirmTranscribe.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

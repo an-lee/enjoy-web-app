@@ -211,12 +211,12 @@
       "selectLanguage": "選択",
       "noTranscript": "字幕がありません",
       "noTranscriptHint": "字幕は自動生成またはインポート可能です",
-      "retranscribe": "再認識",
+      "transcribe": "再認識",
       "syncing": "サーバーから字幕を同期中...",
       "generateTranscript": "字幕を生成",
-      "retranscribing": "認識中...",
-      "retranscribeSuccess": "字幕が正常に再生成されました",
-      "retranscribeErrors": {
+      "transcribing": "認識中...",
+      "transcribeSuccess": "字幕が正常に再生成されました",
+      "transcribeErrors": {
         "audioNotFound": "音声ファイルが見つかりません。メディアを再読み込みしてください。",
         "videoNotFound": "動画ファイルが見つかりません。メディアを再読み込みしてください。",
         "mediaNotFound": "メディアファイルが見つかりません。メディアを再読み込みしてください。",
@@ -235,7 +235,7 @@
         "local": "ローカルモデル",
         "byok": "独自キー"
       },
-      "confirmRetranscribe": {
+      "confirmTranscribe": {
         "title": "再認識の確認",
         "currentProvider": "現在のプロバイダー",
         "changeSettings": "設定で変更",

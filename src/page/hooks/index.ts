@@ -50,7 +50,7 @@ export {
 // ============================================================================
 
 export { useTTS, type UseTTSOptions, type UseTTSReturn } from './use-tts'
-export { useRetranscribe } from './player/use-retranscribe'
+export { useTranscribe } from './player/use-transcribe'
 export { useTranscriptSync, type TranscriptSyncState } from './player/use-transcript-sync'
 export { useMediaElement, type UseMediaElementOptions, type UseMediaElementReturn } from './player/use-media-element'
 

@@ -15,12 +15,12 @@ import { usePlayerStore } from '@/page/stores/player'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AIProvider } from '@/page/ai/types'
 import { ScrollArea } from '@/page/components/ui/scroll-area'
-import { useDisplayTime, usePlayerControls, useRetranscribe, useEchoRegion, useEchoRegionManager } from '@/page/hooks/player'
+import { useDisplayTime, usePlayerControls, useTranscribe, useEchoRegion, useEchoRegionManager } from '@/page/hooks/player'
 import { useTranscriptDisplay } from '../../../hooks/player/use-transcript-display'
 import { useAutoScroll } from '../../../hooks/player/use-auto-scroll'
 import { useUploadSubtitle } from '../../../hooks/player/use-upload-subtitle'
 import { TranscriptLines } from './transcript-lines'
-import { RetranscribeDialog } from './retranscribe-dialog'
+import { TranscribeDialog } from './transcribe-dialog'
 import { TranscriptLoadingState } from './transcript-loading-state'
 import { TranscriptErrorState } from './transcript-error-state'
 import { TranscriptEmptyState } from './transcript-empty-state'
@@ -117,8 +117,8 @@ export function TranscriptDisplay({
   useAutoScroll(scrollTargetIndex, isPlaying, config, scrollAreaRef)
 
 
-  // Retranscribe functionality (only for status, actual retranscribe is handled in RetranscribeDialog)
-  const { isTranscribing, progress, progressPercent } = useRetranscribe({
+  // Transcribe functionality (only for status, actual transcribe is handled in TranscribeDialog)
+  const { isTranscribing, progress, progressPercent } = useTranscribe({
     mediaRef,
   })
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -166,9 +166,9 @@ export function TranscriptDisplay({
   // Determine if we should show empty state
   const showEmptyState = availableTranscripts.length === 0 || lines.length === 0
 
-  // Render RetranscribeDialog at the top level so it's always available
+  // Render TranscribeDialog at the top level so it's always available
   const dialogElement = (
-    <RetranscribeDialog
+    <TranscribeDialog
       open={showConfirmDialog}
       onOpenChange={setShowConfirmDialog}
       mediaDuration={mediaDuration}

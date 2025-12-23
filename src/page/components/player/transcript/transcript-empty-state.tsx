@@ -124,7 +124,7 @@ export function TranscriptEmptyState({
           {isTranscribing ? (
             <>
               <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin" />
-              <span>{transcribeProgress || t('player.transcript.retranscribing')}</span>
+              <span>{transcribeProgress || t('player.transcript.transcribing')}</span>
             </>
           ) : (
             <>

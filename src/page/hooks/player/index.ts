@@ -8,7 +8,7 @@
 export { usePlayerControls } from './use-player-controls'
 export { useDisplayTime, setDisplayTime } from './use-display-time'
 export { useMediaElement } from './use-media-element'
-export { useRetranscribe } from './use-retranscribe'
+export { useTranscribe } from './use-transcribe'
 export { useUploadSubtitle } from './use-upload-subtitle'
 export { useTranscriptSync } from './use-transcript-sync'
 export { useEchoRegion, useEchoRegionOperations, useEchoRegionManager } from './use-echo-region'

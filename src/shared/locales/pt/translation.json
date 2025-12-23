@@ -211,12 +211,12 @@
       "selectLanguage": "Selecionar",
       "noTranscript": "Nenhuma transcrição disponível",
       "noTranscriptHint": "As transcrições serão geradas automaticamente ou podem ser importadas",
-      "retranscribe": "Re-transcrever",
+      "transcribe": "Transcrever",
       "syncing": "Sincronizando transcrições do servidor...",
       "generateTranscript": "Gerar Transcrição",
-      "retranscribing": "Transcrevendo...",
-      "retranscribeSuccess": "A transcrição foi regenerada com sucesso",
-      "retranscribeErrors": {
+      "transcribing": "Transcrevendo...",
+      "transcribeSuccess": "A transcrição foi regenerada com sucesso",
+      "transcribeErrors": {
         "audioNotFound": "Arquivo de áudio não encontrado. Por favor, recarregue a mídia.",
         "videoNotFound": "Arquivo de vídeo não encontrado. Por favor, recarregue a mídia.",
         "mediaNotFound": "Arquivo de mídia não encontrado. Por favor, recarregue a mídia.",
@@ -235,8 +235,8 @@
         "local": "Modelo Local",
         "byok": "Traga Sua Própria Chave"
       },
-      "confirmRetranscribe": {
-        "title": "Confirmar Re-transcrição",
+      "confirmTranscribe": {
+        "title": "Confirmar Transcrição",
         "currentProvider": "Provedor Atual",
         "changeSettings": "Alterar nas Configurações",
         "limitations": "Limitações",

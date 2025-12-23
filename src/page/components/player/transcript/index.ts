@@ -9,7 +9,7 @@ export { TranscriptDisplay } from './transcript-display'
 // Core components
 export { TranscriptLines } from './transcript-lines'
 export { TranscriptLineItem } from './transcript-line-item'
-export { RetranscribeDialog } from './retranscribe-dialog'
+export { TranscribeDialog } from './transcribe-dialog'
 
 // State components
 export { TranscriptLoadingState } from './transcript-loading-state'
