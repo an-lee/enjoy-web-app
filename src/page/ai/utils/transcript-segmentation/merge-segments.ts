@@ -100,17 +100,24 @@ export function mergeShortSegments(segments: WordSegment[]): WordSegment[] {
       }
     }
 
-    // 3. Special handling for very short segments (1 word)
-    // If segment is 1 word and gap is very small, merge with next segment
-    if (isVeryShort && isVeryFastGap) {
+    // 3. Special handling for very short segments (1-2 words)
+    // If segment is very short and gap is small, merge with next segment
+    // This is especially important for single-word segments that shouldn't be standalone
+    const isVeryShortSegment = current.words.length <= 2
+    if (isVeryShortSegment && isVeryFastGap) {
       const combinedLength = current.words.length + next.words.length
       // Only merge if result is still reasonable
       if (combinedLength <= SEGMENTATION_CONFIG.maxWordsPerSegment) {
-        merged.push({
-          words: [...current.words, ...next.words],
-        })
-        i += 2
-        continue
+        // Additional check: don't merge if current segment ends with sentence-ending punctuation
+        // (unless it's a single word and gap is very small)
+        const hasSentenceEnd = lastWord.isSentenceEnd
+        if (!hasSentenceEnd || (current.words.length === 1 && segmentGap < 50)) {
+          merged.push({
+            words: [...current.words, ...next.words],
+          })
+          i += 2
+          continue
+        }
       }
     }
 
@@ -124,6 +131,24 @@ export function mergeShortSegments(segments: WordSegment[]): WordSegment[] {
       })
       i += 2
       continue
+    }
+
+    // 5. Special case: If current segment is very short (1-2 words) and next segment is not too long,
+    // merge them even if combined length exceeds preferredWordsPerSegment (but not maxWordsPerSegment)
+    // This prevents very short segments in the middle of sentences
+    if (isVeryShortSegment && combinedLength <= SEGMENTATION_CONFIG.maxWordsPerSegment) {
+      // Don't merge if there's a strong pause or sentence-ending punctuation
+      if (
+        segmentGap < 200 && // Gap is relatively small
+        !hasStrongPunctuation && // No strong punctuation
+        !lastWord.isSentenceEnd // Not a sentence end
+      ) {
+        merged.push({
+          words: [...current.words, ...next.words],
+        })
+        i += 2
+        continue
+      }
     }
 
     // Default: Don't merge

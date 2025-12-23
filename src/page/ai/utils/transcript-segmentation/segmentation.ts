@@ -211,14 +211,15 @@ function segmentSentence(
     return []
   }
 
-  // For very long sentences (more than 2x maxWordsPerSegment), use even segmentation
-  const isVeryLongSentence = sentenceWords.length > SEGMENTATION_CONFIG.maxWordsPerSegment * 2
+  // For long sentences (more than preferredWordsPerSegment), use even segmentation
+  // This ensures segments are more balanced and avoids creating very short segments
+  const isLongSentence = sentenceWords.length > SEGMENTATION_CONFIG.preferredWordsPerSegment
 
-  if (isVeryLongSentence) {
+  if (isLongSentence) {
     return segmentLongSentenceEvenly(sentenceWords)
   }
 
-  // For shorter sentences, use the original incremental approach
+  // For very short sentences (<= preferredWordsPerSegment), use the original incremental approach
   const segments: WordSegment[] = []
   let currentSegment: WordWithMetadata[] = []
   let currentWordCount = 0

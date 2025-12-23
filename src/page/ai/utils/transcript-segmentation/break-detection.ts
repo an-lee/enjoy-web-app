@@ -65,9 +65,27 @@ export function shouldBreakAtPosition(
   let breakScore = calculateBreakScore(word, currentWordCount)
 
   // Factor 6: Avoid breaking too early (unless there's a very strong signal)
+  // Especially avoid breaking at the very beginning of a sentence
   if (currentWordCount < SEGMENTATION_CONFIG.minWordsPerSegment) {
-    // Only break if there's a very strong signal
-    if (breakScore < 10) {
+    // Only break if there's a very strong signal (sentence end)
+    if (!word.isSentenceEnd && breakScore < 12) {
+      return false
+    }
+  }
+
+  // Additional check: Avoid breaking in the first few words of a sentence
+  // unless it's a sentence-ending punctuation
+  // This prevents cases like "One" being split off as a single-word segment
+  if (currentWordCount <= 2) {
+    // Only allow breaking if:
+    // 1. It's a sentence end (strong signal)
+    // 2. OR there's a very long pause (>= longPauseThreshold) AND punctuation
+    const isStrongBreak =
+      word.isSentenceEnd ||
+      (word.gapAfter >= SEGMENTATION_CONFIG.longPauseThreshold &&
+        word.punctuationWeight >= 6)
+
+    if (!isStrongBreak) {
       return false
     }
   }
