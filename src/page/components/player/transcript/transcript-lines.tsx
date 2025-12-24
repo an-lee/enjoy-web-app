@@ -4,7 +4,7 @@
  * Renders the list of transcript lines with echo region controls.
  */
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useRef } from 'react'
 import { cn } from '@/shared/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
 import { EchoRegionControls } from '../echo/echo-region-controls'
@@ -55,11 +55,15 @@ function TranscriptLinesComponent({
     return hasActiveLine || echoModeActive
   }, [lines, currentTimeSeconds, echoModeActive])
 
+  // Create ref for popover content to pass to useTextSelection
+  const popoverContentRef = useRef<HTMLDivElement>(null)
+
   // Text selection detection - enabled when text selection is allowed
   const { selection, clearSelection, containerRef } = useTextSelection<HTMLDivElement>({
     enabled: shouldAllowTextSelection,
     minLength: 1,
     maxLength: 100,
+    popoverRef: popoverContentRef,
   })
 
   // Get current media info for fetching recordings
@@ -192,15 +196,18 @@ function TranscriptLinesComponent({
         )
       })}
       {/* Text selection panel - rendered once for the entire container */}
-      <TextSelectionPanel
-        selection={selection}
-        sourceLanguage={primaryLanguage}
-        onOpenChange={(open) => {
-          if (!open) {
-            clearSelection()
-          }
-        }}
-      />
+      {selection && (
+        <TextSelectionPanel
+          selection={selection}
+          sourceLanguage={primaryLanguage}
+          popoverContentRef={popoverContentRef}
+          onOpenChange={(open) => {
+            if (!open) {
+              clearSelection()
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

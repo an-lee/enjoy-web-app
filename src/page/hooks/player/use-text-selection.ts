@@ -25,6 +25,8 @@ export interface UseTextSelectionOptions {
   maxLength?: number
   /** Callback when selection changes */
   onSelectionChange?: (selection: TextSelection | null) => void
+  /** Ref to popover/panel element that should not trigger selection clear when clicked */
+  popoverRef?: React.RefObject<HTMLElement | null>
 }
 
 export interface UseTextSelectionReturn<T extends HTMLElement = HTMLElement> {
@@ -47,10 +49,14 @@ export function useTextSelection<T extends HTMLElement = HTMLElement>(
     minLength = 1,
     maxLength = 100,
     onSelectionChange,
+    popoverRef,
   } = options
 
   const containerRef = useRef<T>(null)
   const [selection, setSelection] = useState<TextSelection | null>(null)
+  // Keep a ref to track the last active element that was clicked
+  // This helps us determine if a click happened inside the popover
+  const lastClickTargetRef = useRef<EventTarget | null>(null)
 
   const clearSelection = useCallback(() => {
     setSelection(null)
@@ -64,6 +70,17 @@ export function useTextSelection<T extends HTMLElement = HTMLElement>(
     }
   }, [onSelectionChange])
 
+  // Check if a target element is inside the popover
+  const isInsidePopover = useCallback((target: Node | null): boolean => {
+    if (!target || !popoverRef) return false
+
+    const popoverElement = popoverRef.current
+    if (!popoverElement) return false
+
+    // Check if target is inside the popover element
+    return popoverElement.contains(target)
+  }, [popoverRef])
+
   useEffect(() => {
     if (!enabled) {
       return
@@ -71,7 +88,17 @@ export function useTextSelection<T extends HTMLElement = HTMLElement>(
 
     const handleSelectionChange = () => {
       const sel = window.getSelection()
+
+      // If selection is cleared, check if the click was inside popover
       if (!sel || sel.rangeCount === 0) {
+        // Check if the last click was inside popover
+        const lastClickTarget = lastClickTargetRef.current
+        if (lastClickTarget && isInsidePopover(lastClickTarget as Node)) {
+          // Don't clear selection if click was inside popover
+          return
+        }
+
+        // Selection was cleared and click was not in popover, clear our state
         setSelection(null)
         onSelectionChange?.(null)
         return
@@ -83,6 +110,12 @@ export function useTextSelection<T extends HTMLElement = HTMLElement>(
       // Check if selection is within our container
       const container = containerRef.current
       if (!container || !container.contains(range.commonAncestorContainer)) {
+        // Selection is outside container, but check if click was in popover
+        const lastClickTarget = lastClickTargetRef.current
+        if (lastClickTarget && isInsidePopover(lastClickTarget as Node)) {
+          return
+        }
+
         setSelection(null)
         onSelectionChange?.(null)
         return
@@ -123,7 +156,26 @@ export function useTextSelection<T extends HTMLElement = HTMLElement>(
       document.removeEventListener('selectionchange', handleSelectionChange)
       document.removeEventListener('mouseup', handleSelectionChange)
     }
-  }, [enabled, minLength, maxLength, onSelectionChange])
+  }, [enabled, minLength, maxLength, onSelectionChange, isInsidePopover])
+
+  // Track all mouse down events to capture click targets
+  // This helps us determine if selection was cleared due to a click inside popover
+  useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
+    const handleMouseDown = (e: MouseEvent) => {
+      // Store the click target for use in handleSelectionChange
+      // This happens before selectionchange event fires
+      lastClickTargetRef.current = e.target
+    }
+
+    document.addEventListener('mousedown', handleMouseDown, true) // Use capture phase
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown, true)
+    }
+  }, [enabled])
 
   // Clear selection when clicking outside
   useEffect(() => {
@@ -137,17 +189,27 @@ export function useTextSelection<T extends HTMLElement = HTMLElement>(
         return
       }
 
-      // If click is outside the container, clear selection
-      if (!container.contains(e.target as Node)) {
-        clearSelection()
+      const target = e.target as Node
+
+      // Check if click is inside the container
+      if (container.contains(target)) {
+        return
       }
+
+      // Check if click is inside popover
+      if (isInsidePopover(target)) {
+        return // Click is inside popover, don't clear selection
+      }
+
+      // Click is outside both container and popover, clear selection
+      clearSelection()
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [enabled, clearSelection])
+  }, [enabled, clearSelection, isInsidePopover])
 
   return {
     selection,

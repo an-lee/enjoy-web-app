@@ -5,7 +5,6 @@
  * Uses shadcn Popover component to show the panel below the selection.
  */
 
-import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Popover, PopoverContent, PopoverAnchor } from '@/page/components/ui/popover'
 import { Card, CardContent, CardHeader, CardTitle } from '@/page/components/ui/card'
@@ -25,6 +24,8 @@ interface TextSelectionPanelProps {
   open?: boolean
   /** Callback when panel should close */
   onOpenChange?: (open: boolean) => void
+  /** Ref to attach to the popover content element */
+  popoverContentRef?: React.RefObject<HTMLDivElement | null>
 }
 
 export function TextSelectionPanel({
@@ -32,18 +33,28 @@ export function TextSelectionPanel({
   sourceLanguage,
   open,
   onOpenChange,
+  popoverContentRef,
 }: TextSelectionPanelProps) {
-  const [isOpen, setIsOpen] = useState(false)
   const nativeLanguage = useSettingsStore((s) => s.nativeLanguage)
 
-  // Update open state when selection changes
-  useEffect(() => {
-    setIsOpen(!!selection && (open ?? true))
-  }, [selection, open])
+  // Control Popover open state based on selection
+  // Popover should be open when selection exists
+  const isOpen = !!selection && (open ?? true)
 
   const handleOpenChange = (newOpen: boolean) => {
-    setIsOpen(newOpen)
-    onOpenChange?.(newOpen)
+    // If Popover is trying to close but we still have a selection,
+    // prevent the close. The selection will be cleared by useTextSelection's
+    // click-outside handler, which will then properly close the Popover.
+    if (!newOpen && selection) {
+      // Don't allow Popover to close while selection exists
+      // The Popover is controlled by selection state, not by user interaction
+      return
+    }
+
+    // Only call onOpenChange if we're actually closing (selection is null)
+    if (!newOpen) {
+      onOpenChange?.(newOpen)
+    }
   }
 
   // Query dictionary data
@@ -89,11 +100,25 @@ export function TextSelectionPanel({
         />
       </PopoverAnchor>
       <PopoverContent
+        ref={popoverContentRef}
         className="w-[400px] max-w-[90vw] p-0"
         align="start"
         side="bottom"
         sideOffset={8}
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => {
+          // Always prevent Popover's default close behavior
+          // We'll handle closing through useTextSelection's click-outside handler
+          // which will clear the selection, which will then close the Popover
+          e.preventDefault()
+        }}
+        onEscapeKeyDown={(e) => {
+          // Prevent ESC from closing while selection exists
+          // The selection will be cleared by useTextSelection, which will close the Popover
+          if (selection) {
+            e.preventDefault()
+          }
+        }}
       >
         <Card className="border-0 shadow-none">
           <CardHeader className="pb-3">
