@@ -10,6 +10,7 @@ import {
   IconCloud,
   IconActivity,
   IconBrandChrome,
+  IconExternalLink,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/page/components/layout/nav-main"
@@ -81,8 +82,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navPlugins = [
     {
       title: t("common.chromeExtension"),
-      url: "/plugins/chrome-extension",
+      url: "https://chromewebstore.google.com/detail/enjoy-echo/hiijpdndbjfnffibdhajdanjekbnalob",
       icon: IconBrandChrome,
+      target: "_blank",
     },
   ]
 
@@ -143,9 +145,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {navPlugins.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton tooltip={item.title} asChild>
-                    <Link to={item.url}>
+                    <Link to={item.url} target={item.target}>
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
+                      {item.target === "_blank" && <IconExternalLink className="size-4" />}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
