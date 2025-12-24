@@ -294,6 +294,24 @@
         "error": "녹음 삭제에 실패했습니다"
       },
       "playbackError": "녹음 재생에 실패했습니다",
+      "errorTypes": {
+        "omission": "생략",
+        "insertion": "삽입",
+        "mispronunciation": "잘못된 발음",
+        "unexpectedBreak": "예상치 못한 휴지",
+        "missingBreak": "누락된 휴지",
+        "monotone": "단조로움",
+        "correct": "정확함"
+      },
+      "errorExplanations": {
+        "omission": "단어가 생략되어 발음되지 않았습니다.",
+        "insertion": "있어서는 안 될 추가 단어가 삽입되었습니다.",
+        "mispronunciation": "단어가 잘못 발음되었습니다.",
+        "unexpectedBreak": "예상치 못한 휴지나 중단이 발생했습니다.",
+        "missingBreak": "필요한 휴지나 중단이 누락되었습니다.",
+        "monotone": "단어가 적절한 억양 없이 단조롭게 발음되었습니다.",
+        "correct": "단어가 정확하게 발음되었습니다."
+      },
       "assessment": {
         "title": "발음 평가",
         "description": "상세한 발음 평가 결과",
@@ -306,7 +324,13 @@
         "accuracy": "정확도",
         "fluency": "유창성",
         "completeness": "완전성",
-        "wordLevel": "단어 수준 평가"
+        "prosody": "운율",
+        "wordLevel": "단어 수준 평가",
+        "pronunciationAnalysis": "발음 분석",
+        "accuracyScore": "정확도 점수",
+        "syllables": "음절",
+        "phonemes": "음소",
+        "mispronounced": "잘못 발음됨: 잘못 발음된 단어입니다."
       },
       "uploadSubtitle": "자막 업로드",
       "uploadSubtitleHint": ".srt 또는 .vtt 파일을 업로드하세요",

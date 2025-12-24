@@ -294,6 +294,24 @@
         "error": "録音の削除に失敗しました"
       },
       "playbackError": "録音の再生に失敗しました",
+      "errorTypes": {
+        "omission": "省略",
+        "insertion": "挿入",
+        "mispronunciation": "誤発音",
+        "unexpectedBreak": "予期しない休止",
+        "missingBreak": "欠落した休止",
+        "monotone": "単調",
+        "correct": "正しい"
+      },
+      "errorExplanations": {
+        "omission": "単語が省略され、発音されませんでした。",
+        "insertion": "存在すべきでない追加の単語が挿入されました。",
+        "mispronunciation": "単語が誤って発音されました。",
+        "unexpectedBreak": "予期しない休止や中断が発生しました。",
+        "missingBreak": "必要な休止や中断が欠落していました。",
+        "monotone": "単語が適切なイントネーションなしで単調に発音されました。",
+        "correct": "単語が正しく発音されました。"
+      },
       "assessment": {
         "title": "発音評価",
         "description": "詳細な発音評価結果",
@@ -306,7 +324,13 @@
         "accuracy": "正確性",
         "fluency": "流暢性",
         "completeness": "完全性",
-        "wordLevel": "単語レベルの評価"
+        "prosody": "韻律",
+        "wordLevel": "単語レベルの評価",
+        "pronunciationAnalysis": "発音分析",
+        "accuracyScore": "正確性スコア",
+        "syllables": "音節",
+        "phonemes": "音素",
+        "mispronounced": "誤発音：正しく発音されていない単語。"
       },
       "uploadSubtitle": "字幕をアップロード",
       "uploadSubtitleHint": ".srt または .vtt ファイルをアップロード",

@@ -294,6 +294,24 @@
         "error": "Falha ao excluir gravação"
       },
       "playbackError": "Falha ao reproduzir gravação",
+      "errorTypes": {
+        "omission": "Omissão",
+        "insertion": "Inserção",
+        "mispronunciation": "Pronúncia incorreta",
+        "unexpectedBreak": "Pausa inesperada",
+        "missingBreak": "Pausa faltante",
+        "monotone": "Monótono",
+        "correct": "Correto"
+      },
+      "errorExplanations": {
+        "omission": "A palavra foi omitida e não foi pronunciada.",
+        "insertion": "Uma palavra adicional foi inserida que não deveria estar lá.",
+        "mispronunciation": "A palavra foi pronunciada incorretamente.",
+        "unexpectedBreak": "Uma pausa ou interrupção inesperada ocorreu.",
+        "missingBreak": "Uma pausa ou interrupção necessária estava faltando.",
+        "monotone": "A palavra foi pronunciada de forma monótona sem entonação adequada.",
+        "correct": "A palavra foi pronunciada corretamente."
+      },
       "assessment": {
         "title": "Avaliação de Pronúncia",
         "description": "Resultados detalhados da avaliação de pronúncia",
@@ -306,7 +324,13 @@
         "accuracy": "Precisão",
         "fluency": "Fluência",
         "completeness": "Completude",
-        "wordLevel": "Avaliação no Nível de Palavra"
+        "prosody": "Prosódia",
+        "wordLevel": "Avaliação no Nível de Palavra",
+        "pronunciationAnalysis": "Análise de Pronúncia",
+        "accuracyScore": "Pontuação de Precisão",
+        "syllables": "Sílabas",
+        "phonemes": "Fonemas",
+        "mispronounced": "Pronunciado incorretamente: As palavras que são pronunciadas incorretamente."
       },
       "uploadSubtitle": "Enviar legendas",
       "uploadSubtitleHint": "Envie um arquivo .srt ou .vtt",

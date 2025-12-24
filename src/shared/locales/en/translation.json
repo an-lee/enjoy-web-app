@@ -301,6 +301,24 @@
         "error": "Failed to delete recording"
       },
       "playbackError": "Failed to play recording",
+      "errorTypes": {
+        "omission": "Omission",
+        "insertion": "Insertion",
+        "mispronunciation": "Mispronunciation",
+        "unexpectedBreak": "Unexpected Break",
+        "missingBreak": "Missing Break",
+        "monotone": "Monotone",
+        "correct": "Correct"
+      },
+      "errorExplanations": {
+        "omission": "The word was omitted and not spoken.",
+        "insertion": "An extra word was inserted that should not be there.",
+        "mispronunciation": "The word was mispronounced.",
+        "unexpectedBreak": "An unexpected pause or break occurred.",
+        "missingBreak": "A required pause or break was missing.",
+        "monotone": "The word was spoken in a monotone manner without proper intonation.",
+        "correct": "The word was pronounced correctly."
+      },
       "assessment": {
         "title": "Pronunciation Assessment",
         "description": "Detailed pronunciation assessment results",
@@ -313,7 +331,13 @@
         "accuracy": "Accuracy",
         "fluency": "Fluency",
         "completeness": "Completeness",
-        "wordLevel": "Word-level Assessment"
+        "prosody": "Prosody",
+        "wordLevel": "Word-level Assessment",
+        "pronunciationAnalysis": "Pronunciation Analysis",
+        "accuracyScore": "Accuracy Score",
+        "syllables": "Syllables",
+        "phonemes": "Phonemes",
+        "mispronounced": "Mispronounced: The words that are spoken incorrectly."
       },
       "progress": {
         "loadingMedia": "Loading media...",

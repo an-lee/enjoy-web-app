@@ -294,6 +294,24 @@
         "error": "Échec de la suppression de l'enregistrement"
       },
       "playbackError": "Échec de la lecture de l'enregistrement",
+      "errorTypes": {
+        "omission": "Omission",
+        "insertion": "Insertion",
+        "mispronunciation": "Mauvaise prononciation",
+        "unexpectedBreak": "Pause inattendue",
+        "missingBreak": "Pause manquante",
+        "monotone": "Monotone",
+        "correct": "Correct"
+      },
+      "errorExplanations": {
+        "omission": "Le mot a été omis et n'a pas été prononcé.",
+        "insertion": "Un mot supplémentaire a été inséré qui ne devrait pas être là.",
+        "mispronunciation": "Le mot a été mal prononcé.",
+        "unexpectedBreak": "Une pause ou interruption inattendue s'est produite.",
+        "missingBreak": "Une pause ou interruption requise était manquante.",
+        "monotone": "Le mot a été prononcé de manière monotone sans intonation appropriée.",
+        "correct": "Le mot a été prononcé correctement."
+      },
       "assessment": {
         "title": "Évaluation de la Prononciation",
         "description": "Résultats détaillés de l'évaluation de la prononciation",
@@ -306,7 +324,13 @@
         "accuracy": "Précision",
         "fluency": "Fluidité",
         "completeness": "Complétude",
-        "wordLevel": "Évaluation au Niveau des Mots"
+        "prosody": "Prosodie",
+        "wordLevel": "Évaluation au Niveau des Mots",
+        "pronunciationAnalysis": "Analyse de Prononciation",
+        "accuracyScore": "Score de Précision",
+        "syllables": "Syllabes",
+        "phonemes": "Phonèmes",
+        "mispronounced": "Mal prononcé : Les mots qui sont prononcés incorrectement."
       },
       "uploadSubtitle": "Télécharger les sous-titres",
       "uploadSubtitleHint": "Téléchargez un fichier .srt ou .vtt",

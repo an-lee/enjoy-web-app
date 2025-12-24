@@ -292,6 +292,24 @@
         "error": "删除录音失败"
       },
       "playbackError": "播放录音失败",
+      "errorTypes": {
+        "omission": "遗漏",
+        "insertion": "插入",
+        "mispronunciation": "发音错误",
+        "unexpectedBreak": "意外停顿",
+        "missingBreak": "缺少停顿",
+        "monotone": "单调",
+        "correct": "正确"
+      },
+      "errorExplanations": {
+        "omission": "该词被遗漏，未说出。",
+        "insertion": "插入了不应存在的额外词语。",
+        "mispronunciation": "该词发音错误。",
+        "unexpectedBreak": "出现了意外的停顿或中断。",
+        "missingBreak": "缺少必需的停顿或中断。",
+        "monotone": "该词以单调的方式说出，缺乏适当的语调。",
+        "correct": "该词发音正确。"
+      },
       "assessment": {
         "title": "发音评估",
         "description": "详细的发音评估结果",
@@ -304,7 +322,13 @@
         "accuracy": "准确度",
         "fluency": "流畅度",
         "completeness": "完整度",
-        "wordLevel": "单词级别评估"
+        "prosody": "韵律",
+        "wordLevel": "单词级别评估",
+        "pronunciationAnalysis": "发音分析",
+        "accuracyScore": "准确度分数",
+        "syllables": "音节",
+        "phonemes": "音素",
+        "mispronounced": "发音错误：发音不正确的单词。"
       },
       "syncing": "正在从服务器同步字幕...",
       "generateTranscript": "生成字幕",

@@ -294,6 +294,24 @@
         "error": "Aufnahme konnte nicht gelöscht werden"
       },
       "playbackError": "Aufnahme konnte nicht abgespielt werden",
+      "errorTypes": {
+        "omission": "Auslassung",
+        "insertion": "Einfügung",
+        "mispronunciation": "Falsche Aussprache",
+        "unexpectedBreak": "Unerwartete Pause",
+        "missingBreak": "Fehlende Pause",
+        "monotone": "Monoton",
+        "correct": "Korrekt"
+      },
+      "errorExplanations": {
+        "omission": "Das Wort wurde ausgelassen und nicht ausgesprochen.",
+        "insertion": "Ein zusätzliches Wort wurde eingefügt, das nicht vorhanden sein sollte.",
+        "mispronunciation": "Das Wort wurde falsch ausgesprochen.",
+        "unexpectedBreak": "Eine unerwartete Pause oder Unterbrechung trat auf.",
+        "missingBreak": "Eine erforderliche Pause oder Unterbrechung fehlte.",
+        "monotone": "Das Wort wurde in monotoner Weise ohne richtige Intonation ausgesprochen.",
+        "correct": "Das Wort wurde korrekt ausgesprochen."
+      },
       "assessment": {
         "title": "Aussprachebewertung",
         "description": "Detaillierte Aussprachebewertungsergebnisse",
@@ -306,7 +324,13 @@
         "accuracy": "Genauigkeit",
         "fluency": "Flüssigkeit",
         "completeness": "Vollständigkeit",
-        "wordLevel": "Wortebenen-Bewertung"
+        "prosody": "Prosodie",
+        "wordLevel": "Wortebenen-Bewertung",
+        "pronunciationAnalysis": "Ausspracheanalyse",
+        "accuracyScore": "Genauigkeitswert",
+        "syllables": "Silben",
+        "phonemes": "Phoneme",
+        "mispronounced": "Falsch ausgesprochen: Die Wörter, die falsch ausgesprochen wurden."
       },
       "uploadSubtitle": "Untertitel hochladen",
       "uploadSubtitleHint": "Laden Sie eine .srt- oder .vtt-Datei hoch",

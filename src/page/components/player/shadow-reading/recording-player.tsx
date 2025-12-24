@@ -34,7 +34,7 @@ import { recordingQueryKeys } from '@/page/hooks/queries'
 import { cn, createLogger } from '@/shared/lib/utils'
 import { assessmentService } from '@/page/ai/services/assessment'
 import { getAIServiceConfig } from '@/page/ai/core/config'
-import { AssessmentResultDialog } from './assessment-result-dialog'
+import { AssessmentResultDialog } from '@/page/components/player/assessment'
 import type { Recording } from '@/page/types/db'
 
 const log = createLogger({ name: 'RecordingPlayer' })
