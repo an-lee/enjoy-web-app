@@ -10,8 +10,6 @@ import { cn, formatTime } from '@/shared/lib/utils'
 import { Icon } from '@iconify/react'
 import { useDisplayTime } from '@/page/hooks/player/use-display-time'
 import { usePlayerEchoStore } from '@/page/stores/player/player-echo-store'
-import { useTextSelection } from '@/page/hooks/player/use-text-selection'
-import { TextSelectionPanel } from './text-selection-panel'
 import type { TranscriptLineState } from './types'
 
 interface TranscriptLineItemProps {
@@ -22,8 +20,6 @@ interface TranscriptLineItemProps {
   actionArea?: React.ReactNode
   /** Number of recordings that overlap with this line */
   recordingCount?: number
-  /** Source language of the transcript (for dictionary/translation lookups) */
-  sourceLanguage?: string
 }
 
 export const TranscriptLineItem = memo(function TranscriptLineItem({
@@ -31,7 +27,6 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   onLineClick,
   actionArea,
   recordingCount = 0,
-  sourceLanguage = 'en',
 }: TranscriptLineItemProps) {
   // Get current time directly from hook (no prop drilling needed)
   const currentTimeSeconds = useDisplayTime()
@@ -71,13 +66,6 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
     ? () => onLineClick(line)
     : undefined
   const isInteractive = typeof onClick === 'function'
-
-  // Text selection detection - only enable when text selection is allowed
-  const { selection, clearSelection, containerRef } = useTextSelection<HTMLDivElement>({
-    enabled: shouldAllowTextSelection,
-    minLength: 1,
-    maxLength: 100,
-  })
 
   const containerClassName = cn(
     'group w-full text-left px-4 py-1.5 transition-all duration-300',
@@ -207,34 +195,18 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   )
 
   return (
-    <>
-      {isInteractive ? (
-        <div
-          ref={containerRef}
-          onClick={onClick}
-          className={containerClassName}
-        >
-          {content}
-        </div>
-      ) : (
-        <div
-          ref={containerRef}
-          className={containerClassName}
-        >
-          {content}
-        </div>
-      )}
-      {/* Text selection panel */}
-      <TextSelectionPanel
-        selection={selection}
-        sourceLanguage={sourceLanguage}
-        onOpenChange={(open) => {
-          if (!open) {
-            clearSelection()
-          }
-        }}
-      />
-    </>
+    isInteractive ? (
+      <div
+        onClick={onClick}
+        className={containerClassName}
+      >
+        {content}
+      </div>
+    ) : (
+      <div className={containerClassName}>
+        {content}
+      </div>
+    )
   )
 })
 

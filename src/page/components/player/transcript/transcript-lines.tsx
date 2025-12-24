@@ -9,7 +9,10 @@ import { cn } from '@/shared/lib/utils'
 import { TranscriptLineItem } from './transcript-line-item'
 import { EchoRegionControls } from '../echo/echo-region-controls'
 import { ShadowReadingPanel } from '../shadow-reading/shadow-reading-panel'
+import { TextSelectionPanel } from './text-selection-panel'
 import { useEchoRegion } from '@/page/hooks/player'
+import { useTextSelection } from '@/page/hooks/player/use-text-selection'
+import { useDisplayTime } from '@/page/hooks/player/use-display-time'
 import { useRecordingsByTarget } from '@/page/hooks/queries'
 import { usePlayerSessionStore } from '@/page/stores/player/player-session-store'
 import { getTranscriptLineId } from './constants'
@@ -28,6 +31,9 @@ function TranscriptLinesComponent({
   onLineClick,
   primaryLanguage = 'en',
 }: TranscriptLinesProps) {
+  // Get current time to determine if any line is active
+  const currentTimeSeconds = useDisplayTime()
+
   // Echo region state (no lines needed, we only read state for rendering)
   const {
     echoModeActive,
@@ -36,6 +42,25 @@ function TranscriptLinesComponent({
     echoStartTime,
     echoEndTime,
   } = useEchoRegion()
+
+  // Determine if text selection should be enabled
+  // Enable when any line is active or when echo mode is active
+  const shouldAllowTextSelection = useMemo(() => {
+    // Check if any line is currently active
+    const hasActiveLine = lines.some(
+      (line) =>
+        currentTimeSeconds >= line.startTimeSeconds &&
+        currentTimeSeconds < line.endTimeSeconds
+    )
+    return hasActiveLine || echoModeActive
+  }, [lines, currentTimeSeconds, echoModeActive])
+
+  // Text selection detection - enabled when text selection is allowed
+  const { selection, clearSelection, containerRef } = useTextSelection<HTMLDivElement>({
+    enabled: shouldAllowTextSelection,
+    minLength: 1,
+    maxLength: 100,
+  })
 
   // Get current media info for fetching recordings
   const currentSession = usePlayerSessionStore((s) => s.currentSession)
@@ -104,7 +129,7 @@ function TranscriptLinesComponent({
   }, [echoModeActive, echoStartLineIndex, echoEndLineIndex, lines])
 
   return (
-    <div className="py-4 px-3 space-y-1.5">
+    <div ref={containerRef} className="py-4 px-3 space-y-1.5">
       {lines.map((line, lineArrayIndex) => {
         const isInEchoRegion =
           echoModeActive &&
@@ -147,7 +172,6 @@ function TranscriptLinesComponent({
               line={line}
               onLineClick={onLineClick}
               recordingCount={lineRecordingCounts.get(line.index) ?? 0}
-              sourceLanguage={primaryLanguage}
             />
 
             {/* Echo region bottom controls - shown below the last line of echo region */}
@@ -167,6 +191,16 @@ function TranscriptLinesComponent({
           </div>
         )
       })}
+      {/* Text selection panel - rendered once for the entire container */}
+      <TextSelectionPanel
+        selection={selection}
+        sourceLanguage={primaryLanguage}
+        onOpenChange={(open) => {
+          if (!open) {
+            clearSelection()
+          }
+        }}
+      />
     </div>
   )
 }
