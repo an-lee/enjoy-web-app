@@ -7,13 +7,9 @@
 
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
 import { getAzureToken } from './token-manager'
-import type { AIServiceResponse, AssessmentResponse } from '../../../types'
+import type { AIServiceResponse } from '@/page/ai/types'
 import { AIServiceType, AIProvider } from '@/page/ai/types'
-import { normalizeLanguageForAzure } from '@/page/ai/utils/azure-language'
-import { convertToWav } from '@/page/ai/utils/audio-converter'
-import { createLogger } from '@/shared/lib/utils'
-
-const log = createLogger({ name: 'AzureAssessment' })
+import { normalizeLanguageForAzure, prepareAudioConfig, createPronunciationConfig, performAssessment, processAssessmentResult, cleanReferenceText } from '@/page/ai/utils/azure'
 
 /**
  * Assess pronunciation using Azure Speech SDK
@@ -29,16 +25,13 @@ export async function assess(
   referenceText: string,
   language: string,
   durationMs?: number
-): Promise<AIServiceResponse<AssessmentResponse>> {
+): Promise<AIServiceResponse<import('@/page/ai/types').AssessmentResponse>> {
   let recognizer: SpeechSDK.SpeechRecognizer | null = null
 
-  // Clean up reference text: remove line breaks and extra whitespace
-  const cleanedReferenceText = (referenceText || '').trim()
-    .replace(/[\r\n]+/g, ' ')  // Replace line breaks with spaces
-    .replace(/\s+/g, ' ')       // Normalize multiple spaces to single space
-    .trim();
-
   try {
+    // Clean up reference text
+    const cleanedReferenceText = cleanReferenceText(referenceText)
+
     // Calculate duration in seconds for usage tracking
     // If duration is not provided, estimate from blob size or use default
     let durationSeconds = 15 // default
@@ -63,143 +56,31 @@ export async function assess(
     })
 
     // Create speech config with auth token
-    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
-      token,
-      region
-    )
+    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region)
     // Normalize language code to Azure Speech SDK format
     const azureLanguage = normalizeLanguageForAzure(language)
     speechConfig.speechRecognitionLanguage = azureLanguage
 
-    // Convert audio blob to WAV format (16kHz, 16-bit, mono)
-    // Azure Speech SDK supports WAV files directly
-    let wavBlob: Blob
-    try {
-      wavBlob = await convertToWav(audioBlob)
-      log.debug('Audio converted to WAV', {
-        blobType: audioBlob.type,
-        blobSize: audioBlob.size,
-        wavSize: wavBlob.size,
-        wavType: wavBlob.type,
-      })
-    } catch (error: any) {
-      log.error('Failed to convert audio blob to WAV', {
-        error: error.message,
-        blobType: audioBlob.type,
-        blobSize: audioBlob.size,
-      })
-      throw new Error(`Audio conversion failed: ${error.message}`)
-    }
-
-    // Create audio config from WAV file
-    // Azure SDK supports WAV files directly via pushStream
-    // Note: pushStream.write() can accept the full WAV file (including header)
-    const audioFormat = SpeechSDK.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1)
-    const pushStream = SpeechSDK.AudioInputStream.createPushStream(audioFormat)
-
-    // Write WAV file to stream (Azure SDK can handle WAV format directly)
-    const wavArrayBuffer = await wavBlob.arrayBuffer()
-    pushStream.write(wavArrayBuffer)
-    pushStream.close()
-
-    log.debug('WAV file written to stream', {
-      wavSize: wavArrayBuffer.byteLength,
-    })
-
-    const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(pushStream)
+    // Prepare audio config (converts to WAV and creates stream)
+    const { audioConfig } = await prepareAudioConfig(audioBlob)
 
     // Create pronunciation assessment config
-    const pronunciationConfig = new SpeechSDK.PronunciationAssessmentConfig(
-      cleanedReferenceText,
-      SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
-      SpeechSDK.PronunciationAssessmentGranularity.Phoneme,
-      true // Enable miscue
-    )
-    // Enable prosody assessment
-    pronunciationConfig.enableProsodyAssessment = true;
-    // Use IPA phoneme alphabet for more detailed phoneme representation
-    pronunciationConfig.phonemeAlphabet = 'IPA';
-    // Request NBest phoneme details for deeper analysis
-    pronunciationConfig.nbestPhonemeCount = 1;
-    // Enable prosody assessment
-    pronunciationConfig.enableProsodyAssessment = true;
+    const pronunciationConfig = createPronunciationConfig(cleanedReferenceText)
 
     // Create recognizer
     recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig)
     pronunciationConfig.applyTo(recognizer)
 
     // Perform assessment
-      const result = await new Promise<SpeechSDK.SpeechRecognitionResult>(
-        (resolve, reject) => {
-          recognizer!.recognizeOnceAsync(
-            (result: SpeechSDK.SpeechRecognitionResult) => resolve(result),
-            (error: string) => reject(new Error(error))
-          )
-        }
-      )
+    const result = await performAssessment(recognizer)
 
-    // Check result
-    log.debug('Assessment result received', {
-      reason: result.reason,
-      text: result.text,
-      duration: result.duration,
-    })
-
+    // Process result
     if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-      const pronunciationResult =
-        SpeechSDK.PronunciationAssessmentResult.fromResult(result)
-
-      log.debug('Pronunciation assessment scores', {
-        overallScore: pronunciationResult.pronunciationScore,
-        accuracyScore: pronunciationResult.accuracyScore,
-        fluencyScore: pronunciationResult.fluencyScore,
-        prosodyScore: pronunciationResult.prosodyScore,
-        recognizedText: result.text,
-        referenceText: cleanedReferenceText,
-      })
-
-      // Extract word-level results
-      const wordResults: AssessmentResponse['wordResults'] = []
-
-      // Get detailed JSON result for word-level analysis
-      const jsonResult = result.properties.getProperty(
-        SpeechSDK.PropertyId.SpeechServiceResponse_JsonResult
-      )
-
-      let fullResult: import('@/page/types/db').PronunciationAssessmentResult | undefined
-
-      if (jsonResult) {
-        try {
-          const parsed = JSON.parse(jsonResult)
-          const nBest = parsed.NBest?.[0]
-
-          // Store full result for detailed analysis
-          fullResult = parsed as import('@/page/types/db').PronunciationAssessmentResult
-
-          if (nBest?.Words) {
-            for (const word of nBest.Words) {
-              wordResults.push({
-                word: word.Word || '',
-                accuracyScore: word.PronunciationAssessment?.AccuracyScore || 0,
-                errorType: word.PronunciationAssessment?.ErrorType || 'None',
-              })
-            }
-          }
-        } catch {
-          // Ignore JSON parsing errors
-        }
-      }
+      const data = processAssessmentResult(result, cleanedReferenceText, true)
 
       return {
         success: true,
-        data: {
-          overallScore: pronunciationResult.pronunciationScore,
-          accuracyScore: pronunciationResult.accuracyScore,
-          fluencyScore: pronunciationResult.fluencyScore,
-          prosodyScore: pronunciationResult.prosodyScore,
-          wordResults: wordResults.length > 0 ? wordResults : undefined,
-          fullResult,
-        },
+        data,
         metadata: {
           serviceType: AIServiceType.ASSESSMENT,
           provider: AIProvider.ENJOY,

@@ -7,11 +7,10 @@
  */
 
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
-import type { AIServiceResponse, AssessmentResponse } from '@/page/ai/types'
+import type { AIServiceResponse } from '@/page/ai/types'
 import { AIServiceType, AIProvider } from '@/page/ai/types'
 import type { AzureSpeechConfig } from '@/page/ai/providers/byok/azure/types'
-import { normalizeLanguageForAzure } from '@/page/ai/utils/azure-language'
-import { convertToWav } from '@/page/ai/utils/audio-converter'
+import { normalizeLanguageForAzure, prepareAudioConfig, createPronunciationConfig, performAssessment, processAssessmentResult, cleanReferenceText } from '@/page/ai/utils/azure'
 
 /**
  * Assess pronunciation using user-provided Azure subscription key
@@ -27,10 +26,14 @@ export async function assess(
   referenceText: string,
   language: string,
   config: AzureSpeechConfig
-): Promise<AIServiceResponse<AssessmentResponse>> {
+): Promise<AIServiceResponse<import('@/page/ai/types').AssessmentResponse>> {
   let recognizer: SpeechSDK.SpeechRecognizer | null = null
 
   try {
+    // Clean up reference text
+    const cleanedReferenceText = cleanReferenceText(referenceText)
+
+    // Create speech config with subscription key
     const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
       config.subscriptionKey,
       config.region
@@ -39,81 +42,26 @@ export async function assess(
     const azureLanguage = normalizeLanguageForAzure(language)
     speechConfig.speechRecognitionLanguage = azureLanguage
 
-    // Convert audio blob to WAV format (16kHz, 16-bit, mono)
-    // Azure Speech SDK supports WAV files directly
-    const wavBlob = await convertToWav(audioBlob)
-
-    // Create audio config from WAV file
-    // Azure SDK supports WAV files directly via pushStream
-    const audioFormat = SpeechSDK.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1)
-    const pushStream = SpeechSDK.AudioInputStream.createPushStream(audioFormat)
-
-    // Write WAV file to stream (Azure SDK can handle WAV format directly)
-    const wavArrayBuffer = await wavBlob.arrayBuffer()
-    pushStream.write(wavArrayBuffer)
-    pushStream.close()
-
-    const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(pushStream)
+    // Prepare audio config (converts to WAV and creates stream)
+    const { audioConfig } = await prepareAudioConfig(audioBlob)
 
     // Create pronunciation assessment config
-    const pronunciationConfig = new SpeechSDK.PronunciationAssessmentConfig(
-      referenceText,
-      SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
-      SpeechSDK.PronunciationAssessmentGranularity.Phoneme,
-      true // Enable miscue
-    )
-    pronunciationConfig.enableProsodyAssessment = true
+    const pronunciationConfig = createPronunciationConfig(cleanedReferenceText)
 
+    // Create recognizer
     recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig)
     pronunciationConfig.applyTo(recognizer)
 
-    const result = await new Promise<SpeechSDK.SpeechRecognitionResult>(
-      (resolve, reject) => {
-        recognizer!.recognizeOnceAsync(
-          (result: SpeechSDK.SpeechRecognitionResult) => resolve(result),
-          (error: string) => reject(new Error(error))
-        )
-      }
-    )
+    // Perform assessment
+    const result = await performAssessment(recognizer)
 
+    // Process result
     if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-      const pronunciationResult =
-        SpeechSDK.PronunciationAssessmentResult.fromResult(result)
-
-      // Extract word-level results
-      const wordResults: AssessmentResponse['wordResults'] = []
-      const jsonResult = result.properties.getProperty(
-        SpeechSDK.PropertyId.SpeechServiceResponse_JsonResult
-      )
-
-      if (jsonResult) {
-        try {
-          const parsed = JSON.parse(jsonResult)
-          const nBest = parsed.NBest?.[0]
-
-          if (nBest?.Words) {
-            for (const word of nBest.Words) {
-              wordResults.push({
-                word: word.Word || '',
-                accuracyScore: word.PronunciationAssessment?.AccuracyScore || 0,
-                errorType: word.PronunciationAssessment?.ErrorType || 'None',
-              })
-            }
-          }
-        } catch {
-          // Ignore JSON parsing errors
-        }
-      }
+      const data = processAssessmentResult(result, cleanedReferenceText, false)
 
       return {
         success: true,
-        data: {
-          overallScore: pronunciationResult.pronunciationScore,
-          accuracyScore: pronunciationResult.accuracyScore,
-          fluencyScore: pronunciationResult.fluencyScore,
-          prosodyScore: pronunciationResult.prosodyScore,
-          wordResults: wordResults.length > 0 ? wordResults : undefined,
-        },
+        data,
         metadata: {
           serviceType: AIServiceType.ASSESSMENT,
           provider: AIProvider.BYOK,

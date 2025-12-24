@@ -10,8 +10,7 @@ import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
 import type { AIServiceResponse, ASRResponse } from '@/page/ai/types'
 import { AIServiceType, AIProvider } from '@/page/ai/types'
 import type { AzureSpeechConfig } from './types'
-import { normalizeLanguageForAzure } from '@/page/ai/utils/azure-language'
-import { convertToWav } from '@/page/ai/utils/audio-converter'
+import { normalizeLanguageForAzure, convertToWav } from '@/page/ai/utils/azure'
 
 /**
  * Transcribe speech using user-provided Azure subscription key
