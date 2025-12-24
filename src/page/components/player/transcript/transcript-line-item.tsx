@@ -70,7 +70,6 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   const containerClassName = cn(
     'group w-full text-left px-4 py-1.5 transition-all duration-300',
     isInteractive && 'cursor-pointer',
-    (!isInteractive || shouldAllowTextSelection) && 'cursor-text select-text',
     isInteractive &&
       'focus-visible:outline-none focus-visible:ring-none',
     // Echo region - using standardized highlight styles
@@ -110,7 +109,7 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
   const content = (
     <>
       {/* Header row with timestamp, recording count, and action area */}
-      <div className="flex items-center justify-between mb-1.5">
+      <div className="flex items-center justify-between mb-1.5 select-none">
         {/* Timestamp on the left */}
         <span
           className={cn(
@@ -172,7 +171,8 @@ export const TranscriptLineItem = memo(function TranscriptLineItem({
           'text-base md:text-lg leading-relaxed transition-all duration-300',
           isInEchoRegion && 'text-highlight-active-foreground',
           !isInEchoRegion && isActive && 'text-primary font-medium text-lg md:text-xl',
-          !isInEchoRegion && !isActive && 'text-foreground'
+          !isInEchoRegion && !isActive && 'text-foreground',
+          (!isInteractive || shouldAllowTextSelection) && 'cursor-text select-text'
         )}
       >
         {line.primary.text}
