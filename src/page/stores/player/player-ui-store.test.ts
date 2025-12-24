@@ -11,6 +11,7 @@ describe('Player UI Store', () => {
     usePlayerUIStore.setState({
       mode: 'mini',
       isPlaying: false,
+      isBuffering: false,
       isTranscribing: false,
     })
   })
@@ -20,6 +21,7 @@ describe('Player UI Store', () => {
       const state = usePlayerUIStore.getState()
       expect(state.mode).toBe('mini')
       expect(state.isPlaying).toBe(false)
+      expect(state.isBuffering).toBe(false)
       expect(state.isTranscribing).toBe(false)
     })
   })
@@ -55,6 +57,19 @@ describe('Player UI Store', () => {
       usePlayerUIStore.setState({ isPlaying: true })
       usePlayerUIStore.getState().setPlaying(false)
       expect(usePlayerUIStore.getState().isPlaying).toBe(false)
+    })
+  })
+
+  describe('Buffering State', () => {
+    it('should set buffering state', () => {
+      usePlayerUIStore.getState().setBuffering(true)
+      expect(usePlayerUIStore.getState().isBuffering).toBe(true)
+    })
+
+    it('should clear buffering state', () => {
+      usePlayerUIStore.setState({ isBuffering: true })
+      usePlayerUIStore.getState().setBuffering(false)
+      expect(usePlayerUIStore.getState().isBuffering).toBe(false)
     })
   })
 

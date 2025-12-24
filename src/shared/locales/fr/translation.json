@@ -185,6 +185,7 @@
   "player": {
     "play": "Lire",
     "pause": "Pause",
+    "buffering": "Mise en mémoire tampon...",
     "expand": "Agrandir",
     "collapse": "Réduire",
     "skipBackward": "Reculer de 5 secondes",

@@ -15,6 +15,7 @@ interface PlayerUIState {
   // UI State
   mode: PlayerMode
   isPlaying: boolean
+  isBuffering: boolean
   isTranscribing: boolean
   transcribeProgress: string | null
   transcribeProgressPercent: number | null
@@ -25,6 +26,7 @@ interface PlayerUIState {
   expand: () => void
   collapse: () => void
   hide: () => void
+  setBuffering: (buffering: boolean) => void
   setTranscribing: (isTranscribing: boolean) => void
   setTranscribeProgress: (progress: string | null, percent?: number | null) => void
   clearTranscribeState: () => void
@@ -34,6 +36,7 @@ export const usePlayerUIStore = create<PlayerUIState>((set) => ({
   // Initial UI state
   mode: 'mini',
   isPlaying: false,
+  isBuffering: false,
   isTranscribing: false,
   transcribeProgress: null,
   transcribeProgressPercent: null,
@@ -59,7 +62,11 @@ export const usePlayerUIStore = create<PlayerUIState>((set) => ({
     // Hide player by clearing session (handled by session store)
     // This is a convenience method that clears the session
     usePlayerSessionStore.getState().clearSession()
-    set({ mode: 'mini', isPlaying: false })
+    set({ mode: 'mini', isPlaying: false, isBuffering: false })
+  },
+
+  setBuffering: (buffering: boolean) => {
+    set({ isBuffering: buffering })
   },
 
   setTranscribing: (isTranscribing: boolean) => {

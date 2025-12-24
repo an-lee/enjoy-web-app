@@ -43,6 +43,10 @@ export interface UseMediaElementReturn {
   handleEnded: () => void
   /** Media canplay event handler */
   handleCanPlay: (e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => void
+  /** Media waiting event handler (buffering) */
+  handleWaiting: (e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => void
+  /** Media canplaythrough event handler (buffering complete) */
+  handleCanPlayThrough: (e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => void
   /** Media error event handler */
   handleLoadError: (e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => void
 }
@@ -58,6 +62,7 @@ export function useMediaElement({
   const echoStartTime = usePlayerEchoStore((s) => s.echoStartTime)
   const echoEndTime = usePlayerEchoStore((s) => s.echoEndTime)
   const setPlaying = usePlayerUIStore((s) => s.setPlaying)
+  const setBuffering = usePlayerUIStore((s) => s.setBuffering)
 
   const lastStoreUpdateRef = useRef(0)
   const hasRestoredPositionRef = useRef(false)
@@ -176,6 +181,18 @@ export function useMediaElement({
     [onReady]
   )
 
+  // Handle waiting (buffering)
+  const handleWaiting = useCallback(() => {
+    log.debug('Media buffering...')
+    setBuffering(true)
+  }, [setBuffering])
+
+  // Handle canplaythrough (buffering complete)
+  const handleCanPlayThrough = useCallback(() => {
+    log.debug('Media can play through (buffering complete)')
+    setBuffering(false)
+  }, [setBuffering])
+
   // Handle load error
   const handleLoadError = useCallback(
     (e: React.SyntheticEvent<HTMLAudioElement | HTMLVideoElement>) => {
@@ -185,10 +202,11 @@ export function useMediaElement({
         networkState: el.networkState,
         readyState: el.readyState,
       })
+      setBuffering(false)
       onError?.('Failed to load media')
       onReady?.(false)
     },
-    [onError, onReady]
+    [onError, onReady, setBuffering]
   )
 
   // Reset position restoration flag when session changes
@@ -229,6 +247,8 @@ export function useMediaElement({
     handleTimeUpdate,
     handleEnded,
     handleCanPlay,
+    handleWaiting,
+    handleCanPlayThrough,
     handleLoadError,
   }
 }

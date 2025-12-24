@@ -185,6 +185,7 @@
   "player": {
     "play": "Play",
     "pause": "Pause",
+    "buffering": "Buffering...",
     "expand": "Expand",
     "collapse": "Collapse",
     "skipBackward": "Skip backward 5 seconds",

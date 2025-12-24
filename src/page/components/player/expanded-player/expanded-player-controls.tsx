@@ -30,6 +30,7 @@ export function ExpandedPlayerControls({}: ExpandedPlayerControlsProps) {
   // Get player state from stores
   const currentSession = usePlayerSessionStore((s) => s.currentSession)
   const isPlaying = usePlayerUIStore((s) => s.isPlaying)
+  const isBuffering = usePlayerUIStore((s) => s.isBuffering)
   const volume = usePlayerSettingsStore((s) => s.volume)
   const playbackRate = usePlayerSettingsStore((s) => s.playbackRate)
   const echoModeActive = usePlayerEchoStore((s) => s.echoModeActive)
@@ -105,16 +106,25 @@ export function ExpandedPlayerControls({}: ExpandedPlayerControlsProps) {
                   size="icon"
                   className="h-12 w-11 rounded-full shadow-md"
                   onClick={controls.onTogglePlay}
+                  disabled={isBuffering}
                 >
-                  <Icon
-                    icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
-                    className={cn('w-6 h-5', !isPlaying && 'ml-0.5')}
-                  />
+                  {isBuffering ? (
+                    <Icon icon="lucide:loader-2" className="w-6 h-5 animate-spin" />
+                  ) : (
+                    <Icon
+                      icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
+                      className={cn('w-6 h-5', !isPlaying && 'ml-0.5')}
+                    />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top" className="flex items-center gap-2">
-                <span>{t('hotkeys.togglePlay')}</span>
-                {togglePlayKey && formatHotkeyAsKbd(togglePlayKey)}
+                <span>
+                  {isBuffering
+                    ? t('player.buffering', { defaultValue: 'Buffering...' })
+                    : t('hotkeys.togglePlay')}
+                </span>
+                {togglePlayKey && !isBuffering && formatHotkeyAsKbd(togglePlayKey)}
               </TooltipContent>
             </Tooltip>
 

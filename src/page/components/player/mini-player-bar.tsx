@@ -46,6 +46,7 @@ export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
   // Player state
   const currentSession = usePlayerSessionStore((s) => s.currentSession)
   const isPlaying = usePlayerUIStore((s) => s.isPlaying)
+  const isBuffering = usePlayerUIStore((s) => s.isBuffering)
   const expand = usePlayerUIStore((s) => s.expand)
   const hide = usePlayerUIStore((s) => s.hide)
 
@@ -86,6 +87,8 @@ export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
     handleTimeUpdate,
     handleEnded,
     handleCanPlay,
+    handleWaiting,
+    handleCanPlayThrough,
     handleLoadError,
   } = useMediaElement({
     mediaRef,
@@ -191,13 +194,22 @@ export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
             size="icon"
             className="h-9 w-9"
             onClick={controls.onTogglePlay}
+            disabled={isBuffering}
           >
-            <Icon
-              icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
-              className={cn('w-5 h-5', !isPlaying && 'ml-0.5')}
-            />
+            {isBuffering ? (
+              <Icon icon="lucide:loader-2" className="w-5 h-5 animate-spin" />
+            ) : (
+              <Icon
+                icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
+                className={cn('w-5 h-5', !isPlaying && 'ml-0.5')}
+              />
+            )}
             <span className="sr-only">
-              {isPlaying ? t('player.pause') : t('player.play')}
+              {isBuffering
+                ? t('player.buffering', { defaultValue: 'Buffering...' })
+                : isPlaying
+                  ? t('player.pause')
+                  : t('player.play')}
             </span>
           </Button>
 
@@ -237,7 +249,8 @@ export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={handleEnded}
                 onCanPlay={handleCanPlay}
-                onWaiting={() => log.debug('buffering...')}
+                onWaiting={handleWaiting}
+                onCanPlayThrough={handleCanPlayThrough}
                 onStalled={() => log.warn('stalled!')}
                 onError={handleLoadError}
                 playsInline
@@ -253,7 +266,8 @@ export function MiniPlayerBar({ className }: MiniPlayerBarProps) {
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={handleEnded}
                 onCanPlay={handleCanPlay}
-                onWaiting={() => log.debug('buffering...')}
+                onWaiting={handleWaiting}
+                onCanPlayThrough={handleCanPlayThrough}
                 onStalled={() => log.warn('stalled!')}
                 onError={handleLoadError}
                 preload="auto"

@@ -71,6 +71,8 @@ export function ExpandedPlayerContent({}: ExpandedPlayerContentProps = {}) {
     handleTimeUpdate,
     handleEnded,
     handleCanPlay,
+    handleWaiting,
+    handleCanPlayThrough,
     handleLoadError,
   } = useMediaElement({
     mediaRef,
@@ -143,7 +145,8 @@ export function ExpandedPlayerContent({}: ExpandedPlayerContentProps = {}) {
                     onTimeUpdate={handleTimeUpdate}
                     onEnded={handleEnded}
                     onCanPlay={handleCanPlay}
-                    onWaiting={() => log.debug('buffering...')}
+                    onWaiting={handleWaiting}
+                    onCanPlayThrough={handleCanPlayThrough}
                     onStalled={() => log.warn('stalled!')}
                     onError={handleLoadError}
                     playsInline
@@ -192,7 +195,8 @@ export function ExpandedPlayerContent({}: ExpandedPlayerContentProps = {}) {
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEnded}
               onCanPlay={handleCanPlay}
-              onWaiting={() => log.debug('buffering...')}
+              onWaiting={handleWaiting}
+              onCanPlayThrough={handleCanPlayThrough}
               onStalled={() => log.warn('stalled!')}
               onError={handleLoadError}
               preload="auto"

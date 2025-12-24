@@ -185,6 +185,7 @@
   "player": {
     "play": "再生",
     "pause": "一時停止",
+    "buffering": "バッファリング中...",
     "expand": "展開",
     "collapse": "折りたたむ",
     "skipBackward": "5秒戻る",

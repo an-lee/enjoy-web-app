@@ -185,6 +185,7 @@
   "player": {
     "play": "재생",
     "pause": "일시 정지",
+    "buffering": "버퍼링 중...",
     "expand": "확장",
     "collapse": "접기",
     "skipBackward": "5초 뒤로",

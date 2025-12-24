@@ -185,6 +185,7 @@
   "player": {
     "play": "Reproduzir",
     "pause": "Pausar",
+    "buffering": "Carregando...",
     "expand": "Expandir",
     "collapse": "Recolher",
     "skipBackward": "Voltar 5 segundos",
