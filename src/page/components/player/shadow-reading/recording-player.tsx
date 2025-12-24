@@ -12,6 +12,11 @@ import { Icon } from '@iconify/react'
 import { Button } from '@/page/components/ui/button'
 import { Progress } from '@/page/components/ui/progress'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/page/components/ui/tooltip'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -33,6 +38,8 @@ import { deleteRecording } from '@/page/db'
 import { recordingQueryKeys } from '@/page/hooks/queries'
 import { cn, createLogger } from '@/shared/lib/utils'
 import { RecordingAssessmentButton } from '@/page/components/player/assessment'
+import { useHotkeyBinding } from '@/page/stores/hotkeys'
+import { formatHotkeyAsKbd } from '@/page/lib/format-hotkey'
 import type { Recording } from '@/page/types/db'
 
 const log = createLogger({ name: 'RecordingPlayer' })
@@ -244,6 +251,9 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
 
   const progressPercentage = duration === 0 ? 0 : (currentTime / duration) * 100
 
+  // Get hotkey binding for tooltip
+  const playRecordingKey = useHotkeyBinding('player.playRecording')
+
   // Use refs to store latest values for the controls callbacks
   const isPlayingRef = useRef(isPlaying)
   const handlePlayPauseRef = useRef(handlePlayPause)
@@ -279,17 +289,25 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {/* Play/Pause Button */}
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={handlePlayPause}
-        className="size-8 shrink-0 rounded-full cursor-pointer"
-      >
-        <Icon
-          icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
-          className="h-4 w-4"
-        />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePlayPause}
+            className="size-8 shrink-0 rounded-full cursor-pointer"
+          >
+            <Icon
+              icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
+              className="h-4 w-4"
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="flex items-center gap-2">
+          <span>{t('hotkeys.playRecording')}</span>
+          {playRecordingKey && formatHotkeyAsKbd(playRecordingKey)}
+        </TooltipContent>
+      </Tooltip>
 
       {/* Assessment Button */}
       <RecordingAssessmentButton recording={recording} />

@@ -16,7 +16,13 @@ import { useTranscriptDisplay, useEchoRegion, useRecorder } from '@/page/hooks/p
 import { recordingQueryKeys } from '@/page/hooks/queries'
 import { RecordButton } from './record-button'
 import { Button } from '@/page/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/page/components/ui/tooltip'
 import { ShadowRecordingProgress } from './shadow-recording-progress'
+import { formatHotkeyAsKbd } from '@/page/lib/format-hotkey'
 import { recordingRepository } from '@/page/db/repositories/recording-repository'
 import { createLogger } from '@/shared/lib/utils'
 import type { TargetType, RecordingInput } from '@/page/types/db'
@@ -268,20 +274,29 @@ export function ShadowRecorder() {
       <div className="flex items-center justify-center gap-3 pt-1">
         <RecordButton isRecording={isRecording} onRecord={handleRecordClick} />
         {isRecording && (
-          <Button
-            variant="outline"
-            size="lg"
-            className="rounded-full"
-            onClick={cancelRecording}
-            title={t('player.transcript.cancelRecording', {
-              defaultValue: 'Cancel Recording (ESC)',
-            })}
-          >
-            <Icon icon="lucide:x" className="w-5 h-5" />
-            <span>
-              {t('player.transcript.cancel', { defaultValue: 'Cancel' })}
-            </span>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full"
+                onClick={cancelRecording}
+              >
+                <Icon icon="lucide:x" className="w-5 h-5" />
+                <span>
+                  {t('player.transcript.cancel', { defaultValue: 'Cancel' })}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="flex items-center gap-2">
+              <span>
+                {t('player.transcript.cancelRecording', {
+                  defaultValue: 'Cancel Recording',
+                })}
+              </span>
+              {formatHotkeyAsKbd('escape')}
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
     </div>
