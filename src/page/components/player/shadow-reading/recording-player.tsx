@@ -297,6 +297,8 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
         blobType: recording.blob.type,
         duration: recording.duration,
         language: recording.language,
+        referenceText: recording.referenceText,
+        referenceTextLength: recording.referenceText?.length || 0,
       })
       const result = await assessmentService.assess({
         audioBlob: recording.blob,

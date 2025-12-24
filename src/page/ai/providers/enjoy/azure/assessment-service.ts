@@ -8,9 +8,12 @@
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
 import { getAzureToken } from './token-manager'
 import type { AIServiceResponse, AssessmentResponse } from '../../../types'
-import { AIServiceType, AIProvider } from '../../../types'
-import { normalizeLanguageForAzure } from '../../../utils/azure-language'
-import { convertAudioBlobToPCM } from '../../../utils/azure-audio'
+import { AIServiceType, AIProvider } from '@/page/ai/types'
+import { normalizeLanguageForAzure } from '@/page/ai/utils/azure-language'
+import { convertToWav } from '@/page/ai/utils/audio-converter'
+import { createLogger } from '@/shared/lib/utils'
+
+const log = createLogger({ name: 'AzureAssessment' })
 
 /**
  * Assess pronunciation using Azure Speech SDK
@@ -62,26 +65,40 @@ export async function assess(
     const azureLanguage = normalizeLanguageForAzure(language)
     speechConfig.speechRecognitionLanguage = azureLanguage
 
-    // Convert audio blob to PCM format (16-bit, 16kHz, mono)
-    // This handles WebM, WAV, and other formats by decoding with AudioContext
-    const pcmData = await convertAudioBlobToPCM(audioBlob)
-
-    // Check if PCM data is empty
-    if (pcmData.length === 0) {
-      throw new Error('Audio blob contains no audio data')
+    // Convert audio blob to WAV format (16kHz, 16-bit, mono)
+    // Azure Speech SDK supports WAV files directly
+    let wavBlob: Blob
+    try {
+      wavBlob = await convertToWav(audioBlob)
+      log.debug('Audio converted to WAV', {
+        blobType: audioBlob.type,
+        blobSize: audioBlob.size,
+        wavSize: wavBlob.size,
+        wavType: wavBlob.type,
+      })
+    } catch (error: any) {
+      log.error('Failed to convert audio blob to WAV', {
+        error: error.message,
+        blobType: audioBlob.type,
+        blobSize: audioBlob.size,
+      })
+      throw new Error(`Audio conversion failed: ${error.message}`)
     }
 
-    // Create audio config from PCM data
-    // Azure SDK expects PCM format: 16kHz, 16-bit, mono
+    // Create audio config from WAV file
+    // Azure SDK supports WAV files directly via pushStream
+    // Note: pushStream.write() can accept the full WAV file (including header)
     const audioFormat = SpeechSDK.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1)
     const pushStream = SpeechSDK.AudioInputStream.createPushStream(audioFormat)
 
-    // Push PCM data to stream
-    // Convert Int16Array to ArrayBuffer for pushStream
-    // Create a new ArrayBuffer from the Int16Array to ensure correct type
-    const pcmBuffer = new Uint8Array(pcmData).buffer
-    pushStream.write(pcmBuffer as ArrayBuffer)
+    // Write WAV file to stream (Azure SDK can handle WAV format directly)
+    const wavArrayBuffer = await wavBlob.arrayBuffer()
+    pushStream.write(wavArrayBuffer)
     pushStream.close()
+
+    log.debug('WAV file written to stream', {
+      wavSize: wavArrayBuffer.byteLength,
+    })
 
     const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(pushStream)
 
@@ -109,9 +126,24 @@ export async function assess(
       )
 
     // Check result
+    log.debug('Assessment result received', {
+      reason: result.reason,
+      text: result.text,
+      duration: result.duration,
+    })
+
     if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
       const pronunciationResult =
         SpeechSDK.PronunciationAssessmentResult.fromResult(result)
+
+      log.debug('Pronunciation assessment scores', {
+        overallScore: pronunciationResult.pronunciationScore,
+        accuracyScore: pronunciationResult.accuracyScore,
+        fluencyScore: pronunciationResult.fluencyScore,
+        prosodyScore: pronunciationResult.prosodyScore,
+        recognizedText: result.text,
+        referenceText,
+      })
 
       // Extract word-level results
       const wordResults: AssessmentResponse['wordResults'] = []

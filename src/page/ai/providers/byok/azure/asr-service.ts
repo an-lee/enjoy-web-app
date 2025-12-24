@@ -7,11 +7,11 @@
  */
 
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
-import type { AIServiceResponse, ASRResponse } from '../../../types'
-import { AIServiceType, AIProvider } from '../../../types'
+import type { AIServiceResponse, ASRResponse } from '@/page/ai/types'
+import { AIServiceType, AIProvider } from '@/page/ai/types'
 import type { AzureSpeechConfig } from './types'
-import { normalizeLanguageForAzure } from '../../../utils/azure-language'
-import { convertAudioBlobToPCM } from '../../../utils/azure-audio'
+import { normalizeLanguageForAzure } from '@/page/ai/utils/azure-language'
+import { convertToWav } from '@/page/ai/utils/audio-converter'
 
 /**
  * Transcribe speech using user-provided Azure subscription key
@@ -40,24 +40,18 @@ export async function transcribe(
       speechConfig.speechRecognitionLanguage = azureLanguage
     }
 
-    // Convert audio blob to PCM format (16-bit, 16kHz, mono)
-    // This handles WebM, WAV, and other formats by decoding with AudioContext
-    const pcmData = await convertAudioBlobToPCM(audioBlob)
+    // Convert audio blob to WAV format (16kHz, 16-bit, mono)
+    // Azure Speech SDK supports WAV files directly
+    const wavBlob = await convertToWav(audioBlob)
 
-    // Check if PCM data is empty
-    if (pcmData.length === 0) {
-      throw new Error('Audio blob contains no audio data')
-    }
-
-    // Create audio config from PCM data
-    // Azure SDK expects PCM format: 16kHz, 16-bit, mono
+    // Create audio config from WAV file
+    // Azure SDK supports WAV files directly via pushStream
     const audioFormat = SpeechSDK.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1)
     const pushStream = SpeechSDK.AudioInputStream.createPushStream(audioFormat)
 
-    // Push PCM data to stream
-    // Convert Int16Array to ArrayBuffer for pushStream
-    const pcmBuffer = new Uint8Array(pcmData).buffer
-    pushStream.write(pcmBuffer as ArrayBuffer)
+    // Write WAV file to stream (Azure SDK can handle WAV format directly)
+    const wavArrayBuffer = await wavBlob.arrayBuffer()
+    pushStream.write(wavArrayBuffer)
     pushStream.close()
 
     const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(pushStream)
