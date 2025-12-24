@@ -216,6 +216,7 @@ export function TranscriptDisplay({
         <TranscriptLines
           lines={lines}
           onLineClick={handleLineClick}
+          primaryLanguage={transcripts.primary?.language}
         />
       </ScrollArea>
     </div>

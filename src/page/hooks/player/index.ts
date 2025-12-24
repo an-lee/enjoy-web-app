@@ -17,3 +17,5 @@ export { useEchoRegion, useEchoRegionOperations, useEchoRegionManager } from './
 export { useTranscriptDisplay } from './use-transcript-display'
 export { useAutoScroll } from './use-auto-scroll'
 export { useRecorder } from './use-recorder'
+export { useTextSelection } from './use-text-selection'
+export type { TextSelection, UseTextSelectionOptions, UseTextSelectionReturn } from './use-text-selection'

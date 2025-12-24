@@ -19,11 +19,14 @@ import type { TargetType } from '@/page/types/db'
 interface TranscriptLinesProps {
   lines: TranscriptLineState[]
   onLineClick: (line: TranscriptLineState) => void
+  /** Primary transcript language (for dictionary/translation lookups) */
+  primaryLanguage?: string
 }
 
 function TranscriptLinesComponent({
   lines,
   onLineClick,
+  primaryLanguage = 'en',
 }: TranscriptLinesProps) {
   // Echo region state (no lines needed, we only read state for rendering)
   const {
@@ -144,6 +147,7 @@ function TranscriptLinesComponent({
               line={line}
               onLineClick={onLineClick}
               recordingCount={lineRecordingCounts.get(line.index) ?? 0}
+              sourceLanguage={primaryLanguage}
             />
 
             {/* Echo region bottom controls - shown below the last line of echo region */}
