@@ -11,13 +11,7 @@ import type { AIServiceResponse, AssessmentResponse } from '@/page/ai/types'
 import { AIServiceType, AIProvider } from '@/page/ai/types'
 import type { AzureSpeechConfig } from '@/page/ai/providers/byok/azure/types'
 import { normalizeLanguageForAzure } from '@/page/ai/utils/azure-language'
-
-/**
- * Convert Blob to ArrayBuffer
- */
-async function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-  return await blob.arrayBuffer()
-}
+import { convertAudioBlobToPCM } from '@/page/ai/utils/azure-audio'
 
 /**
  * Assess pronunciation using user-provided Azure subscription key
@@ -45,24 +39,24 @@ export async function assess(
     const azureLanguage = normalizeLanguageForAzure(language)
     speechConfig.speechRecognitionLanguage = azureLanguage
 
-    // Create audio config
-    const audioData = await blobToArrayBuffer(audioBlob)
+    // Convert audio blob to PCM format (16-bit, 16kHz, mono)
+    // This handles WebM, WAV, and other formats by decoding with AudioContext
+    const pcmData = await convertAudioBlobToPCM(audioBlob)
+
+    // Check if PCM data is empty
+    if (pcmData.length === 0) {
+      throw new Error('Audio blob contains no audio data')
+    }
+
+    // Create audio config from PCM data
+    // Azure SDK expects PCM format: 16kHz, 16-bit, mono
     const audioFormat = SpeechSDK.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1)
     const pushStream = SpeechSDK.AudioInputStream.createPushStream(audioFormat)
 
-    // Handle WAV header
-    const dataView = new Uint8Array(audioData)
-    const hasWavHeader =
-      dataView[0] === 0x52 && // R
-      dataView[1] === 0x49 && // I
-      dataView[2] === 0x46 && // F
-      dataView[3] === 0x46    // F
-
-    if (hasWavHeader && audioData.byteLength > 44) {
-      pushStream.write(audioData.slice(44))
-    } else {
-      pushStream.write(audioData)
-    }
+    // Push PCM data to stream
+    // Convert Int16Array to ArrayBuffer for pushStream
+    const pcmBuffer = new Uint8Array(pcmData).buffer
+    pushStream.write(pcmBuffer as ArrayBuffer)
     pushStream.close()
 
     const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(pushStream)

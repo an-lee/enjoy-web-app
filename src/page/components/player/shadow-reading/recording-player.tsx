@@ -281,10 +281,23 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
       return
     }
 
+    // Validate blob size
+    if (recording.blob.size < 100) {
+      log.warn('Recording blob is too small', { size: recording.blob.size })
+      toast.error(t('player.transcript.assessment.noRecording'))
+      return
+    }
+
     // Start assessment
     setIsAssessing(true)
     try {
       const config = getAIServiceConfig('assessment')
+      log.debug('Starting assessment', {
+        blobSize: recording.blob.size,
+        blobType: recording.blob.type,
+        duration: recording.duration,
+        language: recording.language,
+      })
       const result = await assessmentService.assess({
         audioBlob: recording.blob,
         referenceText: recording.referenceText,

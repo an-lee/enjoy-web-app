@@ -10,13 +10,7 @@ import { getAzureToken } from './token-manager'
 import type { AIServiceResponse, AssessmentResponse } from '../../../types'
 import { AIServiceType, AIProvider } from '../../../types'
 import { normalizeLanguageForAzure } from '../../../utils/azure-language'
-
-/**
- * Convert Blob to ArrayBuffer
- */
-async function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-  return await blob.arrayBuffer()
-}
+import { convertAudioBlobToPCM } from '../../../utils/azure-audio'
 
 /**
  * Assess pronunciation using Azure Speech SDK
@@ -68,27 +62,25 @@ export async function assess(
     const azureLanguage = normalizeLanguageForAzure(language)
     speechConfig.speechRecognitionLanguage = azureLanguage
 
-    // Convert audio blob to ArrayBuffer
-    const audioData = await blobToArrayBuffer(audioBlob)
+    // Convert audio blob to PCM format (16-bit, 16kHz, mono)
+    // This handles WebM, WAV, and other formats by decoding with AudioContext
+    const pcmData = await convertAudioBlobToPCM(audioBlob)
 
-    // Create audio config from ArrayBuffer
-    // Azure SDK expects WAV format
+    // Check if PCM data is empty
+    if (pcmData.length === 0) {
+      throw new Error('Audio blob contains no audio data')
+    }
+
+    // Create audio config from PCM data
+    // Azure SDK expects PCM format: 16kHz, 16-bit, mono
     const audioFormat = SpeechSDK.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1)
     const pushStream = SpeechSDK.AudioInputStream.createPushStream(audioFormat)
 
-    // Push audio data (skip WAV header if present - first 44 bytes)
-    const dataView = new Uint8Array(audioData)
-    const hasWavHeader =
-      dataView[0] === 0x52 && // R
-      dataView[1] === 0x49 && // I
-      dataView[2] === 0x46 && // F
-      dataView[3] === 0x46    // F
-
-    if (hasWavHeader && audioData.byteLength > 44) {
-      pushStream.write(audioData.slice(44))
-    } else {
-      pushStream.write(audioData)
-    }
+    // Push PCM data to stream
+    // Convert Int16Array to ArrayBuffer for pushStream
+    // Create a new ArrayBuffer from the Int16Array to ensure correct type
+    const pcmBuffer = new Uint8Array(pcmData).buffer
+    pushStream.write(pcmBuffer as ArrayBuffer)
     pushStream.close()
 
     const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(pushStream)
