@@ -111,5 +111,9 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.API_BASE_URL': JSON.stringify(apiBaseUrl),
       'import.meta.env.VITE_API_BASE_URL': JSON.stringify(apiBaseUrl),
     },
+    // Worker configuration - use ES module format instead of IIFE
+    worker: {
+      format: 'es',
+    },
   }
 })
