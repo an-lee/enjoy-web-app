@@ -380,7 +380,7 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
         variant="outline"
         size="icon"
         onClick={handlePlayPause}
-        className="h-8 w-8 shrink-0 rounded-full cursor-pointer"
+        className="size-8 shrink-0 rounded-full cursor-pointer"
       >
         <Icon
           icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
@@ -395,24 +395,19 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
         onClick={handleAssessment}
         disabled={isAssessing || !recording.blob}
         className={cn(
-          'h-8 shrink-0 cursor-pointer',
+          'size-8 rounded-full shrink-0 cursor-pointer',
           score !== undefined && getScoreColorClass(score)
         )}
       >
         {isAssessing ? (
           <>
-            <Icon icon="lucide:loader-2" className="h-4 w-4 mr-1 animate-spin" />
-            <span className="text-xs">{t('player.transcript.assessment.assessing')}</span>
+            <Icon icon="lucide:loader-2" className="size-4 animate-spin" />
           </>
         ) : score !== undefined ? (
-          <>
-            <Icon icon="lucide:mic" className="h-4 w-4 mr-1" />
-            <span className="text-xs font-semibold">{Math.round(score)}</span>
-          </>
+          <span className="text-xs font-semibold">{Math.round(score)}</span>
         ) : (
           <>
-            <Icon icon="lucide:mic" className="h-4 w-4 mr-1" />
-            <span className="text-xs">{t('player.transcript.assessment.assess')}</span>
+            <Icon icon="lucide:check" className="size-4" />
           </>
         )}
       </Button>
