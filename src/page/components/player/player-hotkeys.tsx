@@ -179,17 +179,6 @@ export function PlayerHotkeys() {
     { deps: [], preventDefault: true }
   )
 
-  // Toggle pronunciation assessment (V) - placeholder for future implementation
-  useAppHotkey(
-    'player.toggleAssessment',
-    (e) => {
-      e.preventDefault()
-      // TODO: Implement assessment visibility toggle
-      console.log('Toggle pronunciation assessment - not yet implemented')
-    },
-    { deps: [], preventDefault: true }
-  )
-
   // Store stable references to setPlaybackRate
   const setPlaybackRateRef = useRef(setPlaybackRate)
   const playbackRateRef = useRef(playbackRate)

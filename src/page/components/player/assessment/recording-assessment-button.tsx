@@ -5,11 +5,16 @@
  * Displays assessment button with score and manages assessment dialog.
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { Icon } from '@iconify/react'
 import { Button } from '@/page/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/page/components/ui/tooltip'
 import { toast } from 'sonner'
 import { updateRecording } from '@/page/db'
 import { recordingQueryKeys } from '@/page/hooks/queries'
@@ -18,6 +23,9 @@ import { assessmentService } from '@/page/ai/services/assessment'
 import { getAIServiceConfig } from '@/page/ai/core/config'
 import { AssessmentResultDialog } from './assessment-result-dialog'
 import { getScoreLevelConfig } from './assessment-utils'
+import { useAppHotkey } from '@/page/components/hotkeys'
+import { useHotkeyBinding } from '@/page/stores/hotkeys'
+import { formatHotkeyAsKbd } from '@/page/lib/format-hotkey'
 import type { Recording } from '@/page/types/db'
 
 const log = createLogger({ name: 'RecordingAssessmentButton' })
@@ -145,6 +153,25 @@ export function RecordingAssessmentButton({ recording }: RecordingAssessmentButt
     }
   }, [localRecording, queryClient, t])
 
+  // Store handleAssessment in ref to avoid re-registering hotkeys
+  const handleAssessmentRef = useRef(handleAssessment)
+  useEffect(() => {
+    handleAssessmentRef.current = handleAssessment
+  }, [handleAssessment])
+
+  // Bind hotkey V to trigger assessment
+  // Behavior matches button click: shows dialog if assessment exists, otherwise runs assessment
+  useAppHotkey(
+    'player.toggleAssessment',
+    (e) => {
+      e.preventDefault()
+      // Call handleAssessment which checks if assessment exists first
+      // If exists: shows dialog, otherwise: runs assessment
+      handleAssessmentRef.current()
+    },
+    { deps: [], preventDefault: true }
+  )
+
   // Get score for display (use localRecording for immediate updates)
   const score =
     localRecording.pronunciationScore ??
@@ -153,31 +180,47 @@ export function RecordingAssessmentButton({ recording }: RecordingAssessmentButt
   // Get score level config for styling
   const scoreConfig = score !== undefined ? getScoreLevelConfig(score) : null
 
+  // Get hotkey binding for tooltip
+  const assessmentKey = useHotkeyBinding('player.toggleAssessment')
+
+  // Get tooltip text based on state
+  const tooltipText = localRecording.assessment
+    ? t('player.transcript.assessment.title')
+    : t('player.transcript.assessment.assess')
+
   return (
     <>
       {/* Assessment Button */}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleAssessment}
-        disabled={isAssessing || !localRecording.blob}
-        className={cn(
-          'size-8 rounded-full shrink-0 cursor-pointer',
-          scoreConfig && scoreConfig.badgeClassName
-        )}
-      >
-        {isAssessing ? (
-          <>
-            <Icon icon="lucide:loader-2" className="size-4 animate-spin" />
-          </>
-        ) : score !== undefined ? (
-          <span className="text-xs font-semibold">{Math.round(score)}</span>
-        ) : (
-          <>
-            <Icon icon="lucide:sparkles" className="size-4" />
-          </>
-        )}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAssessment}
+            disabled={isAssessing || !localRecording.blob}
+            className={cn(
+              'size-8 rounded-full shrink-0 cursor-pointer',
+              scoreConfig && scoreConfig.badgeClassName
+            )}
+          >
+            {isAssessing ? (
+              <>
+                <Icon icon="lucide:loader-2" className="size-4 animate-spin" />
+              </>
+            ) : score !== undefined ? (
+              <span className="text-xs font-semibold">{Math.round(score)}</span>
+            ) : (
+              <>
+                <Icon icon="lucide:sparkles" className="size-4" />
+              </>
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="flex items-center gap-2">
+          <span>{tooltipText}</span>
+          {assessmentKey && formatHotkeyAsKbd(assessmentKey)}
+        </TooltipContent>
+      </Tooltip>
 
       {/* Assessment Result Dialog */}
       {localRecording.assessment && (
