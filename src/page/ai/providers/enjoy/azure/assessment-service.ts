@@ -32,6 +32,12 @@ export async function assess(
 ): Promise<AIServiceResponse<AssessmentResponse>> {
   let recognizer: SpeechSDK.SpeechRecognizer | null = null
 
+  // Clean up reference text: remove line breaks and extra whitespace
+  const cleanedReferenceText = (referenceText || '').trim()
+    .replace(/[\r\n]+/g, ' ')  // Replace line breaks with spaces
+    .replace(/\s+/g, ' ')       // Normalize multiple spaces to single space
+    .trim();
+
   try {
     // Calculate duration in seconds for usage tracking
     // If duration is not provided, estimate from blob size or use default
@@ -104,12 +110,19 @@ export async function assess(
 
     // Create pronunciation assessment config
     const pronunciationConfig = new SpeechSDK.PronunciationAssessmentConfig(
-      referenceText,
+      cleanedReferenceText,
       SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
       SpeechSDK.PronunciationAssessmentGranularity.Phoneme,
       true // Enable miscue
     )
-    pronunciationConfig.enableProsodyAssessment = true
+    // Enable prosody assessment
+    pronunciationConfig.enableProsodyAssessment = true;
+    // Use IPA phoneme alphabet for more detailed phoneme representation
+    pronunciationConfig.phonemeAlphabet = 'IPA';
+    // Request NBest phoneme details for deeper analysis
+    pronunciationConfig.nbestPhonemeCount = 1;
+    // Enable prosody assessment
+    pronunciationConfig.enableProsodyAssessment = true;
 
     // Create recognizer
     recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig)
@@ -142,7 +155,7 @@ export async function assess(
         fluencyScore: pronunciationResult.fluencyScore,
         prosodyScore: pronunciationResult.prosodyScore,
         recognizedText: result.text,
-        referenceText,
+        referenceText: cleanedReferenceText,
       })
 
       // Extract word-level results
