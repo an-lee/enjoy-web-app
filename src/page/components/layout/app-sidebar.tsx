@@ -4,14 +4,12 @@ import { useTranslation } from "react-i18next"
 import {
   IconDashboard,
   IconFolder,
-  IconFileWord,
   IconSettings,
   IconLanguage,
   IconMicrophone,
-  IconBrandYoutube,
-  IconCast,
   IconCloud,
   IconActivity,
+  IconBrandChrome,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/page/components/layout/nav-main"
@@ -46,11 +44,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("common.library"),
       url: "/library",
       icon: IconFolder,
-    },
-    {
-      title: t("common.vocabulary"),
-      url: "/vocabulary",
-      icon: IconFileWord,
     },
   ]
 
@@ -87,14 +80,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const navPlugins = [
     {
-      title: t("common.youtube"),
-      url: "/plugins/youtube",
-      icon: IconBrandYoutube,
-    },
-    {
-      title: t("common.podcast"),
-      url: "/plugins/podcast",
-      icon: IconCast,
+      title: t("common.chromeExtension"),
+      url: "/plugins/chrome-extension",
+      icon: IconBrandChrome,
     },
   ]
 

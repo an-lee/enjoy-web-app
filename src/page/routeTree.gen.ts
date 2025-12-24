@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VoiceSynthesisRouteImport } from './routes/voice-synthesis'
-import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as TaskManagerRouteImport } from './routes/task-manager'
 import { Route as SyncRouteImport } from './routes/sync'
 import { Route as SmartTranslationRouteImport } from './routes/smart-translation'
@@ -23,11 +22,6 @@ import { Route as IndexRouteImport } from './routes/index'
 const VoiceSynthesisRoute = VoiceSynthesisRouteImport.update({
   id: '/voice-synthesis',
   path: '/voice-synthesis',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VocabularyRoute = VocabularyRouteImport.update({
-  id: '/vocabulary',
-  path: '/vocabulary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TaskManagerRoute = TaskManagerRouteImport.update({
@@ -80,7 +74,6 @@ export interface FileRoutesByFullPath {
   '/smart-translation': typeof SmartTranslationRoute
   '/sync': typeof SyncRoute
   '/task-manager': typeof TaskManagerRoute
-  '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
 }
 export interface FileRoutesByTo {
@@ -92,7 +85,6 @@ export interface FileRoutesByTo {
   '/smart-translation': typeof SmartTranslationRoute
   '/sync': typeof SyncRoute
   '/task-manager': typeof TaskManagerRoute
-  '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
 }
 export interface FileRoutesById {
@@ -105,7 +97,6 @@ export interface FileRoutesById {
   '/smart-translation': typeof SmartTranslationRoute
   '/sync': typeof SyncRoute
   '/task-manager': typeof TaskManagerRoute
-  '/vocabulary': typeof VocabularyRoute
   '/voice-synthesis': typeof VoiceSynthesisRoute
 }
 export interface FileRouteTypes {
@@ -119,7 +110,6 @@ export interface FileRouteTypes {
     | '/smart-translation'
     | '/sync'
     | '/task-manager'
-    | '/vocabulary'
     | '/voice-synthesis'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -131,7 +121,6 @@ export interface FileRouteTypes {
     | '/smart-translation'
     | '/sync'
     | '/task-manager'
-    | '/vocabulary'
     | '/voice-synthesis'
   id:
     | '__root__'
@@ -143,7 +132,6 @@ export interface FileRouteTypes {
     | '/smart-translation'
     | '/sync'
     | '/task-manager'
-    | '/vocabulary'
     | '/voice-synthesis'
   fileRoutesById: FileRoutesById
 }
@@ -156,7 +144,6 @@ export interface RootRouteChildren {
   SmartTranslationRoute: typeof SmartTranslationRoute
   SyncRoute: typeof SyncRoute
   TaskManagerRoute: typeof TaskManagerRoute
-  VocabularyRoute: typeof VocabularyRoute
   VoiceSynthesisRoute: typeof VoiceSynthesisRoute
 }
 
@@ -167,13 +154,6 @@ declare module '@tanstack/react-router' {
       path: '/voice-synthesis'
       fullPath: '/voice-synthesis'
       preLoaderRoute: typeof VoiceSynthesisRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/vocabulary': {
-      id: '/vocabulary'
-      path: '/vocabulary'
-      fullPath: '/vocabulary'
-      preLoaderRoute: typeof VocabularyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/task-manager': {
@@ -244,7 +224,6 @@ const rootRouteChildren: RootRouteChildren = {
   SmartTranslationRoute: SmartTranslationRoute,
   SyncRoute: SyncRoute,
   TaskManagerRoute: TaskManagerRoute,
-  VocabularyRoute: VocabularyRoute,
   VoiceSynthesisRoute: VoiceSynthesisRoute,
 }
 export const routeTree = rootRouteImport

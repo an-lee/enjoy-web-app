@@ -27,8 +27,9 @@
     "voiceSynthesis": "Sprachsynthese",
     "sync": "Synchronisieren",
     "plugins": "Plugins",
-    "youtube": "YouTube",
+    "chromeExtension": "Chrome-Erweiterung",
     "podcast": "Podcast",
+    "youtube": "YouTube",
     "noSearchResults": "Keine Ergebnisse gefunden",
     "taskManager": "Aufgaben-Manager"
   },
