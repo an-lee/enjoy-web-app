@@ -5,7 +5,7 @@
  * Displays assessment button with score and manages assessment dialog.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { Icon } from '@iconify/react'
@@ -32,24 +32,31 @@ export function RecordingAssessmentButton({ recording }: RecordingAssessmentButt
   const queryClient = useQueryClient()
   const [isAssessing, setIsAssessing] = useState(false)
   const [showAssessmentDialog, setShowAssessmentDialog] = useState(false)
+  // Local state to immediately reflect assessment updates
+  const [localRecording, setLocalRecording] = useState<Recording>(recording)
+
+  // Update local recording when prop changes
+  useEffect(() => {
+    setLocalRecording(recording)
+  }, [recording])
 
   // Handle assessment
   const handleAssessment = useCallback(async () => {
     // If assessment exists, show dialog
-    if (recording.assessment) {
+    if (localRecording.assessment) {
       setShowAssessmentDialog(true)
       return
     }
 
     // If no blob, can't assess
-    if (!recording.blob) {
+    if (!localRecording.blob) {
       toast.error(t('player.transcript.assessment.noRecording'))
       return
     }
 
     // Validate blob size
-    if (recording.blob.size < 100) {
-      log.warn('Recording blob is too small', { size: recording.blob.size })
+    if (localRecording.blob.size < 100) {
+      log.warn('Recording blob is too small', { size: localRecording.blob.size })
       toast.error(t('player.transcript.assessment.noRecording'))
       return
     }
@@ -59,19 +66,19 @@ export function RecordingAssessmentButton({ recording }: RecordingAssessmentButt
     try {
       const config = getAIServiceConfig('assessment')
       log.debug('Starting assessment', {
-        blobSize: recording.blob.size,
-        blobType: recording.blob.type,
-        duration: recording.duration,
-        language: recording.language,
-        referenceText: recording.referenceText,
-        referenceTextLength: recording.referenceText?.length || 0,
+        blobSize: localRecording.blob.size,
+        blobType: localRecording.blob.type,
+        duration: localRecording.duration,
+        language: localRecording.language,
+        referenceText: localRecording.referenceText,
+        referenceTextLength: localRecording.referenceText?.length || 0,
       })
       const result = await assessmentService.assess({
-        audioBlob: recording.blob,
-        referenceText: recording.referenceText,
-        language: recording.language,
+        audioBlob: localRecording.blob,
+        referenceText: localRecording.referenceText,
+        language: localRecording.language,
         config,
-        durationMs: recording.duration, // duration in milliseconds
+        durationMs: localRecording.duration, // duration in milliseconds
       })
 
       if (!result.success || !result.data) {
@@ -83,14 +90,48 @@ export function RecordingAssessmentButton({ recording }: RecordingAssessmentButt
       const fullResult = assessmentResult.fullResult
       const pronunciationScore = assessmentResult.overallScore
 
-      await updateRecording(recording.id, {
+      // Update database
+      await updateRecording(localRecording.id, {
         assessment: fullResult,
         pronunciationScore,
       })
 
-      // Invalidate queries to refresh UI
-      await queryClient.invalidateQueries({
-        queryKey: recordingQueryKeys.byTarget(recording.targetType, recording.targetId),
+      // Immediately update local state to show score
+      const updatedRecording: Recording = {
+        ...localRecording,
+        assessment: fullResult,
+        pronunciationScore,
+      }
+      setLocalRecording(updatedRecording)
+
+      // Update query cache for immediate UI updates across all components
+      const byTargetKey = recordingQueryKeys.byTarget(
+        localRecording.targetType,
+        localRecording.targetId
+      )
+      queryClient.setQueryData<Recording[]>(byTargetKey, (oldData) => {
+        if (!oldData) return oldData
+        return oldData.map((r) => (r.id === localRecording.id ? updatedRecording : r))
+      })
+
+      // Also update byEchoRegion cache if applicable
+      const startTime = Math.round(localRecording.referenceStart)
+      const endTime = Math.round(localRecording.referenceStart + localRecording.referenceDuration)
+      const byEchoRegionKey = recordingQueryKeys.byEchoRegion(
+        localRecording.targetType,
+        localRecording.targetId,
+        localRecording.language,
+        startTime,
+        endTime
+      )
+      queryClient.setQueryData<Recording[]>(byEchoRegionKey, (oldData) => {
+        if (!oldData) return oldData
+        return oldData.map((r) => (r.id === localRecording.id ? updatedRecording : r))
+      })
+
+      // Invalidate queries to ensure consistency (runs in background)
+      queryClient.invalidateQueries({
+        queryKey: byTargetKey,
       })
 
       // Show dialog with results
@@ -102,10 +143,12 @@ export function RecordingAssessmentButton({ recording }: RecordingAssessmentButt
     } finally {
       setIsAssessing(false)
     }
-  }, [recording, queryClient, t])
+  }, [localRecording, queryClient, t])
 
-  // Get score for display
-  const score = recording.pronunciationScore ?? recording.assessment?.NBest?.[0]?.PronunciationAssessment?.PronScore
+  // Get score for display (use localRecording for immediate updates)
+  const score =
+    localRecording.pronunciationScore ??
+    localRecording.assessment?.NBest?.[0]?.PronunciationAssessment?.PronScore
 
   // Get score level config for styling
   const scoreConfig = score !== undefined ? getScoreLevelConfig(score) : null
@@ -117,7 +160,7 @@ export function RecordingAssessmentButton({ recording }: RecordingAssessmentButt
         variant="outline"
         size="sm"
         onClick={handleAssessment}
-        disabled={isAssessing || !recording.blob}
+        disabled={isAssessing || !localRecording.blob}
         className={cn(
           'size-8 rounded-full shrink-0 cursor-pointer',
           scoreConfig && scoreConfig.badgeClassName
@@ -137,11 +180,11 @@ export function RecordingAssessmentButton({ recording }: RecordingAssessmentButt
       </Button>
 
       {/* Assessment Result Dialog */}
-      {recording.assessment && (
+      {localRecording.assessment && (
         <AssessmentResultDialog
           open={showAssessmentDialog}
           onOpenChange={setShowAssessmentDialog}
-          assessment={recording.assessment}
+          assessment={localRecording.assessment}
         />
       )}
     </>

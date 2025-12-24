@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from '@/page/components/ui/select'
 import { useRecordingsByEchoRegion } from '@/page/hooks/queries'
+import { getScoreLevelConfig } from '@/page/components/player/assessment/assessment-utils'
+import { cn } from '@/shared/lib/utils'
 import type { TargetType, Recording } from '@/page/types/db'
 
 interface ShadowRecordingListProps {
@@ -89,6 +91,36 @@ export function ShadowRecordingList({
     }
   }, [selectedRecording, onSelectedRecordingChange])
 
+  /**
+   * Get score from recording
+   */
+  const getRecordingScore = (recording: Recording): number | undefined => {
+    return (
+      recording.pronunciationScore ??
+      recording.assessment?.NBest?.[0]?.PronunciationAssessment?.PronScore
+    )
+  }
+
+  /**
+   * Render score badge for a recording
+   */
+  const renderScoreBadge = (recording: Recording) => {
+    const score = getRecordingScore(recording)
+    if (score === undefined) return null
+
+    const scoreConfig = getScoreLevelConfig(score)
+    return (
+      <span
+        className={cn(
+          'ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold',
+          scoreConfig.badgeClassName
+        )}
+      >
+        {Math.round(score)}
+      </span>
+    )
+  }
+
   // Don't render if required props missing, loading, or no recordings
   if (!hasRequiredProps || isLoading || recordings.length === 0) {
     return null
@@ -98,11 +130,15 @@ export function ShadowRecordingList({
     <div className={className}>
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs text-muted-foreground">
-            {t('player.transcript.existingRecordings', {
-              defaultValue: 'Existing Recordings',
-            })}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {t('player.transcript.existingRecordings', {
+                defaultValue: 'Existing Recordings',
+              })}
+            </span>
+            {/* Show score badge when there's only one recording */}
+            {recordings.length === 1 && selectedRecording && renderScoreBadge(selectedRecording)}
+          </div>
 
           {/* Recording Selection Dropdown - only show if multiple recordings */}
           {recordings.length > 1 && selectedRecording && (
@@ -112,10 +148,15 @@ export function ShadowRecordingList({
             >
               <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs">
                 <SelectValue>
-                  {t('player.transcript.recordingNumber', {
-                    number: recordings.length - selectedIndex,
-                    defaultValue: `Recording ${recordings.length - selectedIndex}`,
-                  })}
+                  <div className="flex items-center gap-1">
+                    <span>
+                      {t('player.transcript.recordingNumber', {
+                        number: recordings.length - selectedIndex,
+                        defaultValue: `Recording ${recordings.length - selectedIndex}`,
+                      })}
+                    </span>
+                    {renderScoreBadge(selectedRecording)}
+                  </div>
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -127,11 +168,16 @@ export function ShadowRecordingList({
                   const displayNumber = recordings.length - index
                   return (
                     <SelectItem key={recording.id} value={recording.id}>
-                      {t('player.transcript.recordingNumber', {
-                        number: displayNumber,
-                        defaultValue: `Recording ${displayNumber}`,
-                      })}
-                      {dateStr && ` (${dateStr})`}
+                      <div className="flex items-center justify-between w-full">
+                        <span>
+                          {t('player.transcript.recordingNumber', {
+                            number: displayNumber,
+                            defaultValue: `Recording ${displayNumber}`,
+                          })}
+                          {dateStr && ` (${dateStr})`}
+                        </span>
+                        {renderScoreBadge(recording)}
+                      </div>
                     </SelectItem>
                   )
                 })}
