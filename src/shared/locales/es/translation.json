@@ -294,6 +294,20 @@
         "error": "Error al eliminar la grabación"
       },
       "playbackError": "Error al reproducir la grabación",
+      "assessment": {
+        "title": "Evaluación de Pronunciación",
+        "description": "Resultados detallados de evaluación de pronunciación",
+        "assess": "Evaluar",
+        "assessing": "Evaluando...",
+        "success": "Evaluación completada",
+        "error": "Error al evaluar la pronunciación",
+        "noRecording": "No hay grabación disponible para evaluación",
+        "overallScore": "Puntuación General",
+        "accuracy": "Precisión",
+        "fluency": "Fluidez",
+        "completeness": "Completitud",
+        "wordLevel": "Evaluación a Nivel de Palabra"
+      },
       "uploadSubtitle": "Subir subtítulos",
       "uploadSubtitleHint": "Sube un archivo .srt o .vtt",
       "noMedia": "No hay ningún medio reproduciéndose actualmente",

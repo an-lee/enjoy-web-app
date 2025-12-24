@@ -79,8 +79,13 @@ export async function synthesize(
   let synthesizer: SpeechSDK.SpeechSynthesizer | null = null
 
   try {
-    // Get Azure token
-    const { token, region } = await getAzureToken()
+    // Get Azure token with usage information
+    const { token, region } = await getAzureToken({
+      purpose: 'tts',
+      tts: {
+        textLength: text.length,
+      },
+    })
 
     // Create speech config with auth token
     const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(

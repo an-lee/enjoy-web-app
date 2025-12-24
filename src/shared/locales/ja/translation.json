@@ -294,6 +294,20 @@
         "error": "録音の削除に失敗しました"
       },
       "playbackError": "録音の再生に失敗しました",
+      "assessment": {
+        "title": "発音評価",
+        "description": "詳細な発音評価結果",
+        "assess": "評価",
+        "assessing": "評価中...",
+        "success": "評価が完了しました",
+        "error": "発音評価に失敗しました",
+        "noRecording": "評価用の録音がありません",
+        "overallScore": "総合スコア",
+        "accuracy": "正確性",
+        "fluency": "流暢性",
+        "completeness": "完全性",
+        "wordLevel": "単語レベルの評価"
+      },
       "uploadSubtitle": "字幕をアップロード",
       "uploadSubtitleHint": ".srt または .vtt ファイルをアップロード",
       "noMedia": "現在再生中のメディアがありません",

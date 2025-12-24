@@ -294,6 +294,20 @@
         "error": "Échec de la suppression de l'enregistrement"
       },
       "playbackError": "Échec de la lecture de l'enregistrement",
+      "assessment": {
+        "title": "Évaluation de la Prononciation",
+        "description": "Résultats détaillés de l'évaluation de la prononciation",
+        "assess": "Évaluer",
+        "assessing": "Évaluation en cours...",
+        "success": "Évaluation terminée",
+        "error": "Échec de l'évaluation de la prononciation",
+        "noRecording": "Aucun enregistrement disponible pour l'évaluation",
+        "overallScore": "Score Global",
+        "accuracy": "Précision",
+        "fluency": "Fluidité",
+        "completeness": "Complétude",
+        "wordLevel": "Évaluation au Niveau des Mots"
+      },
       "uploadSubtitle": "Télécharger les sous-titres",
       "uploadSubtitleHint": "Téléchargez un fichier .srt ou .vtt",
       "noMedia": "Aucun média n'est actuellement en cours de lecture",

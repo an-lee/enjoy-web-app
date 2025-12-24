@@ -10,6 +10,7 @@ import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
 import type { AIServiceResponse, ASRResponse } from '../../../types'
 import { AIServiceType, AIProvider } from '../../../types'
 import type { AzureSpeechConfig } from './types'
+import { normalizeLanguageForAzure } from '../../../utils/azure-language'
 
 /**
  * Convert Blob to ArrayBuffer
@@ -40,7 +41,9 @@ export async function transcribe(
     )
 
     if (language) {
-      speechConfig.speechRecognitionLanguage = language
+      // Normalize language code to Azure Speech SDK format
+      const azureLanguage = normalizeLanguageForAzure(language)
+      speechConfig.speechRecognitionLanguage = azureLanguage
     }
 
     // Create audio config from blob

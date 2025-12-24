@@ -294,6 +294,20 @@
         "error": "Falha ao excluir gravação"
       },
       "playbackError": "Falha ao reproduzir gravação",
+      "assessment": {
+        "title": "Avaliação de Pronúncia",
+        "description": "Resultados detalhados da avaliação de pronúncia",
+        "assess": "Avaliar",
+        "assessing": "Avaliando...",
+        "success": "Avaliação concluída",
+        "error": "Falha ao avaliar pronúncia",
+        "noRecording": "Nenhuma gravação disponível para avaliação",
+        "overallScore": "Pontuação Geral",
+        "accuracy": "Precisão",
+        "fluency": "Fluência",
+        "completeness": "Completude",
+        "wordLevel": "Avaliação no Nível de Palavra"
+      },
       "uploadSubtitle": "Enviar legendas",
       "uploadSubtitleHint": "Envie um arquivo .srt ou .vtt",
       "noMedia": "Nenhuma mídia está sendo reproduzida no momento",

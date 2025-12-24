@@ -294,6 +294,20 @@
         "error": "녹음 삭제에 실패했습니다"
       },
       "playbackError": "녹음 재생에 실패했습니다",
+      "assessment": {
+        "title": "발음 평가",
+        "description": "상세한 발음 평가 결과",
+        "assess": "평가",
+        "assessing": "평가 중...",
+        "success": "평가가 완료되었습니다",
+        "error": "발음 평가에 실패했습니다",
+        "noRecording": "평가할 녹음이 없습니다",
+        "overallScore": "전체 점수",
+        "accuracy": "정확도",
+        "fluency": "유창성",
+        "completeness": "완전성",
+        "wordLevel": "단어 수준 평가"
+      },
       "uploadSubtitle": "자막 업로드",
       "uploadSubtitleHint": ".srt 또는 .vtt 파일을 업로드하세요",
       "noMedia": "현재 재생 중인 미디어가 없습니다",

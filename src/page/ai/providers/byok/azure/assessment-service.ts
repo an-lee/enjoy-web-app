@@ -7,9 +7,10 @@
  */
 
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
-import type { AIServiceResponse, AssessmentResponse } from '../../../types'
-import { AIServiceType, AIProvider } from '../../../types'
-import type { AzureSpeechConfig } from './types'
+import type { AIServiceResponse, AssessmentResponse } from '@/page/ai/types'
+import { AIServiceType, AIProvider } from '@/page/ai/types'
+import type { AzureSpeechConfig } from '@/page/ai/providers/byok/azure/types'
+import { normalizeLanguageForAzure } from '@/page/ai/utils/azure-language'
 
 /**
  * Convert Blob to ArrayBuffer
@@ -40,7 +41,9 @@ export async function assess(
       config.subscriptionKey,
       config.region
     )
-    speechConfig.speechRecognitionLanguage = language
+    // Normalize language code to Azure Speech SDK format
+    const azureLanguage = normalizeLanguageForAzure(language)
+    speechConfig.speechRecognitionLanguage = azureLanguage
 
     // Create audio config
     const audioData = await blobToArrayBuffer(audioBlob)

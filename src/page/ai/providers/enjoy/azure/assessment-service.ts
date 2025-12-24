@@ -9,6 +9,7 @@ import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk'
 import { getAzureToken } from './token-manager'
 import type { AIServiceResponse, AssessmentResponse } from '../../../types'
 import { AIServiceType, AIProvider } from '../../../types'
+import { normalizeLanguageForAzure } from '../../../utils/azure-language'
 
 /**
  * Convert Blob to ArrayBuffer
@@ -23,25 +24,49 @@ async function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
  * @param audioBlob - Audio recording of the user's speech
  * @param referenceText - The text that should have been spoken
  * @param language - Language code for assessment
+ * @param durationMs - Optional duration of audio in milliseconds (for usage tracking)
  * @returns Assessment response with scores and word-level feedback
  */
 export async function assess(
   audioBlob: Blob,
   referenceText: string,
-  language: string
+  language: string,
+  durationMs?: number
 ): Promise<AIServiceResponse<AssessmentResponse>> {
   let recognizer: SpeechSDK.SpeechRecognizer | null = null
 
   try {
-    // Get Azure token
-    const { token, region } = await getAzureToken()
+    // Calculate duration in seconds for usage tracking
+    // If duration is not provided, estimate from blob size or use default
+    let durationSeconds = 15 // default
+    if (durationMs !== undefined && durationMs > 0) {
+      durationSeconds = Math.ceil(durationMs / 1000)
+    } else {
+      // Estimate from blob size (rough estimate: assume 16kHz, 16-bit, mono = 32KB per second)
+      // This is a fallback if duration is not provided
+      const estimatedSeconds = Math.ceil(audioBlob.size / 32000)
+      if (estimatedSeconds > 0 && estimatedSeconds < 300) {
+        // Cap at 5 minutes for safety
+        durationSeconds = estimatedSeconds
+      }
+    }
+
+    // Get Azure token with usage information
+    const { token, region } = await getAzureToken({
+      purpose: 'assessment',
+      assessment: {
+        durationSeconds,
+      },
+    })
 
     // Create speech config with auth token
     const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
       token,
       region
     )
-    speechConfig.speechRecognitionLanguage = language
+    // Normalize language code to Azure Speech SDK format
+    const azureLanguage = normalizeLanguageForAzure(language)
+    speechConfig.speechRecognitionLanguage = azureLanguage
 
     // Convert audio blob to ArrayBuffer
     const audioData = await blobToArrayBuffer(audioBlob)
@@ -104,10 +129,15 @@ export async function assess(
         SpeechSDK.PropertyId.SpeechServiceResponse_JsonResult
       )
 
+      let fullResult: import('@/page/types/db').PronunciationAssessmentResult | undefined
+
       if (jsonResult) {
         try {
           const parsed = JSON.parse(jsonResult)
           const nBest = parsed.NBest?.[0]
+
+          // Store full result for detailed analysis
+          fullResult = parsed as import('@/page/types/db').PronunciationAssessmentResult
 
           if (nBest?.Words) {
             for (const word of nBest.Words) {
@@ -131,6 +161,7 @@ export async function assess(
           fluencyScore: pronunciationResult.fluencyScore,
           prosodyScore: pronunciationResult.prosodyScore,
           wordResults: wordResults.length > 0 ? wordResults : undefined,
+          fullResult,
         },
         metadata: {
           serviceType: AIServiceType.ASSESSMENT,

@@ -29,9 +29,12 @@ import {
 } from '@/page/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { usePlayerRecordingStore } from '@/page/stores/player/player-recording-store'
-import { deleteRecording } from '@/page/db'
+import { deleteRecording, updateRecording } from '@/page/db'
 import { recordingQueryKeys } from '@/page/hooks/queries'
 import { cn, createLogger } from '@/shared/lib/utils'
+import { assessmentService } from '@/page/ai/services/assessment'
+import { getAIServiceConfig } from '@/page/ai/core/config'
+import { AssessmentResultDialog } from './assessment-result-dialog'
 import type { Recording } from '@/page/types/db'
 
 const log = createLogger({ name: 'RecordingPlayer' })
@@ -63,6 +66,25 @@ function createRecordingUrl(recording: Recording): string | null {
   }
 }
 
+/**
+ * Get score color class based on score value
+ * 91-100: excellent (green)
+ * 81-90: good (blue)
+ * 61-80: fair (orange/yellow)
+ * <60: poor (red)
+ */
+function getScoreColorClass(score: number): string {
+  if (score >= 91) {
+    return 'bg-score-excellent text-score-excellent-foreground'
+  } else if (score >= 81) {
+    return 'bg-score-good text-score-good-foreground'
+  } else if (score >= 61) {
+    return 'bg-score-fair text-score-fair-foreground'
+  } else {
+    return 'bg-score-poor text-score-poor-foreground'
+  }
+}
+
 export function RecordingPlayer({ recording, className }: RecordingPlayerProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -73,6 +95,8 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
   const [duration, setDuration] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isAssessing, setIsAssessing] = useState(false)
+  const [showAssessmentDialog, setShowAssessmentDialog] = useState(false)
 
   // Create and cleanup blob URL when recording changes
   useEffect(() => {
@@ -243,6 +267,62 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
 
   const progressPercentage = duration === 0 ? 0 : (currentTime / duration) * 100
 
+  // Handle assessment
+  const handleAssessment = useCallback(async () => {
+    // If assessment exists, show dialog
+    if (recording.assessment) {
+      setShowAssessmentDialog(true)
+      return
+    }
+
+    // If no blob, can't assess
+    if (!recording.blob) {
+      toast.error(t('player.transcript.assessment.noRecording'))
+      return
+    }
+
+    // Start assessment
+    setIsAssessing(true)
+    try {
+      const config = getAIServiceConfig('assessment')
+      const result = await assessmentService.assess({
+        audioBlob: recording.blob,
+        referenceText: recording.referenceText,
+        language: recording.language,
+        config,
+        durationMs: recording.duration, // duration in milliseconds
+      })
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error?.message || 'Assessment failed')
+      }
+
+      // Update recording with assessment result
+      const assessmentResult = result.data
+      const fullResult = assessmentResult.fullResult
+      const pronunciationScore = assessmentResult.overallScore
+
+      await updateRecording(recording.id, {
+        assessment: fullResult,
+        pronunciationScore,
+      })
+
+      // Invalidate queries to refresh UI
+      await queryClient.invalidateQueries({
+        queryKey: recordingQueryKeys.byTarget(recording.targetType, recording.targetId),
+      })
+
+      // Show dialog with results
+      setShowAssessmentDialog(true)
+      toast.success(t('player.transcript.assessment.success'))
+    } catch (error) {
+      log.error('Failed to assess pronunciation:', error)
+      toast.error(t('player.transcript.assessment.error'))
+    } finally {
+      setIsAssessing(false)
+    }
+  }, [recording, queryClient, t])
+
   // Use refs to store latest values for the controls callbacks
   const isPlayingRef = useRef(isPlaying)
   const handlePlayPauseRef = useRef(handlePlayPause)
@@ -275,6 +355,9 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
     return null
   }
 
+  // Get score for display
+  const score = recording.pronunciationScore ?? recording.assessment?.NBest?.[0]?.PronunciationAssessment?.PronScore
+
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {/* Play/Pause Button */}
@@ -288,6 +371,35 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
           icon={isPlaying ? 'lucide:pause' : 'lucide:play'}
           className="h-4 w-4"
         />
+      </Button>
+
+      {/* Assessment Button */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleAssessment}
+        disabled={isAssessing || !recording.blob}
+        className={cn(
+          'h-8 shrink-0 cursor-pointer',
+          score !== undefined && getScoreColorClass(score)
+        )}
+      >
+        {isAssessing ? (
+          <>
+            <Icon icon="lucide:loader-2" className="h-4 w-4 mr-1 animate-spin" />
+            <span className="text-xs">{t('player.transcript.assessment.assessing')}</span>
+          </>
+        ) : score !== undefined ? (
+          <>
+            <Icon icon="lucide:mic" className="h-4 w-4 mr-1" />
+            <span className="text-xs font-semibold">{Math.round(score)}</span>
+          </>
+        ) : (
+          <>
+            <Icon icon="lucide:mic" className="h-4 w-4 mr-1" />
+            <span className="text-xs">{t('player.transcript.assessment.assess')}</span>
+          </>
+        )}
       </Button>
 
       {/* Progress Bar */}
@@ -356,6 +468,15 @@ export function RecordingPlayer({ recording, className }: RecordingPlayerProps) 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Assessment Result Dialog */}
+      {recording.assessment && (
+        <AssessmentResultDialog
+          open={showAssessmentDialog}
+          onOpenChange={setShowAssessmentDialog}
+          assessment={recording.assessment}
+        />
+      )}
     </div>
   )
 }

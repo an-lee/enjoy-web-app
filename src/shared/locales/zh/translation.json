@@ -292,6 +292,20 @@
         "error": "删除录音失败"
       },
       "playbackError": "播放录音失败",
+      "assessment": {
+        "title": "发音评估",
+        "description": "详细的发音评估结果",
+        "assess": "评估",
+        "assessing": "评估中...",
+        "success": "评估完成",
+        "error": "发音评估失败",
+        "noRecording": "没有可用的录音进行评估",
+        "overallScore": "总分",
+        "accuracy": "准确度",
+        "fluency": "流畅度",
+        "completeness": "完整度",
+        "wordLevel": "单词级别评估"
+      },
       "syncing": "正在从服务器同步字幕...",
       "generateTranscript": "生成字幕",
       "uploadSubtitle": "上传字幕",

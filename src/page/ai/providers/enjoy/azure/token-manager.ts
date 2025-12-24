@@ -24,6 +24,19 @@ export interface AzureTokenResponse {
 }
 
 /**
+ * Azure token usage payload for cost estimation
+ */
+export interface AzureTokenUsagePayload {
+  purpose: 'tts' | 'assessment'
+  tts?: {
+    textLength: number // number of characters in the text
+  }
+  assessment?: {
+    durationSeconds: number // duration of audio in seconds
+  }
+}
+
+/**
  * Cached token state
  */
 interface TokenCache {
@@ -53,10 +66,13 @@ function isTokenValid(): boolean {
  * Get Azure Speech token
  * Returns cached token if valid, otherwise fetches a new one
  *
+ * @param usage - Usage payload for cost estimation
  * @returns Token and region for Azure Speech SDK
  * @throws Error if token acquisition fails
  */
-export async function getAzureToken(): Promise<{
+export async function getAzureToken(
+  usage: AzureTokenUsagePayload
+): Promise<{
   token: string
   region: string
 }> {
@@ -81,6 +97,7 @@ export async function getAzureToken(): Promise<{
       'Content-Type': 'application/json',
       Authorization: `Bearer ${authToken}`,
     },
+    body: JSON.stringify({ usage }),
   })
 
   if (!response.ok) {

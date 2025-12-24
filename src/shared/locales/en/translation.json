@@ -301,6 +301,20 @@
         "error": "Failed to delete recording"
       },
       "playbackError": "Failed to play recording",
+      "assessment": {
+        "title": "Pronunciation Assessment",
+        "description": "Detailed pronunciation assessment results",
+        "assess": "Assess",
+        "assessing": "Assessing...",
+        "success": "Assessment completed",
+        "error": "Failed to assess pronunciation",
+        "noRecording": "No recording available for assessment",
+        "overallScore": "Overall Score",
+        "accuracy": "Accuracy",
+        "fluency": "Fluency",
+        "completeness": "Completeness",
+        "wordLevel": "Word-level Assessment"
+      },
       "progress": {
         "loadingMedia": "Loading media...",
         "loadingVideoFromElement": "Loading video from element...",

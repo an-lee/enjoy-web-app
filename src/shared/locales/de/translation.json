@@ -294,6 +294,20 @@
         "error": "Aufnahme konnte nicht gelöscht werden"
       },
       "playbackError": "Aufnahme konnte nicht abgespielt werden",
+      "assessment": {
+        "title": "Aussprachebewertung",
+        "description": "Detaillierte Aussprachebewertungsergebnisse",
+        "assess": "Bewerten",
+        "assessing": "Bewerte...",
+        "success": "Bewertung abgeschlossen",
+        "error": "Aussprachebewertung fehlgeschlagen",
+        "noRecording": "Keine Aufnahme für die Bewertung verfügbar",
+        "overallScore": "Gesamtpunktzahl",
+        "accuracy": "Genauigkeit",
+        "fluency": "Flüssigkeit",
+        "completeness": "Vollständigkeit",
+        "wordLevel": "Wortebenen-Bewertung"
+      },
       "uploadSubtitle": "Untertitel hochladen",
       "uploadSubtitleHint": "Laden Sie eine .srt- oder .vtt-Datei hoch",
       "noMedia": "Es wird derzeit kein Medium abgespielt",

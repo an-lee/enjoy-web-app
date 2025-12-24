@@ -121,5 +121,10 @@ export interface AssessmentResponse {
     accuracyScore: number
     errorType: string
   }>
+  /**
+   * Full pronunciation assessment result from Azure Speech SDK
+   * This is the complete JSON response for detailed analysis
+   */
+  fullResult?: import('@/page/types/db').PronunciationAssessmentResult
 }
 

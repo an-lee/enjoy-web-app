@@ -31,6 +31,11 @@ export interface AssessmentRequest {
   referenceText: string
   language: string
   config?: AIServiceConfig
+  /**
+   * Duration of the audio in milliseconds (for usage tracking)
+   * If not provided, a default value will be used
+   */
+  durationMs?: number
 }
 
 /**
@@ -81,7 +86,8 @@ export const assessmentService = {
       const result = await assessWithEnjoy(
         request.audioBlob,
         request.referenceText,
-        request.language
+        request.language,
+        request.durationMs
       )
 
       if (!result.success || !result.data) {
