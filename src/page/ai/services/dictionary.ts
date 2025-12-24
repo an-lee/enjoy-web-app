@@ -46,7 +46,7 @@ export const smartDictionaryService = {
         SmartDictionaryRequest,
         DictionaryResponse
       >({
-        serviceType: AIServiceType.SMART_DICTIONARY,
+        serviceType: AIServiceType.DICTIONARY,
         request,
         config: request.config,
         handlers: {
@@ -87,12 +87,12 @@ export const smartDictionaryService = {
         },
       })
 
-      return createSuccessResponse(response, AIServiceType.SMART_DICTIONARY, provider)
+      return createSuccessResponse(response, AIServiceType.DICTIONARY, provider)
     } catch (error) {
       return handleProviderError(
         error,
         ERROR_SMART_DICTIONARY_LOCAL_NOT_SUPPORTED,
-        AIServiceType.SMART_DICTIONARY,
+        AIServiceType.DICTIONARY,
         AIProvider.ENJOY
       )
     }

@@ -28,7 +28,7 @@ export interface TranslationRequest {
 export const translationService = {
   /**
    * Translate text (basic translation without style support)
-   * Always uses Enjoy API - free service
+   * Always uses Enjoy API
    */
   async translate(
     request: TranslationRequest

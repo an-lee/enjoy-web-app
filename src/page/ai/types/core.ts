@@ -10,7 +10,7 @@
 export enum AIServiceType {
   TRANSLATION = 'translation', // Basic translation (Enjoy AI free)
   SMART_TRANSLATION = 'smartTranslation',
-  SMART_DICTIONARY = 'smartDictionary',
+  DICTIONARY = 'dictionary',
   ASR = 'asr',
   TTS = 'tts',
   ASSESSMENT = 'assessment',

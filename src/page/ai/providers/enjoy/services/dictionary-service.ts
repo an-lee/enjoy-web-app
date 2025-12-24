@@ -6,9 +6,9 @@
  */
 
 import { getEnjoyClient } from '../client'
-import type { AIServiceResponse, DictionaryResponse } from '../../../types'
-import { AIServiceType, AIProvider } from '../../../types'
-import { buildDictionaryPrompt, parseDictionaryResponse } from '../../../prompts'
+import type { AIServiceResponse, DictionaryResponse } from '@/page/ai/types'
+import { AIServiceType, AIProvider } from '@/page/ai/types'
+import { buildDictionaryPrompt, parseDictionaryResponse } from '@/page/ai/prompts'
 
 /**
  * Dictionary lookup with AI explanation
@@ -49,7 +49,7 @@ export async function lookup(
       success: true,
       data: dictionaryData,
       metadata: {
-        serviceType: AIServiceType.SMART_DICTIONARY,
+        serviceType: AIServiceType.DICTIONARY,
         provider: AIProvider.ENJOY,
       },
     }
@@ -61,7 +61,7 @@ export async function lookup(
         message: error.message || 'Enjoy API smart dictionary lookup failed',
       },
       metadata: {
-        serviceType: AIServiceType.SMART_DICTIONARY,
+        serviceType: AIServiceType.DICTIONARY,
         provider: AIProvider.ENJOY,
       },
     }

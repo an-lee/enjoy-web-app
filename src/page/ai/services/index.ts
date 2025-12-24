@@ -7,7 +7,7 @@ export * from './translation'
 export * from './asr'
 export * from './tts'
 export * from './smart-translation'
-export * from './smart-dictionary'
+export * from './dictionary'
 export * from './assessment'
 
 // Re-export service instances for convenience
@@ -15,7 +15,7 @@ import { translationService } from './translation'
 import { asrService } from './asr'
 import { ttsService } from './tts'
 import { smartTranslationService } from './smart-translation'
-import { smartDictionaryService } from './smart-dictionary'
+import { smartDictionaryService } from './dictionary'
 import { assessmentService } from './assessment'
 
 export const aiServices = {
