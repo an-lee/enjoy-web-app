@@ -35,7 +35,9 @@ export type { BYOKLLMGenerationParams } from './client'
 // OpenAI-Compatible Services
 // ============================================
 export {
+  translate as translateWithBYOK,
   smartTranslate as smartTranslateWithBYOK,
+  contextualTranslate as contextualTranslateWithBYOK,
   lookup as dictionaryLookupWithBYOK,
   transcribe as transcribeWithBYOK,
   synthesize as synthesizeWithBYOK,

@@ -36,6 +36,7 @@ export type {
 export {
   translate as translateWithEnjoy,
   smartTranslate as smartTranslateWithEnjoy,
+  contextualTranslate as contextualTranslateWithEnjoy,
   lookup as dictionaryLookupWithEnjoy,
   transcribe as transcribeWithEnjoy,
 } from './services'

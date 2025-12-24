@@ -10,10 +10,14 @@ interface AIServiceSettings {
     defaultStyle: string
     localModel?: string // Model name when using local provider
   }
-  // Legacy: Keep for backward compatibility (maps to smartTranslation)
-  translation?: {
+  // Basic translation - Enjoy uses dedicated API, Local/BYOK use LLM
+  translation: {
     defaultProvider: AIProvider
-    defaultStyle: string
+    localModel?: string
+  }
+  // Contextual translation - context-aware translation using LLM
+  contextualTranslation: {
+    defaultProvider: AIProvider
     localModel?: string
   }
   tts: {
@@ -25,10 +29,9 @@ interface AIServiceSettings {
     defaultProvider: AIProvider
     localModel?: string // Model name when using local provider, e.g., 'Xenova/whisper-tiny'
   }
-  smartDictionary: {
-    // Contextual dictionary (AI-powered) - requires AI configuration
+  dictionary: {
+    // Dictionary (AI-powered) - only Enjoy API supported
     defaultProvider: AIProvider
-    localModel?: string
   }
   assessment: {
     defaultProvider: AIProvider
@@ -63,13 +66,19 @@ const defaultAISettings: AIServiceSettings = {
     defaultProvider: AIProvider.ENJOY,
     defaultStyle: 'natural',
   },
+  translation: {
+    defaultProvider: AIProvider.ENJOY,
+  },
+  contextualTranslation: {
+    defaultProvider: AIProvider.ENJOY,
+  },
   tts: {
     defaultProvider: AIProvider.ENJOY,
   },
   asr: {
     defaultProvider: AIProvider.LOCAL,
   },
-  smartDictionary: {
+  dictionary: {
     defaultProvider: AIProvider.ENJOY,
   },
   assessment: {

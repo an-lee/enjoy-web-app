@@ -13,7 +13,9 @@ import {
 export const SERVICE_TO_MODEL_TYPE: Partial<Record<AIServiceType, ModelType>> = {
   [AIServiceType.ASR]: 'asr',
   [AIServiceType.SMART_TRANSLATION]: 'smartTranslation',
-  [AIServiceType.SMART_DICTIONARY]: 'smartDictionary',
+  [AIServiceType.TRANSLATION]: 'smartTranslation', // Basic translation uses same model type
+  [AIServiceType.CONTEXTUAL_TRANSLATION]: 'smartTranslation', // Contextual translation uses same model type
+  [AIServiceType.DICTIONARY]: 'smartDictionary',
   [AIServiceType.TTS]: 'tts',
 }
 

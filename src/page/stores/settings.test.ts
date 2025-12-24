@@ -37,7 +37,13 @@ describe('Settings Store', () => {
       asr: {
         defaultProvider: AIProvider.LOCAL,
       },
-      smartDictionary: {
+      dictionary: {
+        defaultProvider: AIProvider.ENJOY,
+      },
+      translation: {
+        defaultProvider: AIProvider.ENJOY,
+      },
+      contextualTranslation: {
         defaultProvider: AIProvider.ENJOY,
       },
       assessment: {
@@ -83,7 +89,7 @@ describe('Settings Store', () => {
       expect(state.aiServices.smartTranslation.defaultStyle).toBe('natural')
       expect(state.aiServices.tts.defaultProvider).toBe(AIProvider.ENJOY)
       expect(state.aiServices.asr.defaultProvider).toBe(AIProvider.LOCAL)
-      expect(state.aiServices.smartDictionary.defaultProvider).toBe(AIProvider.ENJOY)
+      expect(state.aiServices.dictionary.defaultProvider).toBe(AIProvider.ENJOY)
       expect(state.aiServices.assessment.defaultProvider).toBe(AIProvider.ENJOY)
     })
   })

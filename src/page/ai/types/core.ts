@@ -8,12 +8,13 @@
  * Use these instead of hardcoded strings
  */
 export enum AIServiceType {
-  TRANSLATION = 'translation', // Basic translation (Enjoy AI free)
-  SMART_TRANSLATION = 'smartTranslation',
-  DICTIONARY = 'dictionary',
-  ASR = 'asr',
-  TTS = 'tts',
-  ASSESSMENT = 'assessment',
+  TRANSLATION = 'translation', // Basic translation (Enjoy API for Enjoy, LLM for Local/BYOK)
+  SMART_TRANSLATION = 'smartTranslation', // Style-aware translation with custom prompts (LLM)
+  CONTEXTUAL_TRANSLATION = 'contextualTranslation', // Context-aware translation (LLM)
+  DICTIONARY = 'dictionary', // Dictionary lookup (Enjoy API only)
+  ASR = 'asr', // Automatic Speech Recognition
+  TTS = 'tts', // Text-to-Speech
+  ASSESSMENT = 'assessment', // Pronunciation Assessment (Azure only)
 }
 
 /**

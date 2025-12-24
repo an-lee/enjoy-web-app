@@ -12,7 +12,7 @@ import { AIProvider as AIProviderEnum, AIServiceType as AIServiceTypeEnum } from
  * Get AI service configuration from settings
  */
 export function getAIServiceConfig(
-  service: 'asr' | 'smartTranslation' | 'smartDictionary' | 'tts' | 'assessment'
+  service: 'asr' | 'translation' | 'smartTranslation' | 'contextualTranslation' | 'dictionary' | 'tts' | 'assessment'
 ): AIServiceConfig {
   const { aiServices } = useSettingsStore.getState()
   const serviceSettings = aiServices[service]
@@ -59,19 +59,24 @@ export function selectProvider(
   switch (serviceType) {
     case AIServiceTypeEnum.ASR:
     case AIServiceTypeEnum.SMART_TRANSLATION:
-      // ASR and smart translation support local mode, free users default to local
+    case AIServiceTypeEnum.CONTEXTUAL_TRANSLATION:
+      // ASR and translation services support local mode, free users default to local
       return isPro ? AIProviderEnum.ENJOY : AIProviderEnum.LOCAL
 
-    case AIServiceTypeEnum.SMART_DICTIONARY:
-      // Smart dictionary lookup supports local mode, free users default to local
+    case AIServiceTypeEnum.TRANSLATION:
+      // Basic translation: Enjoy uses dedicated API, Local/BYOK use LLM
       return isPro ? AIProviderEnum.ENJOY : AIProviderEnum.LOCAL
+
+    case AIServiceTypeEnum.DICTIONARY:
+      // Dictionary only supports Enjoy API
+      return AIProviderEnum.ENJOY
 
     case AIServiceTypeEnum.TTS:
       // TTS supports local mode, free users default to local
       return isPro ? AIProviderEnum.ENJOY : AIProviderEnum.LOCAL
 
     case AIServiceTypeEnum.ASSESSMENT:
-      // Pronunciation assessment doesn't support local mode, must use cloud
+      // Pronunciation assessment doesn't support local mode, must use cloud (Azure)
       return AIProviderEnum.ENJOY
 
     default:

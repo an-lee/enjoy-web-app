@@ -17,14 +17,34 @@ export function AISettings() {
         providers={[AIProvider.ENJOY, AIProvider.LOCAL, AIProvider.BYOK]}
       />
 
-      {/* Smart Dictionary - Contextual word lookup with AI explanation */}
+      {/* Translation - Basic translation */}
       <AIServiceCard
-        service={AIServiceType.SMART_DICTIONARY}
-        title={t('settings.ai.smartDictionary', { defaultValue: 'Smart Dictionary (Contextual)' })}
-        description={t('settings.ai.smartDictionaryDescription', {
-          defaultValue: 'Contextual word lookup with AI-powered explanation. Basic dictionary is always free.'
+        service={AIServiceType.TRANSLATION}
+        title={t('settings.ai.translation', { defaultValue: 'Translation' })}
+        description={t('settings.ai.translationDescription', {
+          defaultValue: 'Basic translation. Enjoy uses dedicated API, Local/BYOK use LLM.'
         })}
         providers={[AIProvider.ENJOY, AIProvider.LOCAL, AIProvider.BYOK]}
+      />
+
+      {/* Contextual Translation - Context-aware translation */}
+      <AIServiceCard
+        service={AIServiceType.CONTEXTUAL_TRANSLATION}
+        title={t('settings.ai.contextualTranslation', { defaultValue: 'Contextual Translation' })}
+        description={t('settings.ai.contextualTranslationDescription', {
+          defaultValue: 'Context-aware translation using surrounding text context. Uses LLM.'
+        })}
+        providers={[AIProvider.ENJOY, AIProvider.LOCAL, AIProvider.BYOK]}
+      />
+
+      {/* Dictionary - Contextual word lookup with AI explanation */}
+      <AIServiceCard
+        service={AIServiceType.DICTIONARY}
+        title={t('settings.ai.dictionary', { defaultValue: 'Dictionary' })}
+        description={t('settings.ai.dictionaryDescription', {
+          defaultValue: 'Contextual word lookup with AI-powered explanation. Only Enjoy API supported.'
+        })}
+        providers={[AIProvider.ENJOY]}
       />
 
       {/* ASR - Automatic Speech Recognition (Whisper) */}

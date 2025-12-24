@@ -12,7 +12,9 @@
  */
 
 // LLM services
+export { translate } from './translation-service'
 export { smartTranslate } from './smart-translation-service'
+export { contextualTranslate } from './contextual-translation-service'
 export { lookup } from './dictionary-service'
 
 // Audio services (OpenAI-compatible)

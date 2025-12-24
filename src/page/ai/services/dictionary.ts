@@ -1,16 +1,18 @@
 /**
- * Smart Dictionary Service (Contextual AI-powered)
- * Uses AI (LLM) for context-aware word explanations
+ * Dictionary Service
+ * AI-powered dictionary lookup with context-aware word explanations
  *
- * Note: This is the AI-powered contextual dictionary service.
+ * Provider support:
+ * - Enjoy: Uses dedicated dictionary API (/api/dictionary/query) - ONLY provider
+ * - Local: NOT SUPPORTED
+ * - BYOK: NOT SUPPORTED
+ *
+ * Note: Dictionary service is only available through Enjoy API.
  * For basic dictionary lookup (FREE), use @/services/api/dictionary
  */
 
-import { localModelService } from '../providers/local'
-import { dictionaryLookupWithBYOK } from '../providers/byok'
 import { dictionaryLookupWithEnjoy } from '../providers/enjoy'
 import type {
-  AIServiceConfig,
   AIServiceResponse,
   DictionaryResponse,
 } from '../types'
@@ -20,74 +22,45 @@ import {
   createSuccessResponse,
   handleProviderError,
 } from '../core/error-handler'
-import { routeToProvider } from '../core/provider-router'
 
-export interface SmartDictionaryRequest {
+export interface DictionaryRequest {
   word: string
   context?: string
   sourceLanguage: string
   targetLanguage: string
-  config?: AIServiceConfig
 }
 
 /**
- * Smart Dictionary Service (Contextual AI-powered)
+ * Dictionary Service
  * Provides context-aware word explanations using AI
+ * Only available through Enjoy API
  */
-export const smartDictionaryService = {
+export const dictionaryService = {
   /**
    * Contextual word lookup with AI explanation
+   * Only supports Enjoy API provider
    */
   async lookup(
-    request: SmartDictionaryRequest
+    request: DictionaryRequest
   ): Promise<AIServiceResponse<DictionaryResponse>> {
     try {
-      const { response, provider } = await routeToProvider<
-        SmartDictionaryRequest,
-        DictionaryResponse
-      >({
-        serviceType: AIServiceType.DICTIONARY,
-        request,
-        config: request.config,
-        handlers: {
-          local: async (req, config) => {
-            return await localModelService.lookup(
-              req.word,
-              req.context,
-              req.sourceLanguage,
-              req.targetLanguage,
-              config?.localModel
-            )
-          },
-          enjoy: async (req) => {
-            const result = await dictionaryLookupWithEnjoy(
-              req.word,
-              req.context,
-              req.sourceLanguage,
-              req.targetLanguage
-            )
-            if (!result.success || !result.data) {
-              throw new Error(result.error?.message || 'Enjoy API smart dictionary lookup failed')
-            }
-            return result.data
-          },
-          byok: async (req, byokConfig) => {
-            const result = await dictionaryLookupWithBYOK(
-              req.word,
-              req.context,
-              req.sourceLanguage,
-              req.targetLanguage,
-              byokConfig
-            )
-            if (!result.success || !result.data) {
-              throw new Error(result.error?.message || 'BYOK smart dictionary lookup failed')
-            }
-            return result.data
-          },
-        },
-      })
+      // Dictionary service only supports Enjoy API
+      const result = await dictionaryLookupWithEnjoy(
+        request.word,
+        request.context,
+        request.sourceLanguage,
+        request.targetLanguage
+      )
 
-      return createSuccessResponse(response, AIServiceType.DICTIONARY, provider)
+      if (!result.success || !result.data) {
+        throw new Error(result.error?.message || 'Enjoy API dictionary lookup failed')
+      }
+
+      return createSuccessResponse(
+        result.data,
+        AIServiceType.DICTIONARY,
+        AIProvider.ENJOY
+      )
     } catch (error) {
       return handleProviderError(
         error,

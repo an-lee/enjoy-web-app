@@ -14,8 +14,19 @@ export interface TranslationResponse {
 
 /**
  * Smart Translation Response
+ * Style-aware translation with custom prompts
  */
 export interface SmartTranslationResponse {
+  translatedText: string
+  aiModel?: string
+  tokensUsed?: number
+}
+
+/**
+ * Contextual Translation Response
+ * Context-aware translation using surrounding text
+ */
+export interface ContextualTranslationResponse {
   translatedText: string
   aiModel?: string
   tokensUsed?: number

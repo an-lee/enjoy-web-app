@@ -10,6 +10,7 @@ import type { LocalModelConfig } from '../../types'
 import { useLocalModelsStore } from '@/page/stores/local-models'
 import { transcribe } from './services/asr-service'
 import { smartTranslate } from './services/smart-translation-service'
+import { contextualTranslate } from './services/contextual-translation-service'
 import { lookup } from './services/dictionary-service'
 import { synthesize } from './services/tts-service'
 import { initializeModel, checkModelCache, checkModelLoaded } from './services/model-initializer'
@@ -41,6 +42,12 @@ export const localModelService = {
    * Supports different translation styles via prompts, used for user-generated content
    */
   smartTranslate,
+
+  /**
+   * Contextual Translation (using generative models with context)
+   * Uses surrounding text context to provide better translations
+   */
+  contextualTranslate,
 
   /**
    * Legacy: Local Translation (for backward compatibility)

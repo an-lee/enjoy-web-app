@@ -7,6 +7,7 @@ export * from './translation'
 export * from './asr'
 export * from './tts'
 export * from './smart-translation'
+export * from './contextual-translation'
 export * from './dictionary'
 export * from './assessment'
 
@@ -15,7 +16,8 @@ import { translationService } from './translation'
 import { asrService } from './asr'
 import { ttsService } from './tts'
 import { smartTranslationService } from './smart-translation'
-import { smartDictionaryService } from './dictionary'
+import { contextualTranslationService } from './contextual-translation'
+import { dictionaryService } from './dictionary'
 import { assessmentService } from './assessment'
 
 export const aiServices = {
@@ -23,7 +25,8 @@ export const aiServices = {
   asr: asrService,
   tts: ttsService,
   smartTranslation: smartTranslationService,
-  smartDictionary: smartDictionaryService,
+  contextualTranslation: contextualTranslationService,
+  dictionary: dictionaryService,
   assessment: assessmentService,
 }
 

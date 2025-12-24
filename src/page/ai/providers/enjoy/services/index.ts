@@ -12,6 +12,7 @@
 // Translation services
 export { translate } from './translation-service'
 export { smartTranslate } from './smart-translation-service'
+export { contextualTranslate } from './contextual-translation-service'
 
 // Dictionary service
 export { lookup } from './dictionary-service'
